@@ -1,0 +1,31 @@
+[
+  {
+    "nomor": 1,
+    "metadata": {
+      "blok": "Kardiovaskular",
+      "tingkat_kompetensi_skdi": "4A",
+      "sub_kompetensi_klinis": "Penegakan Diagnosis",
+      "tingkat_kognitif": "C4 - Analisis",
+      "tingkat_kesulitan": "Sedang",
+      "kegawatdaruratan": false,
+      "xp": 20
+    },
+    "pertanyaan": "Seorang laki-laki berusia 55 tahun datang dengan keluhan nyeri dada kiri yang menjalar ke lengan kiri sejak 2 jam yang lalu. Nyeri dirasakan seperti tertindih beban berat dan disertai keringat dingin. Pada pemeriksaan fisik didapatkan TD 140/90 mmHg, HR 98 x/menit, RR 20 x/menit. EKG menunjukkan ST-elevasi di lead II, III, dan aVF.<br><br><strong>Pertanyaan:</strong><br>Manakah diagnosis yang paling tepat?",
+    "pilihan": [
+      "Angina Pektoris Stabil",
+      "Angina Pektoris Tidak Stabil",
+      "STEMI Inferior",
+      "NSTEMI",
+      "Perikarditis Akut"
+    ],
+    "jawaban_benar": "STEMI Inferior",
+    "pembahasan": "Nyeri dada khas infark disertai ST-elevasi di lead II, III, aVF menegakkan diagnosis STEMI Inferior.",
+    "eliminasi_opsi": {
+      "A": "Salah. Angina pektoris stabil tidak menunjukkan ST-elevasi pada EKG.",
+      "B": "Salah. Angina pektoris tidak stabil menunjukkan iskemia (ST-depresi/T-inversi) tanpa elevasi.",
+      "C": "Benar. Gambaran klinis dan EKG khas untuk STEMI inferior.",
+      "D": "Salah. NSTEMI tidak menunjukkan gambaran ST-elevasi pada EKG.",
+      "E": "Salah. Perikarditis menunjukkan ST-elevasi difus, bukan terlokalisir di inferior."
+    }
+  }
+]

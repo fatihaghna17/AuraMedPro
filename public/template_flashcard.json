@@ -1,0 +1,28 @@
+{
+  "featureFlags": {
+    "shuffleCards": true,
+    "showHints": true,
+    "hintPenalty": 0.25,
+    "maxHintsAllowed": 3,
+    "caseSensitive": false,
+    "acceptPartialMatch": true
+  },
+  "cards": [
+    {
+      "clue": "Seorang pasien datang dengan demam tinggi, nyeri kepala, dan pembesaran kelenjar getah bening inguinal. Pada pemeriksaan apusan darah ditemukan parasit intraseluler berbentuk pisang (crescent-shaped gametocyte). Apakah nama spesies parasit penyebab infeksi tersebut?",
+      "answer": "plasmodium falciparum",
+      "hints": [
+        "Parasit ini menginfeksi eritrosit dan dapat menyebabkan malaria serebral.",
+        "Ditemukan gambaran gametosit berbentuk pisang atau sosis pada apusan darah.",
+        "Merupakan penyebab utama malaria tropika, nama spesies diawali dengan huruf F."
+      ],
+      "explanation": "Plasmodium falciparum memiliki ciri khas gametosit berbentuk pisang.",
+      "metadata": {
+        "blok": "Infeksi Tropis",
+        "sub_kompetensi_klinis": "Isian Singkat",
+        "tingkat_kesulitan": "Sedang",
+        "xp": 20
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+# Panduan Standar Pembuatan Soal: AuraMed PRO
+
+Gunakan panduan dan instruksi prompt di bawah ini untuk menghasilkan berkas bank soal (format JSON) yang kompatibel 105% dengan sistem analitik, klasifikasi sub-kompetensi, dan kalkulasi XP pada platform **AuraMed PRO**.
+
+---
+
+## 📋 Prompt Generator Soal (Siap Copy-Paste ke AI)
+
+> **Prompt Insturksi AI:**
+> 
+> "Bertindaklah sebagai pembuat soal ujian kompetensi dokter spesialis/umum dan dosen kedokteran senior. Hasilkan soal pilihan ganda berkualitas tinggi untuk persiapan ujian kompetensi klinis kedokteran (UKMPPD/Olimpiade Kedokteran) dengan mengikuti aturan ketat berikut:
+> 
+> ### ATURAN KONTEN SOAL:
+> 1. **Vignette Klinis**: Setiap soal wajib dimulai dengan kasus klinis (usia, jenis kelamin pasien, anamnesis, pemeriksaan fisik, atau data laboratorium).
+> 2. **Format Pertanyaan**: Pisahkan vignette dengan inti pertanyaan menggunakan persis tag HTML ini: `<br><br><strong>Pertanyaan:</strong><br>`
+> 3. **Format Gambar**: Apabila di pertanyaan atau pembahasan memerlukan gambar, berikan format tag HTML `<img src="url_gambar" />` langsung di dalam teks pertanyaan maupun pembahasan.
+> 4. **Pilihan Ganda**: Buat 5 pilihan jawaban (A, B, C, D, E) yang semuanya terdengar masuk akal (distraktor kuat). Hindari ciri khas jawaban benar (seperti opsi yang paling panjang atau satu-satunya yang terdapat tanda kurung).
+> 5. **Pembahasan**: Berikan penjelasan konseptual mengenai diagnosis, patofisiologi, atau tatalaksana dari kasus tersebut.
+> 6. **Eliminasi Opsi**: Bedah kelima opsi (A sampai E) secara ringkas. Awali setiap penjelasan opsi dengan kata "Benar. " atau "Salah. " lalu jelaskan clinical reasoning-nya.
+> 
+> ### ATURAN METADATA:
+> Setiap soal wajib memiliki objek `"metadata"` dengan klasifikasi berikut:
+> * `"blok"`: Sistem organ/blok kedokteran (misal: "Endokrinologi", "Kardiovaskular", "Gastroenterohepatologi", "Respirologi", "Nefrourologi", "Neurologi", "Hemato-Onkologi", "Infeksi Tropis", "Muskuloskeletal", "Dermatologi", "Psikiatri", "Obstetri Ginekologi", "Pediatri").
+> * `"tingkat_kompetensi_skdi"`: Klasifikasi SKDI (Pilih salah satu: `"1"`, `"2"`, `"3A"`, `"3B"`, `"4A"`, atau `"4B"`).
+> * `"sub_kompetensi_klinis"`: Fokus keterampilan klinis (Pilih salah satu: `"Anamnesis"`, `"Pemeriksaan Fisik"`, `"Interpretasi Penunjang"`, `"Penegakan Diagnosis"`, `"Tatalaksana Farmakologi"`, atau `"Edukasi & Pencegahan"`).
+> * `"tingkat_kognitif"`: Klasifikasi taksonomi Bloom (Pilih salah satu: `"C3 - Aplikasi"`, `"C4 - Analisis"`, `"C5 - Evaluasi"`).
+> * `"tingkat_kesulitan"`: Tingkat kesulitan soal (Pilih salah satu: `"Mudah"`, `"Sedang"`, `"Sulit"`).
+> * `"kegawatdaruratan"`: Nilai Boolean (`true` jika merupakan kasus gawat darurat / life-saving / IGD, `false` jika kasus elektif / poliklinik rawat jalan).
+> * `"xp"`: Nilai poin pengalaman (Gunakan integer: `10` untuk Mudah, `20` untuk Sedang, `30` untuk Sulit).
+> 
+> ### FORMAT OUTPUT (STRICT JSON):
+> Kembalikan respon hanya dalam blok kode JSON berupa array objek seperti contoh skema di bawah ini:
+> 
+> ```json
+> [
+>   {
+>     "nomor": 1,
+>     "metadata": {
+>       "blok": "Nama Blok",
+>       "tingkat_kompetensi_skdi": "4A",
+>       "sub_kompetensi_klinis": "Penegakan Diagnosis",
+>       "tingkat_kognitif": "C4 - Analisis",
+>       "tingkat_kesulitan": "Sedang",
+>       "kegawatdaruratan": false,
+>       "xp": 20
+>     },
+>     "pertanyaan": "Kasus klinis di sini...<br><br><strong>Pertanyaan:</strong><br>Manakah diagnosis yang paling tepat?",
+>     "pilihan": [
+>       "Opsi A",
+>       "Opsi B",
+>       "Opsi C",
+>       "Opsi D",
+>       "Opsi E"
+>     ],
+>     "jawaban_benar": "Opsi C",
+>     "pembahasan": "Penjelasan patofisiologis dari diagnosis terpilih.",
+>     "eliminasi_opsi": {
+>       "A": "Salah. Penjelasan patofisiologis mengapa opsi A salah.",
+>       "B": "Salah. Penjelasan patofisiologis mengapa opsi B salah.",
+>       "C": "Benar. Alasan patofisiologis mengapa opsi C adalah pilihan terbaik.",
+>       "D": "Salah. Penjelasan patofisiologis mengapa opsi D salah.",
+>       "E": "Salah. Penjelasan patofisiologis mengapa opsi E salah."
+>     }
+>   }
+> ]
+> ```"
+
+---
+
+## 🗂️ Daftar Klasifikasi Metadata
+
+Untuk memastikan data statistik terpetakan dengan benar pada dashboard analitik AuraMed PRO, pastikan pengisian nilai metadata mengikuti batasan rentang nilai berikut:
+
+### 1. Pilihan Sub-Kompetensi Klinis
+* **`Anamnesis`**: Untuk soal mengenai keluhan utama, riwayat penyakit dahulu/keluarga, atau komunikasi dokter-pasien.
+* **`Pemeriksaan Fisik`**: Untuk soal mengenai interpretasi tanda vital, manuver fisik spesifik (misal: Murphy sign, Lasegue sign).
+* **`Interpretasi Penunjang`**: Untuk soal pembacaan EKG, rontgen dada, hasil laboratorium darah/urin, atau CT scan.
+* **`Penegakan Diagnosis`**: Untuk penentuan diagnosis kerja, diagnosis banding, atau etiologi penyakit.
+* **`Tatalaksana Farmakologi`**: Untuk pemilihan dosis obat, rute pemberian, mekanisme kerja obat, atau drug of choice.
+* **`Edukasi & Pencegahan`**: Untuk soal mengenai vaksinasi, modifikasi gaya hidup, rehabilitasi, atau aspek pencegahan penularan.
+
+### 2. Pilihan Tingkat Kompetensi SKDI
+* **`1`**: Mengenali dan menjelaskan secara teoretis.
+* **`2`**: Mendiagnosis dan merujuk kasus non-darurat.
+* **`3A`**: Mendiagnosis, melakukan tatalaksana awal, dan merujuk kasus non-darurat.
+* **`3B`**: Mendiagnosis, melakukan tatalaksana awal gawat darurat, dan merujuk kasus darurat.
+* **`4A`**: Mendiagnosis, melakukan tatalaksana mandiri hingga tuntas untuk dokter umum.
+* **`4B`**: Pencapaian klinis lanjutan dengan supervisi.
+
+### 3. Pilihan Tingkat Kesulitan & XP
+| Tingkat Kesulitan | XP (Poin) |
+| :--- | :--- |
+| **`Mudah`** | **10** |
+| **`Sedang`** | **20** |
+| **`Sulit`** | **30** |
+

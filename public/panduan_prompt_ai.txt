@@ -1,0 +1,86 @@
+================================================================================
+PANDUAN MEMORI PROMPT AI UNTUK MEMBUAT KUIS AURAMED PRO
+Salin seluruh teks di bawah ini dan kirimkan ke AI (seperti ChatGPT/Gemini/Claude)
+di awal chat sebelum memberikan materi atau instruksi pembuatan soal.
+================================================================================
+
+Selalu ikuti aturan memori terstruktur di bawah ini untuk setiap pembuatan soal:
+
+MEMORI #1 (Instruksi Utama Kuis):
+Saat user bilang "buat kuis", pertama-tama tentukan formatnya: PG, Flashcard, atau Campuran/Kombinasi. 
+- Jika PG, gabungkan aturan dari MEMORI #1 + contoh metadata #3 + contoh soal #4 + contoh eliminasi #5 jadi satu output utuh tanpa ada field yang hilang atau berubah.
+- Jika Flashcard, gabungkan aturan #2 (featureFlags) + #6 (card structure) jadi satu output utuh.
+- Jika Campuran/Kombinasi, gabungkan format dari MEMORI #7.
+Jangan pernah ringkas, ubah, atau skip field apapun. Output wajib berupa kode JSON valid di dalam markdown code block, tanpa penjelasan pembuka atau penutup di luar block.
+
+MEMORI #2 (Flashcard Root):
+FLASHCARD ROOT: {"featureFlags":{"shuffleCards":true,"showHints":true,"hintPenalty":0.25,"maxHintsAllowed":3,"caseSensitive":false,"acceptPartialMatch":true},"cards":[...]}. Root=JSON OBJECT. featureFlags wajib ada semua field di atas.
+
+MEMORI #3 (PG Metadata):
+CONTOH METADATA PG: {"blok":"Nefrourologi","tingkat_kompetensi_skdi":"2","sub_kompetensi_klinis":"Penegakan Diagnosis","tingkat_kognitif":"C4 - Analisis","tingkat_kesulitan":"Sulit","kegawatdaruratan":true,"xp":30}. sub_kompetensi 6 enum: Anamnesis/Pemeriksaan Fisik/Interpretasi Penunjang/Penegakan Diagnosis/Tatalaksana Farmakologi/Edukasi & Pencegahan. xp=10/20/30 sesuai Mudah/Sedang/Sulit.
+
+MEMORI #4 (PG Soal & Pilihan):
+CONTOH SOAL PG: {"nomor":1,"pertanyaan":"Vignet klinis...<br><br><strong>Pertanyaan:</strong><br>Struktur manakah...?","pilihan":["Fascia transversalis","Renal fascia (Gerota)","Perinephric fat","Paranephric fat","Ligamentum teres hepatis"],"jawaban_benar":"Renal fascia (Gerota)","pembahasan":"Renal fascia membungkus ginjal..."}. jawaban_benar=FULL TEXT bukan huruf. pilihan=[5 string] bukan object.
+
+MEMORI #5 (PG Eliminasi Opsi):
+CONTOH ELIMINASI_OPSI PG: {"A":"Salah. Fascia transversalis...","B":"Benar. Renal fascia membatasi...","C":"Salah. Perinephric fat berada...","D":"Salah. Paranephric fat berada...","E":"Salah. Ligamentum teres hepatis..."}. Keys wajib "A"-"E" quoted. Prefix wajib "Benar." atau "Salah." diikuti reasoning klinis.
+
+MEMORI #6 (Flashcard Card Structure):
+FLASHCARD CARD STRUCTURE: {"clue":"Vignet klinis...","answer":"renal fascia","hints":["Hint 1: Patofisiologi...","Hint 2: Temuan penunjang...","Hint 3: Karakteristik klinis + awalan huruf..."],"explanation":"Pembahasan ringkas...","metadata":{"blok":"Nefrourologi","sub_kompetensi_klinis":"Isian Singkat","tingkat_kesulitan":"Sedang","xp":20}}. answer=lowercase. hints=tepat 3. sub_kompetensi="Isian Singkat".
+
+MEMORI #7 (Format Campuran / Kombinasi 1 File):
+Jika kuis mengandung tipe Pilihan Ganda (PG) dan Flashcard (Isian Singkat) sekaligus dalam satu file JSON/YAML, formatnya adalah JSON OBJECT dengan root yang mendefinisikan `featureFlags` serta dua array terpisah: `questions` (untuk PG) dan `cards` (untuk Flashcard).
+Contoh Struktur Campuran:
+{
+  "featureFlags": {
+    "shuffleCards": true,
+    "showHints": true,
+    "hintPenalty": 0.25,
+    "maxHintsAllowed": 3,
+    "caseSensitive": false,
+    "acceptPartialMatch": true
+  },
+  "questions": [
+    {
+      "nomor": 1,
+      "metadata": {
+        "blok": "Nefrourologi",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Penegakan Diagnosis",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sulit",
+        "kegawatdaruratan": true,
+        "xp": 30
+      },
+      "pertanyaan": "Kasus klinis PG...<br><br><strong>Pertanyaan:</strong><br>Manakah diagnosis yang paling tepat?",
+      "pilihan": ["Opsi A", "Opsi B", "Opsi C", "Opsi D", "Opsi E"],
+      "jawaban_benar": "Opsi C",
+      "pembahasan": "Pembahasan PG...",
+      "eliminasi_opsi": {
+        "A": "Salah. Penjelasan...",
+        "B": "Salah. Penjelasan...",
+        "C": "Benar. Penjelasan...",
+        "D": "Salah. Penjelasan...",
+        "E": "Salah. Penjelasan..."
+      }
+    }
+  ],
+  "cards": [
+    {
+      "clue": "Kasus klinis Flashcard... Apakah diagnosis/obat/mikroorganisme tersebut?",
+      "answer": "jawaban_flashcard",
+      "hints": [
+        "Hint 1: Patofisiologi...",
+        "Hint 2: Temuan penunjang...",
+        "Hint 3: Karakteristik klinis + awalan huruf..."
+      ],
+      "explanation": "Pembahasan flashcard...",
+      "metadata": {
+        "blok": "Nefrourologi",
+        "sub_kompetensi_klinis": "Isian Singkat",
+        "tingkat_kesulitan": "Sedang",
+        "xp": 20
+      }
+    }
+  ]
+}

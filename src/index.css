@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-bg: #0B1120;
+  --color-brand-surface: #131C31;
+  --color-brand-surface-hover: #1A2540;
+  --color-brand-border: #1E2D4A;
+  --color-brand-border-subtle: #162036;
+  
+  --color-brand-primary: #818CF8;
+  --color-brand-primary-hover: #6366F1;
+  --color-brand-secondary: #A78BFA;
+  
+  --color-brand-text: #F1F5F9;
+  --color-brand-text-muted: #94A3B8;
+  --color-brand-text-faint: #64748B;
+  
+  --color-brand-xp: #FCD34D;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Glassmorphism Card Style */
+@layer components {
+  .glass-card {
+    background: rgba(19, 28, 49, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(129, 140, 248, 0.1);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    border-color: rgba(129, 140, 248, 0.3);
+    box-shadow: 0 0 20px rgba(129, 140, 248, 0.1);
+  }
+}
+
+/* Custom smooth transition and scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.45);
+}
+
+@keyframes floatOrb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -40px) scale(1.08);
+  }
+  66% {
+    transform: translate(-25px, 25px) scale(0.95);
+  }
+}
+
+.animate-float-orb {
+  animation: floatOrb 26s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

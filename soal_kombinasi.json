@@ -1,0 +1,805 @@
+{
+  "featureFlags": {
+    "shuffleCards": true,
+    "showHints": true,
+    "hintPenalty": 0.25,
+    "maxHintsAllowed": 3,
+    "caseSensitive": false,
+    "acceptPartialMatch": true
+  },
+  "mcq_questions": [
+    {
+      "nomor": 1,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Tindakan Bedah Kebidanan",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita berusia 28 tahun bersalin dengan kondisi bayi besar. Saat kepala janin melewati perineum dan meregangkan vulva, dokter memutuskan untuk menyayat pada garis tengah komissura posterior lurus ke bawah, namun dilakukan secara sangat berhati-hati agar tidak mengenai serabut sfingter ani [cite: 9].<br><br><strong>Pertanyaan:</strong><br>Apakah nama tindakan bedah yang sedang dilakukan oleh dokter tersebut[cite: 10]?",
+      "pilihan": [
+        "Episiotomi mediolateral",
+        "Episiotomi median",
+        "Kolpotomi",
+        "Kuldosentesis",
+        "Perineorafi"
+      ],
+      "jawaban_benar": "Episiotomi median",
+      "pembahasan": "Tindakan menyayat garis tengah komissura posterior lurus ke bawah untuk melebarkan jalan lahir dinamai episiotomi median[cite: 9, 12]. Prosedur ini harus dijaga agar tidak robek lebih dalam menembus serabut sfingter ani externus[cite: 9].",
+      "eliminasi_opsi": {
+        "A": "Salah. Episiotomi mediolateral diarahkan miring menjauhi garis tengah[cite: 11].",
+        "B": "Benar. Sesuai skenario klinis di mana sayatan lurus di midline posterior[cite: 9, 12].",
+        "C": "Salah. Kolpotomi adalah penyayatan dinding vagina[cite: 13, 199, 201].",
+        "D": "Salah. Kuldosentesis adalah aspirasi cairan rongga peritoneal lewat vagina[cite: 14, 200].",
+        "E": "Salah. Perineorafi adalah tindakan rekonstruksi/penjahitan perineum[cite: 15]."
+      }
+    },
+    {
+      "nomor": 2,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Identifikasi Traktus Neurovaskular",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Tinggi",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang laki-laki berusia 30 tahun dibawa ke IGD setelah mengalami trauma jatuh mengangkang[cite: 16]. Dari evaluasi anatomi, dicurigai adanya gangguan pada struktur neurovaskular yang keluar dari cavitas pelvis melalui foramen ischiadicus majus, melintasi lig. sacrospinosum, dan masuk kembali ke perineum melalui foramen ischiadicus minus [cite: 16, 17].<br><br><strong>Pertanyaan:</strong><br>Struktur saraf apakah yang paling mungkin mengalami gangguan lintasan anatomis tersebut[cite: 17]?",
+      "pilihan": [
+        "N. ischiadicus",
+        "N. gluteus superior",
+        "N. pudendus",
+        "N. obturatorius",
+        "M. piriformis"
+      ],
+      "jawaban_benar": "N. pudendus",
+      "pembahasan": "Nervus pudendus memiliki rute spesifik melingkari ligamentum sacrospinosum setelah keluar melalui foramen ischiadicus majus, untuk kemudian masuk kembali ke perineum via foramen ischiadicus minus[cite: 16, 17, 665].",
+      "eliminasi_opsi": {
+        "A": "Salah. N. ischiadicus keluar lewat foramen majus lalu langsung lurus turun ke paha posterior[cite: 18].",
+        "B": "Salah. N. gluteus superior berjalan lewat bagian atas foramen majus tanpa kembali ke perineum[cite: 19, 665].",
+        "C": "Benar. Karakteristik jalur loop melingkari spina/ligamen tersebut adalah khas N. pudendus[cite: 20, 665].",
+        "D": "Salah. N. obturatorius melewati canalis obturatorius anterior[cite: 21, 30].",
+        "E": "Salah. M. piriformis adalah struktur muscular pengisi foramen, bukan struktur saraf[cite: 22]."
+      }
+    },
+    {
+      "nomor": 3,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Anestesi Regional Terpimpin Landmark",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang dokter spesialis bedah hendak melakukan blok saraf (nerve block) untuk memfasilitasi anestesi pada regio perineum pasien[cite: 23]. Sebagai patokan orientasi taktil, dokter meraba spina ischiadica melalui dinding vagina [cite: 23].<br><br><strong>Pertanyaan:</strong><br>Ligamentum panggul manakah yang membentang langsung menuju spina ischiadica dan menjadi marker utama penusukan jarum tersebut[cite: 24]?",
+      "pilihan": [
+        "Lig. sacrotuberosum",
+        "Lig. sacrospinosum",
+        "Lig. inguinale",
+        "Lig. sacroiliacum",
+        "Lig. arcuatum pubis"
+      ],
+      "jawaban_benar": "Lig. sacrospinosum",
+      "pembahasan": "Ligamentum sacrospinosum berinsersi langsung pada spina ischiadica[cite: 24, 26]. Struktur ini menjadi pembatas utama foramen ischiadicus sekaligus landmark anestesi blok n. pudendus karena letak sarafnya yang melintas tepat di dekat perlekatan ligamentum ini[cite: 16, 17, 23].",
+      "eliminasi_opsi": {
+        "A": "Salah. Lig. sacrotuberosum melekat menuju tuber ischiadicum[cite: 25, 665].",
+        "B": "Benar. Lig. sacrospinosum melekat di spina ischiadica[cite: 24, 26].",
+        "C": "Salah. Lig. inguinale membentang di batas lipat paha luar[cite: 27].",
+        "D": "Salah. Lig. sacroiliacum memperkuat sendi sakroiliaka panggul atas[cite: 28].",
+        "E": "Salah. Lig. arcuatum pubis terletak di bawah symphysis pubis[cite: 29]."
+      }
+    },
+    {
+      "nomor": 4,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Identifikasi Cedera Neurovaskular",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang pasien dilaporkan mengalami cedera saraf parah yang melintasi rongga canalis obturatorius[cite: 30]. Selain akan bermanifestasi pada kelumpuhan motorik otot-otot adductor paha, terdapat pembuluh darah penting yang berjalan bersama saraf tersebut di dalam kanalis dan ikut berisiko cedera [cite: 31].<br><br><strong>Pertanyaan:</strong><br>Pasangan pembuluh darah manakah yang terancam ikut mengalami kerusakan pada pasien tersebut[cite: 31]?",
+      "pilihan": [
+        "A/v pudenda interna",
+        "A/v glutea superior",
+        "A/v obturatoria",
+        "A/v iliaca externa",
+        "A/v uterina"
+      ],
+      "jawaban_benar": "A/v obturatoria",
+      "pembahasan": "Canalis obturatorius dilintasi oleh struktur neurovaskular obturatoria, yang mencakup n. obturatorius beserta sepasang vasa obturatoria (arteri dan vena obturatoria)[cite: 30, 31, 35].",
+      "eliminasi_opsi": {
+        "A": "Salah. A/v pudenda interna berjalan di perineum lateral[cite: 32, 93].",
+        "B": "Salah. A/v glutea superior berjalan menuju area gluteus superior[cite: 34, 175].",
+        "C": "Benar. Pembuluh darah yang menyertai saraf di canalis obturatorius adalah A/v obturatoria[cite: 31, 35].",
+        "D": "Salah. A/v iliaca externa berjalan di pelvis mayor menuju paha[cite: 36].",
+        "E": "Salah. A/v uterina menyuplai organ rahim/uterus[cite: 37, 212]."
+      }
+    },
+    {
+      "nomor": 5,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Pelvimetri Klinis Obstetris",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Pada pemeriksaan fisik obstetri antenatal, dokter mengukur kapasitas rongga panggul dalam menggunakan metode pemeriksaan vaginal toucher[cite: 38]. Dokter berhasil meraba ujung promontorium sacri dan mengukur jaraknya ke tepi bawah symphysis ossis pubis, didapatkan angka 12,5 cm [cite: 38].<br><br><strong>Pertanyaan:</strong><br>Apakah jenis ukuran konjugata panggul yang didapatkan dokter melalui pemeriksaan dalam tersebut[cite: 39]?",
+      "pilihan": [
+        "Conjugata vera anatomica",
+        "Conjugata vera obstetrica",
+        "Conjugata diagonalis",
+        "Diameter transversa",
+        "Conjugata externa"
+      ],
+      "jawaban_benar": "Conjugata diagonalis",
+      "pembahasan": "Jarak yang diukur langsung secara taktil klinis dari promontorium menuju tepi bawah symphysis pubis melalui vaginal toucher didefinisikan sebagai conjugata diagonalis[cite: 38, 42].",
+      "eliminasi_opsi": {
+        "A": "Salah. Conjugata vera anatomica diukur ke tepi atas simfisis[cite: 40].",
+        "B": "Salah. Conjugata vera obstetrica diukur ke permukaan belakang simfisis[cite: 41].",
+        "C": "Benar. Definisi jarak dari promontorium ke tepi bawah simfisis adalah conjugata diagonalis[cite: 38, 42].",
+        "D": "Salah. Diameter transversa mengukur kelebaran horizontal aditus pelvis[cite: 43].",
+        "E": "Salah. Conjugata externa diukur dari luar tubuh memakai jangka panggul[cite: 44]."
+      }
+    },
+    {
+      "nomor": 6,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Evaluasi Kemajuan Persalinan",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang bidan sedang memantau jalannya persalinan kala I aktif pada seorang ibu hamil[cite: 45]. Saat melakukan evaluasi dalam, bidan menilai bahwa penurunan kutub bawah kepala janin berada tepat setinggi garis lurus yang menghubungkan kedua spina ischiadica kanan dan kiri [cite: 45].<br><br><strong>Pertanyaan:</strong><br>Bidang panggul Hodge berapakah yang setara dengan penanda spina ischiadica tersebut[cite: 45]?",
+      "pilihan": [
+        "Bidang Hodge I",
+        "Bidang Hodge II",
+        "Bidang Hodge III",
+        "Bidang Hodge IV",
+        "Aditus pelvis"
+      ],
+      "jawaban_benar": "Bidang Hodge III",
+      "pembahasan": "Secara klinis obstetri, Bidang Hodge III didefinisikan sebagai bidang imajiner panggul yang sejajar dengan Hodge I, melewati level setinggi kedua spina ischiadica[cite: 45, 48].",
+      "eliminasi_opsi": {
+        "A": "Salah. Hodge I dibentuk oleh bidang pintu atas panggul (linea terminalis)[cite: 46, 50].",
+        "B": "Salah. Hodge II sejajar Hodge I melewati tepi bawah simfisis pubis[cite: 47].",
+        "C": "Benar. Bidang Hodge III setinggi spina ischiadica[cite: 45, 48].",
+        "D": "Salah. Hodge IV sejajar Hodge I melewati ujung os coccygis[cite: 49]."
+      }
+    },
+    {
+      "nomor": 7,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Morfologi Arsitektur Panggul",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita hamil menjalani pemeriksaan pelvimetri klinis untuk memprediksi kemudahan persalinan[cite: 51]. Hasil pemeriksaan menunjukkan tipe panggul pasien memiliki aditus pelvis (pintu atas panggul) dengan bentuk yang hampir bulat sempurna dan dinilai sebagai tipe yang paling ideal untuk persalinan pervaginam [cite: 51, 52].<br><br><strong>Pertanyaan:</strong><br>Apakah klasifikasi tipe panggul yang dimiliki oleh wanita tersebut[cite: 52]?",
+      "pilihan": [
+        "Android",
+        "Anthropoid",
+        "Platypelloid",
+        "Gynecoid",
+        "Justo minor"
+      ],
+      "jawaban_benar": "Gynecoid",
+      "pembahasan": "Tipe panggul gynecoid adalah morfologi panggul wanita sejati yang ideal dengan aditus berbentuk bulat, arcus pubis luas, dan spina tumpul, memberikan prognosis persalinan terbaik[cite: 51, 56].",
+      "eliminasi_opsi": {
+        "A": "Salah. Android berbentuk menyerupai jantung, khas pria[cite: 53].",
+        "B": "Salah. Anthropoid berbentuk oval memanjang vertikal[cite: 54].",
+        "C": "Salah. Platypelloid berbentuk pipih horizontal[cite: 55].",
+        "D": "Benar. Panggul aditus bulat ideal untuk wanita adalah tipe gynecoid[cite: 51, 56]."
+      }
+    },
+    {
+      "nomor": 8,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Anatomi Sfinter Saluran Kemih",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang pasien pria mengeluhkan gangguan berkemih berupa retensi urin[cite: 58]. Pemeriksaan diagnostik mengarah pada adanya disfungsi atau spasme pada komponen otot rangka yang membungkus melingkari urethra pars membranacea di dalam kompartemen spatium perinei profundum [cite: 58].<br><br><strong>Pertanyaan:</strong><br>Apakah nama struktur otot rangka spesifik yang dimaksud pada saluran kemih tersebut[cite: 59]?",
+      "pilihan": [
+        "M. bulbospongiosus",
+        "M. ischiocavernosus",
+        "M. sphincter urethra externum",
+        "M. levator ani",
+        "M. transversus perinei superficialis"
+      ],
+      "jawaban_benar": "M. sphincter urethra externum",
+      "pembahasan": "Muskulus sphincter urethra externum adalah otot rangka (volunter) yang terletak di dalam spatium perinei profundum dan mengelilingi urethra pars membranacea[cite: 58, 62].",
+      "eliminasi_opsi": {
+        "A": "Salah. M. bulbospongiosus terletak di spatium perinei superficialis[cite: 60].",
+        "B": "Salah. M. ischiocavernosus membungkus krus penis di spatium superficialis[cite: 61].",
+        "C": "Benar. Sesuai letak anatomi di spatium profundum melingkari uretra membranasea[cite: 58, 62].",
+        "D": "Salah. M. levator ani membentuk diafragma pelvis di bagian atas[cite: 63].",
+        "E": "Salah. M. transversus perinei superficialis terletak di spatium superfisial[cite: 64]."
+      }
+    },
+    {
+      "nomor": 9,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3A",
+        "sub_kompetensi_klinis": "Identifikasi Otot Dasar Panggul",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang dokter mendeskripsikan anatomi sebuah otot penyusun utama dasar pelvis[cite: 65]. Otot ini memiliki origo pada jaringan ikat arcus tendineus fasciae pelvis dan serabut posteriornya (M. iliococcygeus) berjalan berinsersi pada corpus anococcygeus serta os coccygis [cite: 65].<br><br><strong>Pertanyaan:</strong><br>Apakah nama kompleks otot dasar pelvis utama yang dideskripsikan oleh dokter tersebut[cite: 66]?",
+      "pilihan": [
+        "M. coccygeus",
+        "M. levator ani",
+        "M. piriformis",
+        "M. obturator internus",
+        "M. sphincter ani externus"
+      ],
+      "jawaban_benar": "M. levator ani",
+      "pembahasan": "M. levator ani adalah otot dasar panggul terbesar yang berorigo pada os pubis dan arcus tendineus, serta bercabang menjadi beberapa pars seperti m. iliococcygeus yang melekat di posterior pada koksigis[cite: 65, 68].",
+      "eliminasi_opsi": {
+        "A": "Salah. M. coccygeus berorigo di spina ischiadica, bukan arcus tendineus[cite: 67].",
+        "B": "Benar. M. levator ani mencakup komponen otot iliococcygeus dan melekat pada arcus tendineus[cite: 65, 68].",
+        "C": "Salah. M. piriformis membentuk dinding posterior panggul atas[cite: 69].",
+        "D": "Salah. M. obturator internus menyusun dinding lateral panggul[cite: 70].",
+        "E": "Salah. M. sphincter ani externus mengelilingi liang anus luar[cite: 71]."
+      }
+    },
+    {
+      "nomor": 10,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Osteologi Panggul Anak-Dewasa",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang bayi baru lahir terdiagnosa mengalami kelainan dislokasi articulatio coxae kongenital, di mana hubungan antara acetabulum panggul dan caput femoris terganggu[cite: 72]. Secara osteologi, mangkok sendi acetabulum tersusun atas penggabungan tiga buah elemen tulang koksa seiring pertumbuhan anak menuju remaja awal [cite: 73].<br><br><strong>Pertanyaan:</strong><br>Tulang primer apa sajakah yang berfusi menyusun struktur acetabulum tersebut[cite: 73]?",
+      "pilihan": [
+        "Ilium, ischium, pubis",
+        "Ilium, sacrum, coccygeus",
+        "Pubis, ischium, femur",
+        "Sacrum, coccygeus, ilium",
+        "Ilium, pubis, femur"
+      ],
+      "jawaban_benar": "Ilium, ischium, pubis",
+      "pembahasan": "Acetabulum dibentuk oleh persimpangan fusi berbentuk huruf Y (tri-radiate cartilage) dari tiga tulang penyusun os coxae, yaitu os ilium, os ischium, dan os pubis[cite: 74].",
+      "eliminasi_opsi": {
+        "A": "Benar. Ilium, ischium, dan pubis bersatu membentuk mangkok sendi panggul acetabulum[cite: 74].",
+        "B": "Salah. Sacrum dan coccygeus adalah kolumna vertebralis belakang[cite: 75].",
+        "C": "Salah. Femur adalah tulang paha mandiri, bukan penyusun os coxae[cite: 76].",
+        "D": "Salah. Mengandung unsur sacrum dan coccygeus yang salah[cite: 77]."
+      }
+    },
+    {
+      "nomor": 11,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Vaskularisasi Trauma Gawat Darurat",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Tinggi",
+        "kegawatdaruratan": true,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang laki-laki dibawa ke IGD setelah mengalami fraktur pelvis displaced yang sangat berat disertai kondisi perdarahan internal hebat dan syok hemoragik[cite: 79]. Tim bedah berupaya melakukan stabilisasi cincin panggul untuk mengontrol kerusakan pembuluh darah arteri utama [cite: 79, 80].<br><br><strong>Pertanyaan:</strong><br>Arteri utama panggul manakah yang paling sering mengalami cedera/robekan pada kasus fraktur pelvis berat tersebut[cite: 80]?",
+      "pilihan": [
+        "A. iliaca interna",
+        "A. sacralis mediana",
+        "A. femoralis",
+        "A. rectalis inferior",
+        "A. ovarica"
+      ],
+      "jawaban_benar": "A. iliaca interna",
+      "pembahasan": "Arteri iliaca interna beserta cabang-cabang parietalnya menempel dekat pada periosteum tulang pelvis sejati. Adanya pergeseran fraktur cincin panggul sering merobek pembuluh darah ini, memicu perdarahan retroperitoneal masif[cite: 79, 81].",
+      "eliminasi_opsi": {
+        "A": "Benar. A. iliaca interna adalah sumber utama perdarahan masif fraktur pelvis sejati[cite: 81].",
+        "B": "Salah. A. sacralis mediana adalah cabang kecil di garis tengah sakrum[cite: 82].",
+        "C": "Salah. A. femoralis terletak di luar panggul kecil, di regio paha anterior[cite: 83].",
+        "D": "Salah. A. rectalis inferior memperdarahi anus bawah[cite: 84].",
+        "E": "Salah. A. ovarica berasal langsung dari aorta abdomen menuju adnexa[cite: 85]."
+      }
+    },
+    {
+      "nomor": 12,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Topografi Spatium Peritoneal Wanita",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang pasien wanita mengeluhkan nyeri dalam saat berhubungan seksual (dispareunia)[cite: 86]. Pada pemeriksaan fisik vaginal toucher, dokter menemukan ovarium pasien teraba turun ke inferior dan dapat dipalpasi dengan jelas menonjol di balik kubah vagina bagian belakang (fornix posterior) [cite: 86].<br><br><strong>Pertanyaan:</strong><br>Apakah nama ruang kantung peritoneum pelvis tempat turunnya ovarium sehingga berbatasan langsung dengan fornix posterior tersebut[cite: 87]?",
+      "pilihan": [
+        "Excavatio vesicouterina",
+        "Cavum Douglas (excavatio rectouterina)",
+        "Cavum Retzius",
+        "Fossa ischiorectalis",
+        "Canalis pudendalis"
+      ],
+      "jawaban_benar": "Cavum Douglas (excavatio rectouterina)",
+      "pembahasan": "Cavum Douglas atau excavatio rectouterina adalah kantung peritoneum paling rendah yang terletak di antara dinding posterior uterus/vagina dan dinding anterior rectum[cite: 89]. Bagian dasarnya menempel langsung pada permukaan superior fornix posterior vagina[cite: 86].",
+      "eliminasi_opsi": {
+        "A": "Salah. Excavatio vesicouterina berbatasan dengan fornix anterior vagina[cite: 88].",
+        "B": "Benar. Hubungan topografi fornix posterior vagina adalah dengan Cavum Douglas[cite: 86, 89].",
+        "C": "Salah. Cavum Retzius adalah spatium prevesikal di belakang os pubis[cite: 90].",
+        "D": "Salah. Fossa ischiorectalis adalah ruang lemak di kanan-kiri liang anus[cite: 91].",
+        "E": "Salah. Canalis pudendalis terletak di dinding lateral fossa ischiorectalis[cite: 92]."
+      }
+    },
+    {
+      "nomor": 13,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Anatomi Kanalis Fasial Perineum",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Saat melakukan eksplorasi bedah di dinding lateral fossa ischiorectalis, dokter mengidentifikasi sebuah terowongan fasial pelindung yang dibentuk oleh duplikasi fascia obturatoria[cite: 93]. Terowongan ini menjadi jalur penting lintasan a/v pudenda interna dan n. pudendus [cite: 93, 94].<br><br><strong>Pertanyaan:</strong><br>Apakah nama struktur saluran anatomis penanda jalur neurovaskular tersebut[cite: 94]?",
+      "pilihan": [
+        "Fossa ovarica",
+        "Canalis pudendalis (Alcock's)",
+        "Fossa ischiorectalis",
+        "Cavum Retzius",
+        "Foramen obturatorium"
+      ],
+      "jawaban_benar": "Canalis pudendalis (Alcock's)",
+      "pembahasan": "Canalis pudendalis (saluran Alcock) adalah spesialisasi struktur fasial pembungkus neurovaskular pudenda interna yang menempel pada permukaan m. obturator internus di dinding lateral fossa ischiorectalis[cite: 93, 96].",
+      "eliminasi_opsi": {
+        "A": "Salah. Fossa ovarica terletak di dinding lateral pelvis sejati tempat ovarium[cite: 95].",
+        "B": "Benar. Terowongan fascia obturatoria untuk n. pudendus dinamai kanalis pudendalis[cite: 93, 96].",
+        "C": "Salah. Fossa ischiorectalis adalah nama ruangan besarnya, bukan terowongan fasialnya[cite: 97].",
+        "D": "Salah. Cavum Retzius berada di regio prevesikal anterior[cite: 98]."
+      }
+    },
+    {
+      "nomor": 14,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Landmark Prosedur Tindakan Medis",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang pasien dengan kelainan hematologi memerlukan tindakan biopsi sumsum tulang (bone marrow aspiration)[cite: 100]. Dokter mencari bagian penanda osseus dari tulang panggul yang posisinya superfisial, mudah diraba dari permukaan kulit, dan aman untuk penusukan jarum besar [cite: 100, 101].<br><br><strong>Pertanyaan:</strong><br>Manakah bagian tulang regio pelvis yang paling sering dipilih sebagai lokasi biopsi tersebut[cite: 101]?",
+      "pilihan": [
+        "Tuber ischiadicum",
+        "Spina ischiadica",
+        "Crista iliaca",
+        "Promontorium",
+        "Symphysis pubis"
+      ],
+      "jawaban_benar": "Crista iliaca",
+      "pembahasan": "Crista iliaca (terutama spina iliaca posterior superior) adalah situs anatomi teraman dan termudah untuk punksi biopsi sumsum tulang dewasa karena letaknya yang superfisial di bawah kulit dan kaya jaringan myeloid[cite: 104].",
+      "eliminasi_opsi": {
+        "A": "Salah. Tuber ischiadicum tertutup otot gluteus tebal saat berbaring[cite: 102].",
+        "B": "Salah. Spina ischiadica terletak jauh di dalam rongga panggul sejati[cite: 103].",
+        "C": "Benar. Bagian panggul luar yang paling tepat diraba untuk punksi adalah crista iliaca[cite: 104].",
+        "D": "Salah. Promontorium adalah bagian internal dari os sacrum[cite: 105]."
+      }
+    },
+    {
+      "nomor": 15,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3A",
+        "sub_kompetensi_klinis": "Anatomi Pintu Keluar Panggul",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Dalam mengevaluasi arsitektur panggul, pemahaman batas apertura pelvis inferior (exitus pelvis) sangat penting[cite: 107]. Pada seorang wanita, batas anterior exitus pelvis dibentuk oleh tepi bawah symphysis pubis, yang kemudian dilanjutkan ke arah anterolateral menuju tuber ischiadicum [cite: 107, 108].<br><br><strong>Pertanyaan:</strong><br>Struktur jembatan tulang manakah yang menyusun batas pinggir anterolateral dari pintu bawah panggul tersebut[cite: 109]?",
+      "pilihan": [
+        "Tuber ischiadicum",
+        "Ramus ischiopubicus",
+        "Lig. sacrotuberosum",
+        "Os coccygis",
+        "Promontorium"
+      ],
+      "jawaban_benar": "Ramus ischiopubicus",
+      "pembahasan": "Batas anterolateral pintu bawah panggul (apertura pelvis inferior) dibentuk oleh ramus ischiopubicus, yang merupakan penyatuan dari ramus inferior os pubis dan ramus os ischium[cite: 109].",
+      "eliminasi_opsi": {
+        "A": "Salah. Tuber ischiadicum adalah titik sudut lateral bawah panggul, bukan jembatan anterolateralnya[cite: 108].",
+        "B": "Benar. Batas anterolateral dibentuk oleh struktur tulang ramus ischiopubicus[cite: 109].",
+        "C": "Salah. Lig. sacrotuberosum membentuk batas posterolateral pintu bawah panggul[cite: 110].",
+        "D": "Salah. Os coccygis membatasi ujung posterior exitus pelvis[cite: 111]."
+      }
+    },
+    {
+      "nomor": 16,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Topografi Foramen Pelvis",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang mahasiswa kedokteran diminta menunjuk otot penanda (landmark) di regio glutea posterior[cite: 113]. Otot ini berorigo pada facies pelvina ossis sacri, kemudian berjalan ke arah lateral keluar menembus foramen ischiadicus majus sehingga membagi celah foramen tersebut menjadi dua kompartemen [cite: 113, 114].<br><br><strong>Pertanyaan:</strong><br>Apakah nama otot panggul posterior yang dimaksud[cite: 114]?",
+      "pilihan": [
+        "M. obturator internus",
+        "M. piriformis",
+        "M. coccygeus",
+        "M. levator ani",
+        "M. quadratus femoris"
+      ],
+      "jawaban_benar": "M. piriformis",
+      "pembahasan": "M. piriformis adalah otot yang menempati foramen ischiadicus majus[cite: 113, 116]. Keberadaannya membagi foramen menjadi spatium suprapiriformis (atas) dan infrapiriformis (bawah), menjadikannya struktur pengarah yang sangat penting[cite: 113, 172, 175].",
+      "eliminasi_opsi": {
+        "A": "Salah. M. obturator internus melintasi foramen ischiadicus minus[cite: 115, 120].",
+        "B": "Benar. Otot yang berorigo di sacrum anterior dan keluar lewat foramen majus adalah M. piriformis[cite: 114, 116].",
+        "C": "Salah. M. coccygeus menetap di lantai panggul posterior dalam[cite: 117].",
+        "D": "Salah. M. levator ani menyusun diafragma pelvis bawah[cite: 118]."
+      }
+    },
+    {
+      "nomor": 17,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Kinesiologi Otot Pelvis",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Tinggi",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang pasien menunjukkan kelemahan gerakan eksorotasi (rotasi lateral) femur pada articulation coxae[cite: 120]. Gangguan terjadi pada otot eksorotator spesifik yang berorigo pada facies pelvina membrana obturatoria, berjalan ke belakang memanfaatkan foramen ischiadicus minor sebagai katrol untuk keluar dari panggul [cite: 120].<br><br><strong>Pertanyaan:</strong><br>Apakah nama otot panggul dalam yang mengalami gangguan tersebut[cite: 121]?",
+      "pilihan": [
+        "M. piriformis",
+        "M. obturator internus",
+        "M. coccygeus",
+        "M. iliococcygeus",
+        "M. puborectalis"
+      ],
+      "jawaban_benar": "M. obturator internus",
+      "pembahasan": "M. obturator internus melapisi dinding lateral pelvis kecil sejati, keluar dari rongga panggul dengan berbelok lewat foramen ischiadicus minus menuju trochanter major femur untuk melakukan fungsi eksorotasi paha[cite: 120, 123].",
+      "eliminasi_opsi": {
+        "A": "Salah. M. piriformis keluar melewati foramen ischiadicus majus[cite: 113, 122].",
+        "B": "Benar. Otot pelvik dinding lateral yang melintasi foramen minus adalah M. obturator internus[cite: 120, 123].",
+        "C": "Salah. M. coccygeus adalah otot lantai dasar pelvis[cite: 124].",
+        "D": "Salah. M. iliococcygeus merupakan komponen m. levator ani[cite: 125]."
+      }
+    },
+    {
+      "nomor": 18,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3A",
+        "sub_kompetensi_klinis": "Antropologi Panggul Geometri",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Dalam menganalisis variasi morfologi sistem rangka panggul, mahasiswa mengidentifikasi spesimen panggul sejati yang memiliki rasio ukuran conjugata vera anatomica (diameter anteroposterior) yang secara signifikan lebih panjang daripada ukuran diameter transversanya [cite: 127].<br><br><strong>Pertanyaan:</strong><br>Apakah nama variasi geometri panggul yang memiliki karakteristik oval vertikal tersebut[cite: 127]?",
+      "pilihan": [
+        "Gynecoid",
+        "Platypelloid",
+        "Anthropoid",
+        "Android",
+        "Justo major"
+      ],
+      "jawaban_benar": "Anthropoid",
+      "pembahasan": "Tipe panggul anthropoid memiliki pintu atas panggul (aditus) berbentuk oval memanjang anteroposterior, di mana conjugata vera lebih panjang daripada diameter transversa horizontalnya[cite: 127, 130].",
+      "eliminasi_opsi": {
+        "A": "Salah. Tipe gynecoid memiliki bentuk bulat atau mendekati seimbang[cite: 51, 128].",
+        "B": "Salah. Platypelloid memiliki diameter transversa yang jauh lebih lebar (oval horizontal)[cite: 55, 129].",
+        "C": "Benar. Karakteristik anteroposterior > transversa mendefinisikan tipe anthropoid[cite: 127, 130].",
+        "D": "Salah. Android berbentuk pintu atas menyerupai jantung[cite: 53, 131]."
+      }
+    },
+    {
+      "nomor": 19,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3A",
+        "sub_kompetensi_klinis": "Anatomi Dasar Panggul Muscular",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang dosen anatomi menegaskan bahwa dasar pelvis (pelvic floor) bertindak sebagai lembaran struktural yang memisahkan cavitas pelvis sejati di bagian atas dari kompartemen perineum di bawahnya[cite: 133]. Lembaran penyokong utama yang bersifat muscular ini disusun oleh sekelompok otot tebal [cite: 134].<br><br><strong>Pertanyaan:</strong><br>Apakah nama struktur anatomis utama yang menyusun pars muscular dasar pelvis tersebut[cite: 134]?",
+      "pilihan": [
+        "Membrana perinei",
+        "Diaphragma pelvis (M. levator ani & M. coccygeus)",
+        "Spatium perinei profundum",
+        "Fascia pelvis visceralis",
+        "M. bulbospongiosus"
+      ],
+      "jawaban_benar": "Diaphragma pelvis (M. levator ani & M. coccygeus)",
+      "pembahasan": "Diaphragma pelvis adalah struktur muscular penyokong lantai panggul sejati yang memisahkan cavitas pelvis dari perineum bawah[cite: 133, 136]. Komponen penyusun utamanya adalah M. levator ani dan M. coccygeus[cite: 136].",
+      "eliminasi_opsi": {
+        "A": "Salah. Membrana perinei adalah struktur fibrous penutup spatium perinei, bukan diafragma otot utama[cite: 135].",
+        "B": "Benar. Pars muscular dasar pelvis dibentuk oleh kompleks Diaphragma pelvis[cite: 134, 136].",
+        "C": "Salah. Spatium perinei profundum adalah ruang di bawah diafragma panggul[cite: 58, 137].",
+        "D": "Salah. Fascia pelvis visceralis adalah selaput ikat organ, bukan muscular[cite: 138]."
+      }
+    },
+    {
+      "nomor": 20,
+      "metadata": {
+        "blok": "Pelvis et Perineum",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Vaskularisasi Parietal Panggul",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Dalam mengevaluasi integritas pasokan arterial rongga panggul posterior, dokter memperhatikan pembuluh darah tunggal tak berpasangan yang keluar langsung dari aorta abdominalis[cite: 140, 141]. Arteri ini muncul tepat di garis tengah posterior sesaat sebelum aorta bercabang menjadi sepasang a. iliaca communis [cite: 141].<br><br><strong>Pertanyaan:</strong><br>Apakah nama pembuluh darah arteri spesifik yang menyusuri sacrum anterior tersebut[cite: 141]?",
+      "pilihan": [
+        "A. iliaca interna",
+        "A. sacralis mediana",
+        "A. rectalis inferior",
+        "A. ovarica",
+        "A. pudenda interna"
+      ],
+      "jawaban_benar": "A. sacralis mediana",
+      "pembahasan": "Arteri sacralis mediana muncul dari aspek posterior aorta abdominalis tepat di atas bifurkasio (setinggi vertebra L4) dan berjalan turun menyuplai regio sacrum di garis tengah posterior pelvis[cite: 141, 143].",
+      "eliminasi_opsi": {
+        "A": "Salah. A. iliaca interna adalah cabang terminal dari a. iliaca communis[cite: 142].",
+        "B": "Benar. Arteri median tunggal pra-bifurkasio aorta adalah A. sacralis mediana[cite: 141, 143].",
+        "C": "Salah. A. rectalis inferior berasal dari a. pudenda interna di perineum[cite: 84, 144].",
+        "D": "Salah. A. ovarica berasal dari aorta lumbal bagian atas secara lateral[cite: 145]."
+      }
+    },
+    {
+      "nomor": 21,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Korelasi Klinis Nyeri Alih Pelvis",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Tinggi",
+        "kegawatdaruratan": true,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita berusia 25 tahun datang ke IGD dengan keluhan nyeri perut bawah mendadak yang sangat hebat disertai sensasi nyeri alih menjalar ke arah bahu (Danforth sign)[cite: 179]. Tes kehamilan urin positif, dan USG pelvis menunjukkan cavum uteri kosong disertai adanya tanda massa dan hemoperitoneum di tuba [cite: 180].<br><br><strong>Pertanyaan:</strong><br>Iritasi darah pada struktur anatomi manakah yang memicu timbulnya referred pain ke bahu pasien tersebut[cite: 180]?",
+      "pilihan": [
+        "Peritoneum pelvis",
+        "Peritoneum subdiafragma",
+        "N. pudendus",
+        "Plexus sacralis",
+        "N. obturatorius"
+      ],
+      "jawaban_benar": "Peritoneum subdiafragma",
+      "pembahasan": "Darah dari ruptur kehamilan tuba mengalir naik ke atas saat berbaring dan mengiritasi peritoneum parietale subdiafragma[cite: 180, 182]. Saraf sensorik pembawa impulsnya adalah N. phrenicus (C3-C5), yang berbagi dermatom somatik dengan regio bahu luar[cite: 180, 182].",
+      "eliminasi_opsi": {
+        "A": "Salah. Iritasi peritoneum pelvis memicu nyeri lokal abdomen bawah murni[cite: 181].",
+        "B": "Benar. Akumulasi darah mengiritasi peritoneum subdiafragma memicu referred pain bahu[cite: 180, 182].",
+        "C": "Salah. N. pudendus mensarafi perineum bagian bawah[cite: 183].",
+        "D": "Salah. Plexus sacralis mensarafi panggul internal dan ekstremitas inferior[cite: 184]."
+      }
+    },
+    {
+      "nomor": 22,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Topografi Kehamilan Ektopik",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Pada kasus kehamilan ektopik terganggu (KET) yang mengakibatkan kondisi kedaruratan hemoperitoneum di atas [cite: 180], dokter menjelaskan bahwa telah terjadi kesalahan tempat nidasi blastokista di luar lingkungan endometrium cavum uteri yang normal [cite: 186].<br><br><strong>Pertanyaan:</strong><br>Apakah organ saluran reproduksi internal wanita yang menjadi lokasi tersering terjadinya insidensi kelainan tersebut[cite: 186]?",
+      "pilihan": [
+        "Ovarium",
+        "Cavum peritoneum",
+        "Tuba falopi",
+        "Cervix",
+        "Cavum Douglas"
+      ],
+      "jawaban_benar": "Tuba falopi",
+      "pembahasan": "Lebih dari 95% kasus kehamilan ektopik terjadi di dalam lumen saluran tuba falopi (paling sering di pars ampullaris tuba) akibat hambatan migrasi mekanis[cite: 189].",
+      "eliminasi_opsi": {
+        "A": "Salah. Ovarium adalah lokasi implantasi ektopik primer yang sangat langka[cite: 187].",
+        "B": "Salah. Kehamilan abdominal intraperitoneal primer memiliki insidensi sangat rendah[cite: 188].",
+        "C": "Benar. Tuba falopi merupakan situs utama terjadinya kehamilan ektopik terganggu[cite: 189].",
+        "D": "Salah. Cervix uteri memicu kehamilan servikal bawah yang jarang[cite: 190]."
+      }
+    },
+    {
+      "nomor": 23,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Topografi Penumpukan Cairan Eksudat",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita dengan riwayat Pelvic Inflammatory Disease (PID) mengalami komplikasi pembentukan abses pelvik[cite: 192]. Akibat pengaruh gravitasi saat berbaring, cairan eksudat purulen (pus) berakumulasi mengumpul di titik kantung peritoneum pelvis paling rendah[cite: 192]. Dokter merencanakan insisi evakuasi melalui dinding vagina [cite: 193].<br><br><strong>Pertanyaan:</strong><br>Apakah nama ruang anatomis spesifik tempat terkumpulnya pus di belakang uterus tersebut[cite: 193]?",
+      "pilihan": [
+        "Excavatio vesicouterina",
+        "Excavatio rectouterina (Cavum Douglas)",
+        "Fossa ovarica",
+        "Mesosalpinx",
+        "Cavum Retzius"
+      ],
+      "jawaban_benar": "Excavatio rectouterina (Cavum Douglas)",
+      "pembahasan": "Excavatio rectouterina atau Cavum Douglas adalah lekukan refleksi peritoneum paling inferior pada pelvis wanita, terletak di antara uterus-vagina (anterior) dan rectum (posterior) sehingga menjadi tempat penumpukan cairan gravitasi[cite: 195].",
+      "eliminasi_opsi": {
+        "A": "Salah. Excavatio vesicouterina adalah kantung anterior di depan rahim[cite: 194].",
+        "B": "Benar. Kantung terendah panggul wanita tempat akumulasi cairan bebas adalah Cavum Douglas[cite: 195].",
+        "C": "Salah. Fossa ovarica adalah cekungan ovarium di dinding lateral panggul[cite: 196].",
+        "D": "Salah. Mesosalpinx adalah lembar peritoneum penggantung tuba falopi[cite: 197]."
+      }
+    },
+    {
+      "nomor": 24,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Tindakan Operatif Ginekologi",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Pada kelanjutan penanganan abses pelvis yang terlokalisir di dalam Cavum Douglas di atas [cite: 193], ginekolog memasukkan spekulum dan melakukan tindakan penyayatan bedah menembus lapisan fornix posterior vagina untuk menguras cairan nanah [cite: 193].<br><br><strong>Pertanyaan:</strong><br>Apakah nama istilah tindakan operatif penyayatan kubah vagina posterior tersebut[cite: 199]?",
+      "pilihan": [
+        "Kuldosentesis",
+        "Kolpotomi",
+        "Episiotomi",
+        "Histerektomi",
+        "Salpingektomi"
+      ],
+      "jawaban_benar": "Kolpotomi",
+      "pembahasan": "Tindakan menyayat dinding vagina secara terbuka untuk tujuan operatif/drainase rongga peritoneal dinamakan kolpotomi (khususnya kolpotomi posterior lewat fornix posterior)[cite: 193, 201].",
+      "eliminasi_opsi": {
+        "A": "Salah. Kuldosentesis adalah tindakan punksi/penusukan jarum aspirasi diagnostik, bukan insisi pisau terbuka[cite: 200].",
+        "B": "Benar. Insisi terbuka pada mukosa/dinding vagina didefinisikan sebagai kolpotomi[cite: 199, 201].",
+        "C": "Salah. Episiotomi adalah insisi luar pada perineum persalinan[cite: 202].",
+        "D": "Salah. Histerektomi adalah operasi pengangkatan organ uterus[cite: 203]."
+      }
+    },
+    {
+      "nomor": 25,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Fisiologi Jalur Reproduksi Wanita",
+        "tingkat_kognitif": "C3 - Aplikasi",
+        "tingkat_kesulitan": "Mudah",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita berusia 32 tahun menjalani prosedur sterilisasi kontrasepsi mantap berupa ligasi tuba falopi[cite: 205]. Agar tindakan ini efektif 100% menghalangi konsepsi, ligasi harus memutus jalur migrasi sel yang mencegah fertilisasi yang secara normal terjadi di saluran tersebut [cite: 206].<br><br><strong>Pertanyaan:</strong><br>Di bagian segmen tuba falopi manakah fertilisasi (pertemuan ovum-sperma) secara normal paling sering berlangsung[cite: 206]?",
+      "pilihan": [
+        "Isthmus",
+        "Ampulla",
+        "Pars intramural",
+        "Infundibulum",
+        "Cavum uteri"
+      ],
+      "jawaban_benar": "Ampulla",
+      "pembahasan": "Ampulla tuba falopi adalah segmen saluran yang paling luas dan panjang, bertindak sebagai situs fisiologis utama berlangsungnya proses pembuahan (fertilisasi) sperma pada ovum[cite: 206, 208].",
+      "eliminasi_opsi": {
+        "A": "Salah. Isthmus adalah segmen proksimal tuba yang sempit mendekati miometrium[cite: 207].",
+        "B": "Benar. Proses fertilisasi manusia secara anatomis bertempat di wilayah ampulla tuba[cite: 206, 208].",
+        "C": "Salah. Pars intramural berada di dalam ketebalan dinding uterus[cite: 209].",
+        "D": "Salah. Infundibulum adalah ujung terluar penampung oosit yang berfimbria[cite: 210]."
+      }
+    },
+    {
+      "nomor": 26,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Komplikasi Bedah Ginekologi Histerektomi",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Tinggi",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang ahli bedah ginekologi sedang melakukan prosedur histerektomi total pada pasien tumor rahim[cite: 212]. Saat hendak melakukan isolasi dan meligasi Arteri uterina di dekat parametrium bawah, dokter harus mengidentifikasi secara cermat struktur traktus urinarius yang disilang oleh arteri tersebut [cite: 212, 213].<br><br><strong>Pertanyaan:</strong><br>Struktur saluran urinaria manakah yang melintas tepat di bawah (posterior) arteri uterina dan rawan terikat secara tidak sengaja[cite: 213]?",
+      "pilihan": [
+        "Ovarium",
+        "Ureter",
+        "Vesica urinaria",
+        "Rectum",
+        "Vagina"
+      ],
+      "jawaban_benar": "Ureter",
+      "pembahasan": "Arteri uterina berjalan melintasi panggul dan menyilang di anterior (di atas) saluran ureter sejati[cite: 213, 669]. Hubungan topografi 'water under the bridge' ini membuat ureter sangat rentan mengalami cedera iatrogenik terikat/terpotong saat ligasi a. uterina dalam histerektomi[cite: 212, 669].",
+      "eliminasi_opsi": {
+        "A": "Salah. Ovarium terletak superior lateral di dalam rongga intraperitoneal[cite: 214].",
+        "B": "Benar. Ureter disilang tepat di anteriornya oleh pembuluh darah a. uterina[cite: 213, 669].",
+        "C": "Salah. Vesica urinaria terletak di anterior bawah inferior rahim[cite: 216].",
+        "D": "Salah. Rectum menempati rongga panggul bagian posterior belakang[cite: 217]."
+      }
+    },
+    {
+      "nomor": 27,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "4A",
+        "sub_kompetensi_klinis": "Defek Lantai Kandung Kemih Uroginekologi",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang wanita mengeluhkan adanya sensasi rasa mengganjal yang tidak nyaman di jalan lahirnya[cite: 219]. Hasil pemeriksaan fisik spekulum ginekologi menunjukkan adanya massa menonjol (bulging) pada dinding anterior vagina yang disebabkan oleh penurunan posisi organ vesica urinaria akibat kelemahan fasial penyokong [cite: 219].<br><br><strong>Pertanyaan:</strong><br>Apakah nama diagnosis klinis hernia organ visera kandung kemih tersebut[cite: 220]?",
+      "pilihan": [
+        "Rektokel",
+        "Sistokel",
+        "Enterokel",
+        "Prolaps uteri",
+        "Uretrokel"
+      ],
+      "jawaban_benar": "Sistokel",
+      "pembahasan": "Sistokel (cystocele) didefinisikan sebagai herniasi atau prolaps kandung kemih (vesica urinaria) ke arah lumen vagina akibat kelemahan sekat fascia pubovesikocervikal di dinding anterior vagina[cite: 219, 222].",
+      "eliminasi_opsi": {
+        "A": "Salah. Rektokel adalah penonjolan rektum melalui dinding posterior vagina[cite: 221].",
+        "B": "Benar. Penurunan vesica urinaria ke dinding anterior vagina disebut sistokel[cite: 219, 222].",
+        "C": "Salah. Enterokel adalah herniasi kantung usus halus di puncak posterior vagina[cite: 223].",
+        "D": "Salah. Prolaps uteri adalah turunnya serviks/korpus uteri ke introitus[cite: 224]."
+      }
+    },
+    {
+      "nomor": 28,
+      "metadata": {
+        "blok": "Organa Genitalia Feminina",
+        "tingkat_kompetensi_skdi": "3B",
+        "sub_kompetensi_klinis": "Kelainan Obstruksi Saluran Genital",
+        "tingkat_kognitif": "C4 - Analisis",
+        "tingkat_kesulitan": "Sedang",
+        "kegawatdaruratan": false,
+        "xp": 20
+      },
+      "pertanyaan": "Seorang remaja putri berusia 15 tahun mengeluhkan nyeri perut bawah kronis yang bersifat siklik setiap bulannya namun dilaporkan belum pernah mengalami menstruasi sama sekali[cite: 226]. Pemeriksaan fisik menunjukkan orificium vagina tertutup oleh selaput tebal menonjol kebiruan akibat bendungan darah haid di vagina [cite: 227].<br><br><strong>Pertanyaan:</strong><br>Apakah nama istilah klinis bagi kondisi akumulasi bendungan darah di dalam vagina tersebut[cite: 227]?",
+      "pilihan": [
+        "Hematocele",
+        "Hematokolpos",
+        "Hidronephrosis",
+        "Amenorrhea primer",
+        "Endometriosis"
+      ],
+      "jawaban_benar": "Hematokolpos",
+      "pembahasan": "Hematokolpos adalah kondisi medis di mana darah menstruasi terperangkap dan menumpuk di dalam kavum lumen vagina yang meregang akibat adanya sumbatan jalan lahir luar total[cite: 227, 229].",
+      "eliminasi_opsi": {
+        "A": "Salah. Hematocele merujuk pada darah di kantung tunika/peritoneum bebas[cite: 228, 357].",
+        "B": "Benar. Penumpukan darah haid di dalam saluran vagina disebut hematokolpos[cite: 227, 229].",
+        "C": "Salah. Hidronephrosis adalah dilatasi urin sistem pelviokalises ginjal[cite: 230, 522].",
+        "D": "Salah. Amenorrhea primer adalah deskripsi gejalanya (belum haid pada usia 15), bukan nama patologi retensi darahnya[cite: 226, 231]."
+      }
+    }
+  ]
+}

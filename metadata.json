@@ -1,0 +1,6 @@
+{
+  "name": "CBT Latihan Soal Pro",
+  "description": "Aplikasi Computer Based Test (CBT) interaktif dengan simulasi ujian, analisis kompetensi klinis, pembahasan lengkap, dan gamifikasi sistem naik level (XP & Streak).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
