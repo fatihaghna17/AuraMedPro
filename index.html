@@ -18,6 +18,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
   </head>
   <body>
+    <div id="error-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,0,0,0.9); color:white; padding:20px; z-index:9999; overflow:auto;">
+      <h2>Fatal Error</h2>
+      <pre id="error-message" style="white-space:pre-wrap; word-break:break-all;"></pre>
+      <button onclick="document.getElementById('error-overlay').style.display='none'">Tutup</button>
+    </div>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        document.getElementById('error-overlay').style.display = 'block';
+        document.getElementById('error-message').innerText += msg + '\n' + (error ? error.stack : '') + '\n\n';
+        return false;
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        document.getElementById('error-overlay').style.display = 'block';
+        document.getElementById('error-message').innerText += 'Unhandled Promise: ' + event.reason + '\n\n';
+      });
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
