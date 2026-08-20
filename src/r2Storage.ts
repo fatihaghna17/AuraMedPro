@@ -1,5 +1,4 @@
-import { Question } from './types'; // Assuming types are in types.ts or we can use any
-
+// r2Storage.ts - Helper functions for Cloudflare R2
 export async function uploadQuestionsToR2(filename: string, questions: any[]): Promise<{ r2_url: string; r2_key: string } | null> {
   try {
     // 1. Dapatkan Presigned URL dari Netlify Function

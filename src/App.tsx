@@ -1593,7 +1593,11 @@ export default function App() {
         const results = await Promise.all(fetchPromises);
 
         results.forEach(({ row, questions }) => {
-          mappedData[row.name] = questions;
+          if (questions && Array.isArray(questions)) {
+            mappedData[row.name] = questions;
+          } else {
+            mappedData[row.name] = []; // Fallback aman
+          }
           
           // Cek apakah pemiliknya adalah admin (global database)
           const ownerProfile = row.profiles as any;
