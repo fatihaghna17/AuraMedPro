@@ -3867,7 +3867,7 @@ export default function App() {
                                     }`}
                                   >
                                     <div className="flex justify-between items-start mb-4 gap-3 relative z-10">
-                                      <h4 className={`font-bold text-sm leading-snug ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                                      <h4 className={`font-bold text-sm leading-snug flex-1 pr-2 break-words ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
                                         {displayName}
                                       </h4>
                                       <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${
@@ -3917,6 +3917,16 @@ export default function App() {
                                           title="Batasi jumlah soal yang diujikan"
                                           className={`w-16 px-2 py-1.5 rounded-lg text-center border text-xs font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500`}
                                         />
+                                        
+                                        {profileUsername === 'collector' && (
+                                          <button
+                                            onClick={(e) => downloadDatabase(key, questions, e)}
+                                            className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors"
+                                            title="Unduh bank soal"
+                                          >
+                                            <Download className="w-4 h-4" />
+                                          </button>
+                                        )}
                                         
                                         {!globalDatabases.includes(key) && (
                                           <button
@@ -3987,7 +3997,7 @@ export default function App() {
                                   }`}
                                 >
                                   <div className="flex justify-between items-start mb-4 gap-3 relative z-10">
-                                    <h4 className={`font-bold text-sm leading-snug ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                                    <h4 className={`font-bold text-sm leading-snug flex-1 pr-2 break-words ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
                                       {displayName}
                                     </h4>
                                     <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${
@@ -4035,6 +4045,16 @@ export default function App() {
                                         title="Batasi jumlah soal yang diujikan"
                                         className={`w-16 px-2 py-1.5 rounded-lg text-center border text-xs font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500`}
                                       />
+                                      
+                                      {profileUsername === 'collector' && (
+                                        <button
+                                          onClick={(e) => downloadDatabase(key, questions, e)}
+                                          className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors"
+                                          title="Unduh bank soal"
+                                        >
+                                          <Download className="w-4 h-4" />
+                                        </button>
+                                      )}
                                       
                                       {!globalDatabases.includes(key) && (
                                         <button
