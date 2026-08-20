@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { DashboardCharts } from './components/DashboardCharts';
+import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import {
   CheckCircle2,
   XCircle,
@@ -1568,10 +1569,31 @@ export default function App() {
       const uploaders: Record<string, string> = {};
       
       if (data) {
-        data.forEach((row: any) => {
-          mappedData[row.name] = typeof row.questions_json === 'string'
+        const fetchPromises = data.map(async (row: any) => {
+          let questions = typeof row.questions_json === 'string'
             ? JSON.parse(row.questions_json)
             : row.questions_json;
+            
+          if (questions && !Array.isArray(questions) && questions.r2_url) {
+            try {
+              const res = await fetch(questions.r2_url);
+              if (res.ok) {
+                questions = await res.json();
+              } else {
+                questions = [];
+              }
+            } catch (err) {
+              console.error('Failed to fetch from R2:', err);
+              questions = [];
+            }
+          }
+          return { row, questions };
+        });
+
+        const results = await Promise.all(fetchPromises);
+
+        results.forEach(({ row, questions }) => {
+          mappedData[row.name] = questions;
           
           // Cek apakah pemiliknya adalah admin (global database)
           const ownerProfile = row.profiles as any;
@@ -1835,9 +1857,11 @@ export default function App() {
         // Simpan ke database Supabase
         (async () => {
           try {
+            const r2Data = await uploadQuestionsToR2(file.name, finalQuestions);
+            const storagePayload = r2Data ? r2Data : finalQuestions;
             const { error } = await supabase
               .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
+              .upsert({ user_id: currentUser.id, name: file.name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
@@ -1913,9 +1937,11 @@ export default function App() {
       try {
         // Simpan setiap bank soal ke Supabase
         for (const [name, questions] of Object.entries(newDatabases)) {
+          const r2Data = await uploadQuestionsToR2(name, questions);
+          const storagePayload = r2Data ? r2Data : questions;
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
           if (error) throw error;
         }
 
@@ -1980,9 +2006,11 @@ export default function App() {
     if (finalQuestions && finalQuestions.length > 0) {
       if (currentUser) {
         try {
+          const r2Data = await uploadQuestionsToR2(name, finalQuestions);
+          const storagePayload = r2Data ? r2Data : finalQuestions;
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
           if (error) throw error;
           
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
