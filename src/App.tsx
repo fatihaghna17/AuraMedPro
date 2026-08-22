@@ -1051,7 +1051,7 @@ export default function App() {
   // Save history helper
   const saveHistoryToLocalStorage = (newHistory: HistoryEntry[]) => {
     setQuizHistory(newHistory);
-    localStorage.setItem('cbtQuizHistory', JSON.stringify(newHistory));
+    try { localStorage.setItem('cbtQuizHistory', JSON.stringify(newHistory)); } catch(e) { console.warn('localStorage full'); }
   };
 
   // Helper to show custom dynamic toast
@@ -1248,7 +1248,7 @@ export default function App() {
       );
 
       setPendingSessions(mergedSessions);
-      localStorage.setItem('cbt_active_sessions', JSON.stringify(mergedSessions));
+      try { localStorage.setItem('cbt_active_sessions', JSON.stringify(mergedSessions)); } catch(e) { console.warn('localStorage full'); }
     } catch (err) {
       console.error('Error checking active quiz session:', err);
     }
@@ -1310,7 +1310,7 @@ export default function App() {
         } catch (e) {}
 
         const updatedList = localList.filter(s => s.id !== sessionId);
-        localStorage.setItem('cbt_active_sessions', JSON.stringify(updatedList));
+        try { localStorage.setItem('cbt_active_sessions', JSON.stringify(updatedList)); } catch(e) { console.warn('localStorage full'); }
         setPendingSessions(updatedList);
 
         if (updatedList.length > 0) {
@@ -1499,7 +1499,7 @@ export default function App() {
           localList.unshift(currentSession);
         }
 
-        localStorage.setItem('cbt_active_sessions', JSON.stringify(localList));
+        try { localStorage.setItem('cbt_active_sessions', JSON.stringify(localList)); } catch(e) { console.warn('localStorage full'); }
         setPendingSessions(localList);
 
         await supabase
@@ -1869,7 +1869,7 @@ export default function App() {
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
-            localStorage.setItem('questionDB', JSON.stringify(updated));
+            // Data disimpan di Supabase, tidak perlu localStorage
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
             triggerToast(`Berhasil memuat ${finalQuestions.length} soal dari "${file.name}"`, '✅');
           } catch (err) {
@@ -1877,7 +1877,7 @@ export default function App() {
             // Fallback lokal jika database cloud bermasalah
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
-            localStorage.setItem('questionDB', JSON.stringify(updated));
+            // Data disimpan di Supabase, tidak perlu localStorage
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
             triggerToast(`Berhasil memuat soal secara lokal, gagal menyimpan di cloud Supabase`, '⚠️');
           }
@@ -1951,7 +1951,7 @@ export default function App() {
 
         const updated = { ...questionDatabase, ...newDatabases };
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
         
         // Auto-select all newly loaded databases
         const newKeys = Object.keys(newDatabases);
@@ -1973,7 +1973,7 @@ export default function App() {
         // Tetap simpan lokal sebagai fallback
         const updated = { ...questionDatabase, ...newDatabases };
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
         const newKeys = Object.keys(newDatabases);
         setSelectedDatabases((prev) => [...new Set([...prev, ...newKeys])]);
         triggerToast(`Berhasil memuat folder secara lokal, gagal menyimpan di cloud Supabase`, '⚠️');
@@ -2027,7 +2027,7 @@ export default function App() {
 
       const updated = { ...questionDatabase, [name]: finalQuestions };
       setQuestionDatabase(updated);
-      localStorage.setItem('questionDB', JSON.stringify(updated));
+      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases((prev) => [...new Set([...prev, name])]);
       
       setPasteModalOpen(false);
@@ -2051,7 +2051,7 @@ export default function App() {
         const updated = { ...questionDatabase };
         delete updated[name];
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
         triggerToast(`File "${name}" dihapus dari database`, '🗑');
       } catch (err) {
@@ -2060,7 +2060,7 @@ export default function App() {
         const updated = { ...questionDatabase };
         delete updated[name];
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
         triggerToast(`File "${name}" dihapus secara lokal, gagal menghapus di cloud`, '⚠️');
       }
@@ -2092,7 +2092,7 @@ export default function App() {
         keysToRemove.forEach((k) => delete updated[k]);
 
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
 
         setSelectedDatabases((prev) => prev.filter((d) => !keysToRemove.includes(d)));
         setQuestionLimits((prev) => {
@@ -2108,7 +2108,7 @@ export default function App() {
         const updated = { ...questionDatabase };
         keysToRemove.forEach((k) => delete updated[k]);
         setQuestionDatabase(updated);
-        localStorage.setItem('questionDB', JSON.stringify(updated));
+        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => !keysToRemove.includes(d)));
         triggerToast(`Folder dihapus secara lokal, gagal menghapus beberapa file di cloud`, '⚠️');
       }
@@ -2127,13 +2127,13 @@ export default function App() {
           .eq('user_id', currentUser.id);
         if (error) throw error;
         setQuestionDatabase({});
-        localStorage.removeItem('questionDB');
+        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases([]);
         triggerToast('Seluruh database berhasil dibersihkan', '🗑');
       } catch (err) {
         console.error(err);
         setQuestionDatabase({});
-        localStorage.removeItem('questionDB');
+        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases([]);
         triggerToast('Database dibersihkan lokal, gagal membersihkan di cloud', '⚠️');
       }
@@ -2193,7 +2193,7 @@ export default function App() {
       
       const updated = { ...questionDatabase, ...SAMPLE_BANKS };
       setQuestionDatabase(updated);
-      localStorage.setItem('questionDB', JSON.stringify(updated));
+      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases(Object.keys(SAMPLE_BANKS));
       triggerToast('Bank soal sampel kedokteran & sains berhasil dimuat!', '✨');
     } catch (err) {
@@ -2201,7 +2201,7 @@ export default function App() {
       // Fallback lokal
       const updated = { ...questionDatabase, ...SAMPLE_BANKS };
       setQuestionDatabase(updated);
-      localStorage.setItem('questionDB', JSON.stringify(updated));
+      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases(Object.keys(SAMPLE_BANKS));
       triggerToast('Bank soal sampel dimuat lokal, gagal memuat ke cloud', '⚠️');
     }
@@ -2688,7 +2688,7 @@ export default function App() {
           } catch (e) {}
 
           const updatedList = localList.filter(s => s.id !== activeId);
-          localStorage.setItem('cbt_active_sessions', JSON.stringify(updatedList));
+          try { localStorage.setItem('cbt_active_sessions', JSON.stringify(updatedList)); } catch(e) { console.warn('localStorage full'); }
           setPendingSessions(updatedList);
 
           if (updatedList.length > 0) {
@@ -2813,7 +2813,7 @@ export default function App() {
             localList.unshift(currentSession);
           }
 
-          localStorage.setItem('cbt_active_sessions', JSON.stringify(localList));
+          try { localStorage.setItem('cbt_active_sessions', JSON.stringify(localList)); } catch(e) { console.warn('localStorage full'); }
           setPendingSessions(localList);
 
           await supabase
