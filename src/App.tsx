@@ -50,7 +50,8 @@ import {
   Maximize2,
   Minimize2,
   Smartphone,
-  Share2
+  Share2,
+  Brain
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -384,6 +385,8 @@ import {
   parseRawFileToQuestions
 } from './utils/quizUtils';
 import { useQuizState } from './hooks/useQuizState';
+import { useSRS } from './hooks/useSRS';
+import { getIntervalLabel, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 
 export default function App() {
   // === React states ===
@@ -491,7 +494,7 @@ export default function App() {
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'analysis' | 'profile'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'analysis' | 'profile'>('home');
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
@@ -517,6 +520,7 @@ export default function App() {
     adaptiveQuestionPool, setAdaptiveQuestionPool
   } = useQuizState();
 
+  const srs = useSRS(currentUser?.id || null);
   // PWA iOS Install Prompt effect
   useEffect(() => {
     const isIos = /ipad|iphone|ipod/.test(navigator.userAgent.toLowerCase()) && !(window as any).MSStream;
@@ -2323,6 +2327,12 @@ export default function App() {
     const updatedHistory = [newEntry, ...quizHistory].slice(0, 50);
     saveHistoryToLocalStorage(updatedHistory);
 
+    // Auto-add wrong answers to Spaced Repetition
+    if (currentUser) {
+      const dbName = selectedDatabases[0] || 'Kuis';
+      srs.addWrongAnswers(currentQuiz, userAnswers, dbName);
+    }
+
     setLastQuizScore(finalScore);
 
     // Delete active session and update total questions count in Supabase
@@ -2759,6 +2769,7 @@ export default function App() {
                       { id: 'home', label: 'Beranda', icon: Home },
                       { id: 'banks', label: 'Bank Soal', icon: BookOpen },
                       { id: 'new', label: 'Baru', icon: PlusCircle },
+                      { id: 'srs', label: 'Spaced Repetition', icon: Brain },
                       { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                       { id: 'profile', label: 'Profil', icon: User },
                     ].map((item) => {
@@ -2768,7 +2779,7 @@ export default function App() {
                         <button
                           key={item.id}
                           onClick={() => setDashboardTab(item.id as any)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
                             isActive
                               ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/10 scale-[1.02]'
                               : theme === 'dark'
@@ -2776,8 +2787,17 @@ export default function App() {
                                 : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                           }`}
                         >
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </div>
+                          {item.id === 'srs' && srs.stats.dueCount > 0 && (
+                            <span className={`text-[9px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 ${
+                              isActive ? 'bg-white text-rose-500' : 'bg-rose-500 text-white'
+                            }`}>
+                              {srs.stats.dueCount > 9 ? '9+' : srs.stats.dueCount}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -2834,6 +2854,7 @@ export default function App() {
                   { id: 'home', label: 'Beranda', icon: Home },
                   { id: 'banks', label: 'Bank Soal', icon: BookOpen },
                   { id: 'new', label: 'Baru', icon: PlusCircle },
+                  { id: 'srs', label: 'SRS', icon: Brain },
                   { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                   { id: 'profile', label: 'Profil', icon: User },
                 ].map((item) => {
@@ -2843,7 +2864,7 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => setDashboardTab(item.id as any)}
-                      className={`flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${
+                      className={`relative flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${
                         isActive
                           ? 'text-indigo-500 dark:text-indigo-400 scale-105'
                           : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
@@ -2851,6 +2872,11 @@ export default function App() {
                     >
                       <Icon className="w-5 h-5" />
                       <span className="text-[9px] font-bold">{item.label}</span>
+                      {item.id === 'srs' && srs.stats.dueCount > 0 && (
+                        <span className="absolute top-1 right-2 bg-rose-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                          {srs.stats.dueCount > 9 ? '9+' : srs.stats.dueCount}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -4385,6 +4411,118 @@ export default function App() {
               </div>
             )}
 
+            {/* Box: SRS Dashboard */}
+            {dashboardTab === 'srs' && (
+              <div className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} min-h-[60vh] relative`}>
+                {srs.isReviewing ? (
+                  <div className={`absolute inset-0 z-10 p-6 flex flex-col rounded-2xl ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold flex items-center gap-2"><Brain className="w-6 h-6 text-indigo-500" /> Review SRS</h2>
+                      <button onClick={srs.stopReview} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"><X className="w-5 h-5"/></button>
+                    </div>
+                    {srs.dueCards[srs.currentReviewIndex] ? (
+                      <div className="flex-1 flex flex-col">
+                        <div className="mb-4 text-sm text-slate-500">
+                          Kartu {srs.currentReviewIndex + 1} dari {srs.dueCards.length}
+                        </div>
+                        <div className="flex-1 overflow-y-auto mb-6 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div dangerouslySetInnerHTML={{ __html: renderHtmlText(srs.dueCards[srs.currentReviewIndex].question_json.pertanyaan) }} />
+                          {srs.dueCards[srs.currentReviewIndex].question_json.pilihan && (
+                            <div className="mt-6 space-y-2">
+                              {Object.entries(srs.dueCards[srs.currentReviewIndex].question_json.pilihan).map(([key, val]: any) => (
+                                <div key={key} className="p-3 border rounded-lg dark:border-slate-700">{key.toUpperCase()}. {val}</div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
+                            Jawaban Benar: {getCorrectLetterForQuestion(srs.dueCards[srs.currentReviewIndex].question_json)}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                          <button onClick={() => srs.submitRating(0)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition">0: Blackout</button>
+                          <button onClick={() => srs.submitRating(1)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition">1: Salah</button>
+                          <button onClick={() => srs.submitRating(2)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition">2: Hampir</button>
+                          <button onClick={() => srs.submitRating(3)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-lime-500 rounded-lg hover:bg-lime-600 transition">3: Sulit</button>
+                          <button onClick={() => srs.submitRating(4)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition">4: Ragu</button>
+                          <button onClick={() => srs.submitRating(5)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition">5: Sempurna</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
+                        <CheckCircle2 className="w-16 h-16 text-emerald-500 mb-4" />
+                        <span className="text-xl font-bold">Review Selesai!</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-2xl font-black flex items-center gap-2"><Brain className="w-6 h-6 text-indigo-500" /> Spaced Repetition (SRS)</h2>
+                        <p className="text-sm text-slate-500 mt-1">Review soal yang pernah salah agar ilmu menempel selamanya.</p>
+                      </div>
+                      <button 
+                        onClick={srs.startReview}
+                        disabled={srs.stats.dueCount === 0}
+                        className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition ${srs.stats.dueCount > 0 ? 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600 cursor-not-allowed'}`}
+                      >
+                        <Play className="w-4 h-4" /> Mulai Review ({srs.stats.dueCount})
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                      <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/30 bg-rose-50 dark:bg-rose-900/10">
+                        <div className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">Due Today</div>
+                        <div className="text-2xl font-black text-rose-700 dark:text-rose-400">{srs.stats.dueCount}</div>
+                      </div>
+                      <div className="p-4 rounded-xl border border-indigo-200 dark:border-indigo-900/30 bg-indigo-50 dark:bg-indigo-900/10">
+                        <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Total Kartu</div>
+                        <div className="text-2xl font-black text-indigo-700 dark:text-indigo-400">{srs.stats.total}</div>
+                      </div>
+                      <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-900/10">
+                        <div className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Retention</div>
+                        <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{srs.stats.retentionRate}%</div>
+                      </div>
+                      <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-900/10">
+                        <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">Mature</div>
+                        <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{srs.stats.mature.length}</div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 dark:border-slate-700 text-xs text-slate-500">
+                            <th className="pb-3 pr-4 font-semibold">Soal</th>
+                            <th className="pb-3 pr-4 font-semibold whitespace-nowrap">Review Berikutnya</th>
+                            <th className="pb-3 pr-4 font-semibold text-center">EF</th>
+                            <th className="pb-3 pr-4 font-semibold text-center">Reps</th>
+                            <th className="pb-3 font-semibold text-right">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-sm">
+                          {srs.cards.map((c, i) => (
+                            <tr key={i} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                              <td className="py-3 pr-4 max-w-[200px] truncate">{c.question_json.pertanyaan.replace(/<[^>]*>?/gm, '')}</td>
+                              <td className="py-3 pr-4 whitespace-nowrap">{new Date(c.next_review_date) <= new Date() ? <span className="text-rose-500 font-bold">Sekarang</span> : getIntervalLabel(c.interval_days)}</td>
+                              <td className="py-3 pr-4 text-center">{c.ease_factor}</td>
+                              <td className="py-3 pr-4 text-center">{c.repetitions}</td>
+                              <td className="py-3 text-right">
+                                <button onClick={() => srs.removeCard(c.id!)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/20 rounded-lg transition"><Trash2 className="w-4 h-4"/></button>
+                              </td>
+                            </tr>
+                          ))}
+                          {srs.cards.length === 0 && (
+                            <tr><td colSpan={5} className="py-8 text-center text-slate-500 italic">Belum ada kartu SRS. Kerjakan kuis dan jawaban salah akan otomatis masuk ke sini!</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Box 4: Analysis Dashboard */}
             {dashboardTab === 'analysis' && (
               <div className={`lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border ${
@@ -5281,6 +5419,20 @@ export default function App() {
                   <RotateCcw className="w-4 h-4 fill-current" />
                   Mulai Ulang Tryout
                 </button>
+
+                {userAnswers.filter((a, i) => a !== null && !isUserAnswerCorrect(a, currentQuiz[i])).length > 0 && (
+                  <button
+                    onClick={() => {
+                      setScreen('setup');
+                      setDashboardTab('srs');
+                      srs.startReview();
+                    }}
+                    className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-xs font-bold bg-rose-500 text-white shadow-md shadow-rose-500/10 transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer hover:bg-rose-600"
+                  >
+                    <Brain className="w-4 h-4" />
+                    Review Salah di SRS
+                  </button>
+                )}
               </div>
 
             </div>
