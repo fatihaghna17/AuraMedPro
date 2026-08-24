@@ -263,7 +263,11 @@ export const mapUnifiedQuestion = (item: any, rootFeatureFlags: any = {}): Quest
       };
 
   return {
-    pertanyaan: item.pertanyaan || item.clue || item.question || "Tanpa pertanyaan",
+    pertanyaan: (() => {
+      const p = item.pertanyaan || item.clue || item.question;
+      if (typeof p === 'object' && p !== null) return p.text || "Tanpa pertanyaan";
+      return typeof p === 'string' ? p : "Tanpa pertanyaan";
+    })(),
     pilihan,
     jawaban_benar,
     pembahasan: item.pembahasan || item.explanation || "",

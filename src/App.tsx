@@ -4819,7 +4819,9 @@ export default function App() {
                           Kartu {srs.currentReviewIndex + 1} dari {srs.dueCards.length}
                         </div>
                         <div className="flex-1 overflow-y-auto mb-6 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
-                          <div dangerouslySetInnerHTML={{ __html: renderHtmlText(srs.dueCards[srs.currentReviewIndex].question_json.pertanyaan) }} />
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                            {renderHtmlText(srs.dueCards[srs.currentReviewIndex].question_json.pertanyaan)}
+                          </div>
                           {srs.dueCards[srs.currentReviewIndex].question_json.pilihan && (
                             <div className="mt-6 space-y-2">
                               {Object.entries(srs.dueCards[srs.currentReviewIndex].question_json.pilihan).map(([key, val]: any) => (
@@ -4896,7 +4898,7 @@ export default function App() {
                         <tbody className="text-sm">
                           {srs.cards.map((c, i) => (
                             <tr key={i} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                              <td className="py-3 pr-4 max-w-[200px] truncate">{c.question_json.pertanyaan.replace(/<[^>]*>?/gm, '')}</td>
+                              <td className="py-3 pr-4 max-w-[200px] truncate">{String(c.question_json.pertanyaan || '').replace(/<[^>]*>?/gm, '')}</td>
                               <td className="py-3 pr-4 whitespace-nowrap">{new Date(c.next_review_date) <= new Date() ? <span className="text-rose-500 font-bold">Sekarang</span> : getIntervalLabel(c.interval_days)}</td>
                               <td className="py-3 pr-4 text-center">{c.ease_factor}</td>
                               <td className="py-3 pr-4 text-center">{c.repetitions}</td>
@@ -5021,7 +5023,7 @@ export default function App() {
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                            {b.question_json.pertanyaan.replace(/<[^>]*>?/gm, '')}
+                            {String(b.question_json.pertanyaan || '').replace(/<[^>]*>?/gm, '')}
                           </p>
                         </div>
                         <div className="flex flex-shrink-0 gap-2">
