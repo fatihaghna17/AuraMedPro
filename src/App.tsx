@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
 import confetti from 'canvas-confetti';
 import { supabase } from './supabaseClient';
@@ -389,7 +390,9 @@ import {
 import { useQuizState } from './hooks/useQuizState';
 import { useSRS } from './hooks/useSRS';
 import { useStudyRoom } from './hooks/useStudyRoom';
+import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
+import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achievements';
 
 export default function App() {
   // === React states ===
@@ -501,6 +504,7 @@ export default function App() {
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
+  const [achievementFilter, setAchievementFilter] = useState<'all' | 'quiz' | 'streak' | 'mastery'>('all');
   const [expandedCompetencies, setExpandedCompetencies] = useState<Record<string, boolean>>({});
   
   // Note Editor State
@@ -530,6 +534,10 @@ export default function App() {
 
   const srs = useSRS(currentUser?.id || null);
   const studyRoom = useStudyRoom(currentUser?.id || null);
+  const achievements = useAchievements(currentUser?.id || null, (xpReward) => {
+    setUserXP(prev => prev + xpReward);
+    triggerToast(`Selamat! +${xpReward} XP dari Achievement!`, '🏆');
+  });
   // PWA iOS Install Prompt effect
   useEffect(() => {
     const isIos = /ipad|iphone|ipod/.test(navigator.userAgent.toLowerCase()) && !(window as any).MSStream;
@@ -2344,6 +2352,22 @@ export default function App() {
 
     setLastQuizScore(finalScore);
 
+    if (currentUser) {
+      const achStats: AchievementStats = {
+        totalQuizzes: quizHistory.length + 1,
+        totalQuestionsAnswered: totalQuestionsAnswered + currentQuiz.length,
+        totalCorrect: correct,
+        currentStreak,
+        longestStreak,
+        level: getLevelInfo(userXP).level,
+        xp: userXP,
+        perfectScores: finalScore === 100 ? (quizHistory.filter(h => h.score === 100).length + 1) : quizHistory.filter(h => h.score === 100).length,
+        dailyChallengesCompleted: quizHistory.filter(h => h.files.includes('daily')).length,
+        uniqueBanksAttempted: new Set(quizHistory.flatMap(h => h.files)).size,
+      };
+      achievements.checkAchievements(achStats);
+    }
+
     // Delete active session and update total questions count in Supabase
     const activeId = activeQuizSessionIdRef.current;
     activeQuizSessionIdRef.current = null; // Invalidate immediately to prevent race conditions with autoSaveSession
@@ -4033,6 +4057,67 @@ export default function App() {
                     <div className="py-3 flex justify-between">
                       <span className="font-semibold text-slate-400">Tipe Akun</span>
                       <span className="font-extrabold text-teal-500 uppercase tracking-widest text-[9px] bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">Pro</span>
+                    </div>
+                  </div>
+
+                  <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
+
+                  {/* Achievements Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className={`text-sm font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                        Achievements 🏆
+                      </h3>
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        {achievements.unlockedIds.length} / {achievements.getAllAchievements().length} Unlocked
+                      </span>
+                    </div>
+                    
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar">
+                      {['all', 'quiz', 'streak', 'mastery'].map(filter => (
+                        <button
+                          key={filter}
+                          onClick={() => setAchievementFilter(filter as any)}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition ${
+                            achievementFilter === filter 
+                              ? 'bg-indigo-500 text-white' 
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          {filter === 'all' ? 'Semua' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      {achievements.getAllAchievements()
+                        .filter(a => achievementFilter === 'all' || a.category === achievementFilter)
+                        .map(ach => (
+                        <div 
+                          key={ach.id}
+                          title={ach.description}
+                          className={`relative p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
+                            ach.isUnlocked 
+                              ? `${getRarityBg(ach.rarity, theme === 'dark')} opacity-100 transform hover:scale-105` 
+                              : 'bg-slate-50/50 dark:bg-slate-900/30 border-slate-200/50 dark:border-slate-800/50 opacity-40 grayscale'
+                          }`}
+                        >
+                          {!ach.isUnlocked && (
+                            <div className="absolute top-1.5 right-1.5">
+                              <span className="text-[10px]">🔒</span>
+                            </div>
+                          )}
+                          <div className="text-2xl mb-1">{ach.icon}</div>
+                          <div className={`text-[9px] font-black leading-tight ${ach.isUnlocked ? getRarityColor(ach.rarity, theme === 'dark') : 'text-slate-500'}`}>
+                            {ach.title}
+                          </div>
+                          {ach.isUnlocked && (
+                            <div className="mt-1 text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                              +{ach.xpReward} XP
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -6589,6 +6674,42 @@ export default function App() {
 
       </div>
     )}
+
+    {/* Achievement Notification Popup */}
+    <div className="fixed top-20 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
+      <AnimatePresence>
+        {achievements.newlyUnlocked.map((ach, index) => (
+          <motion.div
+            key={`${ach.id}-${index}`}
+            initial={{ opacity: 0, x: 50, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 50, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className={`pointer-events-auto p-4 rounded-2xl border shadow-2xl flex items-center gap-4 w-72 md:w-80 ${getRarityBg(ach.rarity, theme === 'dark')} bg-white dark:bg-slate-900/95 backdrop-blur-md`}
+            onClick={() => {
+              // Dismiss just this one by filtering it out, or dismiss all
+              achievements.dismissNew();
+            }}
+          >
+            <div className="text-4xl">{ach.icon}</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-black uppercase tracking-wider text-amber-500 mb-0.5 flex items-center gap-1">
+                <span>ACHIEVEMENT UNLOCKED</span>
+              </div>
+              <h4 className={`text-sm font-black truncate ${getRarityColor(ach.rarity, theme === 'dark')}`}>{ach.title}</h4>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{ach.description}</p>
+              <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                +{ach.xpReward} XP
+              </div>
+            </div>
+            {ach.rarity === 'legendary' && (
+              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
+            )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+
     </div>
   );
 }
