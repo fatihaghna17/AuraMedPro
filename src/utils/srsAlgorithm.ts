@@ -14,6 +14,7 @@ export interface SRSCard {
   last_quality?: number;
   total_reviews: number;
   correct_reviews: number;
+  updated_at?: string;
 }
 
 export type QualityRating = 0 | 1 | 2 | 3 | 4 | 5;

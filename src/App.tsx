@@ -51,7 +51,9 @@ import {
   Minimize2,
   Smartphone,
   Share2,
-  Brain
+  Brain,
+  StickyNote,
+  Bookmark
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -386,7 +388,8 @@ import {
 } from './utils/quizUtils';
 import { useQuizState } from './hooks/useQuizState';
 import { useSRS } from './hooks/useSRS';
-import { getIntervalLabel, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
+import { useStudyRoom } from './hooks/useStudyRoom';
+import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 
 export default function App() {
   // === React states ===
@@ -494,11 +497,16 @@ export default function App() {
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'analysis' | 'profile'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile'>('home');
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
   const [expandedCompetencies, setExpandedCompetencies] = useState<Record<string, boolean>>({});
+  
+  // Note Editor State
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<any>(null);
+  const [noteRefQuestion, setNoteRefQuestion] = useState<any>(null);
 
   // Active quiz states
   const {
@@ -521,6 +529,7 @@ export default function App() {
   } = useQuizState();
 
   const srs = useSRS(currentUser?.id || null);
+  const studyRoom = useStudyRoom(currentUser?.id || null);
   // PWA iOS Install Prompt effect
   useEffect(() => {
     const isIos = /ipad|iphone|ipod/.test(navigator.userAgent.toLowerCase()) && !(window as any).MSStream;
@@ -2770,6 +2779,7 @@ export default function App() {
                       { id: 'banks', label: 'Bank Soal', icon: BookOpen },
                       { id: 'new', label: 'Baru', icon: PlusCircle },
                       { id: 'srs', label: 'Spaced Repetition', icon: Brain },
+                      { id: 'notes', label: 'Study Room', icon: StickyNote },
                       { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                       { id: 'profile', label: 'Profil', icon: User },
                     ].map((item) => {
@@ -2855,6 +2865,7 @@ export default function App() {
                   { id: 'banks', label: 'Bank Soal', icon: BookOpen },
                   { id: 'new', label: 'Baru', icon: PlusCircle },
                   { id: 'srs', label: 'SRS', icon: Brain },
+                  { id: 'notes', label: 'Notes', icon: StickyNote },
                   { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                   { id: 'profile', label: 'Profil', icon: User },
                 ].map((item) => {
@@ -4523,6 +4534,218 @@ export default function App() {
               </div>
             )}
 
+            {/* Box: Study Room Dashboard */}
+            {dashboardTab === 'notes' && (
+              <div className={`lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border ${
+                theme === 'dark'
+                  ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
+                  : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+              } min-h-[60vh] relative flex flex-col`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-black flex items-center gap-2"><StickyNote className="w-6 h-6 text-indigo-500" /> Study Room</h2>
+                    <p className="text-sm text-slate-500 mt-1">Kelola catatan dan soal yang Anda tandai.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingNote(null);
+                      setNoteRefQuestion(null);
+                      setIsNoteModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-indigo-500 text-white rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20"
+                  >
+                    <Plus className="w-4 h-4" /> Buat Catatan
+                  </button>
+                </div>
+
+                {/* Sub-tabs inside notes */}
+                <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <button 
+                    onClick={() => setBankFilter('notes' as any)} 
+                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'notes' || bankFilter === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                  >
+                    Catatan ({studyRoom.notes.length})
+                  </button>
+                  <button 
+                    onClick={() => setBankFilter('bookmarks' as any)} 
+                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'bookmarks' ? 'bg-slate-100 dark:bg-slate-800 text-amber-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                  >
+                    Bookmark ({studyRoom.bookmarks.length})
+                  </button>
+                </div>
+
+                {studyRoom.isLoading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (bankFilter === 'notes' || bankFilter === 'all') ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {studyRoom.notes.map(note => (
+                      <div key={note.id} className={`p-4 rounded-xl border relative overflow-hidden transition-all hover:shadow-md ${
+                        theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}>
+                        <div className={`absolute top-0 left-0 bottom-0 w-1 bg-${note.color}-500`} />
+                        <div className="flex items-start justify-between gap-2 mb-2 pl-2">
+                          <h3 className="font-bold text-sm truncate">{note.title || 'Tanpa Judul'}</h3>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => studyRoom.updateNote(note.id!, { is_pinned: !note.is_pinned })} className={`p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition ${note.is_pinned ? 'text-amber-500' : 'text-slate-400'}`}>
+                              <StickyNote className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => { setEditingNote(note); setIsNoteModalOpen(true); }} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-indigo-500 transition">
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => { if(window.confirm('Hapus catatan?')) studyRoom.deleteNote(note.id!); }} className="p-1.5 rounded-md text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-500 transition">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 pl-2 mb-3">
+                          {note.content}
+                        </p>
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pl-2">
+                            {note.tags.map(tag => (
+                              <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">#{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                        {note.question_ref && (
+                          <div className="mt-3 pl-2 text-[10px] text-slate-400 flex items-center gap-1">
+                            <Bookmark className="w-3 h-3" /> Terkait {note.question_bank_name || 'Soal'}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {studyRoom.notes.length === 0 && (
+                      <div className="col-span-full py-12 text-center text-slate-500">
+                        <StickyNote className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                        <p>Belum ada catatan.</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {studyRoom.bookmarks.map(b => (
+                      <div key={b.id} className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-4 justify-between transition-all ${
+                        theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-white'
+                      }`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                              {b.question_bank_name}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(b.created_at || '').toLocaleDateString('id-ID')}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                            {b.question_json.pertanyaan.replace(/<[^>]*>?/gm, '')}
+                          </p>
+                        </div>
+                        <div className="flex flex-shrink-0 gap-2">
+                          <button 
+                            onClick={() => {
+                              triggerToast('Fitur Practice dari bookmark segera hadir', '🚀');
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                          >
+                            Practice
+                          </button>
+                          <button 
+                            onClick={() => studyRoom.removeBookmark(b.question_ref)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                            title="Hapus Bookmark"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {studyRoom.bookmarks.length === 0 && (
+                      <div className="py-12 text-center text-slate-500">
+                        <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                        <p>Belum ada bookmark.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Note Editor Modal */}
+            {isNoteModalOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsNoteModalOpen(false)}></div>
+                <div className={`relative w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-scale-up ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
+                  <button onClick={() => setIsNoteModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                    <X className="w-5 h-5" />
+                  </button>
+                  
+                  <h3 className="text-lg font-black mb-4">{editingNote ? 'Edit Catatan' : 'Buat Catatan Baru'}</h3>
+                  
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const title = formData.get('title') as string;
+                    const content = formData.get('content') as string;
+                    const color = formData.get('color') as any;
+                    const tagsRaw = formData.get('tags') as string;
+                    const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t);
+                    
+                    try {
+                      if (editingNote) {
+                        await studyRoom.updateNote(editingNote.id, { title, content, color, tags });
+                        triggerToast('Catatan berhasil diperbarui!', '📝');
+                      } else {
+                        await studyRoom.createNote({
+                          title, content, color, tags, is_pinned: false,
+                          question_ref: noteRefQuestion ? generateQuestionFingerprint(noteRefQuestion.q) : undefined,
+                          question_bank_name: noteRefQuestion ? noteRefQuestion.bankName : undefined,
+                        });
+                        triggerToast('Catatan berhasil dibuat!', '📝');
+                      }
+                      setIsNoteModalOpen(false);
+                    } catch(err) {
+                      triggerToast('Gagal menyimpan catatan', '❌');
+                    }
+                  }} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Judul</label>
+                      <input name="title" defaultValue={editingNote?.title || ''} required className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Contoh: Klasifikasi Gagal Jantung" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Catatan</label>
+                      <textarea name="content" defaultValue={editingNote?.content || ''} required rows={4} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Ketik catatan di sini..." />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Warna</label>
+                      <div className="flex gap-2">
+                        {['indigo', 'emerald', 'amber', 'rose', 'purple'].map(color => (
+                          <label key={color} className="relative cursor-pointer">
+                            <input type="radio" name="color" value={color} defaultChecked={(editingNote?.color || 'indigo') === color} className="peer sr-only" />
+                            <div className={`w-8 h-8 rounded-full bg-${color}-500 border-2 border-transparent peer-checked:border-white dark:peer-checked:border-slate-900 peer-checked:ring-2 peer-checked:ring-indigo-500 shadow-sm transition-all hover:scale-110`} />
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Tags (Pisahkan dengan koma)</label>
+                      <input name="tags" defaultValue={editingNote?.tags?.join(', ') || ''} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Kardiologi, EKG, dll" />
+                    </div>
+                    
+                    <div className="pt-2 flex justify-end gap-2">
+                      <button type="button" onClick={() => setIsNoteModalOpen(false)} className="px-4 py-2 rounded-lg font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        Batal
+                      </button>
+                      <button type="submit" className="px-4 py-2 rounded-lg font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20">
+                        Simpan Catatan
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
             {/* Box 4: Analysis Dashboard */}
             {dashboardTab === 'analysis' && (
               <div className={`lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border ${
@@ -4687,6 +4910,29 @@ export default function App() {
                           <Copy className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Salin Soal</span>
                         </button>
+                        {currentUser && (
+                          <button
+                            onClick={() => {
+                              const q = currentQuiz[currentIndex];
+                              if (studyRoom.isBookmarked(q)) {
+                                studyRoom.removeBookmark(generateQuestionFingerprint(q));
+                              } else {
+                                studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
+                              }
+                            }}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                              studyRoom.isBookmarked(currentQuiz[currentIndex]) 
+                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50' 
+                                : theme === 'dark'
+                                  ? 'bg-slate-800/80 hover:bg-slate-850 text-slate-300 border-slate-700/50'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-655 border-slate-200'
+                            }`}
+                            title="Bookmark Soal"
+                          >
+                            <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(currentQuiz[currentIndex]) ? 'fill-current' : ''}`} />
+                            <span className="hidden sm:inline">Bookmark</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -5750,6 +5996,42 @@ export default function App() {
                               </div>
                             </div>
                           )}
+                        </div>
+                      )}
+
+                      {/* Bookmark & Notes Actions for wrong answers */}
+                      {isOpen && !isCorrect && currentUser && (
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex gap-2 justify-end">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (studyRoom.isBookmarked(q)) {
+                                studyRoom.removeBookmark(generateQuestionFingerprint(q));
+                              } else {
+                                studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
+                              }
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${
+                              studyRoom.isBookmarked(q)
+                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
+                            Bookmark Soal Ini
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNoteRefQuestion({ q, bankName: selectedDatabases[0] || 'Kuis' });
+                              setEditingNote(null);
+                              setIsNoteModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                            Buat Catatan
+                          </button>
                         </div>
                       )}
                     </div>
