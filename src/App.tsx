@@ -62,6 +62,7 @@ import {
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
+import { requestAIExplanation, EXPLAIN_MODES, type ExplainMode } from './utils/aiExplain';
 // === SAMPLE QUESTION BANKS ===
 const SAMPLE_BANKS: Record<string, Question[]> = {
   'UKMPPD Kedokteran - Kardiorespirasi.json': [
@@ -400,6 +401,15 @@ import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achi
 import { OnboardingTour } from './components/OnboardingTour';
 
 export default function App() {
+  // === STATE MANAGEMENT ===
+  
+  // AI Tutor States
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiFollowUp, setAiFollowUp] = useState('');
+  const [aiMode, setAiMode] = useState<ExplainMode>('explain');
+
   // === React states ===
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('cbt_theme');
@@ -733,6 +743,36 @@ export default function App() {
       setReportModal({ isOpen: false, questionIndex: null });
       setReportIssueType('Jawaban Salah');
       setReportDescription('');
+    }
+  };
+
+  const handleAIRequest = async (mode: ExplainMode) => {
+    setAiMode(mode);
+    setAiLoading(true);
+    setAiPanelOpen(true);
+    
+    const q = currentQuiz[currentIndex];
+    const correctLetter = getCorrectLetterForQuestion(q);
+    const correctOptionText = q.pilihan ? q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] : q.jawaban_benar;
+    const userAnswerLetter = userAnswers[currentIndex];
+    const userAnswerText = userAnswerLetter && q.pilihan ? q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(userAnswerLetter)] : userAnswerLetter || undefined;
+    
+    try {
+      const resp = await requestAIExplanation({
+        question: q.pertanyaan,
+        correctAnswer: correctOptionText || q.jawaban_benar,
+        explanation: q.pembahasan,
+        userAnswer: userAnswerText,
+        context: q.metadata?.sub_kompetensi_klinis,
+        mode,
+        followUp: mode === 'clarify' ? aiFollowUp : undefined
+      });
+      setAiExplanation(resp);
+      if (mode === 'clarify') setAiFollowUp('');
+    } catch (e: any) {
+      triggerToast(e.message || 'Gagal menghubungi AI Tutor', '❌');
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -5591,6 +5631,87 @@ export default function App() {
                                   </div>
                                 </div>
                               )}
+
+                              {/* AI Tutor Panel */}
+                              <div className="mt-4 pt-4 border-t border-slate-200/40 dark:border-slate-800/40">
+                                <button
+                                  onClick={() => !aiPanelOpen && handleAIRequest('explain')}
+                                  disabled={aiLoading}
+                                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                                    aiPanelOpen
+                                      ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20'
+                                      : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer'
+                                  }`}
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                  AI Tutor (Gemini)
+                                </button>
+
+                                {aiPanelOpen && (
+                                  <div className={`mt-3 p-4 rounded-xl border ${
+                                    theme === 'dark' ? 'bg-slate-900/50 border-indigo-500/20' : 'bg-indigo-50/50 border-indigo-200/50'
+                                  }`}>
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                      {EXPLAIN_MODES.map((m) => (
+                                        <button
+                                          key={m.mode}
+                                          onClick={() => handleAIRequest(m.mode)}
+                                          disabled={aiLoading}
+                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                                            aiMode === m.mode
+                                              ? 'bg-indigo-500 text-white shadow-sm'
+                                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
+                                          } disabled:opacity-50`}
+                                        >
+                                          <span>{m.icon}</span>
+                                          {m.label}
+                                        </button>
+                                      ))}
+                                    </div>
+
+                                    {aiLoading ? (
+                                      <div className="space-y-2 animate-pulse">
+                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></div>
+                                      </div>
+                                    ) : aiExplanation ? (
+                                      <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                        {renderHtmlText(aiExplanation)}
+                                      </div>
+                                    ) : null}
+
+                                    {aiMode === 'clarify' && (
+                                      <div className="mt-4 flex gap-2">
+                                        <input
+                                          type="text"
+                                          placeholder="Tanyakan bagian yang belum jelas..."
+                                          value={aiFollowUp}
+                                          onChange={(e) => setAiFollowUp(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && aiFollowUp.trim()) {
+                                              handleAIRequest('clarify');
+                                            }
+                                          }}
+                                          className={`flex-1 px-3 py-2 text-xs rounded-lg border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                            theme === 'dark'
+                                              ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500'
+                                              : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                                          }`}
+                                        />
+                                        <button
+                                          onClick={() => aiFollowUp.trim() && handleAIRequest('clarify')}
+                                          disabled={!aiFollowUp.trim() || aiLoading}
+                                          className="px-3 py-2 rounded-lg bg-indigo-500 text-white text-xs font-bold disabled:opacity-50 cursor-pointer"
+                                        >
+                                          Kirim
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
                             </div>
                           </div>
                         </div>
