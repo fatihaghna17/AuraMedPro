@@ -30,14 +30,23 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
         
         // Simple check for correct answer
         let isCorrect = false;
-        if (q.jawaban) {
-          isCorrect = typeof q.jawaban === 'string' 
-            ? userAnswer === q.jawaban 
-            : Array.isArray(q.jawaban) 
-              ? q.jawaban.includes(userAnswer)
-              : false;
-        } else if (q.pilihan && q.pilihan.length > 0) {
-          isCorrect = userAnswer === q.pilihan[0];
+        if (q.jawaban_benar) {
+          // Cocokkan jawaban user dengan jawaban_benar
+          if (userAnswer === q.jawaban_benar) {
+            isCorrect = true;
+          } else if (q.pilihan && q.pilihan.length > 0) {
+            // Cek apakah jawaban_benar adalah teks yang cocok dengan salah satu opsi
+            const correctIdx = q.pilihan.findIndex(
+              (opt: string) => opt.trim().toLowerCase() === q.jawaban_benar.trim().toLowerCase()
+            );
+            if (correctIdx !== -1 && userAnswer === q.pilihan[correctIdx]) {
+              isCorrect = true;
+            }
+            // Cek apakah user menjawab dengan teks opsi yang benar
+            if (!isCorrect) {
+              isCorrect = userAnswer === q.jawaban_benar;
+            }
+          }
         }
 
         if (isCorrect) {

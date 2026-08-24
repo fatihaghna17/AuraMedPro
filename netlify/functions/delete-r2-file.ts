@@ -15,7 +15,7 @@ export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTION',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -27,6 +27,12 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    const authHeader = event.headers.authorization || event.headers.Authorization;
+    // Gunakan shared secret R2_SECRET_TOKEN jika diatur di environment backend
+    if (process.env.R2_SECRET_TOKEN && authHeader !== `Bearer ${process.env.R2_SECRET_TOKEN}`) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
+    }
+
     const { key } = JSON.parse(event.body || '{}');
 
     if (!key) {

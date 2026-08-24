@@ -38,7 +38,10 @@ export async function deleteQuestionsFromR2(key: string): Promise<boolean> {
   try {
     const res = await fetch('/.netlify/functions/delete-r2-file', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_R2_SECRET_TOKEN || ''}`
+      },
       body: JSON.stringify({ key }),
     });
     return res.ok;

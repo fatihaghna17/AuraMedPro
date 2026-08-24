@@ -11,9 +11,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import rateLimit from 'express-rate-limit';
+
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use('/api/', limiter);
 
 let db: Database;
 
@@ -68,8 +76,12 @@ app.get('/api/questions', async (req, res) => {
 app.post('/api/questions', async (req, res) => {
   const { name, questions } = req.body;
   
-  if (!name || !Array.isArray(questions)) {
-    return res.status(400).json({ error: 'Nama bank soal atau array pertanyaan tidak valid' });
+  // Validasi input
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return res.status(400).json({ error: 'Nama bank soal tidak valid' });
+  }
+  if (!Array.isArray(questions)) {
+    return res.status(400).json({ error: 'Data questions harus berupa array' });
   }
 
   try {

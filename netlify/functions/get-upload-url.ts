@@ -16,7 +16,7 @@ export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTION',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -34,14 +34,17 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Filename is required' }) };
     }
 
+    // Sanitize filename: remove directory paths and special characters
+    const sanitizedFilename = filename.replace(/^.*[\\/]/, '').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
-      Key: filename,
+      Key: sanitizedFilename,
       ContentType: contentType || 'application/json',
     });
 
     const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-    const publicUrl = `https://${process.env.R2_PUBLIC_DEV_URL || ''}/${filename}`;
+    const publicUrl = `https://${process.env.R2_PUBLIC_DEV_URL || ''}/${sanitizedFilename}`;
 
     return {
       statusCode: 200,

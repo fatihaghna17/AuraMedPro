@@ -53,44 +53,7 @@ import {
   Share2
 } from 'lucide-react';
 
-// === interfaces ===
-interface QuestionMetadata {
-  sub_kompetensi_klinis?: string;
-  tingkat_kognitif?: string;
-  tingkat_kesulitan?: string;
-  xp?: number;
-}
-
-interface Question {
-  pertanyaan: string;
-  pilihan: string[];
-  jawaban_benar: string;
-  pembahasan: string;
-  eliminasi_opsi?: Record<string, string>;
-  metadata?: QuestionMetadata;
-  gambar?: string;
-  gambar_url?: string;
-  image?: string;
-  image_url?: string;
-  imageUrl?: string;
-  hints?: string[];
-  featureFlags?: any;
-}
-
-interface HistoryEntry {
-  id: number;
-  date: string;
-  score: number;
-  correct: number;
-  wrong: number;
-  empty: number;
-  total: number;
-  files: string[];
-  mode: 'utuh' | 'simulasi';
-  questions?: Question[];
-  userAnswers?: (string | null)[];
-}
-
+import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
 // === SAMPLE QUESTION BANKS ===
 const SAMPLE_BANKS: Record<string, Question[]> = {
   'UKMPPD Kedokteran - Kardiorespirasi.json': [
@@ -408,327 +371,19 @@ const SAMPLE_BANKS: Record<string, Question[]> = {
 };
 
 // Kalimat roasting yang lucu, sarkas, dan menghibur ala mahasiswa kedokteran & umum
-const SCORE_FEEDBACKS: Record<number, string> = {
-  0: "Skor 0? Kamu ngerjainnya merem, atau emang niat nyumbang kuota doang ke server? Astaga naga...",
-  10: "Skor 10! Selamat, insting kamu lebih rendah dari tebakan acak seekor kucing rumahan. Yuk belajar lagi!",
-  20: "Skor 20. Ini transkrip nilai CBT apa sisa baterai HP kamu yang minta dicharge? Mengenaskan sekali.",
-  30: "Skor 30. Nilai segini kalo dijadiin suhu ruangan udah bikin hipotermia. Otak kamu ikutan beku ya pas ngerjain?",
-  40: "Skor 40. Gak usah sedih, seenggaknya kamu konsisten... konsisten di bawah KKM. Pura-pura amnesia aja kalau ditanya temen.",
-  50: "Skor 50! Pas banget setengah. Setengah pinter, setengahnya lagi ga tertolong oleh sistem.",
-  60: "Skor 60! Dikit lagi lulus, tapi kenyataannya tetep gagal. Sakitnya tuh nembus ke tulang rusuk belakang.",
-  70: "Skor 70! Lulus pas-pasan! Napas kamu lega dikit, mirip pasien asma abis disemprot inhaler. Selamat bertahan!",
-  80: "Skor 80! Keren, sinaps otak kamu bekerja dengan efisiensi tinggi. Pantes jadi kandidat asisten laboratorium nih!",
-  90: "Skor 90! Edan! Nilai A mutlak sudah digenggam. Orang tuamu akhirnya bisa bangga pamer di grup WhatsApp keluarga!",
-  100: "Skor 100! Sempurna Tanpa Cela! Kamu ini manusia, dewa ujian, atau emang kunci jawabannya udah kamu hafalkan? Sungkem sepuh!"
-};
-
-const getFeedbackForScore = (score: number): string => {
-  const scoreKeys = Object.keys(SCORE_FEEDBACKS).map(Number).sort((a, b) => b - a);
-  for (const key of scoreKeys) {
-    if (score >= key) {
-      return SCORE_FEEDBACKS[key];
-    }
-  }
-  return "Nilai di luar nalar manusia.";
-};
-
-const formatTimer = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
-
-const getCorrectLetterForQuestion = (q: Question): string => {
-  if (!q) return 'A';
-
-  const letters = ['A', 'B', 'C', 'D', 'E'];
-
-  // 1. First priority: Check if any rationale in eliminasi_opsi explicitly starts with "benar" or "betul"
-  if (q.eliminasi_opsi) {
-    const foundEntry = Object.entries(q.eliminasi_opsi).find(([key, desc]) => {
-      const cleanDesc = (desc as string).trim().toLowerCase();
-      return cleanDesc.startsWith('benar') || cleanDesc.startsWith('betul');
-    });
-    if (foundEntry) {
-      return foundEntry[0].toUpperCase();
-    }
-  }
-
-  // 2. Second priority: Check if any option in pilihan explicitly starts with "benar" or "betul"
-  if (q.pilihan && q.pilihan.length > 0) {
-    const idx = q.pilihan.findIndex(opt => {
-      const cleanOpt = opt.trim().toLowerCase();
-      return cleanOpt.startsWith('benar') || cleanOpt.startsWith('betul');
-    });
-    if (idx !== -1 && idx < letters.length) {
-      return letters[idx];
-    }
-  }
-
-  // 3. Third priority: Try to match q.jawaban_benar with options in q.pilihan
-  if (q.jawaban_benar) {
-    const jb = q.jawaban_benar.trim();
-    const jbLower = jb.toLowerCase();
-
-    // Exact match in pilihan
-    const exactIdx = q.pilihan.findIndex(opt => opt.trim().toLowerCase() === jbLower);
-    if (exactIdx !== -1 && exactIdx < letters.length) {
-      return letters[exactIdx];
-    }
-
-    // Is jawaban_benar exactly a letter (A-E)?
-    if (/^[A-E]$/i.test(jb)) {
-      return jb.toUpperCase();
-    }
-
-    // Is it a letter with dot or parenthesis (e.g. "A." or "A)")?
-    if (/^[A-E][\s.)]/i.test(jb)) {
-      return jb[0].toUpperCase();
-    }
-
-    // Check if any option starts with or contains jawaban_benar
-    const partialIdx = q.pilihan.findIndex(opt => 
-      opt.toLowerCase().includes(jbLower) || jbLower.includes(opt.toLowerCase())
-    );
-    if (partialIdx !== -1 && partialIdx < letters.length) {
-      return letters[partialIdx];
-    }
-  }
-
-  // Fallback: If q.jawaban_benar matches any letter in some way
-  if (q.jawaban_benar) {
-    const firstChar = q.jawaban_benar.trim()[0]?.toUpperCase();
-    if (letters.includes(firstChar)) {
-      return firstChar;
-    }
-  }
-
-  return 'A'; // Absolute fallback
-};
-
-const isUserAnswerCorrect = (userAns: string | null, q: Question): boolean => {
-  if (userAns === null) return false;
-  
-  // If short answer (Isian Singkat) with empty pilihan array
-  if (!q.pilihan || q.pilihan.length === 0) {
-    const flags = q.featureFlags || {};
-    const caseSensitive = flags.caseSensitive === true;
-    const acceptPartialMatch = flags.acceptPartialMatch !== false; // default true
-    
-    let userVal = userAns.trim();
-    let correctVal = q.jawaban_benar.trim();
-    
-    if (!caseSensitive) {
-      userVal = userVal.toLowerCase();
-      correctVal = correctVal.toLowerCase();
-    }
-    
-    if (userVal === correctVal) {
-      return true;
-    }
-    
-    // Fuzzy matching similarity (Levenshtein Distance)
-    const getSimilarity = (s1: string, s2: string): number => {
-      let longer = s1.toLowerCase();
-      let shorter = s2.toLowerCase();
-      if (s1.length < s2.length) {
-        longer = s2.toLowerCase();
-        shorter = s1.toLowerCase();
-      }
-      const longerLength = longer.length;
-      if (longerLength === 0) return 1.0;
-      
-      const costs = [];
-      for (let i = 0; i <= longer.length; i++) {
-        let lastValue = i;
-        for (let j = 0; j <= shorter.length; j++) {
-          if (i === 0) {
-            costs[j] = j;
-          } else {
-            if (j > 0) {
-              let newValue = costs[j - 1];
-              if (longer.charAt(i - 1) !== shorter.charAt(j - 1)) {
-                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-              }
-              costs[j - 1] = lastValue;
-              lastValue = newValue;
-            }
-          }
-        }
-        if (i > 0) {
-          costs[shorter.length] = lastValue;
-        }
-      }
-      return (longerLength - costs[shorter.length]) / longerLength;
-    };
-
-    if (getSimilarity(userVal, correctVal) >= 0.80) {
-      return true;
-    }
-    
-    if (acceptPartialMatch) {
-      // If user answer or correct answer is contained within each other
-      if (userVal.includes(correctVal) || correctVal.includes(userVal)) {
-        if (userVal.length >= 3 && correctVal.length >= 3) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  
-  const correctLetter = getCorrectLetterForQuestion(q);
-  const correctIndex = ['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter);
-  
-  // If the correct index was found in choices
-  if (correctIndex !== -1 && correctIndex < q.pilihan.length) {
-    const correctOptionText = q.pilihan[correctIndex];
-    if (userAns === correctOptionText) {
-      return true;
-    }
-  }
-
-  // Fallback: direct comparison
-  if (userAns === q.jawaban_benar) {
-    return true;
-  }
-
-  // Fallback: if userAns matches the correct letter exactly
-  if (userAns.trim().toUpperCase() === correctLetter) {
-    return true;
-  }
-
-  return false;
-};
-
-const renderHtmlText = (text: any) => {
-  if (!text || typeof text !== 'string') return text || null;
-  return <span dangerouslySetInnerHTML={{ __html: text }} />;
-};
-
-const getQuestionImage = (q: Question): string | null => {
-  if (q.gambar && typeof q.gambar === 'string') return q.gambar;
-  if (q.gambar_url && typeof q.gambar_url === 'string') return q.gambar_url;
-  if (q.image && typeof q.image === 'string') return q.image;
-  if (q.image_url && typeof q.image_url === 'string') return q.image_url;
-  if (q.imageUrl && typeof q.imageUrl === 'string') return q.imageUrl;
-  return null;
-};
-
-const renderQuestionImage = (q: Question, setLightbox: (url: string | null) => void, theme: 'light' | 'dark') => {
-  const imageUrl = getQuestionImage(q);
-  if (!imageUrl) return null;
-
-  return (
-    <div className="my-4 relative group max-w-xl mx-auto">
-      <div className={`overflow-hidden rounded-xl border shadow-sm flex justify-center items-center relative ${
-        theme === 'dark' ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-100'
-      }`}>
-        <img 
-          src={imageUrl} 
-          alt="Soal Visual" 
-          referrerPolicy="no-referrer"
-          className="max-h-[320px] object-contain transition-transform duration-300 group-hover:scale-[1.01] cursor-zoom-in p-2"
-          onClick={() => setLightbox(imageUrl)}
-        />
-        <div 
-          className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer backdrop-blur-sm transition-all"
-          onClick={() => setLightbox(imageUrl)}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          Perbesar Gambar
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const mapUnifiedQuestion = (item: any, rootFeatureFlags: any = {}): Question => {
-  const pilihan = item.pilihan || item.answers || [];
-  
-  let jawaban_benar = "";
-  if (item.jawaban_benar !== undefined && item.jawaban_benar !== null) {
-    jawaban_benar = String(item.jawaban_benar);
-  } else if (item.answer !== undefined && item.answer !== null) {
-    jawaban_benar = String(item.answer);
-  } else if (item.correct_answer !== undefined && item.correct_answer !== null) {
-    if (typeof item.correct_answer === 'number' && pilihan.length > 0) {
-      jawaban_benar = pilihan[item.correct_answer - 1] || "";
-    } else {
-      jawaban_benar = String(item.correct_answer);
-    }
-  }
-
-  const isIsian = pilihan.length === 0;
-
-  const defaultMetadata = isIsian
-    ? {
-        sub_kompetensi_klinis: "Isian Singkat",
-        tingkat_kognitif: "C1",
-        tingkat_kesulitan: "Sedang",
-        xp: 150
-      }
-    : {
-        sub_kompetensi_klinis: "Klinis Umum",
-        tingkat_kognitif: "C3",
-        tingkat_kesulitan: "Sedang",
-        xp: 100
-      };
-
-  return {
-    pertanyaan: item.pertanyaan || item.clue || item.question || "Tanpa pertanyaan",
-    pilihan,
-    jawaban_benar,
-    pembahasan: item.pembahasan || item.explanation || "",
-    eliminasi_opsi: item.eliminasi_opsi || {},
-    metadata: {
-      ...defaultMetadata,
-      ...(item.metadata || {})
-    },
-    hints: item.hints || [],
-    featureFlags: item.featureFlags || rootFeatureFlags || {},
-    image: item.image,
-    image_url: item.image_url,
-    imageUrl: item.imageUrl,
-    gambar: item.gambar,
-    gambar_url: item.gambar_url
-  };
-};
-
-const parseRawFileToQuestions = (raw: string, ext: string): Question[] | null => {
-  let finalQuestions: Question[] = [];
-  try {
-    let parsed: any = null;
-    if (ext === 'yaml' || ext === 'yml') {
-      parsed = jsYaml.load(raw);
-    } else if (ext === 'json') {
-      parsed = JSON.parse(raw);
-    }
-
-    if (!parsed) return null;
-
-    const rootFlags = parsed.featureFlags || {};
-
-    if (Array.isArray(parsed)) {
-      finalQuestions = parsed.map(item => mapUnifiedQuestion(item, {}));
-    } else if (typeof parsed === 'object') {
-      let itemsList: any[] = [];
-      Object.keys(parsed).forEach(key => {
-        if (key !== 'featureFlags' && Array.isArray(parsed[key])) {
-          itemsList = itemsList.concat(parsed[key]);
-        }
-      });
-
-      if (itemsList.length > 0) {
-        finalQuestions = itemsList.map(item => mapUnifiedQuestion(item, rootFlags));
-      }
-    }
-  } catch (err) {
-    console.error('Error parsing file content:', err);
-    return null;
-  }
-  return finalQuestions.length > 0 ? finalQuestions : null;
-};
+import {
+  SCORE_FEEDBACKS,
+  getFeedbackForScore,
+  formatTimer,
+  getCorrectLetterForQuestion,
+  isUserAnswerCorrect,
+  renderHtmlText,
+  getQuestionImage,
+  renderQuestionImage,
+  mapUnifiedQuestion,
+  parseRawFileToQuestions
+} from './utils/quizUtils';
+import { useQuizState } from './hooks/useQuizState';
 
 export default function App() {
   // === React states ===
@@ -843,24 +498,24 @@ export default function App() {
   const [expandedCompetencies, setExpandedCompetencies] = useState<Record<string, boolean>>({});
 
   // Active quiz states
-  const [screen, setScreen] = useState<'setup' | 'quiz' | 'result'>('setup');
-  const [currentQuiz, setCurrentQuiz] = useState<Question[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<(string | null)[]>([]);
-  const [doubtStatus, setDoubtStatus] = useState<boolean[]>([]);
-  const [isRevealed, setIsRevealed] = useState<boolean[]>([]);
-  const [unlockedHints, setUnlockedHints] = useState<Record<number, number>>({});
-  const [showSidebar, setShowSidebar] = useState<boolean>(true);
-  const [quizSecondsLeft, setQuizSecondsLeft] = useState<number>(0);
-  const [quizTimerActive, setQuizTimerActive] = useState<boolean>(false);
-  const [isDailyChallenge, setIsDailyChallenge] = useState<boolean>(false);
-  const [keyboardNavEnabled, setKeyboardNavEnabled] = useState<boolean>(true);
-  
-  // Phase 5: Adaptive Quiz States
-  const [isAdaptiveMode, setIsAdaptiveMode] = useState<boolean>(false);
-  const [adaptiveHistory, setAdaptiveHistory] = useState<boolean[]>([]);
-  const [currentDifficulty, setCurrentDifficulty] = useState<'mudah' | 'sedang' | 'sukar'>('sedang');
-  const [adaptiveQuestionPool, setAdaptiveQuestionPool] = useState<Question[]>([]);
+  const {
+    screen, setScreen,
+    currentQuiz, setCurrentQuiz,
+    currentIndex, setCurrentIndex,
+    userAnswers, setUserAnswers,
+    doubtStatus, setDoubtStatus,
+    isRevealed, setIsRevealed,
+    unlockedHints, setUnlockedHints,
+    showSidebar, setShowSidebar,
+    quizSecondsLeft, setQuizSecondsLeft,
+    quizTimerActive, setQuizTimerActive,
+    isDailyChallenge, setIsDailyChallenge,
+    keyboardNavEnabled, setKeyboardNavEnabled,
+    isAdaptiveMode, setIsAdaptiveMode,
+    adaptiveHistory, setAdaptiveHistory,
+    currentDifficulty, setCurrentDifficulty,
+    adaptiveQuestionPool, setAdaptiveQuestionPool
+  } = useQuizState();
 
   // PWA iOS Install Prompt effect
   useEffect(() => {
@@ -880,12 +535,7 @@ export default function App() {
     const interval = setInterval(() => {
       setQuizSecondsLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(interval);
-          setQuizTimerActive(false);
-          // Auto submit the quiz when time runs out
-          finishQuiz();
-          triggerToast('Waktu Ujian Telah Habis!', '⏰');
-          return 0;
+          return 0; // Hanya update state, jangan panggil fungsi lain
         }
         return prev - 1;
       });
@@ -893,6 +543,15 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [quizTimerActive, screen]);
+
+  // Handle timeout
+  useEffect(() => {
+    if (quizSecondsLeft === 0 && quizTimerActive && screen === 'quiz') {
+      setQuizTimerActive(false);
+      finishQuiz();
+      triggerToast('Waktu Ujian Telah Habis!', '⏰');
+    }
+  }, [quizSecondsLeft, quizTimerActive, screen]);
   
   const [userXP, setUserXP] = useState(0);
   const [currentCombo, setCurrentCombo] = useState(0); // in-quiz consecutive correct answers
@@ -929,7 +588,7 @@ export default function App() {
     };
     
     updateProfile();
-  }, [userXP, currentStreak, currentUser, authLoading]);
+  }, [userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate, currentUser, authLoading]);
 
   // Floating text / XP notification
   const [floatingXP, setFloatingXP] = useState<{ id: number; text: string; isBenar: boolean; x: number; y: number } | null>(null);
@@ -1515,7 +1174,7 @@ export default function App() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser]);
+  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser, quizSecondsLeft]);
 
   useEffect(() => {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard') {
@@ -2362,7 +2021,6 @@ export default function App() {
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    setQuizSecondsLeft(pool.length * 60); // 60 seconds per question
     setQuizTimerActive(true);
     setScreen('quiz');
     setShowSidebar(true);
@@ -2384,13 +2042,7 @@ export default function App() {
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 5);
     
     // Process them
-    const pool = shuffled.map(q => {
-      let finalChoices = q.pilihan ? [...q.pilihan] : [];
-      if (finalChoices.length > 0) {
-        finalChoices = finalChoices.sort(() => Math.random() - 0.5);
-      }
-      return { ...q, pilihan: finalChoices };
-    });
+    const pool = shuffled.map(q => shuffleQuestionOptions(q));
 
     setCurrentQuiz(pool);
     setUserAnswers(new Array(pool.length).fill(null));
@@ -2872,7 +2524,7 @@ export default function App() {
   };
 
   // Analytics calculator
-  const calculateAnalytics = () => {
+  const analytics = React.useMemo(() => {
     const competencies: Record<string, { correct: number; total: number }> = {};
     const cognitives: Record<string, { correct: number; total: number }> = {};
     const difficulties: Record<string, { correct: number; total: number }> = {};
@@ -2906,26 +2558,22 @@ export default function App() {
     });
 
     return { competencies, cognitives, difficulties, hasMetadata };
-  };
-
-  const analytics = calculateAnalytics();
+  }, [currentQuiz, userAnswers]);
 
   // Find clinical weakness below 70%
-  const getWeaknesses = () => {
+  const weaknessesList = React.useMemo(() => {
     const list: { name: string; percentage: number; correct: number; total: number }[] = [];
-    Object.entries(analytics.competencies).forEach(([name, data]) => {
+    Object.entries(analytics.competencies).forEach(([name, data]: [string, any]) => {
       const pct = Math.round((data.correct / data.total) * 100);
       if (pct < 70) {
         list.push({ name, percentage: pct, correct: data.correct, total: data.total });
       }
     });
     return list;
-  };
-
-  const weaknessesList = getWeaknesses();
+  }, [analytics.competencies]);
 
   // History Analytics Calculator
-  const calculateHistoryAnalytics = () => {
+  const historyAnalytics = React.useMemo(() => {
     const competencies: Record<string, { correct: number; total: number }> = {};
     
     quizHistory.forEach(entry => {
@@ -2956,7 +2604,7 @@ export default function App() {
     }
     
     return competencies;
-  };
+  }, [quizHistory]);
 
   // Toggle review items
   const toggleReviewAccordion = (idx: number) => {
@@ -3510,7 +3158,7 @@ export default function App() {
                       <div className={`border rounded-2xl divide-y overflow-hidden transition-colors ${
                         theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80 divide-slate-850' : 'bg-white border-slate-200 divide-slate-100'
                       }`}>
-                        {Object.entries(calculateHistoryAnalytics()).map(([name, data]) => {
+                        {Object.entries(historyAnalytics).map(([name, data]: [string, any]) => {
                           const pct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
                           const expanded = !!expandedCompetencies[name];
                           const toggleExpand = () => setExpandedCompetencies(prev => ({ ...prev, [name]: !prev[name] }));
@@ -5695,7 +5343,7 @@ export default function App() {
                       ⚔️ Analisis Sub-Kompetensi
                     </h4>
                     <div className="space-y-2">
-                      {Object.entries(analytics.competencies).map(([name, data]) => {
+                      {Object.entries(analytics.competencies).map(([name, data]: [string, any]) => {
                         const pct = Math.round((data.correct / data.total) * 100);
                         const progressColor = pct >= 80 
                           ? 'bg-emerald-500' 
@@ -5722,7 +5370,7 @@ export default function App() {
                       🧠 Analisis Kemampuan Kognitif
                     </h4>
                     <div className="space-y-2">
-                      {Object.entries(analytics.cognitives).map(([name, data]) => {
+                      {Object.entries(analytics.cognitives).map(([name, data]: [string, any]) => {
                         const pct = Math.round((data.correct / data.total) * 100);
                         const progressColor = pct >= 80 
                           ? 'bg-emerald-500' 
@@ -5749,7 +5397,7 @@ export default function App() {
                       🛡️ Performa Tingkat Kesulitan
                     </h4>
                     <div className="space-y-2">
-                      {Object.entries(analytics.difficulties).map(([name, data]) => {
+                      {Object.entries(analytics.difficulties).map(([name, data]: [string, any]) => {
                         const pct = Math.round((data.correct / data.total) * 100);
                         const progressColor = pct >= 80 
                           ? 'bg-emerald-500' 
