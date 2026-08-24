@@ -54,7 +54,8 @@ import {
   Share2,
   Brain,
   StickyNote,
-  Bookmark
+  Bookmark,
+  Flag
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -500,7 +501,24 @@ export default function App() {
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
+  const [adminReports, setAdminReports] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (dashboardTab === 'reports' && (currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector')) {
+      const fetchReports = async () => {
+        const { data, error } = await supabase
+          .from('question_reports')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+          setAdminReports(data);
+        }
+      };
+      fetchReports();
+    }
+  }, [dashboardTab, currentUser]);
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
@@ -628,6 +646,55 @@ export default function App() {
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [reportModal, setReportModal] = useState<{ isOpen: boolean; questionIndex: number | null }>({ isOpen: false, questionIndex: null });
+  const [reportIssueType, setReportIssueType] = useState<string>('Jawaban Salah');
+  const [reportDescription, setReportDescription] = useState<string>('');
+  
+  const shareResult = async () => {
+    const total = currentQuiz.length;
+    const correct = userAnswers.filter((a, i) => isUserAnswerCorrect(a, currentQuiz[i])).length;
+    const levelInfo = getLevelInfo(userXP);
+    const text = `🩺 AuraMedPro Quiz Result\n${'━'.repeat(24)}\n📊 Skor: ${lastQuizScore}% (${correct}/${total})\n📚 Topik: ${selectedDatabases.map(d => d.replace(/\.(json|yaml|yml)$/i, '')).join(', ')}\n🔥 Streak: ${currentStreak} Hari\n⚡ Level ${levelInfo.level} — ${levelInfo.rank}\n${'━'.repeat(24)}\n🔥 Ayo belajar di AuraMedPro!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'AuraMedPro Result', text });
+        return;
+      } catch (e: any) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    
+    await navigator.clipboard.writeText(text);
+    triggerToast('Hasil kuis disalin ke clipboard!', '📋');
+  };
+
+  const submitReport = async () => {
+    if (reportModal.questionIndex === null || !currentUser) return;
+    const q = currentQuiz[reportModal.questionIndex];
+    
+    try {
+      const { error } = await supabase.from('question_reports').insert([{
+        user_id: currentUser.id,
+        question_bank_name: selectedDatabases[0] || 'Kuis',
+        question_text: q.question,
+        issue_type: reportIssueType,
+        description: reportDescription
+      }]);
+
+      if (error) throw error;
+      triggerToast('Laporan berhasil dikirim. Terima kasih!', '🚩');
+    } catch (e: any) {
+      console.error(e);
+      triggerToast('Gagal mengirim laporan', '❌');
+    } finally {
+      setReportModal({ isOpen: false, questionIndex: null });
+      setReportIssueType('Jawaban Salah');
+      setReportDescription('');
+    }
+  };
+
+
 
   // Group question databases by folder
   const groupedDatabases = React.useMemo(() => {
@@ -2806,6 +2873,7 @@ export default function App() {
                       { id: 'notes', label: 'Study Room', icon: StickyNote },
                       { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                       { id: 'profile', label: 'Profil', icon: User },
+                      ...(currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector' ? [{ id: 'reports', label: 'Laporan', icon: AlertCircle }] : []),
                     ].map((item) => {
                       const Icon = item.icon;
                       const isActive = dashboardTab === item.id;
@@ -2892,6 +2960,7 @@ export default function App() {
                   { id: 'notes', label: 'Notes', icon: StickyNote },
                   { id: 'analysis', label: 'Analisis', icon: BarChart2 },
                   { id: 'profile', label: 'Profil', icon: User },
+                  ...(currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector' ? [{ id: 'reports', label: 'Laporan', icon: AlertCircle }] : []),
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = dashboardTab === item.id;
@@ -4831,6 +4900,56 @@ export default function App() {
               </div>
             )}
 
+            {/* === LAPORAN (ADMIN ONLY) === */}
+            {dashboardTab === 'reports' && (
+              <div className="lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-rose-500" />
+                  </div>
+                  <div>
+                    <h2 className={`text-xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Laporan Pengguna</h2>
+                    <p className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Tinjau laporan terkait soal dari pengguna</p>
+                  </div>
+                </div>
+
+                <div className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  {adminReports.length === 0 ? (
+                    <div className="text-center py-8">
+                      <AlertCircle className="w-8 h-8 mx-auto mb-3 opacity-20 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-500">Belum ada laporan soal saat ini.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {adminReports.map((report) => (
+                        <div key={report.id} className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
+                              {report.issue_type}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400">
+                              {new Date(report.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div className="mb-2">
+                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Bank Soal: {report.question_bank_name}</h4>
+                            <p className={`text-sm font-bold line-clamp-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                              {report.question_text}
+                            </p>
+                          </div>
+                          {report.description && (
+                            <div className="mt-3 p-3 rounded-lg bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 text-xs text-slate-600 dark:text-slate-300">
+                              <span className="font-bold">Keterangan:</span> {report.description}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Box 4: Analysis Dashboard */}
             {dashboardTab === 'analysis' && (
               <div className={`lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border ${
@@ -5751,6 +5870,15 @@ export default function App() {
                   Mulai Ulang Tryout
                 </button>
 
+                <button
+                  onClick={shareResult}
+                  className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-md shadow-emerald-500/10 transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer hover:bg-emerald-600"
+                >
+                  <Share2 className="w-4 h-4 fill-current" />
+                  Bagikan
+                </button>
+
+
                 {userAnswers.filter((a, i) => a !== null && !isUserAnswerCorrect(a, currentQuiz[i])).length > 0 && (
                   <button
                     onClick={() => {
@@ -6116,6 +6244,16 @@ export default function App() {
                           >
                             <StickyNote className="w-3.5 h-3.5" />
                             Buat Catatan
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportModal({ isOpen: true, questionIndex: idx });
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+                          >
+                            <Flag className="w-3.5 h-3.5" />
+                            Laporkan
                           </button>
                         </div>
                       )}
@@ -6674,6 +6812,94 @@ export default function App() {
 
       </div>
     )}
+
+    {/* Report Modal */}
+    <AnimatePresence>
+      {reportModal.isOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setReportModal({ isOpen: false, questionIndex: null })}
+          />
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className={`relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${
+              theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+            }`}
+          >
+            <div className="p-6">
+              <h3 className={`text-lg font-black flex items-center gap-2 mb-6 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                <Flag className="w-5 h-5 text-rose-500" /> Laporkan Soal
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Jenis Masalah
+                  </label>
+                  <select
+                    value={reportIssueType}
+                    onChange={(e) => setReportIssueType(e.target.value)}
+                    className={`w-full p-3 rounded-xl border text-sm font-medium ${
+                      theme === 'dark' 
+                        ? 'bg-slate-800 border-slate-700 text-white' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <option value="Jawaban Salah">Kunci Jawaban Salah</option>
+                    <option value="Typo">Ada Typo/Kesalahan Ketik</option>
+                    <option value="Tidak Jelas">Soal Tidak Jelas/Ambigu</option>
+                    <option value="Tidak Pantas">Konten Tidak Pantas</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Keterangan (Opsional)
+                  </label>
+                  <textarea
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    placeholder="Jelaskan masalahnya..."
+                    className={`w-full p-3 rounded-xl border text-sm resize-none h-24 ${
+                      theme === 'dark' 
+                        ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                <button
+                  onClick={() => setReportModal({ isOpen: false, questionIndex: null })}
+                  className={`flex-1 py-3 rounded-xl text-sm font-bold border transition-colors ${
+                    theme === 'dark'
+                      ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={submitReport}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
+                >
+                  Kirim Laporan
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
 
     {/* Achievement Notification Popup */}
     <div className="fixed top-20 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
