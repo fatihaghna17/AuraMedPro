@@ -55,7 +55,10 @@ import {
   Brain,
   StickyNote,
   Bookmark,
-  Flag
+  Flag,
+  Pause,
+  Upload,
+  Coffee
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -394,6 +397,7 @@ import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achievements';
+import { OnboardingTour } from './components/OnboardingTour';
 
 export default function App() {
   // === React states ===
@@ -669,6 +673,44 @@ export default function App() {
     triggerToast('Hasil kuis disalin ke clipboard!', '📋');
   };
 
+  // === Pomodoro Timer State ===
+  const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60);
+  const [pomodoroActive, setPomodoroActive] = useState(false);
+  const [pomodoroMode, setPomodoroMode] = useState<'focus' | 'break'>('focus');
+  const [pomodoroCount, setPomodoroCount] = useState(0);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (pomodoroActive && pomodoroSecondsLeft > 0) {
+      interval = setInterval(() => {
+        setPomodoroSecondsLeft(prev => prev - 1);
+      }, 1000);
+    } else if (pomodoroActive && pomodoroSecondsLeft === 0) {
+      setPomodoroActive(false);
+      const isFocus = pomodoroMode === 'focus';
+      if (isFocus) setPomodoroCount(c => c + 1);
+      
+      triggerToast(isFocus ? 'Sesi fokus selesai! Waktunya istirahat.' : 'Waktu istirahat selesai! Mari fokus lagi.', isFocus ? '☕' : '🧠');
+      
+      if (Notification.permission === 'granted') {
+        new Notification(isFocus ? 'AuraMedPro: Fokus Selesai' : 'AuraMedPro: Istirahat Selesai', {
+          body: isFocus ? 'Bagus! Waktunya istirahat sejenak 5 menit.' : 'Waktu istirahat selesai. Ayo lanjut belajar!'
+        });
+      }
+      
+      setPomodoroMode(isFocus ? 'break' : 'focus');
+      setPomodoroSecondsLeft(isFocus ? 5 * 60 : 25 * 60);
+    }
+    return () => clearInterval(interval);
+  }, [pomodoroActive, pomodoroSecondsLeft, pomodoroMode]);
+
+  useEffect(() => {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+
   const submitReport = async () => {
     if (reportModal.questionIndex === null || !currentUser) return;
     const q = currentQuiz[reportModal.questionIndex];
@@ -693,6 +735,61 @@ export default function App() {
       setReportDescription('');
     }
   };
+
+  const exportData = () => {
+    const data = {
+      version: '1.0',
+      exported_at: new Date().toISOString(),
+      quiz_history: quizHistory,
+      srs_cards: srs.cards,
+      study_notes: studyRoom.notes,
+      bookmarks: studyRoom.bookmarks
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `auramedpro-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    triggerToast('Data berhasil diexport!', '💾');
+  };
+
+  const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        const data = JSON.parse(text);
+        if (data.version !== '1.0') throw new Error('Format tidak didukung');
+        
+        // Merge logic for local storage
+        if (data.quiz_history) {
+          const merged = [...quizHistory, ...data.quiz_history];
+          localStorage.setItem('cbt_quiz_history', JSON.stringify(merged));
+        }
+        if (data.srs_cards) {
+          localStorage.setItem('cbt_srs_cards', JSON.stringify([...srs.cards, ...data.srs_cards]));
+        }
+        if (data.study_notes) {
+          localStorage.setItem('cbt_study_notes', JSON.stringify([...studyRoom.notes, ...data.study_notes]));
+        }
+        if (data.bookmarks) {
+          localStorage.setItem('cbt_bookmarks', JSON.stringify([...studyRoom.bookmarks, ...data.bookmarks]));
+        }
+        
+        triggerToast('Data berhasil diimport! Memuat ulang...', '✅');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        triggerToast('Gagal mengimport data', '❌');
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
 
 
@@ -3050,6 +3147,7 @@ export default function App() {
             {/* 🏠 TAB 1: BERANDA */}
             {dashboardTab === 'home' && (
               <div className="space-y-6">
+                <OnboardingTour theme={theme} onComplete={() => console.log('Tour done')} />
                 {/* Greeting & Level progress card */}
                 <div className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
                   theme === 'dark'
@@ -3334,6 +3432,63 @@ export default function App() {
                         })}
                       </div>
                     </div>
+
+                    {/* Pomodoro Timer Widget */}
+                    <div>
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Pomodoro Timer</h3>
+                      <div className={`p-5 rounded-2xl border flex flex-col items-center justify-center transition-colors ${
+                        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200 shadow-sm'
+                      }`}>
+                        <div className="relative w-32 h-32 mb-4">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="64" cy="64" r="58" className="fill-none stroke-slate-200 dark:stroke-slate-800" strokeWidth="8" />
+                            <circle 
+                              cx="64" cy="64" r="58" 
+                              className={`fill-none ${pomodoroMode === 'focus' ? 'stroke-indigo-500' : 'stroke-emerald-500'} transition-all duration-1000`} 
+                              strokeWidth="8" 
+                              strokeDasharray="364.4" 
+                              strokeDashoffset={364.4 - (364.4 * (pomodoroSecondsLeft / (pomodoroMode === 'focus' ? 25 * 60 : 5 * 60)))}
+                              strokeLinecap="round" 
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-black tracking-tighter">
+                              {Math.floor(pomodoroSecondsLeft / 60).toString().padStart(2, '0')}:{(pomodoroSecondsLeft % 60).toString().padStart(2, '0')}
+                            </span>
+                            <span className={`text-[9px] font-extrabold uppercase tracking-widest mt-1 ${pomodoroMode === 'focus' ? 'text-indigo-500' : 'text-emerald-500'}`}>
+                              {pomodoroMode === 'focus' ? 'Fokus' : 'Istirahat'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 w-full">
+                          <button
+                            onClick={() => setPomodoroActive(!pomodoroActive)}
+                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                              pomodoroActive 
+                                ? 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20' 
+                                : 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-600 hover:scale-105'
+                            }`}
+                          >
+                            {pomodoroActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                            {pomodoroActive ? 'Jeda' : 'Mulai'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPomodoroActive(false);
+                              setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
+                            }}
+                            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 mt-4 flex items-center gap-1.5">
+                          <Coffee className="w-3.5 h-3.5" /> Sesi fokus diselesaikan: {pomodoroCount}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -4187,6 +4342,39 @@ export default function App() {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
+
+                  {/* Data Management Section */}
+                  <div>
+                    <h3 className={`text-sm font-black mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      <Download className="w-4 h-4 text-indigo-500" /> Ekspor & Impor Data
+                    </h3>
+                    <p className={`text-xs mb-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Backup data riwayat kuis, catatan (Study Room), dan progress SRS Anda, atau pulihkan dari file backup sebelumnya.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={exportData}
+                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-sm font-bold hover:bg-indigo-500/20 transition-all cursor-pointer"
+                      >
+                        <Download className="w-4 h-4" />
+                        Ekspor JSON
+                      </button>
+                      
+                      <label className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer">
+                        <Upload className="w-4 h-4" />
+                        Impor JSON
+                        <input 
+                          type="file" 
+                          accept=".json" 
+                          className="hidden" 
+                          onChange={importData}
+                        />
+                      </label>
                     </div>
                   </div>
 
@@ -5090,13 +5278,20 @@ export default function App() {
                           {currentQuiz[currentIndex].metadata?.sub_kompetensi_klinis || 'Sains Medis'}
                         </span>
                         <span>•</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-extrabold ${
-                          currentQuiz[currentIndex].metadata?.tingkat_kesulitan === 'Sulit'
-                            ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                            : currentQuiz[currentIndex].metadata?.tingkat_kesulitan === 'Mudah'
-                            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                        <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] uppercase font-extrabold ${
+                          currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
+                            ? 'bg-rose-500/20 text-rose-400'
+                            : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-amber-500/20 text-amber-400'
                         }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
+                              ? 'bg-rose-500'
+                              : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
+                              ? 'bg-emerald-500'
+                              : 'bg-amber-500'
+                          }`} />
                           {currentQuiz[currentIndex].metadata?.tingkat_kesulitan || 'Sedang'}
                         </span>
                       </div>
@@ -5533,17 +5728,22 @@ export default function App() {
                         const isDoubt = doubtStatus[idx];
                         const isActive = idx === currentIndex;
                         
+                        const diff = currentQuiz[idx].metadata?.tingkat_kesulitan?.toLowerCase();
+                        let diffBorder = 'border-l-[3px] border-l-amber-500';
+                        if (diff === 'mudah') diffBorder = 'border-l-[3px] border-l-emerald-500';
+                        if (diff === 'sukar' || diff === 'sulit') diffBorder = 'border-l-[3px] border-l-rose-500';
+
                         let btnClass = "";
                         if (isActive) {
-                          btnClass = "border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-1 ring-indigo-500/20";
+                          btnClass = `border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-1 ring-indigo-500/20 ${diffBorder}`;
                         } else if (isDoubt) {
-                          btnClass = "bg-amber-500 border-amber-500 text-white shadow-sm shadow-amber-500/10";
+                          btnClass = `bg-amber-500 border-amber-500 text-white shadow-sm shadow-amber-500/10 ${diffBorder}`;
                         } else if (isAnswered) {
-                          btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/10";
+                          btnClass = `bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/10 ${diffBorder}`;
                         } else {
                           btnClass = theme === 'dark' 
-                            ? 'bg-slate-800/40 border-slate-850 hover:bg-slate-800 text-slate-400' 
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-655 border-slate-200/60';
+                            ? `bg-slate-800/40 hover:bg-slate-800 text-slate-400 border-r border-y border-slate-850 ${diffBorder}` 
+                            : `bg-slate-100 hover:bg-slate-200 text-slate-655 border-r border-y border-slate-200/60 ${diffBorder}`;
                         }
 
                         return (
