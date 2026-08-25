@@ -565,6 +565,14 @@ export default function App() {
   } = useQuizState();
 
   const srs = useSRS(currentUser?.id || null);
+  const [srsAnswerRevealed, setSrsAnswerRevealed] = useState(false);
+  const [srsPendingRating, setSrsPendingRating] = useState<QualityRating | null>(null);
+
+  useEffect(() => {
+    setSrsAnswerRevealed(false);
+    setSrsPendingRating(null);
+  }, [srs.currentReviewIndex, srs.isReviewing]);
+
   const studyRoom = useStudyRoom(currentUser?.id || null);
   const achievements = useAchievements(currentUser?.id || null, (xpReward) => {
     setUserXP(prev => prev + xpReward);
@@ -4829,18 +4837,29 @@ export default function App() {
                               ))}
                             </div>
                           )}
-                          <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
-                            Jawaban Benar: {getCorrectLetterForQuestion(srs.dueCards[srs.currentReviewIndex].question_json)}
+                          {srsAnswerRevealed && (
+                            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
+                              Jawaban Benar: {getCorrectLetterForQuestion(srs.dueCards[srs.currentReviewIndex].question_json)}
+                            </div>
+                          )}
+                        </div>
+                        {!srsAnswerRevealed ? (
+                          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            <button onClick={() => { setSrsPendingRating(0); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition">0: Blackout</button>
+                            <button onClick={() => { setSrsPendingRating(1); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition">1: Salah</button>
+                            <button onClick={() => { setSrsPendingRating(2); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition">2: Hampir</button>
+                            <button onClick={() => { setSrsPendingRating(3); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-lime-500 rounded-lg hover:bg-lime-600 transition">3: Sulit</button>
+                            <button onClick={() => { setSrsPendingRating(4); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition">4: Ragu</button>
+                            <button onClick={() => { setSrsPendingRating(5); setSrsAnswerRevealed(true); }} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition">5: Sempurna</button>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                          <button onClick={() => srs.submitRating(0)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition">0: Blackout</button>
-                          <button onClick={() => srs.submitRating(1)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition">1: Salah</button>
-                          <button onClick={() => srs.submitRating(2)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition">2: Hampir</button>
-                          <button onClick={() => srs.submitRating(3)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-lime-500 rounded-lg hover:bg-lime-600 transition">3: Sulit</button>
-                          <button onClick={() => srs.submitRating(4)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition">4: Ragu</button>
-                          <button onClick={() => srs.submitRating(5)} className="py-3 text-[10px] sm:text-xs font-bold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition">5: Sempurna</button>
-                        </div>
+                        ) : (
+                          <button 
+                            onClick={() => { if (srsPendingRating !== null) srs.submitRating(srsPendingRating); }}
+                            className="w-full py-3 text-sm font-bold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20"
+                          >
+                            Lanjut →
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
