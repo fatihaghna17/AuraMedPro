@@ -19,7 +19,7 @@ export interface AIExplanationParams {
 
 export const requestAIExplanation = async (params: AIExplanationParams): Promise<string> => {
   try {
-    const response = await fetch('/.netlify/functions/ai-explain', {
+    const response = await fetch('/api/ai-explain', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
