@@ -1,8 +1,15 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
 import * as jsYaml from 'js-yaml';
 import { Question } from '../types';
+
+// Configure marked for safe rendering
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
 export const SCORE_FEEDBACKS: Record<number, string> = {
   0: "Skor 0? Kamu ngerjainnya merem, atau emang niat nyumbang kuota doang ke server? Astaga naga...",
@@ -181,6 +188,18 @@ export const isUserAnswerCorrect = (userAns: string | null, q: Question): boolea
   }
 
   return false;
+};
+
+export const renderMarkdown = (text: string): React.ReactElement | null => {
+  if (!text || typeof text !== 'string') return null;
+  // Convert markdown to HTML first, then sanitize
+  const rawHtml = marked.parse(text) as string;
+  const clean = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 's', 'sub', 'sup', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'img', 'blockquote', 'code', 'pre', 'hr'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'colspan', 'rowspan'],
+    ALLOW_DATA_ATTR: false
+  });
+  return <span dangerouslySetInnerHTML={{ __html: clean }} />;
 };
 
 export const renderHtmlText = (text: any) => {

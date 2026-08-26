@@ -387,6 +387,7 @@ import {
   getCorrectLetterForQuestion,
   isUserAnswerCorrect,
   renderHtmlText,
+  renderMarkdown,
   getQuestionImage,
   renderQuestionImage,
   mapUnifiedQuestion,
@@ -5698,7 +5699,7 @@ export default function App() {
                                       </div>
                                     ) : aiExplanation ? (
                                       <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                        {renderHtmlText(aiExplanation)}
+                                        {renderMarkdown(aiExplanation)}
                                       </div>
                                     ) : null}
 
