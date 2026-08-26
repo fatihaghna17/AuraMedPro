@@ -572,7 +572,6 @@ export default function App() {
     setSrsAnswerRevealed(false);
     setSrsPendingRating(null);
   }, [srs.currentReviewIndex, srs.isReviewing]);
-
   const studyRoom = useStudyRoom(currentUser?.id || null);
   const achievements = useAchievements(currentUser?.id || null, (xpReward) => {
     setUserXP(prev => prev + xpReward);
