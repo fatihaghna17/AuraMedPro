@@ -77,6 +77,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       },
       body: JSON.stringify({
         model: 'auto',
+        stream: false,
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: userPrompt }
