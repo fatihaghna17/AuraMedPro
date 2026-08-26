@@ -111,8 +111,9 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Gemini API Error:', errText);
-      throw new Error('Gagal berkomunikasi dengan AI service.');
+      console.error('Gemini API Error:', response.status, errText);
+      // Return actual Gemini error for debugging
+      throw new Error(`Gemini API ${response.status}: ${errText.substring(0, 200)}`);
     }
 
     const data = await response.json();
