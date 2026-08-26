@@ -1,5 +1,6 @@
 name = "auramedpro"
 compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"
 
 # R2 Bucket Binding
 [[r2_buckets]]
