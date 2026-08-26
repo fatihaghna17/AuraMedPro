@@ -7,6 +7,18 @@ const rateLimitCache = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
+// Ordered list of models to try (fallback chain)
+const MODEL_FALLBACK = [
+  'auto/best-free',
+  'auto/best-chat',
+  'auto/fast',
+  'aug/gemini-3.1-pro-preview',
+  'aug/glm-5.2',
+  'oc/deepseek-v4-flash-free',
+  'aug/haiku4.5',
+  'aug/sonnet4.5',
+];
+
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const corsHeaders = {
@@ -65,37 +77,56 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         userPrompt = `${baseContext}Berikan penjelasan singkat.`;
     }
 
-    // OmniRoute: OpenAI-compatible API
+    // OmniRoute: OpenAI-compatible API with model fallback
     const baseUrl = env.OMNIROUTE_BASE_URL.replace(/\/+$/, '');
     const endpoint = `${baseUrl}/chat/completions`;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.OMNIROUTE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'auto',
-        stream: false,
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
-      })
-    });
+    let lastError = '';
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`OmniRoute API ${response.status}: ${errText.substring(0, 300)}`);
+    for (const model of MODEL_FALLBACK) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.OMNIROUTE_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model,
+            stream: false,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 800,
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          lastError = `${model}: ${response.status} ${errText.substring(0, 100)}`;
+          continue; // Try next model
+        }
+
+        const data = await response.json();
+        const generatedText = data.choices?.[0]?.message?.content;
+
+        if (!generatedText) {
+          lastError = `${model}: empty response`;
+          continue; // Try next model
+        }
+
+        return new Response(JSON.stringify({ explanation: generatedText }), { status: 200, headers: corsHeaders });
+
+      } catch (err: any) {
+        lastError = `${model}: ${err.message}`;
+        continue; // Try next model
+      }
     }
 
-    const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content || "Maaf, AI tidak dapat menghasilkan penjelasan saat ini.";
-
-    return new Response(JSON.stringify({ explanation: generatedText }), { status: 200, headers: corsHeaders });
+    // All models failed
+    throw new Error(`Semua model AI gagal. Terakhir: ${lastError}. Coba lagi beberapa saat.`);
 
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { status: 500, headers: corsHeaders });
