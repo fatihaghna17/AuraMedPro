@@ -448,6 +448,8 @@ export default function App() {
   });
   
   const [globalCustomFolders, setGlobalCustomFolders] = useState<string[]>([]);
+  const [moveQuizModal, setMoveQuizModal] = useState<{ quizKey: string; quizName: string } | null>(null);
+
   const [globalQuizFolderMap, setGlobalQuizFolderMap] = useState<Record<string, string>>({});
   const [quizHistory, setQuizHistory] = useState<HistoryEntry[]>(() => {
     const saved = localStorage.getItem('cbtQuizHistory');
@@ -3942,6 +3944,17 @@ export default function App() {
                                           </button>
                                         )}
                                         
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                          }}
+                                          className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-colors"
+                                          title="Pindah ke folder lain"
+                                        >
+                                          <FolderPlus className="w-4 h-4" />
+                                        </button>
+
                                         {!globalDatabases.includes(key) && (
                                           <button
                                             onClick={(e) => removeDatabase(key, e)}
@@ -4070,6 +4083,17 @@ export default function App() {
                                         </button>
                                       )}
                                       
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-colors"
+                                        title="Pindah ke folder lain"
+                                      >
+                                        <FolderPlus className="w-4 h-4" />
+                                      </button>
+                                      
                                       {!globalDatabases.includes(key) && (
                                         <button
                                           onClick={(e) => removeDatabase(key, e)}
@@ -4150,10 +4174,25 @@ export default function App() {
                               <span>{key.split('/').pop()}</span>
                               <button 
                                 onClick={() => setSelectedDatabases(prev => prev.filter(d => d !== key))}
-                                className="text-slate-450 hover:text-rose-500 font-extrabold"
+                                className="text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 font-extrabold"
+                                title="Hapus dari seleksi"
                               >
                                 ×
                               </button>
+                              {!globalDatabases.includes(key) && (
+                                <button 
+                                  onClick={() => {
+                                    if (window.confirm(`Hapus bank soal "${key.split('/').pop()}" secara permanen?`)) {
+                                      removeDatabase(key, { stopPropagation: () => {} } as React.MouseEvent);
+                                      setSelectedDatabases(prev => prev.filter(d => d !== key));
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-rose-500 transition-colors"
+                                  title="Hapus bank soal secara permanen"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
                             </span>
                           ))}
                         </div>
@@ -7278,6 +7317,85 @@ export default function App() {
         ))}
       </AnimatePresence>
     </div>
+
+    {/* Move Quiz to Folder - Bottom Sheet Modal */}
+    <AnimatePresence>
+      {moveQuizModal && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            onClick={() => setMoveQuizModal(null)}
+          />
+          {/* Bottom Sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] rounded-t-3xl shadow-2xl overflow-hidden ${
+              theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'
+            }`}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className={`w-10 h-1 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`} />
+            </div>
+          
+            {/* Header */}
+            <div className={`px-5 pb-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+              <h3 className={`text-sm font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                Pindah: {moveQuizModal.quizName}
+              </h3>
+              <p className="text-[10px] text-slate-500 mt-0.5">Pilih folder tujuan</p>
+            </div>
+          
+            {/* Folder list */}
+            <div className="overflow-y-auto max-h-[50vh] p-3 space-y-1.5">
+              {/* Root option */}
+              <button
+                onClick={() => {
+                  handleMoveQuiz(moveQuizModal.quizKey, 'root');
+                  setMoveQuizModal(null);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
+                  theme === 'dark' 
+                    ? 'hover:bg-slate-800 text-slate-300' 
+                    : 'hover:bg-slate-100 text-slate-700'
+                }`}
+              >
+                <FileText className="w-4 h-4 text-slate-400" />
+                <span>File Lepas (Root)</span>
+              </button>
+            
+              {/* Custom folders */}
+              {[...globalCustomFolders, ...customFolders]
+                .filter((v, i, arr) => arr.indexOf(v) === i) // deduplicate
+                .map((folder) => (
+                  <button
+                    key={folder}
+                    onClick={() => {
+                      handleMoveQuiz(moveQuizModal.quizKey, folder);
+                      setMoveQuizModal(null);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
+                      theme === 'dark' 
+                        ? 'hover:bg-slate-800 text-slate-300' 
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <Folder className="w-4 h-4 text-indigo-400" />
+                    <span>{folder}</span>
+                  </button>
+                ))}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
 
     </div>
   );
