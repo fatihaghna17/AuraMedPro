@@ -4257,10 +4257,18 @@ export default function App() {
                   )}
 
                   {selectedDatabases.length > 0 && (
-                    <div className="mt-6 flex justify-end">
+                    <div className="sticky bottom-0 z-30 py-4 -mx-6 -mb-6 px-6 mt-6 flex justify-end"
+                      style={{
+                        background: theme === 'dark'
+                          ? 'linear-gradient(to top, rgb(15 23 42) 60%, transparent)'
+                          : 'linear-gradient(to top, rgb(255 255 255) 60%, transparent)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)'
+                      }}
+                    >
                       <button
                         onClick={() => setDashboardTab('new')}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/10 transition-all cursor-pointer"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                       >
                         Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih) <ChevronRight className="w-4 h-4" />
                       </button>
