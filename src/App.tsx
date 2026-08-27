@@ -1469,16 +1469,28 @@ export default function App() {
             ? JSON.parse(row.questions_json)
             : row.questions_json;
             
+          // R2 fetch fallback: jika data lama masih berupa referensi R2, coba ambil dari R2
+          // Tapi JANGAN pernah silent-replace jadi [] — jika R2 gagal, biarkan data apa adanya
           if (questions && !Array.isArray(questions) && questions.r2_url) {
             try {
               const res = await fetch(questions.r2_url);
               if (res.ok) {
-                questions = await res.json();
-              } else {
-                questions = [];
+                const fetched = await res.json();
+                if (Array.isArray(fetched) && fetched.length > 0) {
+                  questions = fetched;
+                  // Perbarui Supabase: simpan array lengkap sebagai source of truth
+                  supabase.from('question_banks')
+                    .update({ questions_json: fetched })
+                    .eq('name', row.name)
+                    .then(() => console.log('Migrated R2 ref to full array:', row.name));
+                }
               }
             } catch (err) {
-              console.error('Failed to fetch from R2:', err);
+              console.warn('R2 fetch failed for', row.name, ':', err);
+            }
+            // Jika R2 gagal, questions tetap berupa { r2_url, r2_key }
+            // Ini akan fallback ke [] di bawah, yang lebih baik dari data rusak
+            if (!Array.isArray(questions)) {
               questions = [];
             }
           }
@@ -1756,11 +1768,13 @@ export default function App() {
         // Simpan ke database Supabase
         (async () => {
           try {
-            const r2Data = await uploadQuestionsToR2(file.name, finalQuestions);
-            const storagePayload = r2Data ? r2Data : finalQuestions;
+            // R2 upload sebagai backup saja (best-effort), jangan blok jika gagal
+            uploadQuestionsToR2(file.name, finalQuestions).catch(err =>
+              console.warn('R2 upload skipped:', err)
+            );
             const { error } = await supabase
               .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+              .upsert({ user_id: currentUser.id, name: file.name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
@@ -1836,11 +1850,13 @@ export default function App() {
       try {
         // Simpan setiap bank soal ke Supabase
         for (const [name, questions] of Object.entries(newDatabases)) {
-          const r2Data = await uploadQuestionsToR2(name, questions);
-          const storagePayload = r2Data ? r2Data : questions;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, questions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
           if (error) throw error;
         }
 
@@ -1905,11 +1921,13 @@ export default function App() {
     if (finalQuestions && finalQuestions.length > 0) {
       if (currentUser) {
         try {
-          const r2Data = await uploadQuestionsToR2(name, finalQuestions);
-          const storagePayload = r2Data ? r2Data : finalQuestions;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, finalQuestions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
           if (error) throw error;
           
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
