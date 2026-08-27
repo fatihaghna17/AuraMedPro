@@ -5027,11 +5027,19 @@ export default function App() {
                               ))}
                             </div>
                           )}
-                          {srsAnswerRevealed && (
-                            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
-                              Jawaban Benar: {getCorrectLetterForQuestion(srs.dueCards[srs.currentReviewIndex].question_json)}
-                            </div>
-                          )}
+                          {srsAnswerRevealed && (() => {
+                            const currentCard = srs.dueCards[srs.currentReviewIndex];
+                            const q = currentCard.question_json;
+                            const isIsian = !q.pilihan || q.pilihan.length === 0;
+                            const displayAnswer = isIsian
+                              ? q.jawaban_benar
+                              : getCorrectLetterForQuestion(q);
+                            return (
+                              <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
+                                Jawaban Benar: {displayAnswer}
+                              </div>
+                            );
+                          })()}
                         </div>
                         {!srsAnswerRevealed ? (
                           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
