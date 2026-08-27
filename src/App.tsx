@@ -1469,28 +1469,35 @@ export default function App() {
             ? JSON.parse(row.questions_json)
             : row.questions_json;
             
-          // R2 fetch fallback: jika data lama masih berupa referensi R2, coba ambil dari R2
-          // Tapi JANGAN pernah silent-replace jadi [] — jika R2 gagal, biarkan data apa adanya
-          if (questions && !Array.isArray(questions) && questions.r2_url) {
+          if (questions && !Array.isArray(questions) && questions.r2_key) {
+            // Construct URL yang benar menggunakan r2_key
+            const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
+            const correctUrl = `${R2_BASE}/${questions.r2_key}`;
             try {
-              const res = await fetch(questions.r2_url);
+              const res = await fetch(correctUrl);
               if (res.ok) {
                 const fetched = await res.json();
                 if (Array.isArray(fetched) && fetched.length > 0) {
+                  const r2Key = questions.r2_key;
+                  const oldUrl = questions.r2_url;
                   questions = fetched;
-                  // Perbarui Supabase: simpan array lengkap sebagai source of truth
-                  supabase.from('question_banks')
-                    .update({ questions_json: fetched })
-                    .eq('name', row.name)
-                    .then(() => console.log('Migrated R2 ref to full array:', row.name));
+                  // Auto-migrate: perbaiki r2_url di Supabase jika URL lama salah
+                  if (oldUrl !== correctUrl) {
+                    supabase.from('question_banks')
+                      .update({ questions_json: { r2_url: correctUrl, r2_key: r2Key } })
+                      .eq('name', row.name)
+                      .then(() => console.log('Auto-migrated R2 URL for:', row.name));
+                  }
+                } else {
+                  console.warn('R2 returned empty/invalid data for:', row.name);
+                  questions = [];
                 }
+              } else {
+                console.warn('R2 fetch failed (status', res.status, ') for:', row.name);
+                questions = [];
               }
             } catch (err) {
-              console.warn('R2 fetch failed for', row.name, ':', err);
-            }
-            // Jika R2 gagal, questions tetap berupa { r2_url, r2_key }
-            // Ini akan fallback ke [] di bawah, yang lebih baik dari data rusak
-            if (!Array.isArray(questions)) {
+              console.error('Failed to fetch from R2 for', row.name, ':', err);
               questions = [];
             }
           }
@@ -1976,6 +1983,57 @@ export default function App() {
         // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
         triggerToast(`File "${name}" dihapus secara lokal, gagal menghapus di cloud`, '⚠️');
+      }
+    })();
+  };
+
+  const removeGlobalDatabase = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`)) return;
+    (async () => {
+      try {
+        // Hapus dari Supabase tanpa filter user_id (karena global)
+        const { data: bankData, error: fetchErr } = await supabase
+          .from('question_banks')
+          .select('questions_json')
+          .eq('name', name)
+          .single();
+
+        if (!fetchErr && bankData?.questions_json) {
+          const qj = bankData.questions_json;
+          // Jika data berupa referensi R2, hapus file dari R2 juga
+          if (qj && !Array.isArray(qj) && qj.r2_key) {
+            await deleteQuestionsFromR2(qj.r2_key);
+          }
+        }
+
+        const { error } = await supabase
+          .from('question_banks')
+          .delete()
+          .eq('name', name);
+        if (error) throw error;
+
+        // Update semua local state
+        const updated = { ...questionDatabase };
+        delete updated[name];
+        setQuestionDatabase(updated);
+        setSelectedDatabases((prev) => prev.filter((d) => d !== name));
+        setGlobalDatabases((prev) => prev.filter((d) => d !== name));
+        setQuestionLimits((prev) => { const next = { ...prev }; delete next[name]; return next; });
+
+        // Hapus dari global folder map
+        setGlobalQuizFolderMap((prev) => {
+          const next = { ...prev };
+          delete next[name];
+          // Simpan perubahan ke Supabase
+          supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: next }).then(() => {}, console.error);
+          return next;
+        });
+
+        triggerToast(`Kuis global "${name}" berhasil dihapus!`, '🗑️');
+      } catch (err) {
+        console.error(err);
+        triggerToast(`Gagal menghapus kuis global "${name}"`, '❌');
       }
     })();
   };
@@ -3973,7 +4031,7 @@ export default function App() {
                                           <FolderPlus className="w-4 h-4" />
                                         </button>
 
-                                        {!globalDatabases.includes(key) && (
+                                        {!globalDatabases.includes(key) ? (
                                           <button
                                             onClick={(e) => removeDatabase(key, e)}
                                             className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -3981,7 +4039,15 @@ export default function App() {
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
-                                        )}
+                                        ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                          <button
+                                            onClick={(e) => removeGlobalDatabase(key, e)}
+                                            className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
+                                            title="Hapus kuis global (admin)"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        ) : null}
                                       </div>
                                     </div>
 
@@ -4112,7 +4178,7 @@ export default function App() {
                                         <FolderPlus className="w-4 h-4" />
                                       </button>
                                       
-                                      {!globalDatabases.includes(key) && (
+                                      {!globalDatabases.includes(key) ? (
                                         <button
                                           onClick={(e) => removeDatabase(key, e)}
                                           className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -4120,7 +4186,15 @@ export default function App() {
                                         >
                                           <Trash2 className="w-4 h-4" />
                                         </button>
-                                      )}
+                                      ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                        <button
+                                          onClick={(e) => removeGlobalDatabase(key, e)}
+                                          className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
+                                          title="Hapus kuis global (admin)"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      ) : null}
                                     </div>
                                   </div>
 
