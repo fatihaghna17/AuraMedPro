@@ -713,7 +713,7 @@ export default function App() {
       
       triggerToast(isFocus ? 'Sesi fokus selesai! Waktunya istirahat.' : 'Waktu istirahat selesai! Mari fokus lagi.', isFocus ? '☕' : '🧠');
       
-      if (Notification.permission === 'granted') {
+      if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(isFocus ? 'AuraMedPro: Fokus Selesai' : 'AuraMedPro: Istirahat Selesai', {
           body: isFocus ? 'Bagus! Waktunya istirahat sejenak 5 menit.' : 'Waktu istirahat selesai. Ayo lanjut belajar!'
         });
@@ -726,7 +726,7 @@ export default function App() {
   }, [pomodoroActive, pomodoroSecondsLeft, pomodoroMode]);
 
   useEffect(() => {
-    if (Notification.permission === 'default') {
+    if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
