@@ -1413,6 +1413,99 @@ export default function App() {
     }
   };
 
+  // === RECORD QUIZ RESULTS TO LEADERBOARD ===
+  const recordQuizToLeaderboard = useCallback(async (
+    fileName: string,
+    correctCount: number,
+    totalCount: number
+  ) => {
+    if (!currentUser || totalCount === 0) return;
+
+    const score = Math.round((correctCount / totalCount) * 100);
+
+    try {
+      // 1. Insert ke quiz_history_logs (untuk time-filtered global leaderboard)
+      const { error: logError } = await supabase
+        .from('quiz_history_logs')
+        .insert({
+          user_id: currentUser.id,
+          file_name: fileName,
+          score: score,
+          correct_count: correctCount,
+          total_count: totalCount,
+          created_at: new Date().toISOString(),
+        });
+
+      if (logError) console.error('Failed to insert quiz_history_logs:', logError);
+
+      // 2. Insert/update leaderboard (untuk per-file leaderboard)
+      // Cek apakah user sudah punya skor untuk file ini
+      const { data: existingScore } = await supabase
+        .from('leaderboard')
+        .select('score, questions_count')
+        .eq('user_id', currentUser.id)
+        .eq('file_name', fileName)
+        .maybeSingle();
+
+      if (existingScore) {
+        // Update hanya jika skor baru lebih tinggi, atau jumlah soal lebih banyak
+        if (score > existingScore.score || totalCount > existingScore.questions_count) {
+          await supabase
+            .from('leaderboard')
+            .update({
+              score: Math.max(score, existingScore.score),
+              questions_count: Math.max(totalCount, existingScore.questions_count),
+              created_at: new Date().toISOString(),
+            })
+            .eq('user_id', currentUser.id)
+            .eq('file_name', fileName);
+        }
+      } else {
+        // Insert baru
+        await supabase
+          .from('leaderboard')
+          .insert({
+            user_id: currentUser.id,
+            file_name: fileName,
+            score: score,
+            questions_count: totalCount,
+            created_at: new Date().toISOString(),
+          });
+      }
+
+      // 3. Update profiles.total_questions_answered (tambah correctCount)
+      // Gunakan RPC untuk atomic increment agar tidak race condition
+      const { error: profileError } = await supabase.rpc('increment_total_answered', {
+        user_id_input: currentUser.id,
+        count_input: correctCount,
+      });
+
+      if (profileError) {
+        // Fallback: update manual jika RPC tidak ada
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('total_questions_answered')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({
+              total_questions_answered: (profile.total_questions_answered || 0) + correctCount,
+            })
+            .eq('id', currentUser.id);
+        }
+      }
+
+      // Re-fetch leaderboard setelah update
+      await fetchGlobalLeaderboard();
+
+    } catch (err) {
+      console.error('Failed to record quiz to leaderboard:', err);
+    }
+  }, [currentUser, profileUsername, globalTimeFilter]);
+
   // Debounced auto-save effect
   useEffect(() => {
     if (screen !== 'quiz' || !currentUser || currentQuiz.length === 0) return;
@@ -2911,24 +3004,19 @@ export default function App() {
               .delete()
               .eq('user_id', currentUser.id);
           }
-          // 1.5. Insert quiz attempt log
-          await supabase
-            .from('quiz_history_logs')
-            .insert({
-              user_id: currentUser.id,
-              file_name: selectedDatabases.join(', '),
-              score: finalScore,
-              correct_count: correct,
-              total_count: total
-            });
-
-          // 2. Refresh global leaderboard to update local view
-          // (total_questions_answered has already been updated live for correct answers)
-          await fetchGlobalLeaderboard();
         } catch (err) {
-          console.error('Error updating stats after quiz completion:', err);
+          console.error('Error updating session after quiz completion:', err);
         }
       })();
+    }
+
+    if (currentUser) {
+      const quizFileName = selectedDatabases.length === 1
+        ? selectedDatabases[0]
+        : selectedDatabases.length > 1
+        ? selectedDatabases.join(', ')
+        : 'Kuis';
+      recordQuizToLeaderboard(quizFileName, correct, total);
     }
 
     setScreen('result');
