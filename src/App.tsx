@@ -509,6 +509,7 @@ export default function App() {
   const [pasteContent, setPasteContent] = useState('');
   const [pasteError, setPasteError] = useState('');
   const activeQuizSessionIdRef = useRef<string | null>(null);
+  const hasRecordedLeaderboard = useRef(false);
   const [activeDashboardTab, setActiveDashboardTab] = useState<'riwayat' | 'leaderboard'>('riwayat');
   const [leaderboardType, setLeaderboardType] = useState<'global' | 'file'>('global');
   const [selectedLeaderboardFile, setSelectedLeaderboardFile] = useState<string>('');
@@ -1191,6 +1192,7 @@ export default function App() {
       setSelectedDatabases(selectedDbs || []);
       setQuizMode(session.quiz_mode);
 
+      hasRecordedLeaderboard.current = false;
       setScreen('quiz');
       setShowSidebar(true);
       setQuizSecondsLeft(session.seconds_left !== undefined ? session.seconds_left : pool.length * 60);
@@ -1505,6 +1507,38 @@ export default function App() {
       console.error('Failed to record quiz to leaderboard:', err);
     }
   }, [currentUser, profileUsername, globalTimeFilter]);
+
+  // Auto-record ke leaderboard saat kuis selesai (batch submit)
+  useEffect(() => {
+    const isQuizDone = screen === 'result';
+    const hasQuestions = currentQuiz && currentQuiz.length > 0;
+    const hasAnswers = userAnswers && userAnswers.length > 0;
+
+    if (isQuizDone && hasQuestions && hasAnswers && !hasRecordedLeaderboard.current && currentUser) {
+      hasRecordedLeaderboard.current = true;
+
+      // Hitung jumlah jawaban benar
+      let correctCount = 0;
+      currentQuiz.forEach((q: Question, i: number) => {
+        if (i < userAnswers.length) {
+          const userAns = userAnswers[i];
+          if (isUserAnswerCorrect(userAns, q)) {
+            correctCount++;
+          }
+        }
+      });
+
+      if (correctCount > 0) {
+        let quizName = 'Kuis';
+        if (selectedDatabases && selectedDatabases.length > 0) {
+          quizName = selectedDatabases.length === 1 ? selectedDatabases[0] : selectedDatabases.join(', ');
+        }
+
+        console.log(`[Leaderboard] Recording: ${correctCount}/${currentQuiz.length} correct for ${quizName}`);
+        recordQuizToLeaderboard(quizName, correctCount, currentQuiz.length);
+      }
+    }
+  }, [screen, currentQuiz, userAnswers, currentUser, selectedDatabases, recordQuizToLeaderboard]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -2601,6 +2635,7 @@ export default function App() {
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
     setQuizTimerActive(true);
     setScreen('quiz');
     setShowSidebar(true);
@@ -2639,6 +2674,7 @@ export default function App() {
     setIsDailyChallenge(true);
 
     activeQuizSessionIdRef.current = 'quiz_daily_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
     setQuizSecondsLeft(600); // 10 minutes
     setQuizTimerActive(true);
     setScreen('quiz');
@@ -2685,6 +2721,7 @@ export default function App() {
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_bookmark_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
     setQuizTimerActive(true);
     setScreen('quiz');
     setShowSidebar(true);
@@ -5534,6 +5571,7 @@ export default function App() {
                               setLastQuizScore(0);
                               setIsDailyChallenge(false);
                               activeQuizSessionIdRef.current = 'quiz_single_bm_' + Date.now();
+                              hasRecordedLeaderboard.current = false;
                               setQuizTimerActive(true);
                               setScreen('quiz');
                               setShowSidebar(true);
