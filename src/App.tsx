@@ -1250,7 +1250,7 @@ export default function App() {
       let allData: any[] = [];
 
       if (globalTimeFilter === 'all') {
-        // Semua waktu: pakai total_questions_answered dari profiles
+        // SEMUA WAKTU: pakai total_questions_answered dari profiles (kumulatif, tidak reset)
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, total_questions_answered, level')
@@ -1264,17 +1264,41 @@ export default function App() {
           total_questions_answered: row.total_questions_answered || 0
         }));
       } else {
-        // Filter waktu: hitung dari quiz_history_logs
-        const days = parseInt(globalTimeFilter);
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
-        const cutoffIso = cutoff.toISOString();
+        // FILTER WAKTU: hitung jawaban benar dari quiz_history_logs
+        // dengan fixed period berdasarkan WIB (UTC+7)
+
+        const now = new Date();
+        // Konversi ke WIB
+        const wibOffsetMs = 7 * 60 * 60 * 1000;
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+        const wibNow = new Date(utcMs + wibOffsetMs);
+
+        let cutoffDate: Date;
+
+        if (globalTimeFilter === '1') {
+          // HARI INI: sejak jam 00:00 WIB hari ini
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+        } else if (globalTimeFilter === '7') {
+          // MINGGU INI: sejak jam 00:00 WIB hari Senin terakhir
+          const dayOfWeek = wibNow.getDay(); // 0=Min, 1=Sen, 2=Sel, ...
+          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          cutoffDate = new Date(wibNow);
+          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
+          cutoffDate.setHours(0, 0, 0, 0);
+        } else {
+          // BULAN INI: sejak jam 00:00 WIB tanggal 1 bulan ini
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+        }
+
+        // Konversi cutoff WIB kembali ke UTC untuk query Supabase
+        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        const cutoffIso = new Date(cutoffUtcMs).toISOString();
 
         const { data, error } = await supabase
           .from('quiz_history_logs')
           .select(`
             user_id,
-            total_count,
+            correct_count,
             profiles (
               username,
               level
@@ -1284,7 +1308,7 @@ export default function App() {
 
         if (error) throw error;
 
-        // Aggregate total_count per user
+        // Aggregate correct_count per user
         const userMap: Record<string, { username: string; level: number; total: number }> = {};
         (data || []).forEach((row: any) => {
           const uid = row.user_id;
@@ -1295,7 +1319,8 @@ export default function App() {
               total: 0
             };
           }
-          userMap[uid].total += (row.total_count || 0);
+          // Hitung jawaban BENAR (correct_count)
+          userMap[uid].total += (row.correct_count || 0);
         });
 
         allData = Object.entries(userMap)
