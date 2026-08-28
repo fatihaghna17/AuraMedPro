@@ -4383,20 +4383,13 @@ export default function App() {
                   )}
 
                   {selectedDatabases.length > 0 && (
-                    <div className="sticky bottom-0 z-30 py-4 -mx-6 -mb-6 px-6 mt-6 flex justify-end"
-                      style={{
-                        background: theme === 'dark'
-                          ? 'linear-gradient(to top, rgb(15 23 42) 60%, transparent)'
-                          : 'linear-gradient(to top, rgb(255 255 255) 60%, transparent)',
-                        backdropFilter: 'blur(8px)',
-                        WebkitBackdropFilter: 'blur(8px)'
-                      }}
-                    >
+                    <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <button
                         onClick={() => setDashboardTab('new')}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                        className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 border border-white/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
                       >
-                        Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih) <ChevronRight className="w-4 h-4" />
+                        <span>Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih)</span>
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   )}
