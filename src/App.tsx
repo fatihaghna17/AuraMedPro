@@ -2553,6 +2553,51 @@ export default function App() {
     triggerToast('Daily Challenge dimulai! 10 Menit, 5 Soal, 2x XP!', '🔥');
   };
 
+  const startBookmarkPractice = () => {
+    if (!studyRoom.bookmarks || studyRoom.bookmarks.length === 0) {
+      triggerToast('Belum ada soal yang di-bookmark!', '⚠️');
+      return;
+    }
+
+    const bookmarkQuestions = studyRoom.bookmarks
+      .map(b => b.question_json)
+      .filter(Boolean);
+
+    if (bookmarkQuestions.length === 0) {
+      triggerToast('Data soal bookmark tidak valid!', '⚠️');
+      return;
+    }
+
+    const pool = shuffleQuestions 
+      ? shuffleArray(bookmarkQuestions) 
+      : [...bookmarkQuestions];
+
+    const processedPool = shuffleOptions 
+      ? pool.map(shuffleQuestionOptions) 
+      : pool;
+
+    setCurrentQuiz(processedPool);
+    setUserAnswers(new Array(processedPool.length).fill(null));
+    setDoubtStatus(new Array(processedPool.length).fill(false));
+    setIsRevealed(new Array(processedPool.length).fill(false));
+    setCurrentIndex(0);
+    setQuizSecondsLeft(processedPool.length * 60);
+
+    // Reset Gamification & States
+    setXpHistory([userXP]);
+    setOpenReviewIndices({});
+    setUnlockedHints({});
+    setHasSubmittedLeaderboard(false);
+    setLastQuizScore(0);
+    setIsDailyChallenge(false);
+
+    activeQuizSessionIdRef.current = 'quiz_bookmark_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    setQuizTimerActive(true);
+    setScreen('quiz');
+    setShowSidebar(true);
+    triggerToast(`Latihan ${processedPool.length} soal bookmark dimulai!`, '🔖');
+  };
+
   const checkAnswerNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     const userAnswer = userAnswers[currentIndex];
     const q = currentQuiz[currentIndex];
@@ -5287,19 +5332,31 @@ export default function App() {
                 </div>
 
                 {/* Sub-tabs inside notes */}
-                <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <button 
-                    onClick={() => setBankFilter('notes' as any)} 
-                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'notes' || bankFilter === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                  >
-                    Catatan ({studyRoom.notes.length})
-                  </button>
-                  <button 
-                    onClick={() => setBankFilter('bookmarks' as any)} 
-                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'bookmarks' ? 'bg-slate-100 dark:bg-slate-800 text-amber-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                  >
-                    Bookmark ({studyRoom.bookmarks.length})
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setBankFilter('notes' as any)} 
+                      className={`px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${bankFilter === 'notes' || bankFilter === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Catatan ({studyRoom.notes.length})
+                    </button>
+                    <button 
+                      onClick={() => setBankFilter('bookmarks' as any)} 
+                      className={`px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${bankFilter === 'bookmarks' ? 'bg-slate-100 dark:bg-slate-800 text-amber-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Bookmark ({studyRoom.bookmarks.length})
+                    </button>
+                  </div>
+
+                  {bankFilter === 'bookmarks' && studyRoom.bookmarks.length > 0 && (
+                    <button
+                      onClick={startBookmarkPractice}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      Practice ({studyRoom.bookmarks.length} Soal)
+                    </button>
+                  )}
                 </div>
 
                 {studyRoom.isLoading ? (
@@ -5367,21 +5424,41 @@ export default function App() {
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                            {String(b.question_json.pertanyaan || '').replace(/<[^>]*>?/gm, '')}
+                            {String(b.question_json?.pertanyaan || '').replace(/<[^>]*>?/gm, '')}
                           </p>
                         </div>
                         <div className="flex flex-shrink-0 gap-2">
                           <button 
                             onClick={() => {
-                              triggerToast('Fitur Practice dari bookmark segera hadir', '🚀');
+                              const q = b.question_json;
+                              if (!q) return;
+                              const pool = [q];
+                              setCurrentQuiz(pool);
+                              setUserAnswers([null]);
+                              setDoubtStatus([false]);
+                              setIsRevealed([false]);
+                              setCurrentIndex(0);
+                              setQuizSecondsLeft(60);
+                              setXpHistory([userXP]);
+                              setOpenReviewIndices({});
+                              setUnlockedHints({});
+                              setHasSubmittedLeaderboard(false);
+                              setLastQuizScore(0);
+                              setIsDailyChallenge(false);
+                              activeQuizSessionIdRef.current = 'quiz_single_bm_' + Date.now();
+                              setQuizTimerActive(true);
+                              setScreen('quiz');
+                              setShowSidebar(true);
+                              triggerToast('Mulai latihan soal bookmark!', '🔖');
                             }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition cursor-pointer"
                           >
+                            <Play className="w-3.5 h-3.5 fill-current" />
                             Practice
                           </button>
                           <button 
                             onClick={() => studyRoom.removeBookmark(b.question_ref)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition cursor-pointer"
                             title="Hapus Bookmark"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -6947,8 +7024,8 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Bookmark & Notes Actions for wrong answers */}
-                      {isOpen && !isCorrect && currentUser && (
+                      {/* Bookmark & Notes Actions */}
+                      {isOpen && currentUser && (
                         <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex gap-2 justify-end">
                           <button
                             onClick={(e) => {
@@ -6959,7 +7036,7 @@ export default function App() {
                                 studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
                               }
                             }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                               studyRoom.isBookmarked(q)
                                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
                                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -6980,17 +7057,30 @@ export default function App() {
                                 isCorrect
                               );
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                              answerNotes[q.pertanyaan]
+                                ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
                           >
-                            <StickyNote className="w-3.5 h-3.5" />
-                            {answerNotes[q.pertanyaan] ? 'Edit Catatan' : 'Catatan Soal'}
+                            {answerNotes[q.pertanyaan] ? (
+                              <>
+                                <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                <span>Edit Catatan</span>
+                              </>
+                            ) : (
+                              <>
+                                <StickyNote className="w-3.5 h-3.5" />
+                                <span>Buat Catatan</span>
+                              </>
+                            )}
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReportModal({ isOpen: true, questionIndex: idx });
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer"
                           >
                             <Flag className="w-3.5 h-3.5" />
                             Laporkan
@@ -7329,6 +7419,38 @@ export default function App() {
                                 </p>
                               </div>
 
+                              {/* Catatan yang sudah ada (inline) di riwayat */}
+                              {answerNotes[q.pertanyaan] && (
+                                <div
+                                  className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const correctLetter = getCorrectLetterForQuestion(q);
+                                    const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                    openNotePopup(
+                                      q.pertanyaan,
+                                      userAns !== null && userAns !== undefined ? `${userAns}` : '(Tidak Dijawab)',
+                                      `${correctLetter}. ${correctOptionText}`,
+                                      isCorrect
+                                    );
+                                  }}
+                                  style={{
+                                    backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
+                                    border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
+                                    color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                                  }}
+                                >
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-1.5 font-semibold">
+                                      <StickyNote className="w-3.5 h-3.5" />
+                                      Catatan Belajar:
+                                    </div>
+                                    <span className="text-[10px] opacity-75 underline">Edit</span>
+                                  </div>
+                                  <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                                </div>
+                              )}
+
                               {/* Question metadata (competencies, etc) */}
                               {q.metadata && (
                                 <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-850">
@@ -7347,6 +7469,60 @@ export default function App() {
                                       Kesulitan: {q.metadata.tingkat_kesulitan}
                                     </span>
                                   )}
+                                </div>
+                              )}
+
+                              {/* Action toolbar in History detail */}
+                              {currentUser && (
+                                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex gap-2 justify-end mt-3 -mx-5 -mb-5 rounded-b-xl">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (studyRoom.isBookmarked(q)) {
+                                        studyRoom.removeBookmark(generateQuestionFingerprint(q));
+                                      } else {
+                                        studyRoom.addBookmark(q, selectedHistoryDetail.files?.[0] || 'Kuis');
+                                      }
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      studyRoom.isBookmarked(q)
+                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
+                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
+                                    Bookmark Soal Ini
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const correctLetter = getCorrectLetterForQuestion(q);
+                                      const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                      openNotePopup(
+                                        q.pertanyaan,
+                                        userAns !== null && userAns !== undefined ? `${userAns}` : '(Tidak Dijawab)',
+                                        `${correctLetter}. ${correctOptionText}`,
+                                        isCorrect
+                                      );
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      answerNotes[q.pertanyaan]
+                                        ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    {answerNotes[q.pertanyaan] ? (
+                                      <>
+                                        <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                        <span>Edit Catatan</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <StickyNote className="w-3.5 h-3.5" />
+                                        <span>Buat Catatan</span>
+                                      </>
+                                    )}
+                                  </button>
                                 </div>
                               )}
                             </div>
