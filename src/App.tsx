@@ -58,7 +58,9 @@ import {
   Flag,
   Pause,
   Upload,
-  Coffee
+  Coffee,
+  Save,
+  MessageSquarePlus
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -517,6 +519,13 @@ export default function App() {
   const [lastQuizScore, setLastQuizScore] = useState(0);
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
   const [fileTimeFilter, setFileTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
+
+  // === CATATAN SOAL ===
+  const [answerNotes, setAnswerNotes] = useState<Record<string, string>>({});
+  const [notePopupOpen, setNotePopupOpen] = useState<{ isOpen: boolean; questionText: string; userAnswer: string; correctAnswer: string; isCorrect: boolean } | null>(null);
+  const [noteInput, setNoteInput] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const autoNoteTriggeredRef = useRef(false);
 
   // Overhaul Tab States
   const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
@@ -1593,6 +1602,123 @@ export default function App() {
       console.error('Error fetching questions:', err);
     }
   };
+
+  // === CATATAN SOAL FUNCTIONS ===
+  const fetchAnswerNotes = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const { data, error } = await supabase
+        .from('answer_notes')
+        .select('question_text, note_content')
+        .eq('user_id', currentUser.id);
+      if (!error && data) {
+        const notesMap: Record<string, string> = {};
+        data.forEach((d: { question_text: string; note_content: string }) => {
+          notesMap[d.question_text] = d.note_content;
+        });
+        setAnswerNotes(notesMap);
+      }
+    } catch (e) {
+      console.error('Failed to fetch answer notes:', e);
+    }
+  }, [currentUser]);
+
+  const saveAnswerNote = useCallback(async (questionText: string, content: string) => {
+    if (!currentUser || !content.trim()) return;
+    setNoteSaving(true);
+    try {
+      const { error } = await supabase
+        .from('answer_notes')
+        .upsert({
+          user_id: currentUser.id,
+          question_text: questionText,
+          note_content: content.trim(),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,question_text' });
+      if (!error) {
+        setAnswerNotes(prev => ({ ...prev, [questionText]: content.trim() }));
+        setNotePopupOpen(null);
+        triggerToast('Catatan berhasil disimpan!', '📝');
+      } else {
+        triggerToast('Gagal menyimpan catatan', '❌');
+      }
+    } catch (e) {
+      console.error('Failed to save note:', e);
+      triggerToast('Gagal menyimpan catatan', '❌');
+    }
+    setNoteSaving(false);
+  }, [currentUser]);
+
+  const deleteAnswerNote = useCallback(async (questionText: string) => {
+    if (!currentUser) return;
+    setNoteSaving(true);
+    try {
+      const { error } = await supabase
+        .from('answer_notes')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('question_text', questionText);
+      if (!error) {
+        setAnswerNotes(prev => {
+          const next = { ...prev };
+          delete next[questionText];
+          return next;
+        });
+        setNotePopupOpen(null);
+        triggerToast('Catatan berhasil dihapus', '🗑️');
+      } else {
+        triggerToast('Gagal menghapus catatan', '❌');
+      }
+    } catch (e) {
+      console.error('Failed to delete note:', e);
+      triggerToast('Gagal menghapus catatan', '❌');
+    }
+    setNoteSaving(false);
+  }, [currentUser]);
+
+  const openNotePopup = (questionText: string, userAnswer: string, correctAnswer: string, isCorrect: boolean) => {
+    setNoteInput(answerNotes[questionText] || '');
+    setNotePopupOpen({ isOpen: true, questionText, userAnswer, correctAnswer, isCorrect });
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchAnswerNotes();
+    } else {
+      setAnswerNotes({});
+    }
+  }, [currentUser, fetchAnswerNotes]);
+
+  // Auto-show note popup for first wrong answer without note when reviewing results
+  useEffect(() => {
+    if (screen !== 'result' || currentQuiz.length === 0) {
+      autoNoteTriggeredRef.current = false;
+      return;
+    }
+
+    if (autoNoteTriggeredRef.current) return;
+
+    // Temukan jawaban salah pertama yang belum punya catatan
+    const wrongIdx = currentQuiz.findIndex((q, i) => {
+      const isWrong = userAnswers[i] === null || !isUserAnswerCorrect(userAnswers[i], q);
+      return isWrong && !answerNotes[q.pertanyaan];
+    });
+
+    if (wrongIdx !== -1 && !notePopupOpen?.isOpen) {
+      autoNoteTriggeredRef.current = true;
+      const wrongQ = currentQuiz[wrongIdx];
+      const userAns = userAnswers[wrongIdx] !== null ? `${userAnswers[wrongIdx]}` : '(Tidak Dijawab)';
+      const correctLetter = getCorrectLetterForQuestion(wrongQ);
+      const correctOptionText = wrongQ.pilihan ? (wrongQ.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || wrongQ.jawaban_benar) : wrongQ.jawaban_benar;
+      const correctAns = `${correctLetter}. ${correctOptionText}`;
+
+      const timer = setTimeout(() => {
+        openNotePopup(wrongQ.pertanyaan, userAns, correctAns, false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [screen, currentQuiz, userAnswers, answerNotes, notePopupOpen?.isOpen]);
+
 
   // Auth Listener
   useEffect(() => {
@@ -6680,9 +6806,45 @@ export default function App() {
                           </p>
                         </div>
 
-                        <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
-                          isOpen ? 'rotate-180 text-indigo-500' : ''
-                        }`} />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Tombol Catatan */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const correctLetter = getCorrectLetterForQuestion(q);
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                              openNotePopup(
+                                q.pertanyaan,
+                                userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                `${correctLetter}. ${correctOptionText}`,
+                                isCorrect
+                              );
+                            }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer hover:scale-[1.05]"
+                            title={answerNotes[q.pertanyaan] ? 'Lihat/Edit Catatan' : 'Tambah Catatan'}
+                            style={{
+                              backgroundColor: answerNotes[q.pertanyaan]
+                                ? (theme === 'dark' ? 'rgb(245 158 11 / 0.15)' : 'rgb(245 158 11 / 0.1)')
+                                : (isCorrect
+                                  ? (theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)')
+                                  : 'rgb(245 158 11 / 0.15)'),
+                              color: answerNotes[q.pertanyaan]
+                                ? '#f59e0b'
+                                : (isCorrect
+                                  ? (theme === 'dark' ? '#94a3b8' : '#64748b')
+                                  : '#f59e0b'),
+                            }}
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                            {answerNotes[q.pertanyaan] && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            )}
+                          </button>
+
+                          <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                            isOpen ? 'rotate-180 text-indigo-500' : ''
+                          }`} />
+                        </div>
                       </div>
 
                       {/* Accordion Body */}
@@ -6696,7 +6858,7 @@ export default function App() {
                           <div className="flex flex-wrap gap-2">
                             {(() => {
                               const correctLetter = getCorrectLetterForQuestion(q);
-                              const correctOptionText = q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar;
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
 
                               return userAnswer === null ? (
                                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
@@ -6718,6 +6880,38 @@ export default function App() {
                               );
                             })()}
                           </div>
+
+                          {/* Catatan yang sudah ada (inline) */}
+                          {answerNotes[q.pertanyaan] && (
+                            <div
+                              className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const correctLetter = getCorrectLetterForQuestion(q);
+                                const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                openNotePopup(
+                                  q.pertanyaan,
+                                  userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                  `${correctLetter}. ${correctOptionText}`,
+                                  isCorrect
+                                );
+                              }}
+                              style={{
+                                backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
+                                border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
+                                color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                              }}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 font-semibold">
+                                  <StickyNote className="w-3.5 h-3.5" />
+                                  Catatan Belajar:
+                                </div>
+                                <span className="text-[10px] opacity-75 underline">Edit</span>
+                              </div>
+                              <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                            </div>
+                          )}
 
                           <div className="pt-3 border-t border-slate-200/40 dark:border-slate-850/50">
                             <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-500 mb-1.5">
@@ -6784,14 +6978,19 @@ export default function App() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setNoteRefQuestion({ q, bankName: selectedDatabases[0] || 'Kuis' });
-                              setEditingNote(null);
-                              setIsNoteModalOpen(true);
+                              const correctLetter = getCorrectLetterForQuestion(q);
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                              openNotePopup(
+                                q.pertanyaan,
+                                userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                `${correctLetter}. ${correctOptionText}`,
+                                isCorrect
+                              );
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
                           >
                             <StickyNote className="w-3.5 h-3.5" />
-                            Buat Catatan
+                            {answerNotes[q.pertanyaan] ? 'Edit Catatan' : 'Catatan Soal'}
                           </button>
                           <button
                             onClick={(e) => {
@@ -7562,6 +7761,149 @@ export default function App() {
         </>
       )}
     </AnimatePresence>
+
+      {/* === POPUP CATATAN SOAL === */}
+      {notePopupOpen && notePopupOpen.isOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={() => setNotePopupOpen(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Popup Card */}
+          <div
+            className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+              border: theme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(226 232 240)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: notePopupOpen.isCorrect ? 'rgb(34 197 94 / 0.15)' : 'rgb(245 158 11 / 0.15)' }}
+                >
+                  <StickyNote
+                    className="w-4 h-4"
+                    style={{ color: notePopupOpen.isCorrect ? '#22c55e' : '#f59e0b' }}
+                  />
+                </div>
+                <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}>
+                  {answerNotes[notePopupOpen.questionText] ? 'Edit Catatan' : 'Tambah Catatan'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setNotePopupOpen(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                style={{
+                  color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                  backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
+                }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Question Context */}
+            <div
+              className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3"
+              style={{
+                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
+                color: theme === 'dark' ? '#cbd5e1' : '#475569',
+              }}
+            >
+              <span className="font-semibold" style={{ color: theme === 'dark' ? '#e2e8f0' : '#334155' }}>Soal:</span>{' '}
+              {notePopupOpen.questionText.replace(/<[^>]*>/g, '').length > 200
+                ? notePopupOpen.questionText.replace(/<[^>]*>/g, '').substring(0, 200) + '...'
+                : notePopupOpen.questionText.replace(/<[^>]*>/g, '')}
+            </div>
+
+            {/* Answer Info (only for wrong answers) */}
+            {!notePopupOpen.isCorrect && (
+              <div className="flex gap-2">
+                <div
+                  className="flex-1 rounded-xl p-3 text-xs"
+                  style={{
+                    backgroundColor: 'rgb(239 68 68 / 0.08)',
+                    border: '1px solid rgb(239 68 68 / 0.2)',
+                  }}
+                >
+                  <span className="font-semibold text-red-400">Jawabanmu:</span>
+                  <p className="mt-1" style={{ color: theme === 'dark' ? '#fca5a5' : '#dc2626' }}>
+                    {notePopupOpen.userAnswer || '-'}
+                  </p>
+                </div>
+                <div
+                  className="flex-1 rounded-xl p-3 text-xs"
+                  style={{
+                    backgroundColor: 'rgb(34 197 94 / 0.08)',
+                    border: '1px solid rgb(34 197 94 / 0.2)',
+                  }}
+                >
+                  <span className="font-semibold text-green-400">Jawaban Benar:</span>
+                  <p className="mt-1" style={{ color: theme === 'dark' ? '#86efac' : '#16a34a' }}>
+                    {notePopupOpen.correctAnswer || '-'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Note Textarea */}
+            <textarea
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              placeholder="Tulis catatan belajar di sini... (misal: konsep yang perlu diingat, tips mnemonik, referensi halaman buku, dll)"
+              rows={5}
+              className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all"
+              style={{
+                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
+                color: theme === 'dark' ? '#e2e8f0' : '#1e293b',
+                border: `1px solid ${theme === 'dark' ? 'rgb(51 65 85)' : 'rgb(226 232 240)'}`,
+              }}
+              autoFocus
+            />
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-between gap-2">
+              {answerNotes[notePopupOpen.questionText] ? (
+                <button
+                  onClick={() => deleteAnswerNote(notePopupOpen.questionText)}
+                  disabled={noteSaving}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Hapus
+                </button>
+              ) : (
+                <div />
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setNotePopupOpen(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  style={{
+                    color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                    backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => saveAnswerNote(notePopupOpen.questionText, noteInput)}
+                  disabled={noteSaving || !noteInput.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {noteSaving ? 'Menyimpan...' : 'Simpan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
