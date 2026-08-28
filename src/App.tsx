@@ -1623,16 +1623,16 @@ export default function App() {
   }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser, quizSecondsLeft]);
 
   useEffect(() => {
-    if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard') {
+    if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter]);
+  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType]);
 
   useEffect(() => {
     if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
       fetchGlobalLeaderboard();
     }
-  }, [globalTimeFilter, activeDashboardTab, leaderboardType]);
+  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername]);
 
   const fetchGlobalSettings = async () => {
     try {
