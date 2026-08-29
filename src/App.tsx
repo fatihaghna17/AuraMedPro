@@ -387,6 +387,7 @@ import {
   getCorrectLetterForQuestion,
   isUserAnswerCorrect,
   renderHtmlText,
+  renderMarkdown,
   getQuestionImage,
   renderQuestionImage,
   mapUnifiedQuestion,
@@ -513,6 +514,7 @@ export default function App() {
   const [hasSubmittedLeaderboard, setHasSubmittedLeaderboard] = useState(false);
   const [lastQuizScore, setLastQuizScore] = useState(0);
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
+  const [fileTimeFilter, setFileTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
 
   // Overhaul Tab States
   const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
@@ -1232,32 +1234,90 @@ export default function App() {
     try {
       setIsLeaderboardLoading(true);
       let allData: any[] = [];
+
       if (globalTimeFilter === 'all') {
+        // SEMUA WAKTU: kumulatif dari profiles, tidak reset
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, total_questions_answered, level')
           .order('total_questions_answered', { ascending: false });
         
         if (error) throw error;
-        allData = data || [];
-      } else {
-        const { data, error } = await supabase
-          .rpc('get_time_leaderboard', { interval_days: parseInt(globalTimeFilter) });
-        
-        if (error) throw error;
         allData = (data || []).map((row: any) => ({
-          id: row.user_id, // assuming rpc returns user_id
+          id: row.id,
           username: row.username,
           level: row.level,
-          total_questions_answered: parseInt(row.total_questions_answered)
+          total_questions_answered: row.total_questions_answered || 0
         }));
+      } else {
+        // FILTER WAKTU: fixed period berdasarkan WIB (UTC+7), hitung jawaban benar
+        const now = new Date();
+        const wibOffsetMs = 7 * 60 * 60 * 1000;
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+        const wibNow = new Date(utcMs + wibOffsetMs);
+
+        let cutoffDate: Date;
+
+        if (globalTimeFilter === '1') {
+          // HARI INI: sejak 00:00 WIB hari ini
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+        } else if (globalTimeFilter === '7') {
+          // MINGGU INI: sejak 00:00 WIB hari Senin
+          const dayOfWeek = wibNow.getDay(); // 0=Min, 1=Sen, ...
+          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          cutoffDate = new Date(wibNow);
+          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
+          cutoffDate.setHours(0, 0, 0, 0);
+        } else {
+          // BULAN INI: sejak 00:00 WIB tanggal 1
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+        }
+
+        // Konversi cutoff WIB kembali ke UTC untuk query Supabase
+        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        const cutoffIso = new Date(cutoffUtcMs).toISOString();
+
+        const { data, error } = await supabase
+          .from('quiz_history_logs')
+          .select(`
+            user_id,
+            correct_count,
+            profiles (
+              username,
+              level
+            )
+          `)
+          .gte('created_at', cutoffIso);
+
+        if (error) throw error;
+
+        // Aggregate correct_count (jawaban benar) per user
+        const userMap: Record<string, { username: string; level: number; total: number }> = {};
+        (data || []).forEach((row: any) => {
+          const uid = row.user_id;
+          if (!userMap[uid]) {
+            userMap[uid] = {
+              username: row.profiles?.username || 'User',
+              level: row.profiles?.level || 1,
+              total: 0
+            };
+          }
+          userMap[uid].total += (row.correct_count || 0);
+        });
+
+        allData = Object.entries(userMap)
+          .map(([id, info]) => ({
+            id,
+            username: info.username,
+            level: info.level,
+            total_questions_answered: info.total
+          }))
+          .sort((a, b) => b.total_questions_answered - a.total_questions_answered);
       }
 
-      // If we don't have user_id from RPC, we might not be able to match currentUser exactly, but we can match by username
       const userRankIndex = allData.findIndex(u => u.username === profileUsername);
       let top10 = allData.slice(0, 10);
       
-      // If user is not in top 10, add them at the end with their actual rank
       if (userRankIndex > 9) {
         top10.push({
           ...allData[userRankIndex],
@@ -1278,7 +1338,8 @@ export default function App() {
     if (!fileName) return;
     try {
       setIsLeaderboardLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('leaderboard')
         .select(`
           user_id,
@@ -1290,7 +1351,32 @@ export default function App() {
             level
           )
         `)
-        .eq('file_name', fileName)
+        .eq('file_name', fileName);
+
+      // Terapkan filter waktu jika bukan 'all'
+      if (fileTimeFilter !== 'all') {
+        const now = new Date();
+        const wibOffsetMs = 7 * 60 * 60 * 1000;
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+        const wibNow = new Date(utcMs + wibOffsetMs);
+
+        let cutoffDate: Date;
+        if (fileTimeFilter === '1') {
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+        } else if (fileTimeFilter === '7') {
+          const dayOfWeek = wibNow.getDay();
+          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          cutoffDate = new Date(wibNow);
+          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
+          cutoffDate.setHours(0, 0, 0, 0);
+        } else {
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+        }
+        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        query = query.gte('created_at', new Date(cutoffUtcMs).toISOString());
+      }
+
+      const { data, error } = await query
         .order('score', { ascending: false })
         .order('questions_count', { ascending: false });
       
@@ -1412,7 +1498,7 @@ export default function App() {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab]);
+  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter]);
 
   useEffect(() => {
     if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
@@ -4676,29 +4762,38 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* Time Filter Tabs for Global Leaderboard */}
-                    {leaderboardType === 'global' && (
-                      <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
-                        {[
-                          { key: 'all', label: 'Semua Waktu' },
-                          { key: '1', label: 'Hari Ini' },
-                          { key: '7', label: 'Minggu Ini' },
-                          { key: '30', label: 'Bulan Ini' }
-                        ].map((filter) => (
+                    {/* Time Filter Tabs */}
+                    <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
+                      {[
+                        { key: 'all', label: 'Semua Waktu' },
+                        { key: '1', label: 'Hari Ini' },
+                        { key: '7', label: 'Minggu Ini' },
+                        { key: '30', label: 'Bulan Ini' }
+                      ].map((filter) => {
+                        const isActive = leaderboardType === 'global'
+                          ? globalTimeFilter === filter.key
+                          : fileTimeFilter === filter.key;
+                        return (
                           <button
                             key={filter.key}
-                            onClick={() => setGlobalTimeFilter(filter.key as any)}
+                            onClick={() => {
+                              if (leaderboardType === 'global') {
+                                setGlobalTimeFilter(filter.key as any);
+                              } else {
+                                setFileTimeFilter(filter.key as any);
+                              }
+                            }}
                             className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                              globalTimeFilter === filter.key
+                              isActive
                                 ? 'bg-indigo-500 text-white shadow-sm'
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                             }`}
                           >
                             {filter.label}
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
 
                     {/* Loader */}
                     {isLeaderboardLoading ? (
@@ -5697,7 +5792,7 @@ export default function App() {
                                       </div>
                                     ) : aiExplanation ? (
                                       <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                        {renderHtmlText(aiExplanation)}
+                                        {renderMarkdown(aiExplanation)}
                                       </div>
                                     ) : null}
 
