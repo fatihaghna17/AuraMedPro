@@ -1,10 +1,23 @@
 interface Env {
-  GEMINI_API_KEY: string;
+  OMNIROUTE_API_KEY: string;
+  OMNIROUTE_BASE_URL: string;
 }
 
 const rateLimitCache = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+
+// Ordered list of models to try (fallback chain)
+const MODEL_FALLBACK = [
+  'auto/best-free',
+  'auto/best-chat',
+  'auto/fast',
+  'aug/gemini-3.1-pro-preview',
+  'aug/glm-5.2',
+  'oc/deepseek-v4-flash-free',
+  'aug/haiku4.5',
+  'aug/sonnet4.5',
+];
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -15,8 +28,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   };
 
   try {
-    if (!env.GEMINI_API_KEY) {
-      throw new Error('Server configuration error: Missing API Key');
+    if (!env.OMNIROUTE_API_KEY || !env.OMNIROUTE_BASE_URL) {
+      throw new Error('Server configuration error: Missing OMNIROUTE_API_KEY or OMNIROUTE_BASE_URL');
     }
 
     const { question, correctAnswer, explanation, userAnswer, context: ctx, mode, followUp } = await request.json();
@@ -42,7 +55,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       rateLimitCache.set(clientIp, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     }
 
-    const systemInstruction = "Kamu adalah tutor medis virtual bernama MediAI di platform AuraMedPro. Jelaskan konsep kedokteran dalam Bahasa Indonesia yang jelas. Gunakan format markdown. Maks 300 kata.";
+    const systemMessage = "Kamu adalah tutor medis virtual bernama MediAI di platform AuraMedPro. Jelaskan konsep kedokteran dalam Bahasa Indonesia yang jelas. Gunakan format markdown. Maks 300 kata.";
     
     let userPrompt = "";
     const baseContext = `Konteks/Topik: ${ctx || 'Kedokteran Umum'}\nPertanyaan: ${question}\nJawaban Benar: ${correctAnswer}\nPembahasan Resmi: ${explanation || '-'}\nJawaban User: ${userAnswer || '-'}\n\n`;
@@ -64,25 +77,56 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         userPrompt = `${baseContext}Berikan penjelasan singkat.`;
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-      })
-    });
+    // OmniRoute: OpenAI-compatible API with model fallback
+    const baseUrl = env.OMNIROUTE_BASE_URL.replace(/\/+$/, '');
+    const endpoint = `${baseUrl}/chat/completions`;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API ${response.status}: ${errText.substring(0, 200)}`);
+    let lastError = '';
+
+    for (const model of MODEL_FALLBACK) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.OMNIROUTE_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model,
+            stream: false,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 800,
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          lastError = `${model}: ${response.status} ${errText.substring(0, 100)}`;
+          continue; // Try next model
+        }
+
+        const data = await response.json();
+        const generatedText = data.choices?.[0]?.message?.content;
+
+        if (!generatedText) {
+          lastError = `${model}: empty response`;
+          continue; // Try next model
+        }
+
+        return new Response(JSON.stringify({ explanation: generatedText }), { status: 200, headers: corsHeaders });
+
+      } catch (err: any) {
+        lastError = `${model}: ${err.message}`;
+        continue; // Try next model
+      }
     }
 
-    const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI tidak dapat menghasilkan penjelasan saat ini.";
-
-    return new Response(JSON.stringify({ explanation: generatedText }), { status: 200, headers: corsHeaders });
+    // All models failed
+    throw new Error(`Semua model AI gagal. Terakhir: ${lastError}. Coba lagi beberapa saat.`);
 
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { status: 500, headers: corsHeaders });

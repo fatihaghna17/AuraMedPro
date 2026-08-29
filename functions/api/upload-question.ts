@@ -26,7 +26,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       httpMetadata: { contentType: 'application/json' },
     });
 
-    const fileUrl = `${env.R2_PUBLIC_URL}/${sanitizedFilename}`;
+    // Pastikan R2_PUBLIC_URL tidak ada trailing slash
+    const cleanBaseUrl = env.R2_PUBLIC_URL.replace(/\/+$/, '');
+    const fileUrl = `${cleanBaseUrl}/${sanitizedFilename}`;
 
     return new Response(JSON.stringify({ fileUrl, key: sanitizedFilename }), { status: 200, headers: corsHeaders });
 

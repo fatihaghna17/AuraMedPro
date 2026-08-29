@@ -1,8 +1,312 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
 import * as jsYaml from 'js-yaml';
 import { Question } from '../types';
+
+// Configure marked for safe rendering
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
+// === MEDICAL TERM SYNONYM MAP (EN ↔ ID) ===
+// Digunakan untuk mencocokkan jawaban lintas bahasa di kunci jawaban
+const MEDICAL_SYNONYMS: Record<string, string[]> = {
+  // Kardiovaskular
+  'myocardial': ['miokard'],
+  'infarction': ['infarkt'],
+  'myocardial infarction': ['infarkt miokard'],
+  'acute myocardial infarction': ['infarkt miokard akut', 'ima'],
+  'stemi': ['ste mi', 'elevasi st', 'infarkt miokard elevasi st'],
+  'nstemi': ['non-stemi', 'infarkt miokard non elevasi st'],
+  'angina': ['angina'],
+  'angina pectoris': ['angina pektoris'],
+  'heart failure': ['gagal jantung', 'gagal jantung kongestif'],
+  'congestive heart failure': ['gagal jantung kongestif', 'chf'],
+  'arrhythmia': ['aritmia'],
+  'atrial fibrillation': ['fibrilasi atrium', 'fa'],
+  'ventricular fibrillation': ['fibrilasi ventrikel', 'fv'],
+  'hypertension': ['hipertensi', 'tekanan darah tinggi'],
+  'hypotension': ['hipotensi', 'tekanan darah rendah'],
+  'atherosclerosis': ['aterosklerosis'],
+  'thrombosis': ['trombosis'],
+  'embolism': ['emboli'],
+  'pulmonary embolism': ['emboli paru', 'emboli paru-paru'],
+  'deep vein thrombosis': ['trombosis vena dalam', 'tvd'],
+  'endocarditis': ['endokarditis'],
+  'pericarditis': ['perikarditis'],
+  'myocarditis': ['miokarditis'],
+  
+  // Pernapasan
+  'pneumonia': ['pneumonia'],
+  'tuberculosis': ['tuberkulosis', 'tb'],
+  'asthma': ['asma'],
+  'bronchitis': ['bronkitis'],
+  'chronic obstructive pulmonary disease': ['copd', 'ppok', 'penyakit paru obstruktif kronik'],
+  'copd': ['ppok', 'penyakit paru obstruktif kronik'],
+  'pulmonary': ['pulmonal', 'paru'],
+  'respiratory': ['respirasi', 'pernapasan'],
+  'dyspnea': ['dispnea', 'sesak napas'],
+  'hypoxia': ['hipoksia'],
+  'hypercapnia': ['hiperkapnia'],
+  'bronchodilator': ['bronkodilator'],
+  'salbutamol': ['salbutamol', 'albuterol'],
+  'inhaler': ['inhaler'],
+  'oxygen saturation': ['saturasi oksigen', 'spo2'],
+  
+  // Gastrointestinal
+  'gastroesophageal reflux': ['refluks gastroesofageal', 'gerd'],
+  'gerd': ['refluks gastroesofageal'],
+  'peptic ulcer': ['ulkus peptik', 'tukak lambung'],
+  'gastritis': ['gastritis', 'radang lambung'],
+  'hepatitis': ['hepatitis'],
+  'cirrhosis': ['sirosis', 'sirosis hati'],
+  'pancreatitis': ['pankreatitis'],
+  'appendicitis': ['apendisitis'],
+  'cholecystitis': ['kolesistitis'],
+  'diarrhea': ['diare'],
+  'constipation': ['konstipasi', 'sembelit'],
+  'nausea': ['mual'],
+  'vomiting': ['muntah'],
+  'hemorrhoid': ['wasir', 'hemoroid'],
+  
+  // Neurologi
+  'stroke': ['stroke', 'gangguan serebrovaskular'],
+  'ischemic stroke': ['stroke iskemik', 'stroke non-hemoragik'],
+  'hemorrhagic stroke': ['stroke hemoragik', 'stroke pendarahan'],
+  'seizure': ['kejang', 'epilepsi', 'sesiz'],
+  'epilepsy': ['epilepsi'],
+  'migraine': ['migrain'],
+  'meningitis': ['meningitis'],
+  'encephalitis': ['ensefalitis'],
+  'parkinson': ['parkinson'],
+  'alzheimer': ['alzheimer'],
+  'neuropathy': ['neuropati'],
+  'paralysis': ['paralisis', 'kelumpuhan'],
+  'coma': ['koma'],
+  'headache': ['sakit kepala', 'cefalgia'],
+  
+  // Endokrin
+  'diabetes mellitus': ['diabetes melitus', 'dm'],
+  'diabetes': ['diabetes', 'kencing manis'],
+  'hyperthyroidism': ['hipertiroidisme'],
+  'hypothyroidism': ['hipotiroidisme'],
+  'thyroid': ['tiroid'],
+  'goiter': ['gondok', 'struma'],
+  'cushing': ['cushing'],
+  'addison': ['addison'],
+  
+  // Infeksi
+  'infection': ['infeksi'],
+  'bacteria': ['bakteri'],
+  'virus': ['virus'],
+  'fungus': ['jamur'],
+  'parasite': ['parasit'],
+  'antibiotic': ['antibiotik'],
+  'antiviral': ['antiviral'],
+  'antifungal': ['antijamur'],
+  'inflammation': ['inflamasi', 'radang'],
+  'fever': ['demam'],
+  'sepsis': ['sepsis'],
+  'meningococcemia': ['meningokokemia'],
+  'malaria': ['malaria'],
+  'dengue': ['dengue'],
+  'covid': ['covid', 'covid-19'],
+  'influenza': ['influenza', 'flu'],
+  
+  // Onkologi
+  'cancer': ['kanker', 'ca'],
+  'carcinoma': ['karsinoma'],
+  'sarcoma': ['sarkoma'],
+  'lymphoma': ['limfoma'],
+  'leukemia': ['leukemia'],
+  'tumor': ['tumor'],
+  'metastasis': ['metastasis'],
+  'chemotherapy': ['kemoterapi'],
+  'radiation therapy': ['radioterapi'],
+  'benign': ['jinak'],
+  'malignant': ['ganas'],
+  
+  // Farmakologi
+  'aspirin': ['aspirin', 'asam asetilsalisilat'],
+  'acetaminophen': ['paracetamol', 'asetaminofen'],
+  'ibuprofen': ['ibuprofen'],
+  'morphine': ['morfina'],
+  'insulin': ['insulin'],
+  'adrenaline': ['adrenalin', 'epinefrin'],
+  'epinephrine': ['epinefrin', 'adrenalin'],
+  'noradrenaline': ['noradrenalin', 'norepinefrin'],
+  'dopamine': ['dopamina'],
+  'ace inhibitor': ['ace inhibitor', 'inhibitor ace'],
+  'beta blocker': ['beta blocker', 'penghambat beta'],
+  'calcium channel blocker': ['ccb', 'penghambat kanal kalsium'],
+  'diuretic': ['diuretik'],
+  'anticoagulant': ['antikoagulan'],
+  'antihypertensive': ['antihipertensi'],
+  'corticosteroid': ['kortikosteroid', 'steroid'],
+  'antihistamine': ['antihistamin'],
+  'analgesic': ['analgesik', 'pereda nyeri'],
+  
+  // Urogenital
+  'kidney': ['ginjal'],
+  'renal': ['renal', 'ginjal'],
+  'nephrotic syndrome': ['sindroma nefrotik'],
+  'nephritic syndrome': ['sindroma nefritik'],
+  'acute kidney injury': ['cedera ginjal akut', 'gagal ginjal akut', 'aki'],
+  'chronic kidney disease': ['penyakit ginjal kronik', 'pgk', 'ckd'],
+  'hemodialysis': ['hemodialisa'],
+  'urinary tract infection': ['infeksi saluran kemih', 'isk'],
+  'cystitis': ['sistitis'],
+  'pyelonephritis': ['pielonefritis'],
+  
+  // Muskuloskeletal
+  'fracture': ['fraktur', 'patah tulang'],
+  'osteoporosis': ['osteoporosis'],
+  'arthritis': ['artritis'],
+  'rheumatoid arthritis': ['artritis reumatoid'],
+  'osteoarthritis': ['osteoartritis', 'oa'],
+  'gout': ['gout', 'asam urat', 'pirai'],
+  'sprain': ['sprain', 'keseleo'],
+  'dislocation': ['dislokasi', 'lukasi'],
+  
+  // Dermatologi
+  'dermatitis': ['dermatitis'],
+  'eczema': ['eksim'],
+  'psoriasis': ['psoriasis'],
+  'urticaria': ['urtikaria', 'biduran'],
+  'cellulitis': ['selulitis'],
+  'abscess': ['abses'],
+  
+  // Obstetri & Ginekologi
+  'pregnancy': ['kehamilan', 'hamil'],
+  'labor': ['persalinan', 'melahirkan'],
+  'cesarean section': ['sesar', 'caesar', 'operasi sesar'],
+  'abortion': ['abortus', 'keguguran'],
+  'eclampsia': ['eklampsia'],
+  'preeclampsia': ['preeklampsia'],
+  'placenta': ['plasenta'],
+  'amniotic fluid': ['air ketuban', 'cairan amnion'],
+  'contraception': ['kontrasepsi', 'kb'],
+  
+  // Hematologi
+  'anemia': ['anemia', 'kurang darah'],
+  'iron deficiency anemia': ['anemia defisiensi besi'],
+  'thalassemia': ['thalassemia', 'talasemia'],
+  'leukopenia': ['leukopenia'],
+  'thrombocytopenia': ['trombositopenia'],
+  'hemophilia': ['hemofilia'],
+  'coagulation': ['koagulasi', 'pembekuan darah'],
+  
+  // Istilah umum medis
+  'acute': ['akut'],
+  'chronic': ['kronik'],
+  'congenital': ['kongenital', 'bawaan'],
+  'idiopathic': ['idiopatik'],
+  'symptomatic': ['simtomatik'],
+  'asymptomatic': ['asimtomatik'],
+  'prognosis': ['prognosis'],
+  'diagnosis': ['diagnosis', 'diagnoosa'],
+  'therapy': ['terapi'],
+  'treatment': ['pengobatan', 'tatalaksana'],
+  'surgery': ['bedah', 'operasi'],
+  'biopsy': ['biopsi'],
+  'screening': ['skrining'],
+  'prevention': ['pencegahan'],
+  'rehabilitation': ['rehabilitasi'],
+  'palliative': ['paliatif'],
+  'complication': ['komplikasi'],
+  'contraindication': ['kontraindikasi'],
+  'side effect': ['efek samping'],
+  'dosage': ['dosis'],
+  'intravenous': ['intravena', 'iv'],
+  'oral': ['oral', 'per oral', 'po'],
+  'subcutaneous': ['subkutan', 'sc'],
+  'intramuscular': ['intramuskular', 'im'],
+};
+
+// Fungsi untuk mendapatkan semua variasi sinonim dari sebuah istilah
+const getAllSynonyms = (term: string): string[] => {
+  const normalized = term.trim().toLowerCase();
+  const results: string[] = [normalized];
+  
+  for (const [key, synonyms] of Object.entries(MEDICAL_SYNONYMS)) {
+    if (key === normalized) {
+      results.push(...synonyms.map(s => s.toLowerCase()));
+    } else if (synonyms.some(s => s.toLowerCase() === normalized)) {
+      results.push(key.toLowerCase());
+      results.push(...synonyms.filter(s => s.toLowerCase() !== normalized).map(s => s.toLowerCase()));
+    }
+  }
+  
+  return [...new Set(results)];
+};
+
+// Hitung skor kecocokan antara jawaban_benar dan opsi menggunakan sinonim
+const getCrossLangScore = (answerKey: string, option: string): number => {
+  const a = answerKey.trim().toLowerCase();
+  const b = option.trim().toLowerCase();
+  
+  if (a === b) return 1.0;
+  
+  // Normalisasi: hapus tanda baca, split jadi kata-kata
+  const normalize = (s: string) => s.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
+  const wordsA = normalize(a);
+  const wordsB = normalize(b);
+  
+  if (wordsA.length === 0 || wordsB.length === 0) return 0;
+  
+  let matchCount = 0;
+  let totalChecks = 0;
+  
+  // Untuk setiap kata di jawaban_benar, cek apakah ada sinonim yang cocok di opsi
+  for (const wordA of wordsA) {
+    const synsA = getAllSynonyms(wordA);
+    let found = false;
+    
+    for (const wordB of wordsB) {
+      const synsB = getAllSynonyms(wordB);
+      // Cek apakah ada overlap antara sinonim A dan B
+      if (synsA.some(s => synsB.includes(s))) {
+        found = true;
+        break;
+      }
+      // Juga cek direct similarity (untuk kata yang mirip tapi tidak di map)
+      if (wordA.length >= 4 && wordB.length >= 4) {
+        const shorter = wordA.length < wordB.length ? wordA : wordB;
+        const longer = wordA.length < wordB.length ? wordB : wordA;
+        // Cek apakah salah satu mengandung yang lain (substring)
+        if (longer.includes(shorter) && shorter.length >= 4) {
+          found = true;
+          break;
+        }
+      }
+    }
+    
+    if (found) matchCount++;
+    totalChecks++;
+  }
+  
+  // Juga cek sebaliknya: kata di opsi yang cocok dengan jawaban_benar
+  for (const wordB of wordsB) {
+    const synsB = getAllSynonyms(wordB);
+    let found = false;
+    
+    for (const wordA of wordsA) {
+      const synsA = getAllSynonyms(wordA);
+      if (synsA.some(s => synsB.includes(s))) {
+        found = true;
+        break;
+      }
+    }
+    
+    if (found) matchCount++;
+    totalChecks++;
+  }
+  
+  return totalChecks > 0 ? matchCount / totalChecks : 0;
+};
 
 export const SCORE_FEEDBACKS: Record<number, string> = {
   0: "Skor 0? Kamu ngerjainnya merem, atau emang niat nyumbang kuota doang ke server? Astaga naga...",
@@ -39,6 +343,7 @@ export const getCorrectLetterForQuestion = (q: Question): string => {
 
   const letters = ['A', 'B', 'C', 'D', 'E'];
 
+  // 1. Cek eliminasi_opsi (format lama)
   if (q.eliminasi_opsi) {
     const foundEntry = Object.entries(q.eliminasi_opsi).find(([key, desc]) => {
       const cleanDesc = (desc as string).trim().toLowerCase();
@@ -49,6 +354,7 @@ export const getCorrectLetterForQuestion = (q: Question): string => {
     }
   }
 
+  // 2. Cek opsi yang diawali "benar"/"betul"
   if (q.pilihan && q.pilihan.length > 0) {
     const idx = q.pilihan.findIndex(opt => {
       const cleanOpt = opt.trim().toLowerCase();
@@ -59,31 +365,53 @@ export const getCorrectLetterForQuestion = (q: Question): string => {
     }
   }
 
-  if (q.jawaban_benar) {
+  if (q.jawaban_benar && q.pilihan && q.pilihan.length > 0) {
     const jb = q.jawaban_benar.trim();
     const jbLower = jb.toLowerCase();
 
+    // 3. Exact match
     const exactIdx = q.pilihan.findIndex(opt => opt.trim().toLowerCase() === jbLower);
     if (exactIdx !== -1 && exactIdx < letters.length) {
       return letters[exactIdx];
     }
 
+    // 4. Jika jawaban_benar adalah huruf tunggal A-E
     if (/^[A-E]$/i.test(jb)) {
       return jb.toUpperCase();
     }
 
+    // 5. Jika diawali huruf A-E
     if (/^[A-E][\s.)]/i.test(jb)) {
       return jb[0].toUpperCase();
     }
 
+    // 6. Partial text match (substring)
     const partialIdx = q.pilihan.findIndex(opt => 
       opt.toLowerCase().includes(jbLower) || jbLower.includes(opt.toLowerCase())
     );
     if (partialIdx !== -1 && partialIdx < letters.length) {
       return letters[partialIdx];
     }
+
+    // 7. NEW: Cross-language matching menggunakan sinonim medis
+    let bestMatchIdx = -1;
+    let bestMatchScore = 0;
+    const CROSS_LANG_THRESHOLD = 0.35;
+
+    for (let i = 0; i < q.pilihan.length; i++) {
+      const score = getCrossLangScore(jb, q.pilihan[i]);
+      if (score > bestMatchScore) {
+        bestMatchScore = score;
+        bestMatchIdx = i;
+      }
+    }
+
+    if (bestMatchIdx !== -1 && bestMatchScore >= CROSS_LANG_THRESHOLD && bestMatchIdx < letters.length) {
+      return letters[bestMatchIdx];
+    }
   }
 
+  // 8. Fallback: cek huruf pertama jawaban_benar
   if (q.jawaban_benar) {
     const firstChar = q.jawaban_benar.trim()[0]?.toUpperCase();
     if (letters.includes(firstChar)) {
@@ -181,6 +509,18 @@ export const isUserAnswerCorrect = (userAns: string | null, q: Question): boolea
   }
 
   return false;
+};
+
+export const renderMarkdown = (text: string): React.ReactElement | null => {
+  if (!text || typeof text !== 'string') return null;
+  // Convert markdown to HTML first, then sanitize
+  const rawHtml = marked.parse(text) as string;
+  const clean = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 's', 'sub', 'sup', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'img', 'blockquote', 'code', 'pre', 'hr'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'colspan', 'rowspan'],
+    ALLOW_DATA_ATTR: false
+  });
+  return <span dangerouslySetInnerHTML={{ __html: clean }} />;
 };
 
 export const renderHtmlText = (text: any) => {

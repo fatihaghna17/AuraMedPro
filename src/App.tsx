@@ -58,7 +58,9 @@ import {
   Flag,
   Pause,
   Upload,
-  Coffee
+  Coffee,
+  Save,
+  MessageSquarePlus
 } from 'lucide-react';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
@@ -448,6 +450,8 @@ export default function App() {
   });
   
   const [globalCustomFolders, setGlobalCustomFolders] = useState<string[]>([]);
+  const [moveQuizModal, setMoveQuizModal] = useState<{ quizKey: string; quizName: string } | null>(null);
+
   const [globalQuizFolderMap, setGlobalQuizFolderMap] = useState<Record<string, string>>({});
   const [quizHistory, setQuizHistory] = useState<HistoryEntry[]>(() => {
     const saved = localStorage.getItem('cbtQuizHistory');
@@ -505,6 +509,7 @@ export default function App() {
   const [pasteContent, setPasteContent] = useState('');
   const [pasteError, setPasteError] = useState('');
   const activeQuizSessionIdRef = useRef<string | null>(null);
+  const hasRecordedLeaderboard = useRef(false);
   const [activeDashboardTab, setActiveDashboardTab] = useState<'riwayat' | 'leaderboard'>('riwayat');
   const [leaderboardType, setLeaderboardType] = useState<'global' | 'file'>('global');
   const [selectedLeaderboardFile, setSelectedLeaderboardFile] = useState<string>('');
@@ -515,6 +520,13 @@ export default function App() {
   const [lastQuizScore, setLastQuizScore] = useState(0);
   const [globalTimeFilter, setGlobalTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
   const [fileTimeFilter, setFileTimeFilter] = useState<'all' | '1' | '7' | '30'>('all');
+
+  // === CATATAN SOAL ===
+  const [answerNotes, setAnswerNotes] = useState<Record<string, string>>({});
+  const [notePopupOpen, setNotePopupOpen] = useState<{ isOpen: boolean; questionText: string; userAnswer: string; correctAnswer: string; isCorrect: boolean } | null>(null);
+  const [noteInput, setNoteInput] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const autoNoteTriggeredRef = useRef(false);
 
   // Overhaul Tab States
   const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
@@ -711,7 +723,7 @@ export default function App() {
       
       triggerToast(isFocus ? 'Sesi fokus selesai! Waktunya istirahat.' : 'Waktu istirahat selesai! Mari fokus lagi.', isFocus ? '☕' : '🧠');
       
-      if (Notification.permission === 'granted') {
+      if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(isFocus ? 'AuraMedPro: Fokus Selesai' : 'AuraMedPro: Istirahat Selesai', {
           body: isFocus ? 'Bagus! Waktunya istirahat sejenak 5 menit.' : 'Waktu istirahat selesai. Ayo lanjut belajar!'
         });
@@ -724,7 +736,7 @@ export default function App() {
   }, [pomodoroActive, pomodoroSecondsLeft, pomodoroMode]);
 
   useEffect(() => {
-    if (Notification.permission === 'default') {
+    if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
@@ -1179,6 +1191,7 @@ export default function App() {
       setSelectedDatabases(selectedDbs || []);
       setQuizMode(session.quiz_mode);
 
+      hasRecordedLeaderboard.current = false;
       setScreen('quiz');
       setShowSidebar(true);
       setQuizSecondsLeft(session.seconds_left !== undefined ? session.seconds_left : pool.length * 60);
@@ -1236,7 +1249,7 @@ export default function App() {
       let allData: any[] = [];
 
       if (globalTimeFilter === 'all') {
-        // SEMUA WAKTU: kumulatif dari profiles, tidak reset
+        // SEMUA WAKTU: pakai total_questions_answered dari profiles (kumulatif, tidak reset)
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, total_questions_answered, level')
@@ -1250,8 +1263,11 @@ export default function App() {
           total_questions_answered: row.total_questions_answered || 0
         }));
       } else {
-        // FILTER WAKTU: fixed period berdasarkan WIB (UTC+7), hitung jawaban benar
+        // FILTER WAKTU: hitung jawaban benar dari quiz_history_logs
+        // dengan fixed period berdasarkan WIB (UTC+7)
+
         const now = new Date();
+        // Konversi ke WIB
         const wibOffsetMs = 7 * 60 * 60 * 1000;
         const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
         const wibNow = new Date(utcMs + wibOffsetMs);
@@ -1259,17 +1275,17 @@ export default function App() {
         let cutoffDate: Date;
 
         if (globalTimeFilter === '1') {
-          // HARI INI: sejak 00:00 WIB hari ini
+          // HARI INI: sejak jam 00:00 WIB hari ini
           cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
         } else if (globalTimeFilter === '7') {
-          // MINGGU INI: sejak 00:00 WIB hari Senin
-          const dayOfWeek = wibNow.getDay(); // 0=Min, 1=Sen, ...
+          // MINGGU INI: sejak jam 00:00 WIB hari Senin terakhir
+          const dayOfWeek = wibNow.getDay(); // 0=Min, 1=Sen, 2=Sel, ...
           const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
           cutoffDate = new Date(wibNow);
           cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
           cutoffDate.setHours(0, 0, 0, 0);
         } else {
-          // BULAN INI: sejak 00:00 WIB tanggal 1
+          // BULAN INI: sejak jam 00:00 WIB tanggal 1 bulan ini
           cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
         }
 
@@ -1291,7 +1307,7 @@ export default function App() {
 
         if (error) throw error;
 
-        // Aggregate correct_count (jawaban benar) per user
+        // Aggregate correct_count per user
         const userMap: Record<string, { username: string; level: number; total: number }> = {};
         (data || []).forEach((row: any) => {
           const uid = row.user_id;
@@ -1302,6 +1318,7 @@ export default function App() {
               total: 0
             };
           }
+          // Hitung jawaban BENAR (correct_count)
           userMap[uid].total += (row.correct_count || 0);
         });
 
@@ -1327,8 +1344,12 @@ export default function App() {
       }
 
       setGlobalLeaderboard(top10);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching global leaderboard:', err);
+      // Jika time-filtered query gagal (kemungkinan RLS), tampilkan pesan
+      if (globalTimeFilter !== 'all') {
+        console.warn('Time-filtered leaderboard query failed. Possible RLS issue on quiz_history_logs table. Error:', err?.message);
+      }
     } finally {
       setIsLeaderboardLoading(false);
     }
@@ -1353,7 +1374,7 @@ export default function App() {
         `)
         .eq('file_name', fileName);
 
-      // Terapkan filter waktu jika bukan 'all'
+      // Terapkan filter waktu jika bukan 'all' (fixed period WIB)
       if (fileTimeFilter !== 'all') {
         const now = new Date();
         const wibOffsetMs = 7 * 60 * 60 * 1000;
@@ -1437,6 +1458,131 @@ export default function App() {
     }
   };
 
+  // === RECORD QUIZ RESULTS TO LEADERBOARD ===
+  const recordQuizToLeaderboard = useCallback(async (
+    fileName: string,
+    correctCount: number,
+    totalCount: number
+  ) => {
+    if (!currentUser || totalCount === 0) return;
+
+    const score = Math.round((correctCount / totalCount) * 100);
+
+    try {
+      // 1. Insert ke quiz_history_logs (untuk time-filtered global leaderboard)
+      const { error: logError } = await supabase
+        .from('quiz_history_logs')
+        .insert({
+          user_id: currentUser.id,
+          file_name: fileName,
+          score: score,
+          correct_count: correctCount,
+          total_count: totalCount,
+          created_at: new Date().toISOString(),
+        });
+
+      if (logError) console.error('Failed to insert quiz_history_logs:', logError);
+
+      // 2. Insert/update leaderboard (untuk per-file leaderboard)
+      // Cek apakah user sudah punya skor untuk file ini
+      const { data: existingScore } = await supabase
+        .from('leaderboard')
+        .select('score, questions_count')
+        .eq('user_id', currentUser.id)
+        .eq('file_name', fileName)
+        .maybeSingle();
+
+      if (existingScore) {
+        // Update hanya jika skor baru lebih tinggi, atau jumlah soal lebih banyak
+        if (score > existingScore.score || totalCount > existingScore.questions_count) {
+          await supabase
+            .from('leaderboard')
+            .update({
+              score: Math.max(score, existingScore.score),
+              questions_count: Math.max(totalCount, existingScore.questions_count),
+              created_at: new Date().toISOString(),
+            })
+            .eq('user_id', currentUser.id)
+            .eq('file_name', fileName);
+        }
+      } else {
+        // Insert baru
+        await supabase
+          .from('leaderboard')
+          .insert({
+            user_id: currentUser.id,
+            file_name: fileName,
+            score: score,
+            questions_count: totalCount,
+            created_at: new Date().toISOString(),
+          });
+      }
+
+      // 3. Update profiles.total_questions_answered (tambah correctCount)
+      // Gunakan RPC untuk atomic increment agar tidak race condition
+      const { error: profileError } = await supabase.rpc('increment_total_answered', {
+        user_id_input: currentUser.id,
+        count_input: correctCount,
+      });
+
+      if (profileError) {
+        // Fallback: update manual jika RPC tidak ada
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('total_questions_answered')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({
+              total_questions_answered: (profile.total_questions_answered || 0) + correctCount,
+            })
+            .eq('id', currentUser.id);
+        }
+      }
+
+      // Re-fetch leaderboard setelah update
+      await fetchGlobalLeaderboard();
+
+    } catch (err) {
+      console.error('Failed to record quiz to leaderboard:', err);
+    }
+  }, [currentUser, profileUsername, globalTimeFilter]);
+
+  // Auto-record ke leaderboard saat kuis selesai (batch submit)
+  useEffect(() => {
+    const isQuizDone = screen === 'result';
+    const hasQuestions = currentQuiz && currentQuiz.length > 0;
+    const hasAnswers = userAnswers && userAnswers.length > 0;
+
+    if (isQuizDone && hasQuestions && hasAnswers && !hasRecordedLeaderboard.current && currentUser) {
+      hasRecordedLeaderboard.current = true;
+
+      // Hitung jumlah jawaban benar
+      let correctCount = 0;
+      currentQuiz.forEach((q: Question, i: number) => {
+        if (i < userAnswers.length) {
+          const userAns = userAnswers[i];
+          if (isUserAnswerCorrect(userAns, q)) {
+            correctCount++;
+          }
+        }
+      });
+
+      if (correctCount > 0) {
+        let quizName = 'Kuis';
+        if (selectedDatabases && selectedDatabases.length > 0) {
+          quizName = selectedDatabases.length === 1 ? selectedDatabases[0] : selectedDatabases.join(', ');
+        }
+
+        console.log(`[Leaderboard] Recording: ${correctCount}/${currentQuiz.length} correct for ${quizName}`);
+        recordQuizToLeaderboard(quizName, correctCount, currentQuiz.length);
+      }
+    }
+  }, [screen, currentQuiz, userAnswers, currentUser, selectedDatabases, recordQuizToLeaderboard]);
+
   // Debounced auto-save effect
   useEffect(() => {
     if (screen !== 'quiz' || !currentUser || currentQuiz.length === 0) return;
@@ -1495,16 +1641,16 @@ export default function App() {
   }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser, quizSecondsLeft]);
 
   useEffect(() => {
-    if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard') {
+    if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter]);
+  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType]);
 
   useEffect(() => {
     if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
       fetchGlobalLeaderboard();
     }
-  }, [globalTimeFilter, activeDashboardTab, leaderboardType]);
+  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername]);
 
   const fetchGlobalSettings = async () => {
     try {
@@ -1551,16 +1697,35 @@ export default function App() {
             ? JSON.parse(row.questions_json)
             : row.questions_json;
             
-          if (questions && !Array.isArray(questions) && questions.r2_url) {
+          if (questions && !Array.isArray(questions) && questions.r2_key) {
+            // Construct URL yang benar menggunakan r2_key
+            const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
+            const correctUrl = `${R2_BASE}/${questions.r2_key}`;
             try {
-              const res = await fetch(questions.r2_url);
+              const res = await fetch(correctUrl);
               if (res.ok) {
-                questions = await res.json();
+                const fetched = await res.json();
+                if (Array.isArray(fetched) && fetched.length > 0) {
+                  const r2Key = questions.r2_key;
+                  const oldUrl = questions.r2_url;
+                  questions = fetched;
+                  // Auto-migrate: perbaiki r2_url di Supabase jika URL lama salah
+                  if (oldUrl !== correctUrl) {
+                    supabase.from('question_banks')
+                      .update({ questions_json: { r2_url: correctUrl, r2_key: r2Key } })
+                      .eq('name', row.name)
+                      .then(() => console.log('Auto-migrated R2 URL for:', row.name));
+                  }
+                } else {
+                  console.warn('R2 returned empty/invalid data for:', row.name);
+                  questions = [];
+                }
               } else {
+                console.warn('R2 fetch failed (status', res.status, ') for:', row.name);
                 questions = [];
               }
             } catch (err) {
-              console.error('Failed to fetch from R2:', err);
+              console.error('Failed to fetch from R2 for', row.name, ':', err);
               questions = [];
             }
           }
@@ -1607,6 +1772,123 @@ export default function App() {
       console.error('Error fetching questions:', err);
     }
   };
+
+  // === CATATAN SOAL FUNCTIONS ===
+  const fetchAnswerNotes = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const { data, error } = await supabase
+        .from('answer_notes')
+        .select('question_text, note_content')
+        .eq('user_id', currentUser.id);
+      if (!error && data) {
+        const notesMap: Record<string, string> = {};
+        data.forEach((d: { question_text: string; note_content: string }) => {
+          notesMap[d.question_text] = d.note_content;
+        });
+        setAnswerNotes(notesMap);
+      }
+    } catch (e) {
+      console.error('Failed to fetch answer notes:', e);
+    }
+  }, [currentUser]);
+
+  const saveAnswerNote = useCallback(async (questionText: string, content: string) => {
+    if (!currentUser || !content.trim()) return;
+    setNoteSaving(true);
+    try {
+      const { error } = await supabase
+        .from('answer_notes')
+        .upsert({
+          user_id: currentUser.id,
+          question_text: questionText,
+          note_content: content.trim(),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,question_text' });
+      if (!error) {
+        setAnswerNotes(prev => ({ ...prev, [questionText]: content.trim() }));
+        setNotePopupOpen(null);
+        triggerToast('Catatan berhasil disimpan!', '📝');
+      } else {
+        triggerToast('Gagal menyimpan catatan', '❌');
+      }
+    } catch (e) {
+      console.error('Failed to save note:', e);
+      triggerToast('Gagal menyimpan catatan', '❌');
+    }
+    setNoteSaving(false);
+  }, [currentUser]);
+
+  const deleteAnswerNote = useCallback(async (questionText: string) => {
+    if (!currentUser) return;
+    setNoteSaving(true);
+    try {
+      const { error } = await supabase
+        .from('answer_notes')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('question_text', questionText);
+      if (!error) {
+        setAnswerNotes(prev => {
+          const next = { ...prev };
+          delete next[questionText];
+          return next;
+        });
+        setNotePopupOpen(null);
+        triggerToast('Catatan berhasil dihapus', '🗑️');
+      } else {
+        triggerToast('Gagal menghapus catatan', '❌');
+      }
+    } catch (e) {
+      console.error('Failed to delete note:', e);
+      triggerToast('Gagal menghapus catatan', '❌');
+    }
+    setNoteSaving(false);
+  }, [currentUser]);
+
+  const openNotePopup = (questionText: string, userAnswer: string, correctAnswer: string, isCorrect: boolean) => {
+    setNoteInput(answerNotes[questionText] || '');
+    setNotePopupOpen({ isOpen: true, questionText, userAnswer, correctAnswer, isCorrect });
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchAnswerNotes();
+    } else {
+      setAnswerNotes({});
+    }
+  }, [currentUser, fetchAnswerNotes]);
+
+  // Auto-show note popup for first wrong answer without note when reviewing results
+  useEffect(() => {
+    if (screen !== 'result' || currentQuiz.length === 0) {
+      autoNoteTriggeredRef.current = false;
+      return;
+    }
+
+    if (autoNoteTriggeredRef.current) return;
+
+    // Temukan jawaban salah pertama yang belum punya catatan
+    const wrongIdx = currentQuiz.findIndex((q, i) => {
+      const isWrong = userAnswers[i] === null || !isUserAnswerCorrect(userAnswers[i], q);
+      return isWrong && !answerNotes[q.pertanyaan];
+    });
+
+    if (wrongIdx !== -1 && !notePopupOpen?.isOpen) {
+      autoNoteTriggeredRef.current = true;
+      const wrongQ = currentQuiz[wrongIdx];
+      const userAns = userAnswers[wrongIdx] !== null ? `${userAnswers[wrongIdx]}` : '(Tidak Dijawab)';
+      const correctLetter = getCorrectLetterForQuestion(wrongQ);
+      const correctOptionText = wrongQ.pilihan ? (wrongQ.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || wrongQ.jawaban_benar) : wrongQ.jawaban_benar;
+      const correctAns = `${correctLetter}. ${correctOptionText}`;
+
+      const timer = setTimeout(() => {
+        openNotePopup(wrongQ.pertanyaan, userAns, correctAns, false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [screen, currentQuiz, userAnswers, answerNotes, notePopupOpen?.isOpen]);
+
 
   // Auth Listener
   useEffect(() => {
@@ -1838,11 +2120,13 @@ export default function App() {
         // Simpan ke database Supabase
         (async () => {
           try {
-            const r2Data = await uploadQuestionsToR2(file.name, finalQuestions);
-            const storagePayload = r2Data ? r2Data : finalQuestions;
+            // R2 upload sebagai backup saja (best-effort), jangan blok jika gagal
+            uploadQuestionsToR2(file.name, finalQuestions).catch(err =>
+              console.warn('R2 upload skipped:', err)
+            );
             const { error } = await supabase
               .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+              .upsert({ user_id: currentUser.id, name: file.name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
@@ -1918,11 +2202,13 @@ export default function App() {
       try {
         // Simpan setiap bank soal ke Supabase
         for (const [name, questions] of Object.entries(newDatabases)) {
-          const r2Data = await uploadQuestionsToR2(name, questions);
-          const storagePayload = r2Data ? r2Data : questions;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, questions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
           if (error) throw error;
         }
 
@@ -1987,11 +2273,13 @@ export default function App() {
     if (finalQuestions && finalQuestions.length > 0) {
       if (currentUser) {
         try {
-          const r2Data = await uploadQuestionsToR2(name, finalQuestions);
-          const storagePayload = r2Data ? r2Data : finalQuestions;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, finalQuestions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: storagePayload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
           if (error) throw error;
           
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
@@ -2040,6 +2328,57 @@ export default function App() {
         // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
         triggerToast(`File "${name}" dihapus secara lokal, gagal menghapus di cloud`, '⚠️');
+      }
+    })();
+  };
+
+  const removeGlobalDatabase = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`)) return;
+    (async () => {
+      try {
+        // Hapus dari Supabase tanpa filter user_id (karena global)
+        const { data: bankData, error: fetchErr } = await supabase
+          .from('question_banks')
+          .select('questions_json')
+          .eq('name', name)
+          .single();
+
+        if (!fetchErr && bankData?.questions_json) {
+          const qj = bankData.questions_json;
+          // Jika data berupa referensi R2, hapus file dari R2 juga
+          if (qj && !Array.isArray(qj) && qj.r2_key) {
+            await deleteQuestionsFromR2(qj.r2_key);
+          }
+        }
+
+        const { error } = await supabase
+          .from('question_banks')
+          .delete()
+          .eq('name', name);
+        if (error) throw error;
+
+        // Update semua local state
+        const updated = { ...questionDatabase };
+        delete updated[name];
+        setQuestionDatabase(updated);
+        setSelectedDatabases((prev) => prev.filter((d) => d !== name));
+        setGlobalDatabases((prev) => prev.filter((d) => d !== name));
+        setQuestionLimits((prev) => { const next = { ...prev }; delete next[name]; return next; });
+
+        // Hapus dari global folder map
+        setGlobalQuizFolderMap((prev) => {
+          const next = { ...prev };
+          delete next[name];
+          // Simpan perubahan ke Supabase
+          supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: next }).then(() => {}, console.error);
+          return next;
+        });
+
+        triggerToast(`Kuis global "${name}" berhasil dihapus!`, '🗑️');
+      } catch (err) {
+        console.error(err);
+        triggerToast(`Gagal menghapus kuis global "${name}"`, '❌');
       }
     })();
   };
@@ -2339,6 +2678,7 @@ export default function App() {
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
     setQuizTimerActive(true);
     setScreen('quiz');
     setShowSidebar(true);
@@ -2377,11 +2717,58 @@ export default function App() {
     setIsDailyChallenge(true);
 
     activeQuizSessionIdRef.current = 'quiz_daily_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
     setQuizSecondsLeft(600); // 10 minutes
     setQuizTimerActive(true);
     setScreen('quiz');
     setShowSidebar(true);
     triggerToast('Daily Challenge dimulai! 10 Menit, 5 Soal, 2x XP!', '🔥');
+  };
+
+  const startBookmarkPractice = () => {
+    if (!studyRoom.bookmarks || studyRoom.bookmarks.length === 0) {
+      triggerToast('Belum ada soal yang di-bookmark!', '⚠️');
+      return;
+    }
+
+    const bookmarkQuestions = studyRoom.bookmarks
+      .map(b => b.question_json)
+      .filter(Boolean);
+
+    if (bookmarkQuestions.length === 0) {
+      triggerToast('Data soal bookmark tidak valid!', '⚠️');
+      return;
+    }
+
+    const pool = shuffleQuestions 
+      ? shuffleArray(bookmarkQuestions) 
+      : [...bookmarkQuestions];
+
+    const processedPool = shuffleOptions 
+      ? pool.map(shuffleQuestionOptions) 
+      : pool;
+
+    setCurrentQuiz(processedPool);
+    setUserAnswers(new Array(processedPool.length).fill(null));
+    setDoubtStatus(new Array(processedPool.length).fill(false));
+    setIsRevealed(new Array(processedPool.length).fill(false));
+    setCurrentIndex(0);
+    setQuizSecondsLeft(processedPool.length * 60);
+
+    // Reset Gamification & States
+    setXpHistory([userXP]);
+    setOpenReviewIndices({});
+    setUnlockedHints({});
+    setHasSubmittedLeaderboard(false);
+    setLastQuizScore(0);
+    setIsDailyChallenge(false);
+
+    activeQuizSessionIdRef.current = 'quiz_bookmark_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    hasRecordedLeaderboard.current = false;
+    setQuizTimerActive(true);
+    setScreen('quiz');
+    setShowSidebar(true);
+    triggerToast(`Latihan ${processedPool.length} soal bookmark dimulai!`, '🔖');
   };
 
   const checkAnswerNow = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -2697,24 +3084,19 @@ export default function App() {
               .delete()
               .eq('user_id', currentUser.id);
           }
-          // 1.5. Insert quiz attempt log
-          await supabase
-            .from('quiz_history_logs')
-            .insert({
-              user_id: currentUser.id,
-              file_name: selectedDatabases.join(', '),
-              score: finalScore,
-              correct_count: correct,
-              total_count: total
-            });
-
-          // 2. Refresh global leaderboard to update local view
-          // (total_questions_answered has already been updated live for correct answers)
-          await fetchGlobalLeaderboard();
         } catch (err) {
-          console.error('Error updating stats after quiz completion:', err);
+          console.error('Error updating session after quiz completion:', err);
         }
       })();
+    }
+
+    if (currentUser) {
+      const quizFileName = selectedDatabases.length === 1
+        ? selectedDatabases[0]
+        : selectedDatabases.length > 1
+        ? selectedDatabases.join(', ')
+        : 'Kuis';
+      recordQuizToLeaderboard(quizFileName, correct, total);
     }
 
     setScreen('result');
@@ -4026,7 +4408,18 @@ export default function App() {
                                           </button>
                                         )}
                                         
-                                        {!globalDatabases.includes(key) && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                          }}
+                                          className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-colors"
+                                          title="Pindah ke folder lain"
+                                        >
+                                          <FolderPlus className="w-4 h-4" />
+                                        </button>
+
+                                        {!globalDatabases.includes(key) ? (
                                           <button
                                             onClick={(e) => removeDatabase(key, e)}
                                             className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -4034,7 +4427,15 @@ export default function App() {
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
-                                        )}
+                                        ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                          <button
+                                            onClick={(e) => removeGlobalDatabase(key, e)}
+                                            className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
+                                            title="Hapus kuis global (admin)"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        ) : null}
                                       </div>
                                     </div>
 
@@ -4154,7 +4555,18 @@ export default function App() {
                                         </button>
                                       )}
                                       
-                                      {!globalDatabases.includes(key) && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-colors"
+                                        title="Pindah ke folder lain"
+                                      >
+                                        <FolderPlus className="w-4 h-4" />
+                                      </button>
+                                      
+                                      {!globalDatabases.includes(key) ? (
                                         <button
                                           onClick={(e) => removeDatabase(key, e)}
                                           className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -4162,7 +4574,15 @@ export default function App() {
                                         >
                                           <Trash2 className="w-4 h-4" />
                                         </button>
-                                      )}
+                                      ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                        <button
+                                          onClick={(e) => removeGlobalDatabase(key, e)}
+                                          className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
+                                          title="Hapus kuis global (admin)"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      ) : null}
                                     </div>
                                   </div>
 
@@ -4176,12 +4596,13 @@ export default function App() {
                   )}
 
                   {selectedDatabases.length > 0 && (
-                    <div className="mt-6 flex justify-end">
+                    <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <button
                         onClick={() => setDashboardTab('new')}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/10 transition-all cursor-pointer"
+                        className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 border border-white/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
                       >
-                        Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih) <ChevronRight className="w-4 h-4" />
+                        <span>Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih)</span>
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -4234,10 +4655,25 @@ export default function App() {
                               <span>{key.split('/').pop()}</span>
                               <button 
                                 onClick={() => setSelectedDatabases(prev => prev.filter(d => d !== key))}
-                                className="text-slate-450 hover:text-rose-500 font-extrabold"
+                                className="text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 font-extrabold"
+                                title="Hapus dari seleksi"
                               >
                                 ×
                               </button>
+                              {!globalDatabases.includes(key) && (
+                                <button 
+                                  onClick={() => {
+                                    if (window.confirm(`Hapus bank soal "${key.split('/').pop()}" secara permanen?`)) {
+                                      removeDatabase(key, { stopPropagation: () => {} } as React.MouseEvent);
+                                      setSelectedDatabases(prev => prev.filter(d => d !== key));
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-rose-500 transition-colors"
+                                  title="Hapus bank soal secara permanen"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
                             </span>
                           ))}
                         </div>
@@ -4931,11 +5367,19 @@ export default function App() {
                               ))}
                             </div>
                           )}
-                          {srsAnswerRevealed && (
-                            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
-                              Jawaban Benar: {getCorrectLetterForQuestion(srs.dueCards[srs.currentReviewIndex].question_json)}
-                            </div>
-                          )}
+                          {srsAnswerRevealed && (() => {
+                            const currentCard = srs.dueCards[srs.currentReviewIndex];
+                            const q = currentCard.question_json;
+                            const isIsian = !q.pilihan || q.pilihan.length === 0;
+                            const displayAnswer = isIsian
+                              ? q.jawaban_benar
+                              : getCorrectLetterForQuestion(q);
+                            return (
+                              <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50 font-medium">
+                                Jawaban Benar: {displayAnswer}
+                              </div>
+                            );
+                          })()}
                         </div>
                         {!srsAnswerRevealed ? (
                           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -5056,19 +5500,31 @@ export default function App() {
                 </div>
 
                 {/* Sub-tabs inside notes */}
-                <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <button 
-                    onClick={() => setBankFilter('notes' as any)} 
-                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'notes' || bankFilter === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                  >
-                    Catatan ({studyRoom.notes.length})
-                  </button>
-                  <button 
-                    onClick={() => setBankFilter('bookmarks' as any)} 
-                    className={`px-4 py-2 rounded-lg font-bold text-xs transition ${bankFilter === 'bookmarks' ? 'bg-slate-100 dark:bg-slate-800 text-amber-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                  >
-                    Bookmark ({studyRoom.bookmarks.length})
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setBankFilter('notes' as any)} 
+                      className={`px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${bankFilter === 'notes' || bankFilter === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Catatan ({studyRoom.notes.length})
+                    </button>
+                    <button 
+                      onClick={() => setBankFilter('bookmarks' as any)} 
+                      className={`px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${bankFilter === 'bookmarks' ? 'bg-slate-100 dark:bg-slate-800 text-amber-500' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Bookmark ({studyRoom.bookmarks.length})
+                    </button>
+                  </div>
+
+                  {bankFilter === 'bookmarks' && studyRoom.bookmarks.length > 0 && (
+                    <button
+                      onClick={startBookmarkPractice}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      Practice ({studyRoom.bookmarks.length} Soal)
+                    </button>
+                  )}
                 </div>
 
                 {studyRoom.isLoading ? (
@@ -5136,21 +5592,42 @@ export default function App() {
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                            {String(b.question_json.pertanyaan || '').replace(/<[^>]*>?/gm, '')}
+                            {String(b.question_json?.pertanyaan || '').replace(/<[^>]*>?/gm, '')}
                           </p>
                         </div>
                         <div className="flex flex-shrink-0 gap-2">
                           <button 
                             onClick={() => {
-                              triggerToast('Fitur Practice dari bookmark segera hadir', '🚀');
+                              const q = b.question_json;
+                              if (!q) return;
+                              const pool = [q];
+                              setCurrentQuiz(pool);
+                              setUserAnswers([null]);
+                              setDoubtStatus([false]);
+                              setIsRevealed([false]);
+                              setCurrentIndex(0);
+                              setQuizSecondsLeft(60);
+                              setXpHistory([userXP]);
+                              setOpenReviewIndices({});
+                              setUnlockedHints({});
+                              setHasSubmittedLeaderboard(false);
+                              setLastQuizScore(0);
+                              setIsDailyChallenge(false);
+                              activeQuizSessionIdRef.current = 'quiz_single_bm_' + Date.now();
+                              hasRecordedLeaderboard.current = false;
+                              setQuizTimerActive(true);
+                              setScreen('quiz');
+                              setShowSidebar(true);
+                              triggerToast('Mulai latihan soal bookmark!', '🔖');
                             }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition cursor-pointer"
                           >
+                            <Play className="w-3.5 h-3.5 fill-current" />
                             Practice
                           </button>
                           <button 
                             onClick={() => studyRoom.removeBookmark(b.question_ref)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition cursor-pointer"
                             title="Hapus Bookmark"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -6568,9 +7045,45 @@ export default function App() {
                           </p>
                         </div>
 
-                        <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
-                          isOpen ? 'rotate-180 text-indigo-500' : ''
-                        }`} />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Tombol Catatan */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const correctLetter = getCorrectLetterForQuestion(q);
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                              openNotePopup(
+                                q.pertanyaan,
+                                userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                `${correctLetter}. ${correctOptionText}`,
+                                isCorrect
+                              );
+                            }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer hover:scale-[1.05]"
+                            title={answerNotes[q.pertanyaan] ? 'Lihat/Edit Catatan' : 'Tambah Catatan'}
+                            style={{
+                              backgroundColor: answerNotes[q.pertanyaan]
+                                ? (theme === 'dark' ? 'rgb(245 158 11 / 0.15)' : 'rgb(245 158 11 / 0.1)')
+                                : (isCorrect
+                                  ? (theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)')
+                                  : 'rgb(245 158 11 / 0.15)'),
+                              color: answerNotes[q.pertanyaan]
+                                ? '#f59e0b'
+                                : (isCorrect
+                                  ? (theme === 'dark' ? '#94a3b8' : '#64748b')
+                                  : '#f59e0b'),
+                            }}
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                            {answerNotes[q.pertanyaan] && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            )}
+                          </button>
+
+                          <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                            isOpen ? 'rotate-180 text-indigo-500' : ''
+                          }`} />
+                        </div>
                       </div>
 
                       {/* Accordion Body */}
@@ -6584,7 +7097,7 @@ export default function App() {
                           <div className="flex flex-wrap gap-2">
                             {(() => {
                               const correctLetter = getCorrectLetterForQuestion(q);
-                              const correctOptionText = q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar;
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
 
                               return userAnswer === null ? (
                                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
@@ -6606,6 +7119,38 @@ export default function App() {
                               );
                             })()}
                           </div>
+
+                          {/* Catatan yang sudah ada (inline) */}
+                          {answerNotes[q.pertanyaan] && (
+                            <div
+                              className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const correctLetter = getCorrectLetterForQuestion(q);
+                                const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                openNotePopup(
+                                  q.pertanyaan,
+                                  userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                  `${correctLetter}. ${correctOptionText}`,
+                                  isCorrect
+                                );
+                              }}
+                              style={{
+                                backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
+                                border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
+                                color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                              }}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 font-semibold">
+                                  <StickyNote className="w-3.5 h-3.5" />
+                                  Catatan Belajar:
+                                </div>
+                                <span className="text-[10px] opacity-75 underline">Edit</span>
+                              </div>
+                              <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                            </div>
+                          )}
 
                           <div className="pt-3 border-t border-slate-200/40 dark:border-slate-850/50">
                             <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-500 mb-1.5">
@@ -6648,8 +7193,8 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Bookmark & Notes Actions for wrong answers */}
-                      {isOpen && !isCorrect && currentUser && (
+                      {/* Bookmark & Notes Actions */}
+                      {isOpen && currentUser && (
                         <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex gap-2 justify-end">
                           <button
                             onClick={(e) => {
@@ -6660,7 +7205,7 @@ export default function App() {
                                 studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
                               }
                             }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                               studyRoom.isBookmarked(q)
                                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
                                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -6672,21 +7217,39 @@ export default function App() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setNoteRefQuestion({ q, bankName: selectedDatabases[0] || 'Kuis' });
-                              setEditingNote(null);
-                              setIsNoteModalOpen(true);
+                              const correctLetter = getCorrectLetterForQuestion(q);
+                              const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                              openNotePopup(
+                                q.pertanyaan,
+                                userAnswer !== null ? `${userAnswer}` : '(Tidak Dijawab)',
+                                `${correctLetter}. ${correctOptionText}`,
+                                isCorrect
+                              );
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                              answerNotes[q.pertanyaan]
+                                ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
                           >
-                            <StickyNote className="w-3.5 h-3.5" />
-                            Buat Catatan
+                            {answerNotes[q.pertanyaan] ? (
+                              <>
+                                <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                <span>Edit Catatan</span>
+                              </>
+                            ) : (
+                              <>
+                                <StickyNote className="w-3.5 h-3.5" />
+                                <span>Buat Catatan</span>
+                              </>
+                            )}
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReportModal({ isOpen: true, questionIndex: idx });
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer"
                           >
                             <Flag className="w-3.5 h-3.5" />
                             Laporkan
@@ -7025,6 +7588,38 @@ export default function App() {
                                 </p>
                               </div>
 
+                              {/* Catatan yang sudah ada (inline) di riwayat */}
+                              {answerNotes[q.pertanyaan] && (
+                                <div
+                                  className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const correctLetter = getCorrectLetterForQuestion(q);
+                                    const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                    openNotePopup(
+                                      q.pertanyaan,
+                                      userAns !== null && userAns !== undefined ? `${userAns}` : '(Tidak Dijawab)',
+                                      `${correctLetter}. ${correctOptionText}`,
+                                      isCorrect
+                                    );
+                                  }}
+                                  style={{
+                                    backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
+                                    border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
+                                    color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                                  }}
+                                >
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-1.5 font-semibold">
+                                      <StickyNote className="w-3.5 h-3.5" />
+                                      Catatan Belajar:
+                                    </div>
+                                    <span className="text-[10px] opacity-75 underline">Edit</span>
+                                  </div>
+                                  <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                                </div>
+                              )}
+
                               {/* Question metadata (competencies, etc) */}
                               {q.metadata && (
                                 <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-850">
@@ -7043,6 +7638,60 @@ export default function App() {
                                       Kesulitan: {q.metadata.tingkat_kesulitan}
                                     </span>
                                   )}
+                                </div>
+                              )}
+
+                              {/* Action toolbar in History detail */}
+                              {currentUser && (
+                                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex gap-2 justify-end mt-3 -mx-5 -mb-5 rounded-b-xl">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (studyRoom.isBookmarked(q)) {
+                                        studyRoom.removeBookmark(generateQuestionFingerprint(q));
+                                      } else {
+                                        studyRoom.addBookmark(q, selectedHistoryDetail.files?.[0] || 'Kuis');
+                                      }
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      studyRoom.isBookmarked(q)
+                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
+                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
+                                    Bookmark Soal Ini
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const correctLetter = getCorrectLetterForQuestion(q);
+                                      const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
+                                      openNotePopup(
+                                        q.pertanyaan,
+                                        userAns !== null && userAns !== undefined ? `${userAns}` : '(Tidak Dijawab)',
+                                        `${correctLetter}. ${correctOptionText}`,
+                                        isCorrect
+                                      );
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      answerNotes[q.pertanyaan]
+                                        ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    {answerNotes[q.pertanyaan] ? (
+                                      <>
+                                        <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                        <span>Edit Catatan</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <StickyNote className="w-3.5 h-3.5" />
+                                        <span>Buat Catatan</span>
+                                      </>
+                                    )}
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -7371,6 +8020,228 @@ export default function App() {
         ))}
       </AnimatePresence>
     </div>
+
+    {/* Move Quiz to Folder - Bottom Sheet Modal */}
+    <AnimatePresence>
+      {moveQuizModal && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            onClick={() => setMoveQuizModal(null)}
+          />
+          {/* Bottom Sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] rounded-t-3xl shadow-2xl overflow-hidden ${
+              theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'
+            }`}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className={`w-10 h-1 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`} />
+            </div>
+          
+            {/* Header */}
+            <div className={`px-5 pb-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+              <h3 className={`text-sm font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                Pindah: {moveQuizModal.quizName}
+              </h3>
+              <p className="text-[10px] text-slate-500 mt-0.5">Pilih folder tujuan</p>
+            </div>
+          
+            {/* Folder list */}
+            <div className="overflow-y-auto max-h-[50vh] p-3 space-y-1.5">
+              {/* Root option */}
+              <button
+                onClick={() => {
+                  handleMoveQuiz(moveQuizModal.quizKey, 'root');
+                  setMoveQuizModal(null);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
+                  theme === 'dark' 
+                    ? 'hover:bg-slate-800 text-slate-300' 
+                    : 'hover:bg-slate-100 text-slate-700'
+                }`}
+              >
+                <FileText className="w-4 h-4 text-slate-400" />
+                <span>File Lepas (Root)</span>
+              </button>
+            
+              {/* Custom folders */}
+              {[...globalCustomFolders, ...customFolders]
+                .filter((v, i, arr) => arr.indexOf(v) === i) // deduplicate
+                .map((folder) => (
+                  <button
+                    key={folder}
+                    onClick={() => {
+                      handleMoveQuiz(moveQuizModal.quizKey, folder);
+                      setMoveQuizModal(null);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
+                      theme === 'dark' 
+                        ? 'hover:bg-slate-800 text-slate-300' 
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <Folder className="w-4 h-4 text-indigo-400" />
+                    <span>{folder}</span>
+                  </button>
+                ))}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+
+      {/* === POPUP CATATAN SOAL === */}
+      {notePopupOpen && notePopupOpen.isOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={() => setNotePopupOpen(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Popup Card */}
+          <div
+            className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+              border: theme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(226 232 240)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: notePopupOpen.isCorrect ? 'rgb(34 197 94 / 0.15)' : 'rgb(245 158 11 / 0.15)' }}
+                >
+                  <StickyNote
+                    className="w-4 h-4"
+                    style={{ color: notePopupOpen.isCorrect ? '#22c55e' : '#f59e0b' }}
+                  />
+                </div>
+                <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}>
+                  {answerNotes[notePopupOpen.questionText] ? 'Edit Catatan' : 'Tambah Catatan'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setNotePopupOpen(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                style={{
+                  color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                  backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
+                }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Question Context */}
+            <div
+              className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3"
+              style={{
+                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
+                color: theme === 'dark' ? '#cbd5e1' : '#475569',
+              }}
+            >
+              <span className="font-semibold" style={{ color: theme === 'dark' ? '#e2e8f0' : '#334155' }}>Soal:</span>{' '}
+              {notePopupOpen.questionText.replace(/<[^>]*>/g, '').length > 200
+                ? notePopupOpen.questionText.replace(/<[^>]*>/g, '').substring(0, 200) + '...'
+                : notePopupOpen.questionText.replace(/<[^>]*>/g, '')}
+            </div>
+
+            {/* Answer Info (only for wrong answers) */}
+            {!notePopupOpen.isCorrect && (
+              <div className="flex gap-2">
+                <div
+                  className="flex-1 rounded-xl p-3 text-xs"
+                  style={{
+                    backgroundColor: 'rgb(239 68 68 / 0.08)',
+                    border: '1px solid rgb(239 68 68 / 0.2)',
+                  }}
+                >
+                  <span className="font-semibold text-red-400">Jawabanmu:</span>
+                  <p className="mt-1" style={{ color: theme === 'dark' ? '#fca5a5' : '#dc2626' }}>
+                    {notePopupOpen.userAnswer || '-'}
+                  </p>
+                </div>
+                <div
+                  className="flex-1 rounded-xl p-3 text-xs"
+                  style={{
+                    backgroundColor: 'rgb(34 197 94 / 0.08)',
+                    border: '1px solid rgb(34 197 94 / 0.2)',
+                  }}
+                >
+                  <span className="font-semibold text-green-400">Jawaban Benar:</span>
+                  <p className="mt-1" style={{ color: theme === 'dark' ? '#86efac' : '#16a34a' }}>
+                    {notePopupOpen.correctAnswer || '-'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Note Textarea */}
+            <textarea
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              placeholder="Tulis catatan belajar di sini... (misal: konsep yang perlu diingat, tips mnemonik, referensi halaman buku, dll)"
+              rows={5}
+              className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all"
+              style={{
+                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
+                color: theme === 'dark' ? '#e2e8f0' : '#1e293b',
+                border: `1px solid ${theme === 'dark' ? 'rgb(51 65 85)' : 'rgb(226 232 240)'}`,
+              }}
+              autoFocus
+            />
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-between gap-2">
+              {answerNotes[notePopupOpen.questionText] ? (
+                <button
+                  onClick={() => deleteAnswerNote(notePopupOpen.questionText)}
+                  disabled={noteSaving}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Hapus
+                </button>
+              ) : (
+                <div />
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setNotePopupOpen(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  style={{
+                    color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                    backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => saveAnswerNote(notePopupOpen.questionText, noteInput)}
+                  disabled={noteSaving || !noteInput.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {noteSaving ? 'Menyimpan...' : 'Simpan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
