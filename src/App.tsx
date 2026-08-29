@@ -1371,12 +1371,27 @@ export default function App() {
         `)
         .eq('file_name', fileName);
 
-      // Terapkan filter waktu jika bukan 'all'
+      // Terapkan filter waktu jika bukan 'all' (fixed period WIB)
       if (fileTimeFilter !== 'all') {
-        const days = parseInt(fileTimeFilter);
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
-        query = query.gte('created_at', cutoff.toISOString());
+        const now = new Date();
+        const wibOffsetMs = 7 * 60 * 60 * 1000;
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+        const wibNow = new Date(utcMs + wibOffsetMs);
+
+        let cutoffDate: Date;
+        if (fileTimeFilter === '1') {
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+        } else if (fileTimeFilter === '7') {
+          const dayOfWeek = wibNow.getDay();
+          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          cutoffDate = new Date(wibNow);
+          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
+          cutoffDate.setHours(0, 0, 0, 0);
+        } else {
+          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+        }
+        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        query = query.gte('created_at', new Date(cutoffUtcMs).toISOString());
       }
 
       const { data, error } = await query
