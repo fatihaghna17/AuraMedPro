@@ -4203,19 +4203,6 @@ export default function App() {
                           if (folderScrollRef.current.scrollLeft > 20) setShowSwipeHint(false);
                         }
                       }}
-                      onWheel={(e) => {
-                        const el = e.currentTarget as HTMLDivElement;
-                        const atStart = el.scrollLeft <= 1;
-                        const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
-                        // Jika sudah di ujung kiri & scroll ke atas, atau di ujung kanan & scroll ke bawah — biarkan vertical scroll normal
-                        if ((atStart && e.deltaY < 0) || (atEnd && e.deltaY > 0)) return;
-                        // Konversi vertical wheel ke horizontal scroll
-                        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          el.scrollLeft += e.deltaY;
-                        }
-                      }}
                       className="flex gap-6 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
                     >
                       {/* Swipe hint — mobile only */}
