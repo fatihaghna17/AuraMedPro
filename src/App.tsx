@@ -148,6 +148,8 @@ export default function App() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const folderScrollRef = useRef<HTMLDivElement>(null);
 
   // Auto Fullscreen on Desktop upon first user interaction (click)
   useEffect(() => {
@@ -233,6 +235,13 @@ export default function App() {
       fetchReports();
     }
   }, [dashboardTab, currentUser]);
+
+  // Reset swipe hint setiap kali buka tab Bank Soal
+  useEffect(() => {
+    if (dashboardTab === 'banks') {
+      setShowSwipeHint(true);
+    }
+  }, [dashboardTab]);
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
@@ -4157,7 +4166,50 @@ export default function App() {
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Unggah berkas soal JSON/YAML terlebih dahulu atau gunakan bank soal bawaan.</p>
                     </div>
                   ) : (
-                    <div className="flex gap-6 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                    <div 
+                      ref={folderScrollRef}
+                      onScroll={() => {
+                        // Sembunyikan swipe hint setelah user mulai scroll
+                        if (showSwipeHint && folderScrollRef.current) {
+                          if (folderScrollRef.current.scrollLeft > 20) setShowSwipeHint(false);
+                        }
+                      }}
+                      className="flex gap-6 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] relative"
+                    >
+                      {/* Swipe hint — mobile only */}
+                      <AnimatePresence>
+                        {showSwipeHint && Object.keys(filteredDatabases.folders).length > 1 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ delay: 0.8, duration: 0.4 }}
+                            className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 dark:bg-slate-100/90 backdrop-blur-md shadow-lg border border-slate-700/50 dark:border-slate-300/50"
+                            onAnimationComplete={() => {
+                              // Auto-hide setelah 4 detik
+                              setTimeout(() => setShowSwipeHint(false), 4000);
+                            }}
+                          >
+                            <motion.span
+                              animate={{ x: [0, 8, 0, -8, 0] }}
+                              transition={{ duration: 1.5, repeat: 2, ease: 'easeInOut' }}
+                              className="text-slate-300 dark:text-slate-700"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </motion.span>
+                            <span className="text-[11px] font-bold text-slate-200 dark:text-slate-800 whitespace-nowrap">
+                              Geser untuk lihat folder lain
+                            </span>
+                            <motion.span
+                              animate={{ x: [0, 8, 0, -8, 0] }}
+                              transition={{ duration: 1.5, repeat: 2, ease: 'easeInOut', delay: 0.1 }}
+                              className="text-slate-300 dark:text-slate-700"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </motion.span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       {/* Foldered databases */}
                       {Object.entries(filteredDatabases.folders).map(([folderPath, files]) => {
                         const filesTyped = files as any[];
