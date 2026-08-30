@@ -1051,31 +1051,34 @@ export default function App() {
         // FILTER WAKTU: hitung jawaban benar dari quiz_history_logs
         // dengan fixed period berdasarkan WIB (UTC+7)
 
-        const now = new Date();
-        // Konversi ke WIB
-        const wibOffsetMs = 7 * 60 * 60 * 1000;
-        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-        const wibNow = new Date(utcMs + wibOffsetMs);
+        // Fixed period WIB (UTC+7) — timezone-agnostic calculation
+        const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+        const utcNowMs = Date.now();
+        const wibNowMs = utcNowMs + WIB_OFFSET_MS;
+        const wibNow = new Date(wibNowMs);
 
-        let cutoffDate: Date;
+        // Ambil komponen tanggal WIB via getUTC* (karena wibNow sudah di-shift +7h)
+        const wibYear = wibNow.getUTCFullYear();
+        const wibMonth = wibNow.getUTCMonth();
+        const wibDate = wibNow.getUTCDate();
+        const wibDay = wibNow.getUTCDay();
 
+        // Hitung cutoff dalam WIB, lalu konversi ke UTC
+        let cutoffWibMs: number;
         if (globalTimeFilter === '1') {
-          // HARI INI: sejak jam 00:00 WIB hari ini
-          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+          // HARI INI: 00:00 WIB hari ini
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, wibDate, 0, 0, 0);
         } else if (globalTimeFilter === '7') {
-          // MINGGU INI: sejak jam 00:00 WIB hari Senin terakhir
-          const dayOfWeek = wibNow.getDay(); // 0=Min, 1=Sen, 2=Sel, ...
-          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          cutoffDate = new Date(wibNow);
-          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
-          cutoffDate.setHours(0, 0, 0, 0);
+          // MINGGU INI: 00:00 WIB hari Senin terakhir
+          const diffToMonday = wibDay === 0 ? 6 : wibDay - 1;
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, wibDate - diffToMonday, 0, 0, 0);
         } else {
-          // BULAN INI: sejak jam 00:00 WIB tanggal 1 bulan ini
-          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+          // BULAN INI: 00:00 WIB tanggal 1
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, 1, 0, 0, 0);
         }
 
-        // Konversi cutoff WIB kembali ke UTC untuk query Supabase
-        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        // Konversi WIB cutoff ke UTC (Supabase simpan created_at dalam UTC)
+        const cutoffUtcMs = cutoffWibMs - WIB_OFFSET_MS;
         const cutoffIso = new Date(cutoffUtcMs).toISOString();
 
         const { data, error } = await supabase
@@ -1161,24 +1164,26 @@ export default function App() {
 
       // Terapkan filter waktu jika bukan 'all' (fixed period WIB)
       if (fileTimeFilter !== 'all') {
-        const now = new Date();
-        const wibOffsetMs = 7 * 60 * 60 * 1000;
-        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-        const wibNow = new Date(utcMs + wibOffsetMs);
+        const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+        const utcNowMs = Date.now();
+        const wibNowMs = utcNowMs + WIB_OFFSET_MS;
+        const wibNow = new Date(wibNowMs);
 
-        let cutoffDate: Date;
+        const wibYear = wibNow.getUTCFullYear();
+        const wibMonth = wibNow.getUTCMonth();
+        const wibDate = wibNow.getUTCDate();
+        const wibDay = wibNow.getUTCDay();
+
+        let cutoffWibMs: number;
         if (fileTimeFilter === '1') {
-          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), wibNow.getDate(), 0, 0, 0, 0);
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, wibDate, 0, 0, 0);
         } else if (fileTimeFilter === '7') {
-          const dayOfWeek = wibNow.getDay();
-          const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          cutoffDate = new Date(wibNow);
-          cutoffDate.setDate(cutoffDate.getDate() - diffToMonday);
-          cutoffDate.setHours(0, 0, 0, 0);
+          const diffToMonday = wibDay === 0 ? 6 : wibDay - 1;
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, wibDate - diffToMonday, 0, 0, 0);
         } else {
-          cutoffDate = new Date(wibNow.getFullYear(), wibNow.getMonth(), 1, 0, 0, 0, 0);
+          cutoffWibMs = Date.UTC(wibYear, wibMonth, 1, 0, 0, 0);
         }
-        const cutoffUtcMs = cutoffDate.getTime() - wibOffsetMs;
+        const cutoffUtcMs = cutoffWibMs - WIB_OFFSET_MS;
         query = query.gte('created_at', new Date(cutoffUtcMs).toISOString());
       }
 
