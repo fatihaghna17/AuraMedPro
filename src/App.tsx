@@ -42,6 +42,7 @@ import {
   Download,
   Copy,
   Bell,
+  Clock,
   BarChart2,
   PlusCircle,
   Menu,
@@ -353,6 +354,12 @@ export default function App() {
   const [floatingXP, setFloatingXP] = useState<{ id: number; text: string; isBenar: boolean; x: number; y: number } | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; icon?: string } | null>(null);
 
+  // === NOTIFIKASI ===
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
+  const [notifCount, setNotifCount] = useState(0);
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+
   // Modal confirm states
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
@@ -643,6 +650,99 @@ export default function App() {
     setQuizHistory(newHistory);
     try { localStorage.setItem('cbtQuizHistory', JSON.stringify(newHistory)); } catch(e) { console.warn('localStorage full'); }
   };
+
+  // === FETCH NOTIFIKASI ===
+  const formatNotifTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Baru saja';
+    if (diffMin < 60) return `${diffMin} menit lalu`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr} jam lalu`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 7) return `${diffDay} hari lalu`;
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
+
+  const fetchNotifications = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const lastCheck = localStorage.getItem('cbt_last_notif_check');
+      const lastCheckDate = lastCheck ? new Date(lastCheck) : new Date(0);
+      const newNotifs: { id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[] = [];
+
+      // 1. SRS: hitung kartu yang perlu direview dari local state
+      if (srs && srs.cards) {
+        const now = new Date();
+        const dueCards = srs.cards.filter((c: any) => new Date(c.next_review_date) <= now);
+        if (dueCards.length > 0) {
+          newNotifs.push({
+            id: 'srs-due',
+            type: 'srs',
+            text: `${dueCards.length} kartu SRS perlu direview hari ini`,
+            time: 'Sekarang',
+          });
+        }
+      }
+
+      // 2. Kuis baru dari admin/collector sejak lastCheck
+      const { data: newBanks } = await supabase
+        .from('question_banks')
+        .select(`name, created_at, profiles!inner(username)`)
+        .gte('created_at', lastCheckDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (newBanks && newBanks.length > 0) {
+        const adminBanks = newBanks.filter((b: any) =>
+          b.profiles && (b.profiles.username === 'admin' || b.profiles.username === 'collector')
+        );
+        adminBanks.forEach((b: any) => {
+          newNotifs.push({
+            id: `quiz-${b.name}-${b.created_at}`,
+            type: 'new_quiz',
+            text: `Kuis baru: ${b.name}`,
+            time: formatNotifTime(b.created_at),
+            bankName: b.name,
+          });
+        });
+      }
+
+      setNotifList(newNotifs);
+      setNotifCount(newNotifs.length);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  }, [currentUser, srs]);
+
+  const markAllNotifRead = () => {
+    localStorage.setItem('cbt_last_notif_check', new Date().toISOString());
+    setNotifList([]);
+    setNotifCount(0);
+    setNotifOpen(false);
+  };
+
+  // Close notif panel saat klik di luar
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifPanelRef.current && !notifPanelRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    if (notifOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notifOpen]);
+
+  // Fetch notifikasi saat user login + refresh berkala
+  useEffect(() => {
+    if (currentUser) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 60000); // refresh tiap 1 menit
+      return () => clearInterval(interval);
+    }
+  }, [currentUser, fetchNotifications]);
 
   // Helper to show custom dynamic toast
   const triggerToast = (text: string, icon = 'ℹ️') => {
@@ -3316,16 +3416,99 @@ export default function App() {
                       <span>{userXP} XP</span>
                     </div>
 
-                    <button 
-                      onClick={() => triggerToast('Anda memiliki notifikasi modul baru!', '🔔')}
-                      className={`p-2 rounded-xl border relative transition-all ${
-                        theme === 'dark' ? 'bg-slate-900/80 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-500'
-                      }`}
-                    >
-                      <Bell className="w-4 h-4" />
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                    </button>
+                    {/* Notification Bell + Dropdown */}
+                    <div className="relative" ref={notifPanelRef}>
+                      <button 
+                        onClick={() => setNotifOpen(!notifOpen)}
+                        className={`p-2 rounded-xl border relative transition-all ${
+                          theme === 'dark' 
+                            ? 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200' 
+                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        <Bell className="w-4 h-4" />
+                        {notifCount > 0 && (
+                          <>
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-black px-1 leading-none">
+                              {notifCount > 9 ? '9+' : notifCount}
+                            </span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Dropdown Panel */}
+                      <AnimatePresence>
+                        {notifOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className={`absolute right-0 top-full mt-2 w-80 rounded-2xl border shadow-2xl z-50 overflow-hidden ${
+                              theme === 'dark'
+                                ? 'bg-slate-900 border-slate-700/50 shadow-black/50'
+                                : 'bg-white border-slate-200 shadow-slate-200/80'
+                            }`}
+                          >
+                            {/* Header */}
+                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                              theme === 'dark' ? 'border-slate-700/50' : 'border-slate-100'
+                            }`}>
+                              <h3 className={`text-xs font-black uppercase tracking-wider ${
+                                theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
+                              }`}>Notifikasi</h3>
+                              {notifCount > 0 && (
+                                <button
+                                  onClick={markAllNotifRead}
+                                  className="text-[10px] font-bold text-indigo-500 hover:text-indigo-400 transition-colors"
+                                >
+                                  Tandai sudah dibaca
+                                </button>
+                              )}
+                            </div>
+
+                            {/* List */}
+                            <div className="max-h-72 overflow-y-auto">
+                              {notifList.length === 0 ? (
+                                <div className={`px-4 py-8 text-center text-xs ${
+                                  theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                                }`}>
+                                  <Bell className="w-6 h-6 mx-auto mb-2 opacity-30" />
+                                  Tidak ada notifikasi baru
+                                </div>
+                              ) : (
+                                notifList.map((notif) => (
+                                  <div
+                                    key={notif.id}
+                                    className={`flex items-start gap-3 px-4 py-3 border-b last:border-b-0 transition-colors cursor-default ${
+                                      theme === 'dark'
+                                        ? 'border-slate-800/50 hover:bg-slate-800/30'
+                                        : 'border-slate-50 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                      notif.type === 'srs'
+                                        ? 'bg-amber-500/10 text-amber-500'
+                                        : 'bg-indigo-500/10 text-indigo-500'
+                                    }`}>
+                                      {notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-xs font-semibold leading-snug ${
+                                        theme === 'dark' ? 'text-slate-200' : 'text-slate-700'
+                                      }`}>{notif.text}</p>
+                                      <p className={`text-[10px] mt-0.5 ${
+                                        theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                                      }`}>{notif.time}</p>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
