@@ -3170,9 +3170,58 @@ export default function App() {
       </div>
 
       {authLoading ? (
-        <div className="min-h-screen flex flex-col items-center justify-center relative z-10">
-          <Activity className="w-10 h-10 animate-pulse text-indigo-650 dark:text-indigo-400 mb-4" />
-          <p className="text-sm font-bold opacity-80">Menghubungkan ke server cloud AuraMed...</p>
+        <div className="min-h-screen flex flex-col lg:flex-row relative z-10">
+          {/* Skeleton sidebar — desktop only */}
+          <div className={`hidden lg:flex w-60 flex-col p-4 border-r animate-pulse ${
+            theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-white/60 border-slate-200/50'
+          }`}>
+            <div className={`w-28 h-7 rounded-lg mb-8 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className={`h-8 rounded-lg mb-2 ${
+                i === 0 
+                  ? (theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-100') 
+                  : (theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100')
+              }`} />
+            ))}
+            <div className="mt-auto space-y-2">
+              <div className={`w-full h-10 rounded-xl ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
+              <div className={`w-full h-8 rounded-lg ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
+            </div>
+          </div>
+          {/* Skeleton main content */}
+          <div className="flex-1 p-6 lg:p-8">
+            {/* Skeleton header bar */}
+            <div className="flex items-center gap-4 mb-8">
+              <div className={`lg:hidden w-28 h-7 rounded-lg ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
+              <div className="flex-1" />
+              <div className={`w-20 h-8 rounded-lg ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
+              <div className={`w-8 h-8 rounded-full ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
+              <div className={`w-8 h-8 rounded-full ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
+            </div>
+            {/* Skeleton cards grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className={`p-5 rounded-2xl border animate-pulse ${
+                  theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-white/60 border-slate-200/50'
+                }`}>
+                  <div className={`w-16 h-3 rounded mb-3 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
+                  <div className={`w-24 h-6 rounded mb-1 ${theme === 'dark' ? 'bg-slate-600/50' : 'bg-slate-300'}`} />
+                  <div className={`w-12 h-3 rounded ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
+                </div>
+              ))}
+            </div>
+            {/* Skeleton content block */}
+            <div className={`rounded-2xl border p-6 animate-pulse h-64 ${
+              theme === 'dark' ? 'bg-slate-800/30 border-slate-700/50' : 'bg-white/40 border-slate-200/50'
+            }`}>
+              <div className={`w-40 h-5 rounded mb-4 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
+              <div className="space-y-2">
+                <div className={`w-full h-4 rounded ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
+                <div className={`w-5/6 h-4 rounded ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
+                <div className={`w-4/6 h-4 rounded ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
+              </div>
+            </div>
+          </div>
         </div>
       ) : !currentUser ? (
         <div className="min-h-screen flex flex-col items-center justify-center relative z-10 px-4">
@@ -5186,14 +5235,7 @@ export default function App() {
                       })}
                     </div>
 
-                    {/* Loader */}
-                    {isLeaderboardLoading ? (
-                      <div className="text-center py-12">
-                        <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-2" />
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Memuat peringkat terbaru...</p>
-                      </div>
-                    ) : (
-                      <div className={`overflow-hidden rounded-xl border ${
+                    <div className={`overflow-hidden rounded-xl border ${
                         theme === 'dark' ? 'bg-slate-900/35 border-slate-800' : 'bg-slate-50/50 border-slate-200/50'
                       }`}>
                         <div className="overflow-x-auto">
@@ -5216,7 +5258,55 @@ export default function App() {
                               </tr>
                             </thead>
                             <tbody>
-                              {leaderboardType === 'global' ? (
+                              {isLeaderboardLoading ? (
+                                // Skeleton rows
+                                Array.from({ length: 7 }).map((_, i) => (
+                                  <tr key={i} className={`border-b ${
+                                    theme === 'dark' ? 'border-slate-800/50' : 'border-slate-200/30'
+                                  }`}>
+                                    <td className="py-3.5 px-4 text-center">
+                                      <div className={`w-6 h-6 mx-auto rounded-full animate-pulse ${
+                                        theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                                      }`} />
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-24 h-3.5 rounded animate-pulse ${
+                                          theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                                        }`} />
+                                        <div className={`w-10 h-3 rounded animate-pulse ${
+                                          theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                                        }`} />
+                                      </div>
+                                    </td>
+                                    {leaderboardType === 'global' ? (
+                                      <td className="py-3.5 px-4 text-center">
+                                        <div className={`w-16 h-3.5 mx-auto rounded animate-pulse ${
+                                          theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                                        }`} />
+                                      </td>
+                                    ) : (
+                                      <>
+                                        <td className="py-3.5 px-4 text-center">
+                                          <div className={`w-12 h-3.5 mx-auto rounded animate-pulse ${
+                                            theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                                          }`} />
+                                        </td>
+                                        <td className="py-3.5 px-4 text-center">
+                                          <div className={`w-14 h-3.5 mx-auto rounded animate-pulse ${
+                                            theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                                          }`} />
+                                        </td>
+                                        <td className="py-3.5 px-4">
+                                          <div className={`w-20 h-3 rounded animate-pulse ${
+                                            theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                                          }`} />
+                                        </td>
+                                      </>
+                                    )}
+                                  </tr>
+                                ))
+                              ) : leaderboardType === 'global' ? (
                                 globalLeaderboard.length === 0 ? (
                                   <tr>
                                     <td colSpan={3} className="py-8 text-center text-slate-400">Belum ada data peringkat global.</td>
@@ -5291,7 +5381,6 @@ export default function App() {
                           </table>
                         </div>
                       </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -5483,9 +5572,76 @@ export default function App() {
                 </div>
 
                 {studyRoom.isLoading ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
+                  (bankFilter === 'notes' || bankFilter === 'all') ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className={`p-4 rounded-xl border relative overflow-hidden ${
+                          theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'
+                        }`}>
+                          <div className={`absolute top-0 left-0 bottom-0 w-1 animate-pulse rounded-full ${
+                            theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'
+                          }`} />
+                          <div className="flex items-start justify-between gap-2 mb-2 pl-2">
+                            <div className={`w-28 h-4 rounded animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                            }`} />
+                            <div className="flex items-center gap-1">
+                              <div className={`w-5 h-5 rounded-md animate-pulse ${
+                                theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                              }`} />
+                              <div className={`w-5 h-5 rounded-md animate-pulse ${
+                                theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                              }`} />
+                              <div className={`w-5 h-5 rounded-md animate-pulse ${
+                                theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                              }`} />
+                            </div>
+                          </div>
+                          <div className="pl-2 space-y-1.5">
+                            <div className={`w-full h-3 rounded animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-100'
+                            }`} />
+                            <div className={`w-3/4 h-3 rounded animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-50'
+                            }`} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-4 justify-between ${
+                          theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-16 h-4 rounded-full animate-pulse ${
+                                theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'
+                              }`} />
+                              <div className={`w-20 h-3 rounded animate-pulse ${
+                                theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'
+                              }`} />
+                            </div>
+                            <div className={`w-full h-3.5 rounded animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/60' : 'bg-slate-200'
+                              }`} />
+                            <div className={`w-2/3 h-3 rounded animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'
+                              }`} />
+                          </div>
+                          <div className="flex flex-shrink-0 gap-2">
+                            <div className={`w-20 h-8 rounded-lg animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'
+                            }`} />
+                            <div className={`w-8 h-8 rounded-lg animate-pulse ${
+                              theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'
+                            }`} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
                 ) : (bankFilter === 'notes' || bankFilter === 'all') ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {studyRoom.notes.map(note => (
@@ -6793,7 +6949,9 @@ export default function App() {
                         disabled={isLeaderboardLoading}
                         className="px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition-all cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                       >
-                        {isLeaderboardLoading ? 'Mengirim...' : 'Kirim Skor'}
+                        {isLeaderboardLoading ? (
+                          <span className="flex items-center gap-1.5"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Mengirim...</span>
+                        ) : 'Kirim Skor'}
                       </button>
                     )}
                   </div>
