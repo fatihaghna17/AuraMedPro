@@ -4166,6 +4166,35 @@ export default function App() {
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Unggah berkas soal JSON/YAML terlebih dahulu atau gunakan bank soal bawaan.</p>
                     </div>
                   ) : (
+                    <div className="relative">
+                      {/* Arrow kiri — desktop only */}
+                      {Object.keys(filteredDatabases.folders).length > 1 && (
+                        <button
+                          onClick={() => folderScrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' })}
+                          className={`hidden lg:flex absolute -left-3 top-1/3 z-10 w-9 h-9 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                            theme === 'dark'
+                              ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+                              : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <ChevronRight className="w-4 h-4 rotate-180" />
+                        </button>
+                      )}
+
+                      {/* Arrow kanan — desktop only */}
+                      {Object.keys(filteredDatabases.folders).length > 1 && (
+                        <button
+                          onClick={() => folderScrollRef.current?.scrollBy({ left: 340, behavior: 'smooth' })}
+                          className={`hidden lg:flex absolute -right-3 top-1/3 z-10 w-9 h-9 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                            theme === 'dark'
+                              ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+                              : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
+
                     <div 
                       ref={folderScrollRef}
                       onScroll={() => {
@@ -4174,7 +4203,15 @@ export default function App() {
                           if (folderScrollRef.current.scrollLeft > 20) setShowSwipeHint(false);
                         }
                       }}
-                      className="flex gap-6 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] relative"
+                      onWheel={(e) => {
+                        // Konversi vertical wheel ke horizontal scroll (desktop)
+                        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          (e.currentTarget as HTMLDivElement).scrollLeft += e.deltaY;
+                        }
+                      }}
+                      className="flex gap-6 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
                     >
                       {/* Swipe hint — mobile only */}
                       <AnimatePresence>
@@ -4517,6 +4554,7 @@ export default function App() {
                           </div>
                         </div>
                       )}
+                    </div>
                     </div>
                   )}
 
