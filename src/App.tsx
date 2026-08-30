@@ -93,6 +93,9 @@ import IosInstallModal from './components/IosInstallModal';
 import SkeletonLoader from './components/SkeletonLoader';
 import ConfirmModal from './components/ConfirmModal';
 import BottomNav from './components/BottomNav';
+import PomodoroWidget from './components/PomodoroWidget';
+import NotificationDropdown from './components/NotificationDropdown';
+import SidebarNav from './components/SidebarNav';
 
 export default function App() {
   // === STATE MANAGEMENT ===
@@ -372,7 +375,6 @@ export default function App() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
   const [notifCount, setNotifCount] = useState(0);
-  const notifPanelRef = useRef<HTMLDivElement>(null);
 
   // Modal confirm states
   const [modalOpen, setModalOpen] = useState(false);
@@ -738,16 +740,6 @@ export default function App() {
     setNotifOpen(false);
   };
 
-  // Close notif panel saat klik di luar
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (notifPanelRef.current && !notifPanelRef.current.contains(e.target as Node)) {
-        setNotifOpen(false);
-      }
-    };
-    if (notifOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [notifOpen]);
 
   // Fetch notifikasi saat user login + refresh berkala
   useEffect(() => {
@@ -3261,105 +3253,21 @@ export default function App() {
           {screen === 'setup' && (
             <>
               {/* SIDEBAR DESKTOP */}
-              <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r transition-colors ${
-                theme === 'dark' ? 'bg-slate-900 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-slate-900'
-              }`}>
-                {/* Logo & Header in Sidebar */}
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-8">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-extrabold shadow-sm">
-                      <Activity className="w-5 h-5 text-white animate-pulse" />
-                    </div>
-                    <div>
-                      <span className="font-black text-lg tracking-tight">AuraMed</span>
-                      <span className="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase tracking-widest">PRO</span>
-                    </div>
-                  </div>
-
-                  {/* Navigation list */}
-                  <nav className="space-y-1">
-                    {[
-                      { id: 'home', label: 'Beranda', icon: Home },
-                      { id: 'banks', label: 'Bank Soal', icon: BookOpen },
-                      { id: 'new', label: 'Baru', icon: PlusCircle },
-                      { id: 'srs', label: 'Spaced Repetition', icon: Brain },
-                      { id: 'notes', label: 'Study Room', icon: StickyNote },
-                      { id: 'analysis', label: 'Analisis', icon: BarChart2 },
-                      { id: 'profile', label: 'Profil', icon: User },
-                      ...(currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector' ? [{ id: 'reports', label: 'Laporan', icon: AlertCircle }] : []),
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      const isActive = dashboardTab === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => setDashboardTab(item.id as any)}
-                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-                            isActive
-                              ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/10 scale-[1.02]'
-                              : theme === 'dark'
-                                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </div>
-                          {item.id === 'srs' && srs.stats.dueCount > 0 && (
-                            <span className={`text-[9px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 ${
-                              isActive ? 'bg-white text-rose-500' : 'bg-rose-500 text-white'
-                            }`}>
-                              {srs.stats.dueCount > 9 ? '9+' : srs.stats.dueCount}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
-
-                {/* Streak Overview in Sidebar */}
-                <div className="px-6 py-4 border-t border-slate-200/50 dark:border-slate-800/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-amber-500" />
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{currentStreak} Hari</span>
-                    </div>
-                    <div className="flex items-center gap-1.5" title={`${streakFreezeLeft} Freeze Tersedia`}>
-                      <span className="text-xs font-black text-sky-500">{streakFreezeLeft}</span>
-                      <span className="text-[10px]">❄️</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Profile & Logout in Sidebar Bottom */}
-                <div className="p-6 border-t border-slate-200/50 dark:border-slate-800/50">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-black text-xs border border-white/20">
-                      {(profileUsername?.[0] || 'U').toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-black truncate text-slate-800 dark:text-slate-200">{profileUsername}</p>
-                      <p className="text-[9px] font-extrabold uppercase text-slate-450">LV {getLevelInfo(userXP).level}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      triggerToast('Sampai jumpa lagi!', '👋');
-                    }}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                      theme === 'dark'
-                        ? 'bg-slate-800/80 hover:bg-red-500/10 border-slate-700 text-slate-400 hover:text-red-400'
-                        : 'bg-white hover:bg-red-50 border-slate-200 text-slate-500 hover:text-red-500'
-                    }`}
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Keluar</span>
-                  </button>
-                </div>
-              </aside>
+              <SidebarNav
+                theme={theme}
+                activeTab={dashboardTab}
+                srsDueCount={srs.stats.dueCount}
+                currentStreak={currentStreak}
+                streakFreezeLeft={streakFreezeLeft}
+                username={profileUsername || ''}
+                userLevel={getLevelInfo(userXP).level}
+                isAdmin={currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector'}
+                onTabChange={(tab) => setDashboardTab(tab as any)}
+                onLogout={async () => {
+                  await supabase.auth.signOut();
+                  triggerToast('Sampai jumpa lagi!', '👋');
+                }}
+              />
 
               {/* BOTTOM NAVIGATION FOR MOBILE */}
               <BottomNav 
@@ -3404,98 +3312,15 @@ export default function App() {
                     </div>
 
                     {/* Notification Bell + Dropdown */}
-                    <div className="relative" ref={notifPanelRef}>
-                      <button 
-                        onClick={() => setNotifOpen(!notifOpen)}
-                        className={`p-2 rounded-xl border relative transition-all ${
-                          theme === 'dark' 
-                            ? 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200' 
-                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        <Bell className="w-4 h-4" />
-                        {notifCount > 0 && (
-                          <>
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-black px-1 leading-none">
-                              {notifCount > 9 ? '9+' : notifCount}
-                            </span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Dropdown Panel */}
-                      <AnimatePresence>
-                        {notifOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
-                            className={`absolute right-0 top-full mt-2 w-80 rounded-2xl border shadow-2xl z-50 overflow-hidden ${
-                              theme === 'dark'
-                                ? 'bg-slate-900 border-slate-700/50 shadow-black/50'
-                                : 'bg-white border-slate-200 shadow-slate-200/80'
-                            }`}
-                          >
-                            {/* Header */}
-                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
-                              theme === 'dark' ? 'border-slate-700/50' : 'border-slate-100'
-                            }`}>
-                              <h3 className={`text-xs font-black uppercase tracking-wider ${
-                                theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
-                              }`}>Notifikasi</h3>
-                              {notifCount > 0 && (
-                                <button
-                                  onClick={markAllNotifRead}
-                                  className="text-[10px] font-bold text-indigo-500 hover:text-indigo-400 transition-colors"
-                                >
-                                  Tandai sudah dibaca
-                                </button>
-                              )}
-                            </div>
-
-                            {/* List */}
-                            <div className="max-h-72 overflow-y-auto">
-                              {notifList.length === 0 ? (
-                                <div className={`px-4 py-8 text-center text-xs ${
-                                  theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
-                                }`}>
-                                  <Bell className="w-6 h-6 mx-auto mb-2 opacity-30" />
-                                  Tidak ada notifikasi baru
-                                </div>
-                              ) : (
-                                notifList.map((notif) => (
-                                  <div
-                                    key={notif.id}
-                                    className={`flex items-start gap-3 px-4 py-3 border-b last:border-b-0 transition-colors cursor-default ${
-                                      theme === 'dark'
-                                        ? 'border-slate-800/50 hover:bg-slate-800/30'
-                                        : 'border-slate-50 hover:bg-slate-50'
-                                    }`}
-                                  >
-                                    <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                      notif.type === 'srs'
-                                        ? 'bg-amber-500/10 text-amber-500'
-                                        : 'bg-indigo-500/10 text-indigo-500'
-                                    }`}>
-                                      {notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className={`text-xs font-semibold leading-snug ${
-                                        theme === 'dark' ? 'text-slate-200' : 'text-slate-700'
-                                      }`}>{notif.text}</p>
-                                      <p className={`text-[10px] mt-0.5 ${
-                                        theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
-                                      }`}>{notif.time}</p>
-                                    </div>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                    <NotificationDropdown
+                      theme={theme}
+                      isOpen={notifOpen}
+                      onClose={() => setNotifOpen(false)}
+                      onToggle={() => setNotifOpen(!notifOpen)}
+                      notifList={notifList}
+                      notifCount={notifCount}
+                      onMarkAllRead={markAllNotifRead}
+                    />
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
@@ -3803,61 +3628,18 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Pomodoro Timer Widget */}
-                    <div>
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Pomodoro Timer</h3>
-                      <div className={`p-5 rounded-2xl border flex flex-col items-center justify-center transition-colors ${
-                        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200 shadow-sm'
-                      }`}>
-                        <div className="relative w-32 h-32 mb-4">
-                          <svg className="w-full h-full transform -rotate-90">
-                            <circle cx="64" cy="64" r="58" className="fill-none stroke-slate-200 dark:stroke-slate-800" strokeWidth="8" />
-                            <circle 
-                              cx="64" cy="64" r="58" 
-                              className={`fill-none ${pomodoroMode === 'focus' ? 'stroke-indigo-500' : 'stroke-emerald-500'} transition-all duration-1000`} 
-                              strokeWidth="8" 
-                              strokeDasharray="364.4" 
-                              strokeDashoffset={364.4 - (364.4 * (pomodoroSecondsLeft / (pomodoroMode === 'focus' ? 25 * 60 : 5 * 60)))}
-                              strokeLinecap="round" 
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-2xl font-black tracking-tighter">
-                              {Math.floor(pomodoroSecondsLeft / 60).toString().padStart(2, '0')}:{(pomodoroSecondsLeft % 60).toString().padStart(2, '0')}
-                            </span>
-                            <span className={`text-[9px] font-extrabold uppercase tracking-widest mt-1 ${pomodoroMode === 'focus' ? 'text-indigo-500' : 'text-emerald-500'}`}>
-                              {pomodoroMode === 'focus' ? 'Fokus' : 'Istirahat'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 w-full">
-                          <button
-                            onClick={() => setPomodoroActive(!pomodoroActive)}
-                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                              pomodoroActive 
-                                ? 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20' 
-                                : 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-600 hover:scale-105'
-                            }`}
-                          >
-                            {pomodoroActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
-                            {pomodoroActive ? 'Jeda' : 'Mulai'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPomodoroActive(false);
-                              setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
-                            }}
-                            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <div className="text-[10px] font-bold text-slate-400 mt-4 flex items-center gap-1.5">
-                          <Coffee className="w-3.5 h-3.5" /> Sesi fokus diselesaikan: {pomodoroCount}
-                        </div>
-                      </div>
-                    </div>
+                    <PomodoroWidget
+                      theme={theme}
+                      mode={pomodoroMode}
+                      secondsLeft={pomodoroSecondsLeft}
+                      isActive={pomodoroActive}
+                      completedSessions={pomodoroCount}
+                      onToggle={() => setPomodoroActive(!pomodoroActive)}
+                      onReset={() => {
+                        setPomodoroActive(false);
+                        setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
+                      }}
+                    />
 
                   </div>
                 </div>
