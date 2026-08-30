@@ -96,6 +96,11 @@ import BottomNav from './components/BottomNav';
 import PomodoroWidget from './components/PomodoroWidget';
 import NotificationDropdown from './components/NotificationDropdown';
 import SidebarNav from './components/SidebarNav';
+import LoginForm from './components/LoginForm';
+import PasteJsonModal from './components/PasteJsonModal';
+import NoteEditorModal from './components/NoteEditorModal';
+import ReportQuestionModal from './components/ReportQuestionModal';
+import MoveQuizModal from './components/MoveQuizModal';
 
 export default function App() {
   // === STATE MANAGEMENT ===
@@ -3169,85 +3174,16 @@ export default function App() {
       {authLoading ? (
         <SkeletonLoader theme={theme} />
       ) : !currentUser ? (
-        <div className="min-h-screen flex flex-col items-center justify-center relative z-10 px-4">
-          <div className="w-full max-w-md backdrop-blur-md bg-white/75 dark:bg-slate-900/75 border border-slate-200/50 dark:border-slate-800/60 rounded-3xl shadow-2xl p-8 transition-all duration-300">
-            <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-extrabold text-xl mx-auto shadow-lg shadow-teal-500/10 mb-4">
-                <Activity className="w-6 h-6 text-white animate-pulse" />
-              </div>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight font-sans">
-                Masuk ke AuraMed
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">
-                Platform Evaluasi Kompetensi Klinis & Sains Terintegrasi
-              </p>
-            </div>
-
-            {isSessionKicked && (
-              <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-start gap-3 text-xs animate-shake">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">Sesi Berakhir</p>
-                  <p className="opacity-90">Akun Anda baru saja masuk di perangkat lain. Sesi sebelumnya telah dikeluarkan demi keamanan.</p>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black text-slate-500 dark:text-slate-450 uppercase tracking-widest mb-1.5 pl-1">
-                  Username / ID Ujian
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    required
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="Masukkan username"
-                    className="w-full pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-slate-500 dark:text-slate-450 uppercase tracking-widest mb-1.5 pl-1">
-                  Kata Sandi
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="password"
-                    required
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white font-semibold"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-indigo-650 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer mt-4"
-              >
-                Masuk Dashboard
-              </button>
-            </form>
-          </div>
-          <button
-            onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-            className="mt-6 p-2.5 rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-xs font-semibold"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-            Mode {theme === 'dark' ? 'Terang' : 'Gelap'}
-          </button>
-        </div>
+        <LoginForm
+          theme={theme}
+          isSessionKicked={isSessionKicked}
+          onSubmit={handleAuthSubmit}
+          onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+          emailValue={emailInput}
+          onEmailChange={setEmailInput}
+          passwordValue={passwordInput}
+          onPasswordChange={setPasswordInput}
+        />
       ) : (
         <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-brand-bg text-brand-text' : 'bg-slate-50 text-slate-900'}`}>
           {screen === 'setup' && (
@@ -5463,79 +5399,17 @@ export default function App() {
               </div>
             )}
 
-            {/* Note Editor Modal */}
-            {isNoteModalOpen && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsNoteModalOpen(false)}></div>
-                <div className={`relative w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-scale-up ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
-                  <button onClick={() => setIsNoteModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                    <X className="w-5 h-5" />
-                  </button>
-                  
-                  <h3 className="text-lg font-black mb-4">{editingNote ? 'Edit Catatan' : 'Buat Catatan Baru'}</h3>
-                  
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const title = formData.get('title') as string;
-                    const content = formData.get('content') as string;
-                    const color = formData.get('color') as any;
-                    const tagsRaw = formData.get('tags') as string;
-                    const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t);
-                    
-                    try {
-                      if (editingNote) {
-                        await studyRoom.updateNote(editingNote.id, { title, content, color, tags });
-                        triggerToast('Catatan berhasil diperbarui!', '📝');
-                      } else {
-                        await studyRoom.createNote({
-                          title, content, color, tags, is_pinned: false,
-                          question_ref: noteRefQuestion ? generateQuestionFingerprint(noteRefQuestion.q) : undefined,
-                          question_bank_name: noteRefQuestion ? noteRefQuestion.bankName : undefined,
-                        });
-                        triggerToast('Catatan berhasil dibuat!', '📝');
-                      }
-                      setIsNoteModalOpen(false);
-                    } catch(err) {
-                      triggerToast('Gagal menyimpan catatan', '❌');
-                    }
-                  }} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Judul</label>
-                      <input name="title" defaultValue={editingNote?.title || ''} required className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Contoh: Klasifikasi Gagal Jantung" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Catatan</label>
-                      <textarea name="content" defaultValue={editingNote?.content || ''} required rows={4} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Ketik catatan di sini..." />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Warna</label>
-                      <div className="flex gap-2">
-                        {['indigo', 'emerald', 'amber', 'rose', 'purple'].map(color => (
-                          <label key={color} className="relative cursor-pointer">
-                            <input type="radio" name="color" value={color} defaultChecked={(editingNote?.color || 'indigo') === color} className="peer sr-only" />
-                            <div className={`w-8 h-8 rounded-full bg-${color}-500 border-2 border-transparent peer-checked:border-white dark:peer-checked:border-slate-900 peer-checked:ring-2 peer-checked:ring-indigo-500 shadow-sm transition-all hover:scale-110`} />
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Tags (Pisahkan dengan koma)</label>
-                      <input name="tags" defaultValue={editingNote?.tags?.join(', ') || ''} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Kardiologi, EKG, dll" />
-                    </div>
-                    
-                    <div className="pt-2 flex justify-end gap-2">
-                      <button type="button" onClick={() => setIsNoteModalOpen(false)} className="px-4 py-2 rounded-lg font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                        Batal
-                      </button>
-                      <button type="submit" className="px-4 py-2 rounded-lg font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20">
-                        Simpan Catatan
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
+            <NoteEditorModal
+              theme={theme}
+              isOpen={isNoteModalOpen}
+              editingNote={editingNote}
+              noteRefQuestion={noteRefQuestion}
+              onClose={() => setIsNoteModalOpen(false)}
+              onCreateNote={studyRoom.createNote}
+              onUpdateNote={studyRoom.updateNote}
+              onSuccess={(msg) => triggerToast(msg, '📝')}
+              onError={(msg) => triggerToast(msg, '❌')}
+            />
 
             {/* === LAPORAN (ADMIN ONLY) === */}
             {dashboardTab === 'reports' && (
@@ -7512,164 +7386,31 @@ export default function App() {
 
       <LightboxModal imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
 
-      {/* Paste JSON Modal */}
-      {pasteModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
-          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl p-6 ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-amber-500" />
-              Tempel Kode JSON / YAML
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Nama File Kuis <span className="text-rose-500">*</span></label>
-                <input 
-                  type="text"
-                  value={pasteFileName}
-                  onChange={(e) => setPasteFileName(e.target.value)}
-                  placeholder="Misal: bank_soal_kardiologi"
-                  className={`w-full p-3 text-sm rounded-xl outline-none focus:ring-2 focus:ring-amber-500/50 transition-all ${
-                    theme === 'dark'
-                      ? 'bg-slate-950/50 border border-slate-800 text-slate-200 focus:bg-slate-900'
-                      : 'bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Kode Soal Mentah <span className="text-rose-500">*</span></label>
-                <textarea 
-                  value={pasteContent}
-                  onChange={(e) => setPasteContent(e.target.value)}
-                  placeholder="[\n  {\n    &#34;pertanyaan&#34;: &#34;...&#34;,\n    &#34;pilihan&#34;: [...],\n    &#34;jawaban_benar&#34;: &#34;...&#34;\n  }\n]"
-                  rows={10}
-                  className={`w-full p-3 text-xs font-mono rounded-xl outline-none focus:ring-2 focus:ring-amber-500/50 transition-all custom-scrollbar ${
-                    theme === 'dark'
-                      ? 'bg-slate-950/50 border border-slate-800 text-slate-300 focus:bg-slate-900'
-                      : 'bg-slate-50 border border-slate-200 text-slate-700 focus:bg-white'
-                  }`}
-                />
-              </div>
-
-              {pasteError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg flex items-start gap-2 text-rose-600 dark:text-rose-400">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <p className="text-[11px] font-medium">{pasteError}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 justify-end mt-6">
-              <button
-                onClick={() => setPasteModalOpen(false)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-colors ${
-                  theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                }`}
-              >
-                Batal
-              </button>
-              <button
-                onClick={handlePasteSubmit}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20 transition-colors"
-              >
-                Simpan Kuis
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PasteJsonModal
+        theme={theme}
+        isOpen={pasteModalOpen}
+        fileName={pasteFileName}
+        onFileNameChange={setPasteFileName}
+        content={pasteContent}
+        onContentChange={setPasteContent}
+        error={pasteError}
+        onClose={() => setPasteModalOpen(false)}
+        onSubmit={handlePasteSubmit}
+      />
 
       </div>
     )}
 
-    {/* Report Modal */}
-    <AnimatePresence>
-      {reportModal.isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setReportModal({ isOpen: false, questionIndex: null })}
-          />
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className={`relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${
-              theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-            }`}
-          >
-            <div className="p-6">
-              <h3 className={`text-lg font-black flex items-center gap-2 mb-6 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                <Flag className="w-5 h-5 text-rose-500" /> Laporkan Soal
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Jenis Masalah
-                  </label>
-                  <select
-                    value={reportIssueType}
-                    onChange={(e) => setReportIssueType(e.target.value)}
-                    className={`w-full p-3 rounded-xl border text-sm font-medium ${
-                      theme === 'dark' 
-                        ? 'bg-slate-800 border-slate-700 text-white' 
-                        : 'bg-slate-50 border-slate-200 text-slate-800'
-                    }`}
-                  >
-                    <option value="Jawaban Salah">Kunci Jawaban Salah</option>
-                    <option value="Typo">Ada Typo/Kesalahan Ketik</option>
-                    <option value="Tidak Jelas">Soal Tidak Jelas/Ambigu</option>
-                    <option value="Tidak Pantas">Konten Tidak Pantas</option>
-                    <option value="Lainnya">Lainnya</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Keterangan (Opsional)
-                  </label>
-                  <textarea
-                    value={reportDescription}
-                    onChange={(e) => setReportDescription(e.target.value)}
-                    placeholder="Jelaskan masalahnya..."
-                    className={`w-full p-3 rounded-xl border text-sm resize-none h-24 ${
-                      theme === 'dark' 
-                        ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setReportModal({ isOpen: false, questionIndex: null })}
-                  className={`flex-1 py-3 rounded-xl text-sm font-bold border transition-colors ${
-                    theme === 'dark'
-                      ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={submitReport}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
-                >
-                  Kirim Laporan
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <ReportQuestionModal
+      theme={theme}
+      isOpen={reportModal.isOpen}
+      issueType={reportIssueType}
+      description={reportDescription}
+      onIssueTypeChange={setReportIssueType}
+      onDescriptionChange={setReportDescription}
+      onClose={() => setReportModal({ isOpen: false, questionIndex: null })}
+      onSubmit={submitReport}
+    />
 
     {/* Achievement Notification Popup */}
     <div className="fixed top-20 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
@@ -7706,84 +7447,13 @@ export default function App() {
       </AnimatePresence>
     </div>
 
-    {/* Move Quiz to Folder - Bottom Sheet Modal */}
-    <AnimatePresence>
-      {moveQuizModal && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-            onClick={() => setMoveQuizModal(null)}
-          />
-          {/* Bottom Sheet */}
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] rounded-t-3xl shadow-2xl overflow-hidden ${
-              theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'
-            }`}
-          >
-            {/* Handle bar */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className={`w-10 h-1 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`} />
-            </div>
-          
-            {/* Header */}
-            <div className={`px-5 pb-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
-              <h3 className={`text-sm font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                Pindah: {moveQuizModal.quizName}
-              </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5">Pilih folder tujuan</p>
-            </div>
-          
-            {/* Folder list */}
-            <div className="overflow-y-auto max-h-[50vh] p-3 space-y-1.5">
-              {/* Root option */}
-              <button
-                onClick={() => {
-                  handleMoveQuiz(moveQuizModal.quizKey, 'root');
-                  setMoveQuizModal(null);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-                  theme === 'dark' 
-                    ? 'hover:bg-slate-800 text-slate-300' 
-                    : 'hover:bg-slate-100 text-slate-700'
-                }`}
-              >
-                <FileText className="w-4 h-4 text-slate-400" />
-                <span>File Lepas (Root)</span>
-              </button>
-            
-              {/* Custom folders */}
-              {[...globalCustomFolders, ...customFolders]
-                .filter((v, i, arr) => arr.indexOf(v) === i) // deduplicate
-                .map((folder) => (
-                  <button
-                    key={folder}
-                    onClick={() => {
-                      handleMoveQuiz(moveQuizModal.quizKey, folder);
-                      setMoveQuizModal(null);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-                      theme === 'dark' 
-                        ? 'hover:bg-slate-800 text-slate-300' 
-                        : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <Folder className="w-4 h-4 text-indigo-400" />
-                    <span>{folder}</span>
-                  </button>
-                ))}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    <MoveQuizModal
+      theme={theme}
+      quizModal={moveQuizModal}
+      folders={[...globalCustomFolders, ...customFolders]}
+      onMove={handleMoveQuiz}
+      onClose={() => setMoveQuizModal(null)}
+    />
 
       {/* === POPUP CATATAN SOAL === */}
       {notePopupOpen && notePopupOpen.isOpen && (
