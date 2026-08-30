@@ -88,6 +88,11 @@ import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achievements';
 import { OnboardingTour } from './components/OnboardingTour';
+import LightboxModal from './components/LightboxModal';
+import IosInstallModal from './components/IosInstallModal';
+import SkeletonLoader from './components/SkeletonLoader';
+import ConfirmModal from './components/ConfirmModal';
+import BottomNav from './components/BottomNav';
 
 export default function App() {
   // === STATE MANAGEMENT ===
@@ -3170,59 +3175,7 @@ export default function App() {
       </div>
 
       {authLoading ? (
-        <div className="min-h-screen flex flex-col lg:flex-row relative z-10">
-          {/* Skeleton sidebar — desktop only */}
-          <div className={`hidden lg:flex w-60 flex-col p-4 border-r animate-pulse ${
-            theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-white/60 border-slate-200/50'
-          }`}>
-            <div className={`w-28 h-7 rounded-lg mb-8 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className={`h-8 rounded-lg mb-2 ${
-                i === 0 
-                  ? (theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-100') 
-                  : (theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100')
-              }`} />
-            ))}
-            <div className="mt-auto space-y-2">
-              <div className={`w-full h-10 rounded-xl ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
-              <div className={`w-full h-8 rounded-lg ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
-            </div>
-          </div>
-          {/* Skeleton main content */}
-          <div className="flex-1 p-6 lg:p-8">
-            {/* Skeleton header bar */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className={`lg:hidden w-28 h-7 rounded-lg ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
-              <div className="flex-1" />
-              <div className={`w-20 h-8 rounded-lg ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
-              <div className={`w-8 h-8 rounded-full ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
-              <div className={`w-8 h-8 rounded-full ${theme === 'dark' ? 'bg-slate-700/40' : 'bg-slate-200'}`} />
-            </div>
-            {/* Skeleton cards grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className={`p-5 rounded-2xl border animate-pulse ${
-                  theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-white/60 border-slate-200/50'
-                }`}>
-                  <div className={`w-16 h-3 rounded mb-3 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
-                  <div className={`w-24 h-6 rounded mb-1 ${theme === 'dark' ? 'bg-slate-600/50' : 'bg-slate-300'}`} />
-                  <div className={`w-12 h-3 rounded ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
-                </div>
-              ))}
-            </div>
-            {/* Skeleton content block */}
-            <div className={`rounded-2xl border p-6 animate-pulse h-64 ${
-              theme === 'dark' ? 'bg-slate-800/30 border-slate-700/50' : 'bg-white/40 border-slate-200/50'
-            }`}>
-              <div className={`w-40 h-5 rounded mb-4 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-200'}`} />
-              <div className="space-y-2">
-                <div className={`w-full h-4 rounded ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-slate-100'}`} />
-                <div className={`w-5/6 h-4 rounded ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
-                <div className={`w-4/6 h-4 rounded ${theme === 'dark' ? 'bg-slate-700/20' : 'bg-slate-50'}`} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <SkeletonLoader theme={theme} />
       ) : !currentUser ? (
         <div className="min-h-screen flex flex-col items-center justify-center relative z-10 px-4">
           <div className="w-full max-w-md backdrop-blur-md bg-white/75 dark:bg-slate-900/75 border border-slate-200/50 dark:border-slate-800/60 rounded-3xl shadow-2xl p-8 transition-all duration-300">
@@ -3409,42 +3362,13 @@ export default function App() {
               </aside>
 
               {/* BOTTOM NAVIGATION FOR MOBILE */}
-              <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden flex justify-around items-center h-16 border-t transition-colors ${
-                theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-655'
-              }`}>
-                {[
-                  { id: 'home', label: 'Beranda', icon: Home },
-                  { id: 'banks', label: 'Bank Soal', icon: BookOpen },
-                  { id: 'new', label: 'Baru', icon: PlusCircle },
-                  { id: 'srs', label: 'SRS', icon: Brain },
-                  { id: 'notes', label: 'Notes', icon: StickyNote },
-                  { id: 'analysis', label: 'Analisis', icon: BarChart2 },
-                  { id: 'profile', label: 'Profil', icon: User },
-                  ...(currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector' ? [{ id: 'reports', label: 'Laporan', icon: AlertCircle }] : []),
-                ].map((item) => {
-                  const Icon = item.icon;
-                  const isActive = dashboardTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setDashboardTab(item.id as any)}
-                      className={`relative flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${
-                        isActive
-                          ? 'text-indigo-500 dark:text-indigo-400 scale-105'
-                          : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="text-[9px] font-bold">{item.label}</span>
-                      {item.id === 'srs' && srs.stats.dueCount > 0 && (
-                        <span className="absolute top-1 right-2 bg-rose-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                          {srs.stats.dueCount > 9 ? '9+' : srs.stats.dueCount}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
+              <BottomNav 
+                theme={theme}
+                activeTab={dashboardTab}
+                srsDueCount={srs.stats.dueCount}
+                isAdmin={currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector'}
+                onTabChange={(tab) => setDashboardTab(tab as any)}
+              />
             </>
           )}
 
@@ -7403,42 +7327,14 @@ export default function App() {
       )}
 
       {/* Confirmation Modal overlay */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-          <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl animate-pop-up ${
-            theme === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
-          }`}>
-            <h3 className="text-base sm:text-lg font-extrabold">
-              {modalTitle}
-            </h3>
-            <p className={`mt-2 text-xs sm:text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-              {modalDesc}
-            </p>
-
-            <div className="flex gap-2 justify-end mt-6">
-              <button
-                onClick={() => setModalOpen(false)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer ${
-                  theme === 'dark'
-                    ? 'bg-slate-800 hover:bg-slate-750 text-slate-300'
-                    : 'bg-slate-100 hover:bg-slate-150 text-slate-600'
-                }`}
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => {
-                  setModalOpen(false);
-                  if (modalAction) modalAction();
-                }}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer"
-              >
-                Lanjutkan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={modalOpen}
+        theme={theme}
+        title={modalTitle}
+        description={modalDesc}
+        onConfirm={modalAction}
+        onClose={() => setModalOpen(false)}
+      />
 
       {/* Detail Riwayat Modal overlay */}
       {selectedHistoryDetail && (
@@ -7830,115 +7726,9 @@ export default function App() {
         </div>
       )}
 
-      {/* iOS PWA Installation Guide Modal */}
-      {showIosInstallModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className={`w-full max-w-md p-6 rounded-3xl border shadow-2xl relative animate-scale-up ${
-            theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-          }`}>
-            <button
-              onClick={() => setShowIosInstallModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-500/10 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      <IosInstallModal isOpen={showIosInstallModal} theme={theme} onClose={() => setShowIosInstallModal(false)} />
 
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-505 flex items-center justify-center">
-                <Smartphone className="w-5 h-5 text-indigo-500" />
-              </div>
-              <h3 className="font-extrabold text-sm uppercase tracking-wider text-indigo-505">
-                Instal di iOS (Safari PWA)
-              </h3>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-              Akses AuraMed PRO secara instan langsung dari Home Screen perangkat iOS Anda. Ikuti petunjuk sederhana ini menggunakan browser **Safari**:
-            </p>
-
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-350 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                  1
-                </div>
-                <p className="text-xs text-slate-650 dark:text-slate-300 leading-relaxed">
-                  Buka situs ini di browser **Safari** pada iPhone/iPad Anda.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-350 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                  2
-                </div>
-                <p className="text-xs text-slate-655 dark:text-slate-300 leading-relaxed flex items-center flex-wrap gap-1">
-                  Ketuk tombol **Bagikan (Share)**
-                  <span className="inline-flex items-center justify-center p-1 bg-slate-100 dark:bg-slate-800 border dark:border-slate-700 rounded text-slate-550 dark:text-slate-300 mx-1">
-                    <Share2 className="w-3 h-3 text-indigo-500" />
-                  </span>
-                  pada bar menu Safari.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-350 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                  3
-                </div>
-                <p className="text-xs text-slate-655 dark:text-slate-300 leading-relaxed">
-                  Gulir menu ke bawah lalu ketuk opsi **"Tambah ke Layar Utama" (Add to Home Screen)**.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-550 dark:text-slate-350 text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                  4
-                </div>
-                <p className="text-xs text-slate-655 dark:text-slate-300 leading-relaxed">
-                  Ketuk **"Tambah" (Add)** di pojok kanan atas untuk menyelesaikan instalasi.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowIosInstallModal(false)}
-              className="w-full mt-6 py-3 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/15 transition-all cursor-pointer text-center"
-            >
-              Mengerti & Tutup
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox / Zoom Modal */}
-      {lightboxImage && (
-        <div 
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md transition-opacity duration-300"
-          onClick={() => setLightboxImage(null)}
-        >
-          {/* Close button top-right */}
-          <button 
-            className="absolute top-4 right-4 p-3 rounded-full bg-slate-900/80 text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            onClick={() => setLightboxImage(null)}
-          >
-            <X className="w-6 h-6" />
-          </button>
-
-          {/* Image container */}
-          <div 
-            className="relative max-w-4xl max-h-[85vh] flex flex-col justify-center items-center bg-transparent"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img 
-              src={lightboxImage} 
-              alt="Detail Gambar" 
-              referrerPolicy="no-referrer"
-              className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-slate-800/80 bg-slate-900/40 p-2"
-            />
-            <p className="mt-4 text-xs font-semibold text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-sm">
-              Klik di luar gambar atau tombol close untuk kembali
-            </p>
-          </div>
-        </div>
-      )}
+      <LightboxModal imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
 
       {/* Paste JSON Modal */}
       {pasteModalOpen && (
