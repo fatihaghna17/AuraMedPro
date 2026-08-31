@@ -1589,17 +1589,22 @@ export default function App() {
   };
 
   // === CATATAN SOAL FUNCTIONS ===
+  // Helper: get fingerprint key for a question (used as stable DB key instead of raw HTML text)
+  const getNoteKey = useCallback((q: { pertanyaan: string }) => generateQuestionFingerprint(q), []);
+
   const fetchAnswerNotes = useCallback(async () => {
     if (!currentUser) return;
     try {
       const { data, error } = await supabase
         .from('answer_notes')
-        .select('question_text, note_content')
+        .select('question_ref, question_text, note_content')
         .eq('user_id', currentUser.id);
       if (!error && data) {
         const notesMap: Record<string, string> = {};
-        data.forEach((d: { question_text: string; note_content: string }) => {
-          notesMap[d.question_text] = d.note_content;
+        data.forEach((d: any) => {
+          // Use question_ref (fingerprint) as key; fallback: compute from question_text for old rows
+          const key = d.question_ref || generateQuestionFingerprint({ pertanyaan: d.question_text });
+          notesMap[key] = d.note_content;
         });
         setAnswerNotes(notesMap);
       }
@@ -1612,19 +1617,22 @@ export default function App() {
     if (!currentUser || !content.trim()) return;
     setNoteSaving(true);
     try {
+      const questionRef = generateQuestionFingerprint({ pertanyaan: questionText });
       const { error } = await supabase
         .from('answer_notes')
         .upsert({
           user_id: currentUser.id,
           question_text: questionText,
+          question_ref: questionRef,
           note_content: content.trim(),
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,question_text' });
+        }, { onConflict: 'user_id,question_ref' });
       if (!error) {
-        setAnswerNotes(prev => ({ ...prev, [questionText]: content.trim() }));
+        setAnswerNotes(prev => ({ ...prev, [questionRef]: content.trim() }));
         setNotePopupOpen(null);
         triggerToast('Catatan berhasil disimpan!', '📝');
       } else {
+        console.error('Save note error:', error);
         triggerToast('Gagal menyimpan catatan', '❌');
       }
     } catch (e) {
@@ -1638,15 +1646,16 @@ export default function App() {
     if (!currentUser) return;
     setNoteSaving(true);
     try {
+      const questionRef = generateQuestionFingerprint({ pertanyaan: questionText });
       const { error } = await supabase
         .from('answer_notes')
         .delete()
         .eq('user_id', currentUser.id)
-        .eq('question_text', questionText);
+        .eq('question_ref', questionRef);
       if (!error) {
         setAnswerNotes(prev => {
           const next = { ...prev };
-          delete next[questionText];
+          delete next[questionRef];
           return next;
         });
         setNotePopupOpen(null);
@@ -1662,7 +1671,8 @@ export default function App() {
   }, [currentUser]);
 
   const openNotePopup = (questionText: string, userAnswer: string, correctAnswer: string, isCorrect: boolean) => {
-    setNoteInput(answerNotes[questionText] || '');
+    const key = generateQuestionFingerprint({ pertanyaan: questionText });
+    setNoteInput(answerNotes[key] || '');
     setNotePopupOpen({ isOpen: true, questionText, userAnswer, correctAnswer, isCorrect });
   };
 
@@ -1686,7 +1696,7 @@ export default function App() {
     // Temukan jawaban salah pertama yang belum punya catatan
     const wrongIdx = currentQuiz.findIndex((q, i) => {
       const isWrong = userAnswers[i] === null || !isUserAnswerCorrect(userAnswers[i], q);
-      return isWrong && !answerNotes[q.pertanyaan];
+      return isWrong && !answerNotes[generateQuestionFingerprint(q)];
     });
 
     if (wrongIdx !== -1 && !notePopupOpen?.isOpen) {
@@ -3477,9 +3487,9 @@ export default function App() {
                       {Object.keys(filteredDatabases.folders).length > 1 && (
                         <button
                           onClick={() => folderScrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' })}
-                          className={`hidden lg:flex absolute -left-3 top-1/3 z-10 w-9 h-9 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                          className={`hidden lg:flex absolute -left-3 top-6 z-10 w-8 h-8 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
                             theme === 'dark'
-                              ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+                              ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                               : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
@@ -3491,9 +3501,9 @@ export default function App() {
                       {Object.keys(filteredDatabases.folders).length > 1 && (
                         <button
                           onClick={() => folderScrollRef.current?.scrollBy({ left: 340, behavior: 'smooth' })}
-                          className={`hidden lg:flex absolute -right-3 top-1/3 z-10 w-9 h-9 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                          className={`hidden lg:flex absolute -right-3 top-6 z-10 w-8 h-8 items-center justify-center rounded-full border shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer ${
                             theme === 'dark'
-                              ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+                              ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                               : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
@@ -6179,14 +6189,14 @@ export default function App() {
                               );
                             }}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer hover:scale-[1.05]"
-                            title={answerNotes[q.pertanyaan] ? 'Lihat/Edit Catatan' : 'Tambah Catatan'}
+                            title={answerNotes[generateQuestionFingerprint(q)] ? 'Lihat/Edit Catatan' : 'Tambah Catatan'}
                             style={{
-                              backgroundColor: answerNotes[q.pertanyaan]
+                              backgroundColor: answerNotes[generateQuestionFingerprint(q)]
                                 ? (theme === 'dark' ? 'rgb(245 158 11 / 0.15)' : 'rgb(245 158 11 / 0.1)')
                                 : (isCorrect
                                   ? (theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)')
                                   : 'rgb(245 158 11 / 0.15)'),
-                              color: answerNotes[q.pertanyaan]
+                              color: answerNotes[generateQuestionFingerprint(q)]
                                 ? '#f59e0b'
                                 : (isCorrect
                                   ? (theme === 'dark' ? '#94a3b8' : '#64748b')
@@ -6194,7 +6204,7 @@ export default function App() {
                             }}
                           >
                             <StickyNote className="w-3.5 h-3.5" />
-                            {answerNotes[q.pertanyaan] && (
+                            {answerNotes[generateQuestionFingerprint(q)] && (
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                             )}
                           </button>
@@ -6240,7 +6250,7 @@ export default function App() {
                           </div>
 
                           {/* Catatan yang sudah ada (inline) */}
-                          {answerNotes[q.pertanyaan] && (
+                          {answerNotes[generateQuestionFingerprint(q)] && (
                             <div
                               className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
                               onClick={(e) => {
@@ -6267,7 +6277,7 @@ export default function App() {
                                 </div>
                                 <span className="text-[10px] opacity-75 underline">Edit</span>
                               </div>
-                              <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                              <p className="whitespace-pre-wrap">{answerNotes[generateQuestionFingerprint(q)]}</p>
                             </div>
                           )}
 
@@ -6346,12 +6356,12 @@ export default function App() {
                               );
                             }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
-                              answerNotes[q.pertanyaan]
+                              answerNotes[generateQuestionFingerprint(q)]
                                 ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
                                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                             }`}
                           >
-                            {answerNotes[q.pertanyaan] ? (
+                            {answerNotes[generateQuestionFingerprint(q)] ? (
                               <>
                                 <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
                                 <span>Edit Catatan</span>
@@ -6680,7 +6690,7 @@ export default function App() {
                               </div>
 
                               {/* Catatan yang sudah ada (inline) di riwayat */}
-                              {answerNotes[q.pertanyaan] && (
+                              {answerNotes[generateQuestionFingerprint(q)] && (
                                 <div
                                   className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
                                   onClick={(e) => {
@@ -6707,7 +6717,7 @@ export default function App() {
                                     </div>
                                     <span className="text-[10px] opacity-75 underline">Edit</span>
                                   </div>
-                                  <p className="whitespace-pre-wrap">{answerNotes[q.pertanyaan]}</p>
+                                  <p className="whitespace-pre-wrap">{answerNotes[generateQuestionFingerprint(q)]}</p>
                                 </div>
                               )}
 
@@ -6766,12 +6776,12 @@ export default function App() {
                                       );
                                     }}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
-                                      answerNotes[q.pertanyaan]
+                                      answerNotes[generateQuestionFingerprint(q)]
                                         ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
                                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                                     }`}
                                   >
-                                    {answerNotes[q.pertanyaan] ? (
+                                    {answerNotes[generateQuestionFingerprint(q)] ? (
                                       <>
                                         <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
                                         <span>Edit Catatan</span>
@@ -6858,7 +6868,7 @@ export default function App() {
       noteInput={noteInput}
       onNoteInputChange={setNoteInput}
       isSaving={noteSaving}
-      existingNote={notePopupOpen ? answerNotes[notePopupOpen.questionText] : undefined}
+      existingNote={notePopupOpen ? answerNotes[generateQuestionFingerprint({ pertanyaan: notePopupOpen.questionText })] : undefined}
       onClose={() => setNotePopupOpen(null)}
       onSave={saveAnswerNote}
       onDelete={deleteAnswerNote}
