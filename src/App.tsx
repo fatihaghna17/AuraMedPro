@@ -394,11 +394,11 @@ export default function App() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
   const [notifCount, setNotifCount] = useState(0);
-  const [pushEnabled, setPushEnabled] = useState(() => Notification.permission === 'granted' || localStorage.getItem('auramed_push') === 'dismissed');
+  const [pushEnabled, setPushEnabled] = useState(() => ('Notification' in window && Notification.permission === 'granted') || localStorage.getItem('auramed_push') === 'dismissed');
 
   // Show browser Notification (appears on device lock screen / notification center)
   const showBrowserNotification = useCallback((title: string, body: string, url?: string) => {
-    if (Notification.permission !== 'granted') return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
       // Use Service Worker if available (works even when app is in background)
       if (navigator.serviceWorker?.controller) {
@@ -802,7 +802,7 @@ export default function App() {
       setNotifCount(newNotifs.length);
 
       // Push browser notification for new items (only if user granted permission)
-      if (newNotifs.length > 0 && Notification.permission === 'granted') {
+      if (newNotifs.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
         // Don't re-notify for items we've already pushed this session
         const pushed = new Set(JSON.parse(sessionStorage.getItem('auramed_pushed') || '[]'));
         const fresh = newNotifs.filter((n) => !pushed.has(n.id));
