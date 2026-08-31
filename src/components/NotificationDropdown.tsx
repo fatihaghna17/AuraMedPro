@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Clock, BookOpen } from 'lucide-react';
+import { Bell, Clock, BookOpen, BellRing } from 'lucide-react';
 
 interface NotificationItem {
   id: string;
@@ -18,14 +18,15 @@ interface NotificationDropdownProps {
   notifList: NotificationItem[];
   notifCount: number;
   onMarkAllRead: () => void;
+  pushPermission: NotificationPermission | 'default';
+  onRequestPush: () => void;
 }
 
 export default function NotificationDropdown({
-  theme, isOpen, onClose, onToggle, notifList, notifCount, onMarkAllRead,
+  theme, isOpen, onClose, onToggle, notifList, notifCount, onMarkAllRead, pushPermission, onRequestPush,
 }: NotificationDropdownProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Click outside to close
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -37,13 +38,16 @@ export default function NotificationDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
+  const bellColor = pushPermission === 'granted' ? 'text-emerald-500' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400';
+  const pushLabel = pushPermission === 'granted' ? 'Notif device aktif' : 'Aktifkan notif HP';
+
   return (
     <div className="relative" ref={panelRef}>
-      <button 
+      <button
         onClick={onToggle}
         className={`p-2 rounded-xl border relative transition-all ${
-          theme === 'dark' 
-            ? 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200' 
+          theme === 'dark'
+            ? 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
             : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
         }`}
       >
@@ -68,7 +72,6 @@ export default function NotificationDropdown({
                 : 'bg-white border-slate-200 shadow-slate-200/80'
             }`}
           >
-            {/* Header */}
             <div className={`flex items-center justify-between px-4 py-3 border-b ${
               theme === 'dark' ? 'border-slate-700/50' : 'border-slate-100'
             }`}>
@@ -76,21 +79,15 @@ export default function NotificationDropdown({
                 theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
               }`}>Notifikasi</h3>
               {notifCount > 0 && (
-                <button
-                  onClick={onMarkAllRead}
-                  className="text-[10px] font-bold text-indigo-500 hover:text-indigo-400 transition-colors"
-                >
+                <button onClick={onMarkAllRead} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-400 transition-colors">
                   Tandai sudah dibaca
                 </button>
               )}
             </div>
 
-            {/* List */}
             <div className="max-h-72 overflow-y-auto">
               {notifList.length === 0 ? (
-                <div className={`px-4 py-8 text-center text-xs ${
-                  theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
-                }`}>
+                <div className={`px-4 py-8 text-center text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                   <Bell className="w-6 h-6 mx-auto mb-2 opacity-30" />
                   Tidak ada notifikasi baru
                 </div>
@@ -105,22 +102,37 @@ export default function NotificationDropdown({
                     }`}
                   >
                     <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      notif.type === 'srs'
-                        ? 'bg-amber-500/10 text-amber-500'
-                        : 'bg-indigo-500/10 text-indigo-500'
+                      notif.type === 'srs' ? 'bg-amber-500/10 text-amber-500' : 'bg-indigo-500/10 text-indigo-500'
                     }`}>
                       {notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold leading-snug ${
-                        theme === 'dark' ? 'text-slate-200' : 'text-slate-700'
-                      }`}>{notif.text}</p>
-                      <p className={`text-[10px] mt-0.5 ${
-                        theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
-                      }`}>{notif.time}</p>
+                      <p className={`text-xs font-semibold leading-snug ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
+                        {notif.text}
+                      </p>
+                      <p className={`text-[10px] mt-0.5 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {notif.time}
+                      </p>
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+
+            {/* Push notification toggle */}
+            <div className={`px-4 py-2.5 border-t flex items-center justify-between ${
+              theme === 'dark' ? 'border-slate-700/50 bg-slate-800/20' : 'border-slate-100 bg-slate-50/50'
+            }`}>
+              <div className="flex items-center gap-2">
+                <BellRing className={`w-3.5 h-3.5 ${bellColor}`} />
+                <span className={`text-[10px] font-bold ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {pushLabel}
+                </span>
+              </div>
+              {pushPermission !== 'granted' && (
+                <button onClick={onRequestPush} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-400 transition-colors">
+                  Aktifkan
+                </button>
               )}
             </div>
           </motion.div>

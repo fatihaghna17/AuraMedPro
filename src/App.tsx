@@ -394,6 +394,59 @@ export default function App() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
   const [notifCount, setNotifCount] = useState(0);
+  const [pushEnabled, setPushEnabled] = useState(() => Notification.permission === 'granted' || localStorage.getItem('auramed_push') === 'dismissed');
+
+  // Show browser Notification (appears on device lock screen / notification center)
+  const showBrowserNotification = useCallback((title: string, body: string, url?: string) => {
+    if (Notification.permission !== 'granted') return;
+    try {
+      // Use Service Worker if available (works even when app is in background)
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SHOW_NOTIFICATION',
+          payload: { title, body, url: url || window.location.href },
+        });
+      } else {
+        // Fallback: direct Notification API
+        new Notification(title, {
+          body,
+          icon: '/favicon.svg',
+          badge: '/favicon.svg',
+          tag: 'auramed-notif',
+          renotify: true,
+        } as NotificationOptions);
+      }
+    } catch (e) {
+      // Notification failed silently — non-critical
+    }
+  }, []);
+
+  // Request push notification permission
+  const requestPushPermission = useCallback(async () => {
+    if (!('Notification' in window)) {
+      setToastMessage({ text: 'Browser ini tidak mendukung notifikasi', icon: '⚠️' });
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      setPushEnabled(true);
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      setToastMessage({ text: 'Izin notifikasi ditolak. Aktifkan di Settings browser.', icon: '⚠️' });
+      localStorage.setItem('auramed_push', 'dismissed');
+      setPushEnabled(true);
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setPushEnabled(true);
+      setToastMessage({ text: 'Notifikasi device aktif!', icon: '🔔' });
+      setTimeout(() => setToastMessage(null), 3000);
+    } else {
+      localStorage.setItem('auramed_push', 'dismissed');
+      setPushEnabled(true);
+    }
+  }, []);
 
   // Modal confirm states
   const [modalOpen, setModalOpen] = useState(false);
@@ -747,10 +800,29 @@ export default function App() {
 
       setNotifList(newNotifs);
       setNotifCount(newNotifs.length);
+
+      // Push browser notification for new items (only if user granted permission)
+      if (newNotifs.length > 0 && Notification.permission === 'granted') {
+        // Don't re-notify for items we've already pushed this session
+        const pushed = new Set(JSON.parse(sessionStorage.getItem('auramed_pushed') || '[]'));
+        const fresh = newNotifs.filter((n) => !pushed.has(n.id));
+        if (fresh.length > 0) {
+          // Show one summary notification
+          const srsCount = fresh.filter((n) => n.type === 'srs').length;
+          const quizCount = fresh.filter((n) => n.type === 'new_quiz').length;
+          let body = '';
+          if (srsCount > 0) body += `${srsCount} kartu SRS perlu review. `;
+          if (quizCount > 0) body += `${quizCount} kuis baru tersedia.`;
+          showBrowserNotification('AuraMed PRO', body.trim());
+          // Remember pushed IDs for this session
+          fresh.forEach((n) => pushed.add(n.id));
+          sessionStorage.setItem('auramed_pushed', JSON.stringify([...pushed]));
+        }
+      }
     } catch (err) {
       console.error('Error fetching notifications:', err);
     }
-  }, [currentUser, srs]);
+  }, [currentUser, srs, showBrowserNotification]);
 
   const markAllNotifRead = () => {
     localStorage.setItem('cbt_last_notif_check', new Date().toISOString());
@@ -3279,6 +3351,8 @@ export default function App() {
                       notifList={notifList}
                       notifCount={notifCount}
                       onMarkAllRead={markAllNotifRead}
+                      pushPermission={typeof Notification !== 'undefined' ? Notification.permission : 'default'}
+                      onRequestPush={requestPushPermission}
                     />
 
                     <button
