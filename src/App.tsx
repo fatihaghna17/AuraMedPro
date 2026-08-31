@@ -958,14 +958,19 @@ export default function App() {
         isProfileSyncedRef.current = true;
       }
 
-      // 3. Tarik data kuis (question_banks) terisolasi & bawaan
-      await fetchUserQuestions(userId, profile?.username || 'user');
-
-      // 4. Periksa sesi kuis tertunda
-      await checkActiveQuizSession(userId);
-
-      // 5. Muat leaderboard global
-      await fetchGlobalLeaderboard();
+      // 3-5. Paralel: tarik data kuis, sesi tertunda, dan leaderboard sekaligus
+      // Global safety timeout 20s agar tidak stuck forever di device lambat (iPhone, dll)
+      const syncTimeout = new Promise<'timeout'>((_, reject) =>
+        setTimeout(() => reject(new Error('Sync timeout (20s)')), 20000)
+      );
+      await Promise.race([
+        Promise.all([
+          fetchUserQuestions(userId, profile?.username || 'user'),
+          checkActiveQuizSession(userId),
+          fetchGlobalLeaderboard(),
+        ]),
+        syncTimeout,
+      ]);
     } catch (err) {
       console.error('Error syncing user profile:', err);
     } finally {
@@ -1589,7 +1594,10 @@ export default function App() {
             const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
             const correctUrl = `${R2_BASE}/${questions.r2_key}`;
             try {
-              const res = await fetch(correctUrl);
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+              const res = await fetch(correctUrl, { signal: controller.signal });
+              clearTimeout(timeoutId);
               if (res.ok) {
                 const fetched = await res.json();
                 if (Array.isArray(fetched) && fetched.length > 0) {
@@ -1611,8 +1619,12 @@ export default function App() {
                 console.warn('R2 fetch failed (status', res.status, ') for:', row.name);
                 questions = [];
               }
-            } catch (err) {
-              console.error('Failed to fetch from R2 for', row.name, ':', err);
+            } catch (err: any) {
+              if (err.name === 'AbortError') {
+                console.warn('R2 fetch timed out (10s) for:', row.name);
+              } else {
+                console.error('Failed to fetch from R2 for', row.name, ':', err);
+              }
               questions = [];
             }
           }
