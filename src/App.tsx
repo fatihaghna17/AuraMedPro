@@ -1589,21 +1589,21 @@ export default function App() {
   };
 
   // === CATATAN SOAL FUNCTIONS ===
-  // Helper: get fingerprint key for a question (used as stable DB key instead of raw HTML text)
-  const getNoteKey = useCallback((q: { pertanyaan: string }) => generateQuestionFingerprint(q), []);
+  // Uses fingerprint hash as question_text value to avoid PostgreSQL 2700-byte index limit on raw HTML.
+  // Backward-compat: old rows with raw HTML are re-keyed via fingerprint at fetch time.
 
   const fetchAnswerNotes = useCallback(async () => {
     if (!currentUser) return;
     try {
       const { data, error } = await supabase
         .from('answer_notes')
-        .select('question_ref, question_text, note_content')
+        .select('question_text, note_content')
         .eq('user_id', currentUser.id);
       if (!error && data) {
         const notesMap: Record<string, string> = {};
-        data.forEach((d: any) => {
-          // Use question_ref (fingerprint) as key; fallback: compute from question_text for old rows
-          const key = d.question_ref || generateQuestionFingerprint({ pertanyaan: d.question_text });
+        data.forEach((d: { question_text: string; note_content: string }) => {
+          // Always compute fingerprint so both old (raw HTML) and new (hash) rows work
+          const key = generateQuestionFingerprint({ pertanyaan: d.question_text });
           notesMap[key] = d.note_content;
         });
         setAnswerNotes(notesMap);
@@ -1617,18 +1617,17 @@ export default function App() {
     if (!currentUser || !content.trim()) return;
     setNoteSaving(true);
     try {
-      const questionRef = generateQuestionFingerprint({ pertanyaan: questionText });
+      const fp = generateQuestionFingerprint({ pertanyaan: questionText });
       const { error } = await supabase
         .from('answer_notes')
         .upsert({
           user_id: currentUser.id,
-          question_text: questionText,
-          question_ref: questionRef,
+          question_text: fp,
           note_content: content.trim(),
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,question_ref' });
+        }, { onConflict: 'user_id,question_text' });
       if (!error) {
-        setAnswerNotes(prev => ({ ...prev, [questionRef]: content.trim() }));
+        setAnswerNotes(prev => ({ ...prev, [fp]: content.trim() }));
         setNotePopupOpen(null);
         triggerToast('Catatan berhasil disimpan!', '📝');
       } else {
@@ -1646,16 +1645,16 @@ export default function App() {
     if (!currentUser) return;
     setNoteSaving(true);
     try {
-      const questionRef = generateQuestionFingerprint({ pertanyaan: questionText });
+      const fp = generateQuestionFingerprint({ pertanyaan: questionText });
       const { error } = await supabase
         .from('answer_notes')
         .delete()
         .eq('user_id', currentUser.id)
-        .eq('question_ref', questionRef);
+        .eq('question_text', fp);
       if (!error) {
         setAnswerNotes(prev => {
           const next = { ...prev };
-          delete next[questionRef];
+          delete next[fp];
           return next;
         });
         setNotePopupOpen(null);
