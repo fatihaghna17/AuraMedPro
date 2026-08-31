@@ -101,6 +101,20 @@ import PasteJsonModal from './components/PasteJsonModal';
 import NoteEditorModal from './components/NoteEditorModal';
 import ReportQuestionModal from './components/ReportQuestionModal';
 import MoveQuizModal from './components/MoveQuizModal';
+import AnswerNotePopup from './components/AnswerNotePopup';
+import AchievementPopup from './components/AchievementPopup';
+import QuizHeader from './components/QuizHeader';
+import KeyboardHintPanel from './components/KeyboardHintPanel';
+import MobileQuizNavDrawer from './components/MobileQuizNavDrawer';
+import MobileBottomActionBar from './components/MobileBottomActionBar';
+import DailyChallengeCard from './components/DailyChallengeCard';
+import IosInstallBanner from './components/IosInstallBanner';
+import QuickActionsRow from './components/QuickActionsRow';
+import SearchFilterHeader from './components/SearchFilterHeader';
+import UploadZone from './components/UploadZone';
+import FormatGuide from './components/FormatGuide';
+import PendingSessionsCard from './components/PendingSessionsCard';
+import HistoryAnalyticsPanel from './components/HistoryAnalyticsPanel';
 
 export default function App() {
   // === STATE MANAGEMENT ===
@@ -3326,62 +3340,9 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Daily Challenge Card */}
-                <div className={`p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-r from-amber-500/10 to-orange-600/10 border-amber-500/20 shadow-lg'
-                    : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 shadow-sm'
-                }`}>
-                  <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-10">
-                    <Flame className="w-40 h-40 text-amber-500" />
-                  </div>
-                  <div className="flex items-start gap-4 z-10 relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-                      <Flame className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                        Tantangan Harian
-                      </h3>
-                      <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                        Kerjakan 5 soal acak dalam 10 menit. Dapatkan <strong className="text-amber-600 dark:text-amber-400">2x XP</strong> dan pertahankan Streak Belajar Anda!
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={startDailyChallenge}
-                    className="z-10 relative flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-500/25 transition-all cursor-pointer whitespace-nowrap min-w-[140px]"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    Mulai Sekarang
-                  </button>
-                </div>
+                <DailyChallengeCard theme={theme} onStart={startDailyChallenge} />
 
-                {/* iOS PWA Installation Banner */}
-                <div className={`p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  theme === 'dark'
-                    ? 'bg-slate-900/40 border-white/[0.08] shadow-lg'
-                    : 'bg-white border-slate-200 shadow-sm'
-                }`}>
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-505 flex items-center justify-center flex-shrink-0">
-                      <Smartphone className="w-5 h-5 text-indigo-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-indigo-500 uppercase tracking-wider flex items-center gap-1.5">📲 AuraMed PRO untuk iPhone & iPad</h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                        Jadikan aplikasi ini sebagai PWA di perangkat iOS Anda untuk akses instan langsung dari Home Screen.
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowIosInstallModal(true)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/15 transition-all cursor-pointer flex-shrink-0 text-center"
-                  >
-                    Petunjuk Instalasi iOS
-                  </button>
-                </div>
+                <IosInstallBanner theme={theme} onInstallClick={() => setShowIosInstallModal(true)} />
 
                 {/* Main section contents */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -3389,180 +3350,37 @@ export default function App() {
                   {/* Left panel: Quick Actions & Sesi Tertunda */}
                   <div className="lg:col-span-8 space-y-6">
                     
-                    {/* Quick actions row */}
-                    <div>
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Aksi Cepat</h3>
-                      <div className="flex overflow-x-auto snap-x snap-mandatory lg:grid lg:grid-cols-3 gap-4 pb-2 lg:pb-0 scrollbar-none">
-                        
-                        <div
-                          onClick={() => setDashboardTab('new')}
-                          className={`min-w-[220px] snap-center flex-1 p-5 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] hover:-translate-y-0.5 ${
-                            theme === 'dark' ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-slate-200 hover:border-indigo-200'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-505 flex items-center justify-center mb-3">
-                            <Play className="w-5 h-5 text-indigo-500" />
-                          </div>
-                          <h4 className="text-sm font-black">Try-Out Baru</h4>
-                          <p className="text-[11px] text-slate-400 mt-1">Konfigurasi materi & mulai simulasi kuis baru.</p>
-                        </div>
+                    <QuickActionsRow
+                      theme={theme}
+                      pendingCount={pendingSessions.length}
+                      pendingProgress={pendingSessions.length > 0 ? Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100) : null}
+                      onNewQuiz={() => setDashboardTab('new')}
+                      onResumeOrBanks={() => {
+                        if (pendingSessions.length > 0) {
+                          resumeQuizSession(pendingSessions[0]);
+                        } else {
+                          setDashboardTab('banks');
+                        }
+                      }}
+                      onBanks={() => setDashboardTab('banks')}
+                    />
 
-                        <div
-                          onClick={() => {
-                            if (pendingSessions.length > 0) {
-                              resumeQuizSession(pendingSessions[0]);
-                            } else {
-                              setDashboardTab('banks');
-                            }
-                          }}
-                          className={`min-w-[220px] snap-center flex-1 p-5 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] hover:-translate-y-0.5 ${
-                            theme === 'dark' ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-slate-200 hover:border-indigo-200'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3">
-                            <Flame className="w-5 h-5 text-amber-500" />
-                          </div>
-                          <h4 className="text-sm font-black">
-                            {pendingSessions.length > 0 ? 'Lanjutkan Kuis' : 'Pilih Topik Soal'}
-                          </h4>
-                          <p className="text-[11px] text-slate-400 mt-1">
-                            {pendingSessions.length > 0
-                              ? `Lanjutkan kuis tertunda (${Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100)}%)`
-                              : 'Jelajahi dan pilih bank soal yang tersedia.'}
-                          </p>
-                        </div>
-
-                        <div
-                          onClick={() => setDashboardTab('banks')}
-                          className={`min-w-[220px] snap-center flex-1 p-5 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] hover:-translate-y-0.5 ${
-                            theme === 'dark' ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-slate-200 hover:border-indigo-200'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mb-3">
-                            <UploadCloud className="w-5 h-5 text-teal-500" />
-                          </div>
-                          <h4 className="text-sm font-black">Upload Soal</h4>
-                          <p className="text-[11px] text-slate-400 mt-1">Impor file kuis JSON/YAML atau folder soal baru.</p>
-                        </div>
-
-                      </div>
-                    </div>
-
-                    {/* Sesi Kuis Tertunda */}
-                    {pendingSessions.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Sesi Kuis Tertunda</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {pendingSessions.map((session) => {
-                            const totalQ = session.current_quiz_json?.length || 0;
-                            const answered = session.user_answers_json?.filter((a: any) => a !== null).length || 0;
-                            const pct = totalQ > 0 ? Math.round((answered / totalQ) * 100) : 0;
-                            return (
-                              <div
-                                key={session.id}
-                                className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-colors ${
-                                  theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200'
-                                }`}
-                              >
-                                <div className="min-w-0">
-                                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400">
-                                      {session.quiz_mode === 'simulasi' ? 'Simulasi' : 'Utuh'}
-                                    </span>
-                                    <span className="text-[9px] text-slate-400">
-                                      {new Date(session.updated_at).toLocaleDateString('id-ID', {
-                                        day: 'numeric',
-                                        month: 'short'
-                                      })}
-                                    </span>
-                                  </div>
-                                  <h4 className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">{session.title}</h4>
-                                  <div className="mt-2.5">
-                                    <div className="flex justify-between text-[9px] text-slate-400 mb-1">
-                                      <span>Progres: {answered}/{totalQ} Soal</span>
-                                      <span>{pct}%</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${pct}%` }} />
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-end gap-2 mt-1">
-                                  <button
-                                    onClick={() => resumeQuizSession(session)}
-                                    className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold bg-indigo-500 hover:bg-indigo-600 text-white transition-all cursor-pointer"
-                                  >
-                                    Lanjutkan
-                                  </button>
-                                  <button
-                                    onClick={() => discardQuizSession(session.id)}
-                                    className="px-2.5 py-1.5 rounded-lg text-xs font-extrabold bg-rose-500/10 hover:bg-rose-500/20 text-rose-455 transition-all cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    <PendingSessionsCard
+                      theme={theme}
+                      sessions={pendingSessions}
+                      onResume={resumeQuizSession}
+                      onDiscard={discardQuizSession}
+                    />
 
                   </div>
 
-                  {/* Right panel: Accordion Analysis */}
                   <div className="lg:col-span-4 space-y-6">
-                    <div>
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Analisis Sub-Kompetensi</h3>
-                      <div className={`border rounded-2xl divide-y overflow-hidden transition-colors ${
-                        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80 divide-slate-850' : 'bg-white border-slate-200 divide-slate-100'
-                      }`}>
-                        {Object.entries(historyAnalytics).map(([name, data]: [string, any]) => {
-                          const pct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
-                          const expanded = !!expandedCompetencies[name];
-                          const toggleExpand = () => setExpandedCompetencies(prev => ({ ...prev, [name]: !prev[name] }));
-                          return (
-                            <div key={name} className="text-xs">
-                              <button
-                                onClick={toggleExpand}
-                                className="w-full flex items-center justify-between p-3.5 hover:bg-slate-500/5 transition-colors font-bold text-left"
-                              >
-                                <span className="truncate pr-4">{name}</span>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                    pct >= 80 
-                                      ? 'bg-emerald-500/10 text-emerald-500' 
-                                      : pct >= 60 
-                                        ? 'bg-indigo-500/10 text-indigo-500' 
-                                        : 'bg-rose-500/10 text-rose-500'
-                                  }`}>
-                                    {pct}%
-                                  </span>
-                                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
-                                </div>
-                              </button>
-                              
-                              {expanded && (
-                                <div className="p-3.5 bg-slate-500/[0.02] border-t border-slate-200/50 dark:border-slate-800/50 space-y-2 text-[11px] text-slate-500 dark:text-slate-400">
-                                  <div className="flex justify-between">
-                                    <span>Total Soal Dikerjakan</span>
-                                    <span className="font-bold text-slate-700 dark:text-slate-350">{data.total}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Jawaban Benar</span>
-                                    <span className="font-bold text-emerald-500">{data.correct}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Jawaban Salah / Kosong</span>
-                                    <span className="font-bold text-rose-555">{data.total - data.correct}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <HistoryAnalyticsPanel
+                      theme={theme}
+                      analytics={historyAnalytics}
+                      expandedCompetencies={expandedCompetencies}
+                      onToggleExpand={(name) => setExpandedCompetencies(prev => ({ ...prev, [name]: !prev[name] }))}
+                    />
 
                     <PomodoroWidget
                       theme={theme}
@@ -3586,231 +3404,28 @@ export default function App() {
             {dashboardTab === 'banks' && (
               <div className="space-y-6 animate-fade-in">
                 
-                {/* Search & Filter Header Card */}
-                <div className={`p-6 rounded-3xl border transition-all duration-300 ${
-                  theme === 'dark'
-                    ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-                    : 'bg-white border-slate-200 shadow-sm'
-                }`}>
-                  <h2 className={`text-lg font-black mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                    Daftar Bank Soal
-                  </h2>
-                  <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-                    {/* Search bar */}
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450" />
-                      <input
-                        type="text"
-                        placeholder="Cari bank soal..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                          theme === 'dark'
-                            ? 'bg-slate-950 border-slate-800 text-slate-200 placeholder-slate-500'
-                            : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-                        }`}
-                      />
-                    </div>
-                    {/* Category Filter Buttons */}
-                    <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200/50 dark:border-slate-850">
-                      {[
-                        { id: 'all', label: 'Semua' },
-                        { id: 'ukmppd', label: 'UKMPPD' },
-                        { id: 'flashcard', label: 'Flashcard' },
-                        { id: 'custom', label: 'Kustom' }
-                      ].map((btn) => (
-                        <button
-                          key={btn.id}
-                          onClick={() => setBankFilter(btn.id as any)}
-                          className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                            bankFilter === btn.id
-                              ? 'bg-indigo-500 text-white shadow-sm'
-                              : 'text-slate-450 hover:text-slate-700 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {btn.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <SearchFilterHeader
+                  theme={theme}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  bankFilter={bankFilter}
+                  onFilterChange={setBankFilter}
+                />
 
-                {/* Upload Zone & Guide */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                  
-                  {/* Upload inputs card */}
-                  <div className={`md:col-span-8 p-6 rounded-3xl border transition-all duration-300 space-y-5 ${
-                    theme === 'dark'
-                      ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-                      : 'bg-white border-slate-200 shadow-sm'
-                  }`}>
-                    <div>
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Impor Soal Baru</h3>
-                      <p className="text-[11px] text-slate-450 mt-1">Impor berkas soal Anda untuk diujikan di platform CBT AuraMed.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {/* Upload Single File */}
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
-                          theme === 'dark'
-                            ? 'bg-slate-950/40 border-slate-800 hover:border-indigo-500/40'
-                            : 'bg-slate-50 border-slate-200 hover:border-indigo-500/40'
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-3">
-                          <UploadCloud className="w-5 h-5 text-indigo-500" />
-                        </div>
-                        <h4 className="text-xs font-bold">Pilih File Soal</h4>
-                        <p className="text-[10px] text-slate-400 mt-1.5">JSON, YAML, atau YML (Maks. 5MB)</p>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileUpload}
-                          accept=".json,.yaml,.yml"
-                          className="hidden"
-                        />
-                      </div>
-
-                      {/* Upload Folder Directory */}
-                      <div 
-                        onClick={() => folderInputRef.current?.click()}
-                        className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
-                          theme === 'dark'
-                            ? 'bg-slate-950/40 border-slate-800 hover:border-teal-500/40'
-                            : 'bg-slate-50 border-slate-200 hover:border-teal-500/40'
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mb-3">
-                          <FolderPlus className="w-5 h-5 text-teal-555" />
-                        </div>
-                        <h4 className="text-xs font-bold">Impor Folder Soal</h4>
-                        <p className="text-[10px] text-slate-400 mt-1.5">Unggah direktori folder berisi berkas kuis</p>
-                        <input
-                          type="file"
-                          ref={folderInputRef}
-                          onChange={handleFolderUpload}
-                          {...{ directory: "", webkitdirectory: "" }}
-                          multiple
-                          className="hidden"
-                        />
-                      </div>
-
-                      {/* Paste JSON */}
-                      <div 
-                        onClick={() => setPasteModalOpen(true)}
-                        className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
-                          theme === 'dark'
-                            ? 'bg-slate-950/40 border-slate-800 hover:border-amber-500/40'
-                            : 'bg-slate-50 border-slate-200 hover:border-amber-500/40'
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3">
-                          <ClipboardList className="w-5 h-5 text-amber-500" />
-                        </div>
-                        <h4 className="text-xs font-bold">Tempel JSON</h4>
-                        <p className="text-[10px] text-slate-400 mt-1.5">Salin dan tempel kode soal mentah</p>
-                      </div>
-                    </div>
+                  <div className="md:col-span-8">
+                    <UploadZone
+                      theme={theme}
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      onFileUpload={handleFileUpload}
+                      onFolderUpload={handleFolderUpload}
+                      onPasteClick={() => setPasteModalOpen(true)}
+                    />
                   </div>
 
-                  {/* Format Guide card */}
-                  <div className={`md:col-span-4 p-6 rounded-3xl border transition-all duration-350 flex flex-col justify-between ${
-                    theme === 'dark'
-                      ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-                      : 'bg-white border-slate-200 shadow-sm'
-                  }`}>
-                    <div>
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Petunjuk Format</h3>
-                      <p className="text-[11px] text-slate-450 mt-1">Platform CBT mendukung tipe soal Pilihan Ganda (MCQ) & Isian Singkat (Flashcard) dalam format penyatuan JSON/YAML.</p>
-                      
-                      <div className="space-y-2 mt-4">
-                        <div className="flex items-start gap-2 text-[10px] font-semibold text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5" />
-                          <span>Kunci soal MCQ menggunakan array `mcq_questions` atau `questions`.</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-[10px] font-semibold text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5" />
-                          <span>Kunci flashcard/isian menggunakan `flashcard_questions` atau `cards`.</span>
-                        </div>
-                        <div className="flex items-start gap-2 text-[10px] font-semibold text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5" />
-                          <span>Mendukung upload massal folder soal terkompresi.</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 space-y-3">
-                      <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Unduh Template & Panduan
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <a 
-                          href="/template_mcq.json" 
-                          download="template_mcq.json"
-                          className={`py-2 px-2.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-                            theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-indigo-400' : 'border-slate-200 hover:bg-slate-50 text-indigo-600'
-                          }`}
-                        >
-                          📦 Template MCQ (.json)
-                        </a>
-                        <a 
-                          href="/template_flashcard.json" 
-                          download="template_flashcard.json"
-                          className={`py-2 px-2.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-                            theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-purple-400' : 'border-slate-200 hover:bg-slate-50 text-purple-600'
-                          }`}
-                        >
-                          📦 Template Flashcard (.json)
-                        </a>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <a 
-                          href="/panduan_pembuatan_soal.txt" 
-                          download="panduan_pembuatan_soal.txt"
-                          className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-                            theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-350' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                          }`}
-                          title="Panduan Pembuatan Soal MCQ"
-                        >
-                          📄 Panduan MCQ
-                        </a>
-                        <a 
-                          href="/panduan_flashcard.md" 
-                          download="panduan_flashcard.md"
-                          className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-                            theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                          }`}
-                          title="Panduan Pembuatan Flashcard"
-                        >
-                          📄 Flashcard
-                        </a>
-                        <a 
-                          href="/aturan_konten.txt" 
-                          download="aturan_konten.txt"
-                          className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-                            theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                          }`}
-                          title="Aturan Konten / Konversi Soal"
-                        >
-                          📄 Aturan Konten
-                        </a>
-                      </div>
-
-                      <a 
-                        href="/panduan_prompt_ai.txt" 
-                        download="panduan_prompt_ai.txt"
-                        className={`w-full py-2.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center block cursor-pointer bg-gradient-to-r from-teal-500/10 to-indigo-500/10 hover:from-teal-500/15 hover:to-indigo-500/15 ${
-                          theme === 'dark' ? 'border-slate-800 text-teal-400' : 'border-slate-200 text-indigo-700'
-                        }`}
-                        title="Panduan Memori Prompt AI untuk Pembuatan Soal"
-                      >
-                        🤖 Panduan Memori Prompt AI (.txt)
-                      </a>
-                    </div>
+                  <div className="md:col-span-4">
+                    <FormatGuide theme={theme} />
                   </div>
                 </div>
 
@@ -5484,100 +5099,21 @@ export default function App() {
         {screen === 'quiz' && currentQuiz.length > 0 && (
           <div className="relative min-h-screen pb-24">
 
-            {/* Sticky Header (Fixed Top) */}
-            <header className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors ${
-              theme === 'dark' ? 'bg-slate-950/85 border-slate-900 text-white' : 'bg-white/85 border-slate-200 text-slate-900'
-            }`}>
-              <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between relative">
-                <button
-                  onClick={exitQuiz}
-                  className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Keluar</span>
-                </button>
 
-                <div className="flex items-center gap-4">
-                  <span className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-500 dark:text-slate-400">
-                    Soal {currentIndex + 1} {isAdaptiveMode ? '' : `dari ${currentQuiz.length}`}
-                  </span>
-                  
-                  {isAdaptiveMode && (
-                    <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${
-                      currentDifficulty === 'mudah' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                      currentDifficulty === 'sedang' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                      'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                    }`}>
-                      Level: {currentDifficulty}
-                    </span>
-                  )}
-                  
-                  {/* Timer display */}
-                  <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-all ${
-                    quizSecondsLeft < 300
-                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-black animate-pulse'
-                      : quizSecondsLeft < 600
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold'
-                        : theme === 'dark'
-                          ? 'bg-slate-900 border-slate-800 text-slate-300 font-bold'
-                          : 'bg-slate-100 border-slate-200 text-slate-750 font-bold'
-                  }`}>
-                    ⏱️ {formatTimer(quizSecondsLeft)}
-                  </span>
-                </div>
+            <QuizHeader
+              theme={theme}
+              currentIndex={currentIndex}
+              totalQuestions={currentQuiz.length}
+              isAdaptiveMode={isAdaptiveMode}
+              currentDifficulty={currentDifficulty}
+              quizSecondsLeft={quizSecondsLeft}
+              isFullscreen={isFullscreen}
+              onExit={exitQuiz}
+              onToggleFullscreen={toggleFullscreen}
+              onOpenMobileNav={() => setMobileQuizNavOpen(true)}
+            />
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleFullscreen}
-                    className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                      theme === 'dark'
-                        ? 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
-                        : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
-                    }`}
-                    title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-                  >
-                    {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  </button>
-
-                  <button
-                    onClick={() => setMobileQuizNavOpen(true)}
-                    className={`lg:hidden p-2 rounded-xl border transition-all cursor-pointer ${
-                      theme === 'dark'
-                        ? 'bg-slate-900 border-slate-800 text-slate-450 hover:bg-slate-800'
-                        : 'bg-slate-100 border-slate-200 text-slate-655 hover:bg-slate-200'
-                    }`}
-                    title="Peta Soal"
-                  >
-                    <Menu className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Smooth 4px progress bar at the bottom of the header */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-slate-800/50">
-                <div 
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
-                  style={{ width: `${((currentIndex + 1) / currentQuiz.length) * 100}%` }}
-                />
-              </div>
-            </header>
-
-            {/* Keyboard Hint Panel */}
-            {keyboardNavEnabled && (
-              <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-4 hidden sm:flex justify-center animate-fade-in">
-                <div className={`text-[10px] sm:text-xs font-bold px-4 py-2 rounded-full border shadow-sm flex items-center gap-4 ${
-                  theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-500'
-                }`}>
-                  <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1">1</kbd>-<kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] ml-1 mr-1.5">5</kbd> Pilih Jawaban</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                  <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">←→</kbd> Navigasi</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                  <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">R</kbd> Ragu</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                  <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">M</kbd> Peta Soal</span>
-                </div>
-              </div>
-            )}
+            {keyboardNavEnabled && <KeyboardHintPanel theme={theme} />}
 
             {/* Split View Content Layout */}
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -6197,140 +5733,30 @@ export default function App() {
               </div>
             </div>
 
-            {/* Mobile Navigasi Grid Drawer/Modal Overlay */}
-            {mobileQuizNavOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                <div className={`w-full max-w-sm p-6 rounded-3xl border shadow-2xl relative animate-scale-up ${
-                  theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-                }`}>
-                  <button
-                    onClick={() => setMobileQuizNavOpen(false)}
-                    className="absolute top-4 right-4 p-2 rounded-xl text-slate-455 hover:text-slate-205 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+            <MobileQuizNavDrawer
+              theme={theme}
+              isOpen={mobileQuizNavOpen}
+              currentQuiz={currentQuiz}
+              userAnswers={userAnswers}
+              doubtStatus={doubtStatus}
+              currentIndex={currentIndex}
+              onNavigate={(idx) => { setCurrentIndex(idx); setMobileQuizNavOpen(false); }}
+              onClose={() => setMobileQuizNavOpen(false)}
+            />
 
-                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 mb-4 pr-8">
-                    Peta Soal Ujian
-                  </h3>
-
-                  <div className="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1">
-                    {currentQuiz.map((_, idx) => {
-                      const isAnswered = userAnswers[idx] !== null;
-                      const isDoubt = doubtStatus[idx];
-                      const isActive = idx === currentIndex;
-                      
-                      let btnClass = "";
-                      if (isActive) {
-                        btnClass = "border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-1 ring-indigo-500/20";
-                      } else if (isDoubt) {
-                        btnClass = "bg-amber-500 border-amber-500 text-white shadow-sm";
-                      } else if (isAnswered) {
-                        btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-sm";
-                      } else {
-                        btnClass = theme === 'dark' 
-                          ? 'bg-slate-800 border-slate-750 text-slate-450' 
-                          : 'bg-slate-100 text-slate-600 border-slate-200/60';
-                      }
-
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setCurrentIndex(idx);
-                            setMobileQuizNavOpen(false);
-                          }}
-                          className={`h-10 rounded-xl border text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${btnClass}`}
-                        >
-                          {idx + 1}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold text-slate-500">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 rounded-full h-2 bg-emerald-500" />
-                      <span>Terjawab</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 rounded-full h-2 bg-amber-500" />
-                      <span>Ragu-ragu</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 rounded-full h-2 bg-indigo-500" />
-                      <span>Aktif</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-2 rounded-full h-2 ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
-                      <span>Belum Dijawab</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Fixed Bottom Action Bar for Mobile/Tablet */}
-            <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden p-4 border-t backdrop-blur-md transition-colors ${
-              theme === 'dark' ? 'bg-slate-950/90 border-slate-900/80' : 'bg-slate-50/90 border-slate-200/60'
-            }`}>
-              <div className="flex items-center gap-2 max-w-md mx-auto">
-                <button
-                  onClick={() => setDoubtStatus(prev => {
-                    const updated = [...prev];
-                    updated[currentIndex] = !updated[currentIndex];
-                    return updated;
-                  })}
-                  className={`flex-1 py-3 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
-                    doubtStatus[currentIndex]
-                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
-                      : theme === 'dark'
-                        ? 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  🤔 Ragu
-                </button>
-
-                <button
-                  onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-                  disabled={currentIndex === 0}
-                  className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl border text-xs font-bold transition-all disabled:opacity-40 cursor-pointer ${
-                    theme === 'dark'
-                      ? 'bg-slate-900 border-slate-800 text-slate-350 hover:bg-slate-800'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  ←
-                </button>
-
-                {!isRevealed[currentIndex] && (
-                  <button
-                    onClick={checkAnswerNow}
-                    disabled={userAnswers[currentIndex] === null}
-                    className="flex-1 py-3 px-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/15 transition-all duration-200 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer text-center"
-                  >
-                    ✓ Cek
-                  </button>
-                )}
-
-                {currentIndex === currentQuiz.length - 1 ? (
-                  <button
-                    onClick={finishQuiz}
-                    className="flex-1 py-3 px-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/10 transition-all cursor-pointer text-center"
-                  >
-                    Selesai
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setCurrentIndex(prev => Math.min(currentQuiz.length - 1, prev + 1))}
-                    className="flex-1 py-3 px-2 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/10 transition-all duration-200 cursor-pointer text-center"
-                  >
-                    Lanjut →
-                  </button>
-                )}
-              </div>
-            </div>
+            <MobileBottomActionBar
+              theme={theme}
+              currentIndex={currentIndex}
+              totalQuestions={currentQuiz.length}
+              isDoubt={doubtStatus[currentIndex]}
+              isRevealed={isRevealed[currentIndex]}
+              hasAnswer={userAnswers[currentIndex] !== null}
+              onDoubtToggle={() => setDoubtStatus(prev => { const u = [...prev]; u[currentIndex] = !u[currentIndex]; return u; })}
+              onPrev={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+              onNext={() => setCurrentIndex(prev => Math.min(currentQuiz.length - 1, prev + 1))}
+              onCheck={() => checkAnswerNow({} as any)}
+              onFinish={() => finishQuiz()}
+            />
           </div>
         )}
 
@@ -7412,40 +6838,11 @@ export default function App() {
       onSubmit={submitReport}
     />
 
-    {/* Achievement Notification Popup */}
-    <div className="fixed top-20 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
-      <AnimatePresence>
-        {achievements.newlyUnlocked.map((ach, index) => (
-          <motion.div
-            key={`${ach.id}-${index}`}
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 50, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className={`pointer-events-auto p-4 rounded-2xl border shadow-2xl flex items-center gap-4 w-72 md:w-80 ${getRarityBg(ach.rarity, theme === 'dark')} bg-white dark:bg-slate-900/95 backdrop-blur-md`}
-            onClick={() => {
-              // Dismiss just this one by filtering it out, or dismiss all
-              achievements.dismissNew();
-            }}
-          >
-            <div className="text-4xl">{ach.icon}</div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-black uppercase tracking-wider text-amber-500 mb-0.5 flex items-center gap-1">
-                <span>ACHIEVEMENT UNLOCKED</span>
-              </div>
-              <h4 className={`text-sm font-black truncate ${getRarityColor(ach.rarity, theme === 'dark')}`}>{ach.title}</h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{ach.description}</p>
-              <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                +{ach.xpReward} XP
-              </div>
-            </div>
-            {ach.rarity === 'legendary' && (
-              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
-            )}
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
+    <AchievementPopup
+      theme={theme}
+      achievements={achievements.newlyUnlocked}
+      onDismiss={() => achievements.dismissNew()}
+    />
 
     <MoveQuizModal
       theme={theme}
@@ -7455,148 +6852,17 @@ export default function App() {
       onClose={() => setMoveQuizModal(null)}
     />
 
-      {/* === POPUP CATATAN SOAL === */}
-      {notePopupOpen && notePopupOpen.isOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          onClick={() => setNotePopupOpen(null)}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          
-          {/* Popup Card */}
-          <div
-            className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-              border: theme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(226 232 240)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: notePopupOpen.isCorrect ? 'rgb(34 197 94 / 0.15)' : 'rgb(245 158 11 / 0.15)' }}
-                >
-                  <StickyNote
-                    className="w-4 h-4"
-                    style={{ color: notePopupOpen.isCorrect ? '#22c55e' : '#f59e0b' }}
-                  />
-                </div>
-                <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}>
-                  {answerNotes[notePopupOpen.questionText] ? 'Edit Catatan' : 'Tambah Catatan'}
-                </h3>
-              </div>
-              <button
-                onClick={() => setNotePopupOpen(null)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-                style={{
-                  color: theme === 'dark' ? '#94a3b8' : '#64748b',
-                  backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
-                }}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Question Context */}
-            <div
-              className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3"
-              style={{
-                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
-                color: theme === 'dark' ? '#cbd5e1' : '#475569',
-              }}
-            >
-              <span className="font-semibold" style={{ color: theme === 'dark' ? '#e2e8f0' : '#334155' }}>Soal:</span>{' '}
-              {notePopupOpen.questionText.replace(/<[^>]*>/g, '').length > 200
-                ? notePopupOpen.questionText.replace(/<[^>]*>/g, '').substring(0, 200) + '...'
-                : notePopupOpen.questionText.replace(/<[^>]*>/g, '')}
-            </div>
-
-            {/* Answer Info (only for wrong answers) */}
-            {!notePopupOpen.isCorrect && (
-              <div className="flex gap-2">
-                <div
-                  className="flex-1 rounded-xl p-3 text-xs"
-                  style={{
-                    backgroundColor: 'rgb(239 68 68 / 0.08)',
-                    border: '1px solid rgb(239 68 68 / 0.2)',
-                  }}
-                >
-                  <span className="font-semibold text-red-400">Jawabanmu:</span>
-                  <p className="mt-1" style={{ color: theme === 'dark' ? '#fca5a5' : '#dc2626' }}>
-                    {notePopupOpen.userAnswer || '-'}
-                  </p>
-                </div>
-                <div
-                  className="flex-1 rounded-xl p-3 text-xs"
-                  style={{
-                    backgroundColor: 'rgb(34 197 94 / 0.08)',
-                    border: '1px solid rgb(34 197 94 / 0.2)',
-                  }}
-                >
-                  <span className="font-semibold text-green-400">Jawaban Benar:</span>
-                  <p className="mt-1" style={{ color: theme === 'dark' ? '#86efac' : '#16a34a' }}>
-                    {notePopupOpen.correctAnswer || '-'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Note Textarea */}
-            <textarea
-              value={noteInput}
-              onChange={(e) => setNoteInput(e.target.value)}
-              placeholder="Tulis catatan belajar di sini... (misal: konsep yang perlu diingat, tips mnemonik, referensi halaman buku, dll)"
-              rows={5}
-              className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all"
-              style={{
-                backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
-                color: theme === 'dark' ? '#e2e8f0' : '#1e293b',
-                border: `1px solid ${theme === 'dark' ? 'rgb(51 65 85)' : 'rgb(226 232 240)'}`,
-              }}
-              autoFocus
-            />
-
-            {/* Footer Buttons */}
-            <div className="flex items-center justify-between gap-2">
-              {answerNotes[notePopupOpen.questionText] ? (
-                <button
-                  onClick={() => deleteAnswerNote(notePopupOpen.questionText)}
-                  disabled={noteSaving}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Hapus
-                </button>
-              ) : (
-                <div />
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setNotePopupOpen(null)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                  style={{
-                    color: theme === 'dark' ? '#94a3b8' : '#64748b',
-                    backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
-                  }}
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={() => saveAnswerNote(notePopupOpen.questionText, noteInput)}
-                  disabled={noteSaving || !noteInput.trim()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  {noteSaving ? 'Menyimpan...' : 'Simpan'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    <AnswerNotePopup
+      theme={theme}
+      data={notePopupOpen}
+      noteInput={noteInput}
+      onNoteInputChange={setNoteInput}
+      isSaving={noteSaving}
+      existingNote={notePopupOpen ? answerNotes[notePopupOpen.questionText] : undefined}
+      onClose={() => setNotePopupOpen(null)}
+      onSave={saveAnswerNote}
+      onDelete={deleteAnswerNote}
+    />
 
     </div>
   );
