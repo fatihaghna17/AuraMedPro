@@ -850,10 +850,16 @@ export default function App() {
   };
 
   // Trigger floating XP indicator
-  const triggerFloatingXP = (text: string, isBenar: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2 + (Math.random() - 0.5) * 40;
-    const y = rect.top - 15;
+  const triggerFloatingXP = (text: string, isBenar: boolean, event?: React.MouseEvent<HTMLButtonElement>) => {
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 3;
+    if (event?.currentTarget) {
+      try {
+        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+        x = rect.left + rect.width / 2 + (Math.random() - 0.5) * 40;
+        y = rect.top - 15;
+      } catch {}
+    }
     setFloatingXP({ id: Date.now(), text, isBenar, x, y });
     setTimeout(() => setFloatingXP(null), 1500);
   };
