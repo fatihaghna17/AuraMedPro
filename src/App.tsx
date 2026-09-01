@@ -85,6 +85,7 @@ import {
 } from './utils/quizUtils';
 import { useQuizState } from './hooks/useQuizState';
 import { useSRS } from './hooks/useSRS';
+import { useToast } from './hooks/useToast';
 import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
@@ -390,9 +391,9 @@ export default function App() {
 
   // Floating text / XP notification
   const [floatingXP, setFloatingXP] = useState<{ id: number; text: string; isBenar: boolean; x: number; y: number } | null>(null);
-  const [toastMessage, setToastMessage] = useState<{ text: string; icon?: string } | null>(null);
 
   // === NOTIFIKASI ===
+  const { toastMessage, triggerToast } = useToast();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
   const [notifCount, setNotifCount] = useState(0);
@@ -426,7 +427,7 @@ export default function App() {
   // Request push notification permission
   const requestPushPermission = useCallback(async () => {
     if (!('Notification' in window)) {
-      setToastMessage({ text: 'Browser ini tidak mendukung notifikasi', icon: '⚠️' });
+      triggerToast('Browser ini tidak mendukung notifikasi', '⚠️');
       return;
     }
     if (Notification.permission === 'granted') {
@@ -434,7 +435,7 @@ export default function App() {
       return;
     }
     if (Notification.permission === 'denied') {
-      setToastMessage({ text: 'Izin notifikasi ditolak. Aktifkan di Settings browser.', icon: '⚠️' });
+      triggerToast('Izin notifikasi ditolak. Aktifkan di Settings browser.', '⚠️');
       localStorage.setItem('auramed_push', 'dismissed');
       setPushEnabled(true);
       return;
@@ -442,8 +443,8 @@ export default function App() {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       setPushEnabled(true);
-      setToastMessage({ text: 'Notifikasi device aktif!', icon: '🔔' });
-      setTimeout(() => setToastMessage(null), 3000);
+      triggerToast('Notifikasi device aktif!', '🔔');
+      
     } else {
       localStorage.setItem('auramed_push', 'dismissed');
       setPushEnabled(true);
@@ -827,12 +828,6 @@ export default function App() {
   }, [currentUser, fetchNotifications]);
 
   // Helper to show custom dynamic toast
-  const triggerToast = (text: string, icon = 'ℹ️') => {
-    setToastMessage({ text, icon });
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  };
 
   // Trigger floating XP indicator
   const triggerFloatingXP = (text: string, isBenar: boolean, event?: React.MouseEvent<HTMLButtonElement>) => {
