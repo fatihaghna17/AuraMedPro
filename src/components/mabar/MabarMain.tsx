@@ -17,9 +17,16 @@ interface MabarMainProps {
   currentUser: any;
   availableTopics: string[];
   questionDatabase?: any;
+  initialRoomCode?: string;
 }
 
-export default function MabarMain({ currentUser, availableTopics, questionDatabase }: MabarMainProps) {
+export default function MabarMain({ currentUser, availableTopics, questionDatabase, initialRoomCode }: MabarMainProps) {
+    useEffect(() => {
+    if (initialRoomCode) {
+      handleJoinSubmit(initialRoomCode);
+    }
+  }, [initialRoomCode]);
+
   const [view, setView] = useState<'lobby' | 'create' | 'join' | 'waiting' | 'host' | 'player' | 'podium' | 'history' | 'stats'>('lobby');
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);

@@ -29,7 +29,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
   ];
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden flex justify-around items-center h-16 border-t transition-colors ${
+    <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden flex items-center h-16 border-t overflow-x-auto snap-x px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors ${
       theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-655'
     }`}>
       {items.map((item) => {
@@ -39,7 +39,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
-            className={`relative flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${
+            className={`relative shrink-0 flex flex-col items-center justify-center w-[16%] min-w-[60px] snap-center h-full gap-1 transition-all ${
               isActive
                 ? 'text-indigo-500 dark:text-indigo-400 scale-105'
                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
