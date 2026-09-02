@@ -1,6 +1,6 @@
 import {
   Activity, Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Flame, LogOut
-} from 'lucide-react';
+, Gamepad2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -26,6 +26,7 @@ export default function SidebarNav({
   theme, activeTab, srsDueCount, currentStreak, streakFreezeLeft, username, userLevel, isAdmin, onTabChange, onLogout,
 }: SidebarNavProps) {
   const items: NavItem[] = [
+    { id: 'mabar', label: 'Mabar / Battle', icon: Gamepad2 },
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
     { id: 'new', label: 'Baru', icon: PlusCircle },

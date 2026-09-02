@@ -1,4 +1,4 @@
-import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle , Gamepad2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -17,6 +17,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTabChange }: BottomNavProps) {
   const items: NavItem[] = [
+    { id: 'mabar', label: 'Mabar', icon: Gamepad2 },
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
     { id: 'new', label: 'Baru', icon: PlusCircle },

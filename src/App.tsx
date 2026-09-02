@@ -98,6 +98,7 @@ import { SetupProfileTab } from './components/tabs/SetupProfileTab';
 import { SetupSRSTab } from './components/tabs/SetupSRSTab';
 import { SetupNotesTab } from './components/tabs/SetupNotesTab';
 import { QuizScreen } from './components/screens/QuizScreen';
+import MabarMain from "./components/mabar/MabarMain";
 import { ResultScreen } from './components/screens/ResultScreen';
 import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
@@ -2938,6 +2939,13 @@ export default function App() {
             {dashboardTab === 'srs' && <SetupSRSTab theme={theme} srs={srs} triggerToast={triggerToast} srsAnswerRevealed={srsAnswerRevealed} setSrsAnswerRevealed={setSrsAnswerRevealed} srsPendingRating={srsPendingRating} setSrsPendingRating={setSrsPendingRating} />}
 
             {/* Box: Study Room Dashboard */}
+            {dashboardTab === 'mabar' && (
+              <MabarMain 
+                currentUser={currentUser} 
+                availableTopics={Object.keys(globalDatabases)} 
+              />
+            )}
+
             {dashboardTab === 'notes' && <SetupNotesTab theme={theme} studyRoom={studyRoom} triggerToast={triggerToast} setEditingNote={setEditingNote} setNoteRefQuestion={setNoteRefQuestion} setIsNoteModalOpen={setIsNoteModalOpen} setBankFilter={setBankFilter} setCurrentQuiz={setCurrentQuiz} setUserAnswers={setUserAnswers} setDoubtStatus={setDoubtStatus} setIsRevealed={setIsRevealed} setCurrentIndex={setCurrentIndex} setQuizSecondsLeft={setQuizSecondsLeft} setXpHistory={setXpHistory} setOpenReviewIndices={setOpenReviewIndices} setUnlockedHints={setUnlockedHints} setHasSubmittedLeaderboard={setHasSubmittedLeaderboard} setLastQuizScore={setLastQuizScore} setIsDailyChallenge={setIsDailyChallenge} setQuizTimerActive={setQuizTimerActive} setScreen={setScreen} setShowSidebar={setShowSidebar} bankFilter={bankFilter} startBookmarkPractice={startBookmarkPractice} userXP={userXP} activeQuizSessionIdRef={activeQuizSessionIdRef} hasRecordedLeaderboard={hasRecordedLeaderboard} />}
 
             <NoteEditorModal
