@@ -162,6 +162,33 @@ export default function App() {
 
   // Sync XP and Streak back to Supabase profiles when changed
   const { toastMessage, triggerToast } = useToast();
+  const [guestRoomCode, setGuestRoomCode] = useState('');
+  
+  const handleGuestJoin = async (nickname: string, roomCode: string) => {
+    if (!nickname || !roomCode) {
+      triggerToast('Nama dan Kode Room wajib diisi!', '⚠️');
+      return;
+    }
+    
+    triggerToast('Mendaftarkan guest...', '⏳');
+    const guestEmail = `guest_${Date.now()}_${Math.floor(Math.random()*1000)}@guest.auramed.id`;
+    const { data, error } = await supabase.auth.signUp({
+      email: guestEmail,
+      password: 'GuestPassword123!',
+      options: {
+        data: { username: nickname }
+      }
+    });
+    
+    if (error) {
+      triggerToast('Gagal masuk guest: ' + error.message, '❌');
+      return;
+    }
+    
+    setGuestRoomCode(roomCode);
+    setDashboardTab('mabar');
+    triggerToast('Berhasil join! Tunggu sebentar...', '✅');
+  };
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [pendingSessions, setPendingSessions] = useState<any[]>([]);
   const [globalCustomFolders, setGlobalCustomFolders] = useState<string[]>([]);
@@ -2359,6 +2386,7 @@ export default function App() {
           onEmailChange={setEmailInput}
           passwordValue={passwordInput}
           onPasswordChange={setPasswordInput}
+          onGuestJoin={handleGuestJoin}
         />
       ) : (
         <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-brand-bg text-brand-text' : 'bg-slate-50 text-slate-900'}`}>
@@ -2949,6 +2977,7 @@ export default function App() {
                 currentUser={currentUser} 
                 availableTopics={Object.keys(questionDatabase)} 
                 questionDatabase={questionDatabase} 
+                initialRoomCode={guestRoomCode} 
               />
             )}
 
