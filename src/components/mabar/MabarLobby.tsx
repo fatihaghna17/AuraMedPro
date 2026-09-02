@@ -3,16 +3,17 @@ import { motion } from 'motion/react';
 
 interface MabarLobbyProps {
   onNavigate: (view: 'create' | 'join' | 'history' | 'stats') => void;
+  onJoin: (code: string) => void;
   
 }
 
-export default function MabarLobby({ onNavigate, }: MabarLobbyProps) {
+export default function MabarLobby({ onNavigate, onJoin }: MabarLobbyProps) {
   const [joinCode, setJoinCode] = useState('');
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (joinCode.length === 6) {
-      window.location.href = `/mabar?view=waiting&roomId=${joinCode.toUpperCase()}`; // Wait, we need to join first. Let's just handle it in parent.
+      onJoin(joinCode.toUpperCase());
     }
   };
 
