@@ -28,9 +28,21 @@ export default function MabarGameHost({
   const startQuestion = async (idx: number) => {
     let qData = null;
     if (questionDatabase && questionDatabase[room.topic]) {
-      // In a real app we would fetch the specific question_id from mabar_room_questions
-      // For now, we will just take the question at index idx from the bank
-      qData = questionDatabase[room.topic][idx]; 
+      // Fetch the actual question_id (which is the original index) from DB
+      const { data: rq } = await supabase
+        .from('mabar_room_questions')
+        .select('question_id')
+        .eq('room_id', room.id)
+        .eq('order_index', idx)
+        .single();
+        
+      if (rq && rq.question_id) {
+        const originalIndex = parseInt(rq.question_id, 10);
+        qData = questionDatabase[room.topic][originalIndex];
+      } else {
+        // Fallback
+        qData = questionDatabase[room.topic][idx]; 
+      }
     }
     
     setCurrentQuestionData(qData);
@@ -50,7 +62,7 @@ export default function MabarGameHost({
           event: 'question_start',
           payload: {
             questionIndex: idx,
-            question: { text: qData?.text || 'Soal tidak ditemukan', options: qData?.options || [] }
+            question: { text: qData?.pertanyaan || qData?.text || 'Soal tidak ditemukan', options: qData?.pilihan || qData?.options || [] }
           }
         });
         supabase.removeChannel(channel);
@@ -94,7 +106,7 @@ export default function MabarGameHost({
           type: 'broadcast',
           event: 'question_end',
           payload: {
-            correctAnswer: currentQuestionData?.correctAnswer || currentQuestionData?.options?.find((o:any)=>o.isCorrect)?.text || ''
+            correctAnswer: currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || ''
           }
         });
         supabase.removeChannel(channel);
@@ -133,7 +145,7 @@ export default function MabarGameHost({
             <p className="text-gray-500 text-xl">Menunggu pemain menjawab...</p>
             {currentQuestionData && (
               <div className="mt-8 p-4 bg-gray-100 rounded-lg max-w-xl text-left">
-                <p className="font-bold text-gray-700">{currentQuestionData.text}</p>
+                <p className="font-bold text-gray-700">{currentQuestionData.pertanyaan || currentQuestionData.text}</p>
               </div>
             )}
           </motion.div>

@@ -49,19 +49,23 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
       
       // Setup Questions from Bank
       if (questionDatabase && questionDatabase[params.topic]) {
-        let bankQuestions = [...questionDatabase[params.topic]];
-        // Shuffle
-        bankQuestions.sort(() => Math.random() - 0.5);
+        // Create array of original indices
+        let indices = Array.from({ length: questionDatabase[params.topic].length }, (_, i) => i);
+        // Shuffle indices
+        indices.sort(() => Math.random() - 0.5);
         // Slice
-        bankQuestions = bankQuestions.slice(0, params.totalQuestions);
+        indices = indices.slice(0, params.totalQuestions);
         
         // Map to DB insert format
-        const roomQuestions = bankQuestions.map((q, idx) => ({
-          room_id: newRoom.id,
-          question_id: q.id || `temp-${idx}`,
-          order_index: idx,
-          correct_answer: q.correctAnswer || (q.options?.find((o:any)=>o.isCorrect)?.text) || ''
-        }));
+        const roomQuestions = indices.map((originalIdx, idx) => {
+          const q = questionDatabase[params.topic][originalIdx];
+          return {
+            room_id: newRoom.id,
+            question_id: originalIdx.toString(), // Save original index as question_id
+            order_index: idx,
+            correct_answer: q.jawaban_benar || q.correctAnswer || ''
+          };
+        });
         
         if (roomQuestions.length > 0) {
            await supabase.from('mabar_room_questions').insert(roomQuestions);
