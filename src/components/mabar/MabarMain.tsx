@@ -126,6 +126,7 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
       
       {view === 'lobby' && (
         <MabarLobby 
+          onJoin={handleJoinSubmit}
           onNavigate={(v) => {
             if (v === 'join') {
               const code = prompt("Masukkan kode room:");
