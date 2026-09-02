@@ -46,7 +46,7 @@ export async function findOrCreateQuickMatch(
     topic: topic,
     totalQuestions: 10,
     timeLimitPerQuestion: 15,
-    maxPlayers: 2 // 1v1
+    maxPlayers: 10 // 1v1
   });
 
   return newRoom;

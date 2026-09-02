@@ -20,6 +20,7 @@ export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics }:
   const [topic, setTopic] = useState(availableTopics[0] || '');
   const [totalQuestions, setTotalQuestions] = useState(10);
   const [timeLimit, setTimeLimit] = useState(15);
+  const [maxPlayers, setMaxPlayers] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +33,7 @@ export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics }:
         topic,
         totalQuestions,
         timeLimitPerQuestion: timeLimit,
-        maxPlayers: 50
+        maxPlayers: maxPlayers
       });
     } catch (e) {
       console.error(e);
@@ -77,6 +78,17 @@ export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics }:
             {[10, 15, 20, 30].map(num => (
               <button key={num} type="button" onClick={() => setTimeLimit(num)} className={`flex-1 py-2 rounded-lg font-bold border-2 ${timeLimit === num ? 'border-gray-800 bg-gray-800 text-white' : 'border-gray-200 text-gray-600'}`}>
                 {num}s
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Maksimal Pemain / Tim</label>
+          <div className="flex gap-2">
+            {[2, 5, 10, 20, 50].map(num => (
+              <button key={num} type="button" onClick={() => setMaxPlayers(num)} className={`flex-1 py-2 rounded-lg font-bold border-2 ${maxPlayers === num ? 'border-gray-800 bg-gray-800 text-white' : 'border-gray-200 text-gray-600'}`}>
+                {num}
               </button>
             ))}
           </div>

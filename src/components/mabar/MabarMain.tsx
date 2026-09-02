@@ -8,14 +8,16 @@ import MabarPodium from './MabarPodium';
 import { createRoom, joinRoom } from '../../lib/mabar/mabarRoomManager';
 import { useMabarRoom } from '../../hooks/mabar/useMabarRoom';
 import { useMabarMatchmaking } from '../../hooks/mabar/useMabarMatchmaking';
+import { supabase } from '../../supabaseClient';
 import type { MabarGameMode, MabarSubMode, MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 
 interface MabarMainProps {
   currentUser: any;
   availableTopics: string[];
+  globalDatabases?: any;
 }
 
-export default function MabarMain({ currentUser, availableTopics }: MabarMainProps) {
+export default function MabarMain({ currentUser, availableTopics, globalDatabases }: MabarMainProps) {
   const [view, setView] = useState<'lobby' | 'create' | 'join' | 'waiting' | 'host' | 'player' | 'podium' | 'history' | 'stats'>('lobby');
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
@@ -48,6 +50,28 @@ export default function MabarMain({ currentUser, availableTopics }: MabarMainPro
         hostAvatarUrl: '',
         ...params
       });
+      
+      // Setup Questions from Bank
+      if (globalDatabases && globalDatabases[params.topic]) {
+        let bankQuestions = [...globalDatabases[params.topic]];
+        // Shuffle
+        bankQuestions.sort(() => Math.random() - 0.5);
+        // Slice
+        bankQuestions = bankQuestions.slice(0, params.totalQuestions);
+        
+        // Map to DB insert format
+        const roomQuestions = bankQuestions.map((q, idx) => ({
+          room_id: newRoom.id,
+          question_id: q.id || `temp-${idx}`,
+          order_index: idx,
+          correct_answer: q.correctAnswer || (q.options?.find((o:any)=>o.isCorrect)?.text) || ''
+        }));
+        
+        if (roomQuestions.length > 0) {
+           await supabase.from('mabar_room_questions').insert(roomQuestions);
+        }
+      }
+
       setActiveRoomId(newRoom.id);
       setIsHost(true);
       setView('waiting');
@@ -71,9 +95,11 @@ export default function MabarMain({ currentUser, availableTopics }: MabarMainPro
     }
   };
 
-  const startGame = () => {
-    // Should call API to start game and broadcast to players
-    setView('host');
+  const startGame = async () => {
+    if (room) {
+      await supabase.from('mabar_rooms').update({ status: 'in_progress', started_at: new Date().toISOString() }).eq('id', room.id);
+      setView('host');
+    }
   };
 
   const handleGameEnd = (result: any) => {
@@ -134,13 +160,9 @@ export default function MabarMain({ currentUser, availableTopics }: MabarMainPro
 
       {view === 'host' && room && isHost && (
         <MabarGameHost 
-          roomId={room.code} 
-          questionIndex={room.current_question_index}
-          totalQuestions={room.total_questions}
-          timeRemaining={room.time_limit_per_question}
-          isQuestionActive={true}
+          room={room}
           scores={players}
-          onNextQuestion={() => {}}
+          globalDatabases={globalDatabases}
           onFinishGame={() => setView('podium')}
         />
       )}

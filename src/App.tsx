@@ -2943,6 +2943,7 @@ export default function App() {
               <MabarMain 
                 currentUser={currentUser} 
                 availableTopics={Object.keys(globalDatabases)} 
+                globalDatabases={globalDatabases} 
               />
             )}
 
