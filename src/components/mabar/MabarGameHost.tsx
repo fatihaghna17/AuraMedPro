@@ -8,14 +8,14 @@ import { broadcastToRoom } from '../../lib/mabar/mabarRealtime';
 interface MabarGameHostProps {
   room: MabarRoom;
   scores: MabarRoomPlayer[];
-  globalDatabases: any;
+  questionDatabase: any;
   onFinishGame: () => void;
 }
 
 export default function MabarGameHost({
   room,
   scores,
-  globalDatabases,
+  questionDatabase,
   onFinishGame
 }: MabarGameHostProps) {
   const [questionIndex, setQuestionIndex] = useState(room.current_question_index);
@@ -27,10 +27,10 @@ export default function MabarGameHost({
 
   const startQuestion = async (idx: number) => {
     let qData = null;
-    if (globalDatabases && globalDatabases[room.topic]) {
+    if (questionDatabase && questionDatabase[room.topic]) {
       // In a real app we would fetch the specific question_id from mabar_room_questions
       // For now, we will just take the question at index idx from the bank
-      qData = globalDatabases[room.topic][idx]; 
+      qData = questionDatabase[room.topic][idx]; 
     }
     
     setCurrentQuestionData(qData);

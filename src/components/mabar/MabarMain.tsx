@@ -14,10 +14,10 @@ import type { MabarGameMode, MabarSubMode, MabarRoomPlayer } from '../../lib/mab
 interface MabarMainProps {
   currentUser: any;
   availableTopics: string[];
-  globalDatabases?: any;
+  questionDatabase?: any;
 }
 
-export default function MabarMain({ currentUser, availableTopics, globalDatabases }: MabarMainProps) {
+export default function MabarMain({ currentUser, availableTopics, questionDatabase }: MabarMainProps) {
   const [view, setView] = useState<'lobby' | 'create' | 'join' | 'waiting' | 'host' | 'player' | 'podium' | 'history' | 'stats'>('lobby');
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
@@ -52,8 +52,8 @@ export default function MabarMain({ currentUser, availableTopics, globalDatabase
       });
       
       // Setup Questions from Bank
-      if (globalDatabases && globalDatabases[params.topic]) {
-        let bankQuestions = [...globalDatabases[params.topic]];
+      if (questionDatabase && questionDatabase[params.topic]) {
+        let bankQuestions = [...questionDatabase[params.topic]];
         // Shuffle
         bankQuestions.sort(() => Math.random() - 0.5);
         // Slice
@@ -162,7 +162,7 @@ export default function MabarMain({ currentUser, availableTopics, globalDatabase
         <MabarGameHost 
           room={room}
           scores={players}
-          globalDatabases={globalDatabases}
+          questionDatabase={questionDatabase}
           onFinishGame={() => setView('podium')}
         />
       )}

@@ -2942,8 +2942,8 @@ export default function App() {
             {dashboardTab === 'mabar' && (
               <MabarMain 
                 currentUser={currentUser} 
-                availableTopics={Object.keys(globalDatabases)} 
-                globalDatabases={globalDatabases} 
+                availableTopics={Object.keys(questionDatabase)} 
+                questionDatabase={questionDatabase} 
               />
             )}
 
