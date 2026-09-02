@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
+import { getCachedQuestions, setCachedQuestions } from '../utils/questionCache';
 
 export function useAuth({
   triggerToast,
@@ -266,42 +267,50 @@ export function useAuth({
             : row.questions_json;
             
           if (questions && !Array.isArray(questions) && questions.r2_key) {
-            // Construct URL yang benar menggunakan r2_key
-            const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
-            const correctUrl = `${R2_BASE}/${questions.r2_key}`;
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-              const res = await fetch(correctUrl, { signal: controller.signal });
-              clearTimeout(timeoutId);
-              if (res.ok) {
-                const fetched = await res.json();
-                if (Array.isArray(fetched) && fetched.length > 0) {
-                  const r2Key = questions.r2_key;
-                  const oldUrl = questions.r2_url;
-                  questions = fetched;
-                  // Auto-migrate: perbaiki r2_url di Supabase jika URL lama salah
-                  if (oldUrl !== correctUrl) {
-                    supabase.from('question_banks')
-                      .update({ questions_json: { r2_url: correctUrl, r2_key: r2Key } })
-                      .eq('name', row.name)
-                      .then(() => console.log('Auto-migrated R2 URL for:', row.name));
+            const r2Key = questions.r2_key;
+            // 1. Cek cache lokal browser terlebih dahulu (0ms network)
+            const cached = await getCachedQuestions(r2Key);
+            if (cached && Array.isArray(cached) && cached.length > 0) {
+              questions = cached;
+            } else {
+              // 2. Fetch dari Cloudflare R2 jika belum ada di cache
+              const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
+              const correctUrl = `${R2_BASE}/${r2Key}`;
+              try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                const res = await fetch(correctUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                  const fetched = await res.json();
+                  if (Array.isArray(fetched) && fetched.length > 0) {
+                    const oldUrl = questions.r2_url;
+                    questions = fetched;
+                    // Simpan ke cache browser untuk kunjungan berikutnya
+                    setCachedQuestions(r2Key, fetched);
+                    // Auto-migrate: perbaiki r2_url di Supabase jika URL lama salah
+                    if (oldUrl !== correctUrl) {
+                      supabase.from('question_banks')
+                        .update({ questions_json: { r2_url: correctUrl, r2_key: r2Key } })
+                        .eq('name', row.name)
+                        .then(() => console.log('Auto-migrated R2 URL for:', row.name));
+                    }
+                  } else {
+                    console.warn('R2 returned empty/invalid data for:', row.name);
+                    questions = [];
                   }
                 } else {
-                  console.warn('R2 returned empty/invalid data for:', row.name);
+                  console.warn('R2 fetch failed (status', res.status, ') for:', row.name);
                   questions = [];
                 }
-              } else {
-                console.warn('R2 fetch failed (status', res.status, ') for:', row.name);
+              } catch (err: any) {
+                if (err.name === 'AbortError') {
+                  console.warn('R2 fetch timed out (10s) for:', row.name);
+                } else {
+                  console.error('Failed to fetch from R2 for', row.name, ':', err);
+                }
                 questions = [];
               }
-            } catch (err: any) {
-              if (err.name === 'AbortError') {
-                console.warn('R2 fetch timed out (10s) for:', row.name);
-              } else {
-                console.error('Failed to fetch from R2 for', row.name, ':', err);
-              }
-              questions = [];
             }
           }
           return { row, questions };

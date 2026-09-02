@@ -4,7 +4,6 @@ import * as jsYaml from 'js-yaml';
 import confetti from 'canvas-confetti';
 import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
-import { DashboardCharts } from './components/DashboardCharts';
 import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import {
   CheckCircle2,
@@ -90,21 +89,23 @@ import { useAuth } from './hooks/useAuth';
 import { useNotifications } from './hooks/useNotifications';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import { useAnswerNotes } from './hooks/useAnswerNotes';
-import { SetupReportsTab } from './components/tabs/SetupReportsTab';
 import { SetupHomeTab } from './components/tabs/SetupHomeTab';
-import { SetupBanksTab } from './components/tabs/SetupBanksTab';
-import { SetupNewQuizTab } from './components/tabs/SetupNewQuizTab';
-import { SetupProfileTab } from './components/tabs/SetupProfileTab';
-import { SetupSRSTab } from './components/tabs/SetupSRSTab';
-import { SetupNotesTab } from './components/tabs/SetupNotesTab';
 import { QuizScreen } from './components/screens/QuizScreen';
-import MabarMain from "./components/mabar/MabarMain";
 import { ResultScreen } from './components/screens/ResultScreen';
 import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achievements';
-import { OnboardingTour } from './components/OnboardingTour';
+
+// Lazy loaded heavy components & secondary screens
+const DashboardCharts = React.lazy(() => import('./components/DashboardCharts').then(m => ({ default: m.DashboardCharts })));
+const MabarMain = React.lazy(() => import("./components/mabar/MabarMain"));
+const SetupReportsTab = React.lazy(() => import('./components/tabs/SetupReportsTab').then(m => ({ default: m.SetupReportsTab })));
+const SetupBanksTab = React.lazy(() => import('./components/tabs/SetupBanksTab').then(m => ({ default: m.SetupBanksTab })));
+const SetupNewQuizTab = React.lazy(() => import('./components/tabs/SetupNewQuizTab').then(m => ({ default: m.SetupNewQuizTab })));
+const SetupProfileTab = React.lazy(() => import('./components/tabs/SetupProfileTab').then(m => ({ default: m.SetupProfileTab })));
+const SetupSRSTab = React.lazy(() => import('./components/tabs/SetupSRSTab').then(m => ({ default: m.SetupSRSTab })));
+const SetupNotesTab = React.lazy(() => import('./components/tabs/SetupNotesTab').then(m => ({ default: m.SetupNotesTab })));
 import LightboxModal from './components/LightboxModal';
 import IosInstallModal from './components/IosInstallModal';
 import SkeletonLoader from './components/SkeletonLoader';
@@ -2451,7 +2452,11 @@ export default function App() {
         {/* === SETUP SCREEN (DASHBOARD REDESIGN) === */}
         {screen === 'setup' && (
           <div className="space-y-6 animate-fade-in pb-16 lg:pb-0">
-            
+            <React.Suspense fallback={
+              <div className="flex items-center justify-center p-12 min-h-[300px]">
+                <div className="w-8 h-8 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+              </div>
+            }>
             {/* 🏠 TAB 1: BERANDA */}
             {dashboardTab === 'home' && <SetupHomeTab theme={theme} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} />}
 
@@ -3027,6 +3032,7 @@ export default function App() {
                 <DashboardCharts quizHistory={quizHistory} theme={theme} />
               </div>
             )}
+            </React.Suspense>
           </div>
         )}
 
