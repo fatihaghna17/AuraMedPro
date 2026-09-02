@@ -140,14 +140,21 @@ export default function MabarGameHost({
 
       <div className="flex-1 flex flex-col items-center justify-center">
         {isQuestionActive ? (
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
-            <h1 className="text-8xl font-black text-gray-900 mb-4">{timeRemaining}</h1>
-            <p className="text-gray-500 text-xl">Menunggu pemain menjawab...</p>
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center flex flex-col items-center gap-8 w-full px-4">
             {currentQuestionData && (
-              <div className="mt-8 p-4 bg-gray-100 rounded-lg max-w-xl text-left">
-                <p className="font-bold text-gray-700">{currentQuestionData.pertanyaan || currentQuestionData.text}</p>
+              <div className="w-full max-w-4xl bg-white border-2 border-blue-100 p-8 md:p-12 rounded-3xl shadow-sm text-center">
+                <h2 className="text-3xl md:text-5xl font-black text-gray-800 leading-tight">
+                  {currentQuestionData.pertanyaan || currentQuestionData.text}
+                </h2>
               </div>
             )}
+            
+            <div className="flex flex-col items-center">
+              <div className="w-32 h-32 rounded-full bg-gray-50 border-8 border-blue-500 flex items-center justify-center shadow-inner">
+                <h1 className="text-6xl font-black text-blue-600">{timeRemaining}</h1>
+              </div>
+              <p className="text-gray-500 font-bold mt-4 tracking-wider uppercase">Menunggu pemain menjawab...</p>
+            </div>
           </motion.div>
         ) : (
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
