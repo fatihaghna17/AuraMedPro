@@ -140,7 +140,8 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
         <MabarCreateRoom 
           onCancel={() => setView('lobby')} 
           onSubmit={handleCreateSubmit} 
-          availableTopics={availableTopics} 
+          availableTopics={availableTopics}
+          questionDatabase={questionDatabase} 
         />
       )}
 

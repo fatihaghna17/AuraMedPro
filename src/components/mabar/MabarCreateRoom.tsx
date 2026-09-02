@@ -13,9 +13,10 @@ interface MabarCreateRoomProps {
     maxPlayers: number;
   }) => Promise<void>;
   availableTopics: string[];
+  questionDatabase?: any;
 }
 
-export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics }: MabarCreateRoomProps) {
+export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics, questionDatabase }: MabarCreateRoomProps) {
   const [mode, setMode] = useState<MabarGameMode>('kahoot');
   const [topic, setTopic] = useState(availableTopics[0] || '');
   const [totalQuestions, setTotalQuestions] = useState(10);
@@ -55,9 +56,15 @@ export default function MabarCreateRoom({ onCancel, onSubmit, availableTopics }:
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Topik Kuis</label>
-          <select value={topic} onChange={e => setTopic(e.target.value)} className="w-full p-3 rounded-lg border-2 border-gray-200 bg-white">
-            {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Paket / Bank Soal</label>
+          <select value={topic} onChange={e => setTopic(e.target.value)} className="w-full p-3 rounded-lg border-2 border-gray-200 bg-white text-gray-800 font-medium cursor-pointer hover:border-blue-300 focus:border-blue-500 focus:ring-0 outline-none">
+            {availableTopics.map(t => {
+              const qCount = questionDatabase && questionDatabase[t] ? questionDatabase[t].length : 0;
+              const displayName = t.split('/').pop() || t;
+              return (
+                <option key={t} value={t}>{displayName} ({qCount} soal)</option>
+              );
+            })}
           </select>
         </div>
 
