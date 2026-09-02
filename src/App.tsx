@@ -312,7 +312,7 @@ export default function App() {
 // extracted answerNotes state
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'mabar'>('home');
   const [adminReports, setAdminReports] = useState<any[]>([]);
 
   useEffect(() => {
