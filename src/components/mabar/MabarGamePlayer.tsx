@@ -2,6 +2,7 @@ import React from 'react';
 import { useMabarGame } from '../../hooks/mabar/useMabarGame';
 import MabarQuestionCard from './MabarQuestionCard';
 import MabarTimerBar from './MabarTimerBar';
+import MabarBuzzerButton from './MabarBuzzerButton';
 import MabarLeaderboard from './MabarLeaderboard';
 import type { MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 
@@ -54,6 +55,7 @@ export default function MabarGamePlayer({
       
       <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
         {currentQuestion ? (
+          mode === 'kahoot' ? (
           <MabarQuestionCard
             question={currentQuestion}
             onAnswer={submitAnswer}
@@ -61,6 +63,15 @@ export default function MabarGamePlayer({
             isSubmitting={isSubmitting}
             correctAnswer={correctAnswer}
           />
+        ) : (
+          <MabarBuzzerButton 
+            onBuzz={() => submitAnswer('BUZZ')} 
+            isActive={!isAnswered} 
+            isDisabled={isSubmitting}
+            currentUserId={userId}
+            buzzWinnerId={null /* TODO: read from Realtime */}
+          />
+        )
         ) : (
           <div className="text-center text-gray-500 font-bold text-xl animate-pulse">
             Menunggu Soal...
