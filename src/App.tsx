@@ -90,6 +90,7 @@ import { useAuth } from './hooks/useAuth';
 import { useNotifications } from './hooks/useNotifications';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import { useAnswerNotes } from './hooks/useAnswerNotes';
+import { SetupReportsTab } from './components/tabs/SetupReportsTab';
 import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
