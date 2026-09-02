@@ -1,0 +1,205 @@
+import React from 'react';
+import { BookOpen, Play, Trash, Trash2, Info } from 'lucide-react';
+
+interface SetupNewQuizTabProps {
+  theme: string;
+  selectedDatabases: string[];
+  setSelectedDatabases: any;
+  setDashboardTab: any;
+  quizMode: string;
+  setQuizMode: any;
+  shuffleQuestions: boolean;
+  setShuffleQuestions: any;
+  shuffleOptions: boolean;
+  setShuffleOptions: any;
+  startQuiz: any;
+  globalDatabases: string[];
+  removeDatabase: any;
+  keyboardNavEnabled: boolean;
+  setKeyboardNavEnabled: any;
+  isAdaptiveMode: boolean;
+  setIsAdaptiveMode: any;
+
+  
+
+}
+
+export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
+  theme, selectedDatabases, setSelectedDatabases, setDashboardTab,
+  quizMode, setQuizMode, shuffleQuestions, setShuffleQuestions,
+  shuffleOptions, setShuffleOptions, startQuiz, globalDatabases, removeDatabase, keyboardNavEnabled, setKeyboardNavEnabled, isAdaptiveMode, setIsAdaptiveMode
+}) => {
+  return (
+    <>
+              <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+                <div className={`p-6 rounded-3xl border transition-all duration-300 space-y-6 ${
+                  theme === 'dark'
+                    ? 'bg-slate-900/40 border-white/[0.08] shadow-2xl'
+                    : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div>
+                    <h2 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      Konfigurasi Kuis CBT Baru
+                    </h2>
+                    <p className="text-xs text-slate-450 mt-1">
+                      Atur cara penyajian soal dan mulailah simulasi try-out Anda.
+                    </p>
+                  </div>
+
+                  {selectedDatabases.length === 0 ? (
+                    <div className="text-center py-8">
+                      <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                      <p className="text-xs font-extrabold text-slate-500">Anda belum memilih bank soal untuk diujikan.</p>
+                      <button
+                        onClick={() => setDashboardTab('banks')}
+                        className="px-4 py-2 bg-indigo-500 text-white text-xs font-bold rounded-xl mt-4 cursor-pointer"
+                      >
+                        Pilih Bank Soal Terlebih Dahulu
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Selected Databases Summary list */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Bank Soal Terpilih ({selectedDatabases.length})
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedDatabases.map((key) => (
+                            <span 
+                              key={key} 
+                              className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/15 flex items-center gap-1.5"
+                            >
+                              <span>{key.split('/').pop()}</span>
+                              <button 
+                                onClick={() => setSelectedDatabases(prev => prev.filter(d => d !== key))}
+                                className="text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 font-extrabold"
+                                title="Hapus dari seleksi"
+                              >
+                                ×
+                              </button>
+                              {!globalDatabases.includes(key) && (
+                                <button 
+                                  onClick={() => {
+                                    if (window.confirm(`Hapus bank soal "${key.split('/').pop()}" secara permanen?`)) {
+                                      removeDatabase(key, { stopPropagation: () => {} } as React.MouseEvent);
+                                      setSelectedDatabases(prev => prev.filter(d => d !== key));
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-rose-500 transition-colors"
+                                  title="Hapus bank soal secara permanen"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Mode selection (Utuh/Simulasi) if multiple databases are selected */}
+                      {selectedDatabases.length > 1 && (
+                        <div className="space-y-2.5">
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Metode Integrasi Soal
+                          </label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setQuizMode('utuh')}
+                              className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                                quizMode === 'utuh'
+                                  ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500 dark:text-indigo-400 font-bold'
+                                  : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500'
+                              }`}
+                            >
+                              <span className="text-xs font-extrabold uppercase">Sequential</span>
+                              <span className="text-[10px] opacity-70 mt-0.5 leading-relaxed">Soal diuji per file secara berurutan</span>
+                            </button>
+                            <button
+                              onClick={() => setQuizMode('simulasi')}
+                              className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                                quizMode === 'simulasi'
+                                  ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500 dark:text-indigo-400 font-bold'
+                                  : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500'
+                              }`}
+                            >
+                              <span className="text-xs font-extrabold uppercase">Simulasi Acak</span>
+                              <span className="text-[10px] opacity-70 mt-0.5 leading-relaxed">Gabung seluruh bank soal & acak merata</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Checkbox configs */}
+                      <div className="flex flex-col gap-3.5 pt-2">
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={shuffleQuestions}
+                            onChange={(e) => setShuffleQuestions(e.target.checked)}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                          />
+                          <span>Acak urutan kemunculan soal</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={shuffleOptions}
+                            onChange={(e) => setShuffleOptions(e.target.checked)}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                          />
+                          <span>Acak opsi jawaban (Pilihan Ganda)</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={keyboardNavEnabled}
+                            onChange={(e) => setKeyboardNavEnabled(e.target.checked)}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                          />
+                          <span>Aktifkan Navigasi Keyboard (1-5, Panah, R, M)</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={isAdaptiveMode}
+                            onChange={(e) => setIsAdaptiveMode(e.target.checked)}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                          />
+                          <span>Mode Adaptif (Kecerdasan Buatan menyesuaikan level kesulitan)</span>
+                        </label>
+                      </div>
+
+                      <hr className={`border-t my-2 ${theme === 'dark' ? 'border-slate-800/80' : 'border-slate-200/60'}`} />
+
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button
+                          onClick={startQuiz}
+                          disabled={selectedDatabases.length === 0}
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/10 hover:scale-[1.01] transition-all disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                          Mulai Simulasi Kuis
+                        </button>
+                        
+                        <button
+                          onClick={() => setDashboardTab('banks')}
+                          className={`px-5 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                            theme === 'dark'
+                              ? 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          Kembali Ke Bank Soal
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+    </>
+  );
+};
