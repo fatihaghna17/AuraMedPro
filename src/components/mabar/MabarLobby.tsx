@@ -3,10 +3,10 @@ import { motion } from 'motion/react';
 
 interface MabarLobbyProps {
   onNavigate: (view: 'create' | 'join' | 'history' | 'stats') => void;
-  onQuickMatch: () => void;
+  
 }
 
-export default function MabarLobby({ onNavigate, onQuickMatch }: MabarLobbyProps) {
+export default function MabarLobby({ onNavigate, }: MabarLobbyProps) {
   const [joinCode, setJoinCode] = useState('');
 
   const handleJoin = (e: React.FormEvent) => {
@@ -53,12 +53,7 @@ export default function MabarLobby({ onNavigate, onQuickMatch }: MabarLobbyProps
         </motion.div>
       </div>
       
-      {/* Quick Match Cerdas Cermat */}
-      <motion.div whileHover={{ scale: 1.01 }} className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white shadow-lg text-center mt-4">
-        <h2 className="text-2xl font-bold mb-2">Cerdas Cermat (Quick Match)</h2>
-        <p className="text-purple-100 mb-6">Pertandingan 1v1 dengan mekanisme buzzer. Cari lawan acak sekarang!</p>
-        <button onClick={onQuickMatch} className="bg-white text-purple-600 px-8 py-3 rounded-full font-bold text-lg shadow-md hover:bg-gray-50">Cari Lawan</button>
-      </motion.div>
+
       
       {/* Stats & History Links */}
       <div className="flex justify-center gap-4 mt-8">

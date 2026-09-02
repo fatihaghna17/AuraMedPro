@@ -5,9 +5,11 @@ import MabarWaitingRoom from './MabarWaitingRoom';
 import MabarGameHost from './MabarGameHost';
 import MabarGamePlayer from './MabarGamePlayer';
 import MabarPodium from './MabarPodium';
+import MabarPlayerStats from './MabarPlayerStats';
+import MabarMatchHistory from './MabarMatchHistory';
 import { createRoom, joinRoom } from '../../lib/mabar/mabarRoomManager';
 import { useMabarRoom } from '../../hooks/mabar/useMabarRoom';
-import { useMabarMatchmaking } from '../../hooks/mabar/useMabarMatchmaking';
+
 import { supabase } from '../../supabaseClient';
 import type { MabarGameMode, MabarSubMode, MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 
@@ -22,15 +24,9 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [podiumPlayers, setPodiumPlayers] = useState<MabarRoomPlayer[]>([]);
-  const { isSearching, matchedRoom, startSearch, cancelSearch } = useMabarMatchmaking();
+  
 
-  useEffect(() => {
-    if (matchedRoom) {
-      setActiveRoomId(matchedRoom.id);
-      setIsHost(matchedRoom.host_id === currentUser.id);
-      setView('waiting');
-    }
-  }, [matchedRoom, currentUser.id]);
+
 
   // If we have an active room, fetch it
   const { room, players } = useMabarRoom(activeRoomId || '');
@@ -116,12 +112,7 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
 
   return (
     <div className="w-full min-h-[80vh]">
-      {isSearching && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-white">
-          <h2 className="text-3xl font-bold mb-4 animate-pulse">Mencari Lawan...</h2>
-          <button onClick={cancelSearch} className="px-6 py-2 bg-red-500 rounded-full font-bold hover:bg-red-600">Batal</button>
-        </div>
-      )}
+      
       {view === 'lobby' && (
         <MabarLobby 
           onNavigate={(v) => {
@@ -132,7 +123,7 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
               setView(v);
             }
           }} 
-          onQuickMatch={() => startSearch(currentUser.id, currentUser.user_metadata?.username || 'Player', 'cerdas_cermat')} 
+          
         />
       )}
 
@@ -188,6 +179,14 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
             setView('lobby');
           }}
         />
+      )}
+
+      {view === 'stats' && (
+        <MabarPlayerStats userId={currentUser.id} onBack={() => setView('lobby')} />
+      )}
+
+      {view === 'history' && (
+        <MabarMatchHistory userId={currentUser.id} onBack={() => setView('lobby')} />
       )}
     </div>
   );
