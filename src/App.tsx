@@ -92,6 +92,7 @@ import { useLeaderboard } from './hooks/useLeaderboard';
 import { useAnswerNotes } from './hooks/useAnswerNotes';
 import { SetupReportsTab } from './components/tabs/SetupReportsTab';
 import { SetupHomeTab } from './components/tabs/SetupHomeTab';
+import { SetupBanksTab } from './components/tabs/SetupBanksTab';
 import { useStudyRoom } from './hooks/useStudyRoom';
 import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
