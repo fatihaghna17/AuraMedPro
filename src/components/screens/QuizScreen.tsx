@@ -60,6 +60,7 @@ interface QuizScreenProps {
   selectedDatabases: string[];
   userXP: number;
   currentStreak: number;
+  currentCombo?: number;
 
 }
 
@@ -72,7 +73,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
   handleNextQuestion, openFinishModal, unlockedHints, setMobileQuizNavOpen,
   setUserAnswers, setUnlockedHints, setModalTitle, setModalDesc, setModalAction,
   setModalOpen, setAiFollowUp, setCurrentIndex, setDoubtStatus, exitQuiz,
-  toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, finishQuiz
+  toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, currentCombo = 0, finishQuiz
 }) => {
   return (
     <>
@@ -622,8 +623,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                       
                       <div className="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-500/10 border border-amber-500/10 px-2 py-0.5 rounded-full">
-                        <Flame className="w-3.5 h-3.5 animate-bounce text-amber-500" />
-                        <span>Streak: <strong className="text-amber-500">{currentStreak}</strong></span>
+                        <Flame className={`w-3.5 h-3.5 text-amber-500 ${currentCombo > 0 ? 'animate-bounce' : ''}`} />
+                        <span>Streak: <strong className="text-amber-500">{currentCombo}</strong></span>
                       </div>
                     </div>
 
@@ -725,7 +726,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               theme, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, 
               isAdaptiveMode, currentDifficulty, aiPanelOpen, aiLoading, aiExplanation, 
               aiFollowUp, aiMode, studyRoom, currentUser, selectedDatabases, unlockedHints, 
-              userXP, currentStreak
+              userXP, currentStreak, currentCombo
             ])}
 
             <MobileQuizNavDrawer

@@ -888,6 +888,22 @@ export default function App() {
       setShowSidebar(true);
       setQuizSecondsLeft(session.seconds_left !== undefined ? session.seconds_left : pool.length * 60);
       setQuizTimerActive(true);
+
+      // Hitung ulang streak/combo dari jawaban kuis yang tersimpan
+      let restoredCombo = 0;
+      if (Array.isArray(pool) && Array.isArray(answers) && revealed) {
+        for (let i = 0; i < pool.length; i++) {
+          if (revealed[i] && answers[i]) {
+            if (isUserAnswerCorrect(answers[i], pool[i])) {
+              restoredCombo += 1;
+            } else {
+              restoredCombo = 0;
+            }
+          }
+        }
+      }
+      setCurrentCombo(restoredCombo);
+
       triggerToast(`Melanjutkan kuis: ${session.title}!`, '🚀');
     } catch (err) {
       console.error('Error parsing session data:', err);
@@ -1781,6 +1797,7 @@ export default function App() {
     }
 
     // Reset Gamification (keep persistent lifetime stats)
+    setCurrentCombo(0);
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
@@ -1820,6 +1837,7 @@ export default function App() {
     setCurrentIndex(0);
 
     // Reset Gamification
+    setCurrentCombo(0);
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
@@ -1867,6 +1885,7 @@ export default function App() {
     setQuizSecondsLeft(processedPool.length * 60);
 
     // Reset Gamification & States
+    setCurrentCombo(0);
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
@@ -3144,7 +3163,7 @@ export default function App() {
         )}
 
         {/* === ACTIVE CBT SIMULATOR SCREEN === */}
-        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} />}
+        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} />}
 
         {/* === RESULT & ANALYTICS SUMMARY SCREEN === */}
         {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} />}
