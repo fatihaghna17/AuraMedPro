@@ -493,7 +493,13 @@ export function useAuth({
     } catch (err: any) {
       console.error(err);
       isLoggingInRef.current = false;
-      triggerToast('Username atau password salah', '❌');
+      const msg = String(err?.message || '') + ' ' + String(err?.name || '');
+      const isNetworkIssue = /network|fetch|timeout|abort/i.test(msg);
+      if (isNetworkIssue) {
+        triggerToast('Server sedang lambat/tidak bisa dihubungi. Coba lagi 1-2 menit.', '📡');
+      } else {
+        triggerToast('Username atau password salah', '❌');
+      }
     } finally {
       setAuthLoading(false);
     }
