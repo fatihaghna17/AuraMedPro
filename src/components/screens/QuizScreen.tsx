@@ -93,9 +93,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
             {keyboardNavEnabled && <KeyboardHintPanel theme={theme} />}
 
-            {/* Split View Content Layout */}
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Split View Content Layout - Memoized to prevent timer tick re-renders */}
+            {useMemo(() => (
+              <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Left Side: Active Question Card Panel */}
                 <div className="lg:col-span-8 space-y-6 w-full max-w-[800px] mx-auto">
@@ -189,7 +190,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             src={imageUrl} 
                             alt="Visual Klinis" 
                             referrerPolicy="no-referrer"
-                            className="w-full h-[200px] object-cover cursor-zoom-in quiz-img"
+                            className="w-full object-contain cursor-zoom-in quiz-img"
                             onClick={() => setLightboxImage(imageUrl)}
                           />
                           <div 
@@ -712,6 +713,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
               </div>
             </div>
+            ), [
+              theme, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, 
+              isAdaptiveMode, currentDifficulty, aiPanelOpen, aiLoading, aiExplanation, 
+              aiFollowUp, aiMode, studyRoom, currentUser, selectedDatabases, unlockedHints, 
+              userXP, currentStreak
+            ])}
 
             <MobileQuizNavDrawer
               theme={theme}
