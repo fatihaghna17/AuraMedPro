@@ -1278,14 +1278,13 @@ export default function App() {
         // Simpan ke database Supabase
         (async () => {
           try {
-            // ANTI-EGRESS: R2 = penyimpanan primer (egress gratis); Supabase hanya menerima
-            // pointer kecil { r2_url, r2_key }. Jika R2 gagal → fallback inline agar data tidak hilang.
-            let payload: any = finalQuestions;
-            const r2 = await uploadQuestionsToR2(file.name, finalQuestions);
-            if (r2) payload = r2;
+            // R2 upload sebagai backup saja (best-effort), jangan blok jika gagal
+            uploadQuestionsToR2(file.name, finalQuestions).catch(err =>
+              console.warn('R2 upload skipped:', err)
+            );
             const { error } = await supabase
               .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: payload }, { onConflict: 'user_id,name' });
+              .upsert({ user_id: currentUser.id, name: file.name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
@@ -1361,13 +1360,13 @@ export default function App() {
       try {
         // Simpan setiap bank soal ke Supabase
         for (const [name, questions] of Object.entries(newDatabases)) {
-          // ANTI-EGRESS: R2 = penyimpanan primer; Supabase hanya pointer. Fallback inline bila R2 gagal.
-          let payload: any = questions;
-          const r2 = await uploadQuestionsToR2(name, questions);
-          if (r2) payload = r2;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, questions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: payload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
           if (error) throw error;
         }
 
@@ -1432,13 +1431,13 @@ export default function App() {
     if (finalQuestions && finalQuestions.length > 0) {
       if (currentUser) {
         try {
-          // ANTI-EGRESS: R2 = penyimpanan primer; Supabase hanya pointer. Fallback inline bila R2 gagal.
-          let payload: any = finalQuestions;
-          const r2 = await uploadQuestionsToR2(name, finalQuestions);
-          if (r2) payload = r2;
+          // R2 upload sebagai backup saja (best-effort)
+          uploadQuestionsToR2(name, finalQuestions).catch(err =>
+            console.warn('R2 upload skipped:', err)
+          );
           const { error } = await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: payload }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: currentUser.id, name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
           if (error) throw error;
           
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
@@ -1469,18 +1468,18 @@ export default function App() {
     (async () => {
       try {
         // Hapus dari Supabase tanpa filter user_id (karena global)
-        // ANTI-EGRESS: cukup ambil r2_key-nya saja — jangan tarik questions_json utuh
-        // (string disimpan di variabel agar type-parser supabase-js tidak menandai operator JSON sebagai error)
-        const slimSelect = 'questions_json->>r2_key as r2_key';
-        const { data: bankData, error: fetchErr } = (await supabase
+        const { data: bankData, error: fetchErr } = await supabase
           .from('question_banks')
-          .select(slimSelect)
+          .select('questions_json')
           .eq('name', name)
-          .single()) as unknown as { data: { r2_key: string | null } | null; error: any };
+          .single();
 
-        if (!fetchErr && bankData?.r2_key) {
-          // Bank berupa referensi R2 → hapus file dari R2 juga
-          await deleteQuestionsFromR2(bankData.r2_key);
+        if (!fetchErr && bankData?.questions_json) {
+          const qj = bankData.questions_json;
+          // Jika data berupa referensi R2, hapus file dari R2 juga
+          if (qj && !Array.isArray(qj) && qj.r2_key) {
+            await deleteQuestionsFromR2(qj.r2_key);
+          }
         }
 
         const { error } = await supabase
