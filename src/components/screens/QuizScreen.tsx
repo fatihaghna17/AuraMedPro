@@ -261,6 +261,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             Jawaban Isian Singkat:
                           </label>
                           <input
+                            id="short-answer-input"
                             type="text"
                             disabled={isRevealed[currentIndex]}
                             value={userAnswers[currentIndex] || ''}

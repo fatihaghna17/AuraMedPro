@@ -15,6 +15,8 @@ export default function KeyboardHintPanel({ theme }: KeyboardHintPanelProps) {
         <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">←→</kbd> Navigasi</span>
         <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
         <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">R</kbd> Ragu</span>
+        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+        <span><kbd className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[9px] mr-1.5">/</kbd> Ketik</span>
       </div>
     </div>
   );

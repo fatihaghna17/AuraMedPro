@@ -38,7 +38,9 @@ export function useKeyboardNavigation({
     if (!isActive || screen !== 'quiz' || currentQuiz.length === 0) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in text inputs, EXCEPT if Enter is pressed (to check answer)
+      // Abaikan shortcut jika modifier sistem (Ctrl / Cmd / Alt) aktif, agar shortcut browser (seperti Ctrl+R, Ctrl+C) tetap jalan
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       const activeEl = document.activeElement;
       const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
       setIsInputFocused(isInput);
@@ -58,7 +60,14 @@ export function useKeyboardNavigation({
         }
       }
 
-      if (isInput) return;
+      // Jika sedang fokus di input: tombol Escape melepas fokus
+      if (isInput) {
+        if (e.key === 'Escape') {
+          (activeEl as HTMLElement)?.blur();
+        }
+        return;
+      }
+
       if (isModalOpen && e.key !== 'Escape') return; // Only allow Escape when modal is open
 
       const key = e.key.toUpperCase();
@@ -70,8 +79,20 @@ export function useKeyboardNavigation({
         return;
       }
 
+      // /: Fokus ke kolom input isian singkat
+      if (e.key === '/') {
+        const inputEl = document.getElementById('short-answer-input') as HTMLInputElement | null;
+        if (inputEl && !inputEl.disabled) {
+          e.preventDefault();
+          inputEl.focus();
+          inputEl.select();
+          return;
+        }
+      }
+
       // M: Question Map
       if (key === 'M' && setIsQuestionMapOpen) {
+        e.preventDefault();
         setIsQuestionMapOpen(prev => {
           setIsModalOpen(!prev);
           return !prev;
@@ -81,24 +102,28 @@ export function useKeyboardNavigation({
       
       // Z: Zoom Image
       if (key === 'Z' && toggleImageZoom) {
+        e.preventDefault();
         toggleImageZoom();
         return;
       }
 
       // R: Ragu-ragu
       if (key === 'R' && toggleDoubt) {
+        e.preventDefault();
         toggleDoubt();
         return;
       }
 
       // Arrow Left / P: Previous
       if (e.key === 'ArrowLeft' || key === 'P') {
+        e.preventDefault();
         if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
         return;
       } 
       
       // Arrow Right / N: Next
       if (e.key === 'ArrowRight' || key === 'N') {
+        e.preventDefault();
         if (currentIndex < currentQuiz.length - 1) setCurrentIndex((prev) => prev + 1);
         return;
       }
@@ -117,6 +142,7 @@ export function useKeyboardNavigation({
       if (selectedIdx !== -1) {
         const q = currentQuiz[currentIndex];
         if (q?.pilihan && q.pilihan.length > selectedIdx) {
+          e.preventDefault();
           selectAnswer(q.pilihan[selectedIdx]);
           return;
         }
