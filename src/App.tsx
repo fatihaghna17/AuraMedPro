@@ -66,7 +66,7 @@ import {
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
 import { requestAIExplanation, EXPLAIN_MODES, type ExplainMode } from './utils/aiExplain';
 import { getLevelInfo, shuffleArray, shuffleQuestionOptions, formatNotifTime } from './utils/appHelpers';
-import { saveHistoryToLocalStorage, loadHistoryFromLocalStorage } from './utils/quizStorage';
+import { saveHistoryToLocalStorage, loadHistoryFromLocalStorage, safeLocalStorageParse } from './utils/quizStorage';
 import { SAMPLE_BANKS } from './data/sampleBanks';
 // Kalimat roasting yang lucu, sarkas, dan menghibur ala mahasiswa kedokteran & umum
 import {
@@ -264,23 +264,18 @@ export default function App() {
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(false);
   const [quizMode, setQuizMode] = useState<'utuh' | 'simulasi'>('utuh');
-  const [customFolders, setCustomFolders] = useState<string[]>(() => {
-    const saved = localStorage.getItem('cbt_custom_folders');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [quizFolderMap, setQuizFolderMap] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('cbt_quiz_folder_map');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [customFolders, setCustomFolders] = useState<string[]>(() =>
+    safeLocalStorageParse<string[]>('cbt_custom_folders', [], Array.isArray)
+  );
+  const [quizFolderMap, setQuizFolderMap] = useState<Record<string, string>>(() =>
+    safeLocalStorageParse<Record<string, string>>('cbt_quiz_folder_map', {}, (v) => !!v && typeof v === 'object' && !Array.isArray(v))
+  );
   
 // removed for TDZ
   const [moveQuizModal, setMoveQuizModal] = useState<{ quizKey: string; quizName: string } | null>(null);
 
 // removed for TDZ
-  const [quizHistory, setQuizHistory] = useState<HistoryEntry[]>(() => {
-    const saved = localStorage.getItem('cbtQuizHistory');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [quizHistory, setQuizHistory] = useState<HistoryEntry[]>(() => loadHistoryFromLocalStorage());
   const [selectedHistoryDetail, setSelectedHistoryDetail] = useState<HistoryEntry | null>(null);
   const [openHistoryReviewIndices, setOpenHistoryReviewIndices] = useState<Record<number, boolean>>({});
 
@@ -2090,7 +2085,10 @@ export default function App() {
     };
 
     const updatedHistory = [newEntry, ...quizHistory].slice(0, 50);
-    saveHistoryToLocalStorage(updatedHistory, setQuizHistory);
+    const historySaved = saveHistoryToLocalStorage(updatedHistory, setQuizHistory);
+    if (!historySaved) {
+      triggerToast('Penyimpanan perangkat penuh — riwayat kuis gagal disimpan!', '⚠️');
+    }
 
     // Auto-add wrong answers to Spaced Repetition
     if (currentUser) {
