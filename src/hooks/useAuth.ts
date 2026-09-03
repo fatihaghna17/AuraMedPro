@@ -364,6 +364,15 @@ export function useAuth({
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setCurrentUser(session.user);
+
+          // Anonymous / guest users — skip heavy sync
+          const isGuest = session.user.is_anonymous || session.user.user_metadata?.is_guest;
+          if (isGuest) {
+            setProfileUsername(session.user.user_metadata?.username || 'Guest');
+            setAuthLoading(false);
+            return;
+          }
+
           let token = localStorage.getItem('cbt_session_token');
           if (!token) {
             token = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -390,6 +399,15 @@ export function useAuth({
       try {
         if (event === 'SIGNED_IN' && session) {
           setCurrentUser(session.user);
+
+          // Anonymous / guest users only need mabar — skip heavy profile sync
+          const isGuest = session.user.is_anonymous || session.user.user_metadata?.is_guest;
+          if (isGuest) {
+            setProfileUsername(session.user.user_metadata?.username || 'Guest');
+            setAuthLoading(false);
+            return;
+          }
+
           let token = localStorage.getItem('cbt_session_token');
           if (!token) {
             token = Math.random().toString(36).substring(2) + Date.now().toString(36);

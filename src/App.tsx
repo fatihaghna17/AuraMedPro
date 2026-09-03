@@ -188,15 +188,13 @@ export default function App() {
       return;
     }
     
-    triggerToast('Mendaftarkan akun tamu...', '⏳');
-    const guestEmail = `guest_${Date.now()}_${Math.floor(Math.random()*1000)}@guest.auramed.id`;
-    const guestPassword = 'GuestPassword123!';
+    triggerToast('Masuk sebagai tamu...', '⏳');
 
-    const { data, error } = await supabase.auth.signUp({
-      email: guestEmail,
-      password: guestPassword,
+    // Use anonymous sign-in — signUp with fake email fails because
+    // Supabase requires email confirmation, so no session is created.
+    const { data, error } = await supabase.auth.signInAnonymously({
       options: {
-        data: { username: cleanNick }
+        data: { username: cleanNick, is_guest: true }
       }
     });
     
@@ -205,23 +203,14 @@ export default function App() {
       return;
     }
 
-    let user = data?.user;
-    if (!data?.session) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: guestEmail,
-        password: guestPassword
-      });
-      if (signInError) {
-        triggerToast('Gagal autentikasi guest: ' + signInError.message, '❌');
-        return;
-      }
-      user = signInData?.user;
+    const user = data?.user;
+    if (!user) {
+      triggerToast('Gagal membuat sesi tamu.', '❌');
+      return;
     }
 
-    if (user) {
-      setCurrentUser(user);
-    }
-    
+    // Set user immediately so the dashboard renders
+    setCurrentUser(user);
     setGuestRoomCode(cleanCode);
     setDashboardTab('mabar');
     triggerToast(`Selamat datang ${cleanNick}! Masuk ke room...`, '✅');
