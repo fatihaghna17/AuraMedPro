@@ -1,41 +1,52 @@
 // AuraMed PRO — Service Worker
 // Handles background notifications for PWA
 
-const CACHE_NAME = 'auramed-v1';
+const CACHE_NAME = 'auramed-v3';
 
 // Install: cache essential assets
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/favicon.svg',
-        '/manifest.json',
-      ]);
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate: clean old caches
+// Activate: clean old caches immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
-        names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
+        names.map((n) => {
+          if (n !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', n);
+            return caches.delete(n);
+          }
+        })
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Fetch: network-first for HTML & API, cache-first for hashed static assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // API calls: always network
+  // API calls & Supabase: always network
   if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
+    return;
+  }
+
+  // HTML navigation: always network first so users always get the latest app build
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 
