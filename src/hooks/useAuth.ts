@@ -4,6 +4,7 @@ import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
 import { getCachedQuestions, setCachedQuestions } from '../utils/questionCache';
+import { uploadQuestionsToR2 } from '../r2Storage';
 
 export function useAuth({
   triggerToast,
@@ -243,37 +244,71 @@ export function useAuth({
 
   const fetchUserQuestions = async (userId: string, username: string) => {
     try {
-      const { data, error } = await supabase
+      // ============================================================
+      // ANTI-EGRESS GUARD (Supabase Free Plan)
+      // JANGAN pernah menarik questions_json utuh dari Supabase.
+      // Cukup pointer kecil (r2_key/r2_url). Konten berat diambil dari
+      // Cloudflare R2 (egress gratis) dengan cache browser 7 hari.
+      // Fallback kompatibel untuk row lama yang masih inline (array).
+      // ============================================================
+      let data: any[] | null = null;
+      const slim = await supabase
         .from('question_banks')
         .select(`
           name,
-          questions_json,
           user_id,
+          questions_json->>r2_key as r2_key,
+          questions_json->>r2_url as r2_url,
           profiles (
             username
           )
         `);
-      
-      if (error) throw error;
-      
+
+      if (slim.error) {
+        // Kompatibilitas: PostgREST versi lama bisa gagal parse operator JSON.
+        // Fallback ke select penuh ( perilaku lama ) agar app tetap jalan.
+        console.warn('[Egress-Guard] Slim select gagal, fallback select lama:', slim.error.message);
+        const legacy = await supabase
+          .from('question_banks')
+          .select(`
+            name,
+            questions_json,
+            user_id,
+            profiles (
+              username
+            )
+          `);
+        if (legacy.error) throw legacy.error;
+        data = legacy.data;
+      } else {
+        data = slim.data;
+      }
+
       const mappedData: Record<string, Question[]> = {};
       const globals: string[] = [];
       const uploaders: Record<string, string> = {};
       
       if (data) {
         const fetchPromises = data.map(async (row: any) => {
-          let questions = typeof row.questions_json === 'string'
-            ? JSON.parse(row.questions_json)
-            : row.questions_json;
-            
-          if (questions && !Array.isArray(questions) && questions.r2_key) {
-            const r2Key = questions.r2_key;
-            // 1. Cek cache lokal browser terlebih dahulu (0ms network)
+          let questions: any = null;
+
+          // Normalisasi: slim row punya r2_key/r2_url langsung; legacy row ada di dalam questions_json
+          let r2Key: string | null = row.r2_key ?? null;
+          let oldUrl: string | null = row.r2_url ?? null;
+          if (r2Key === null && row.questions_json !== undefined && row.questions_json !== null && !Array.isArray(row.questions_json)) {
+            const qjObj = typeof row.questions_json === 'string' ? JSON.parse(row.questions_json) : row.questions_json;
+            if (qjObj && typeof qjObj === 'object') {
+              r2Key = qjObj.r2_key ?? null;
+              oldUrl = qjObj.r2_url ?? null;
+            }
+          }
+
+          if (r2Key) {
+            // ---- Konten dari R2 (egress gratis), cache browser 7 hari ----
             const cached = await getCachedQuestions(r2Key);
             if (cached && Array.isArray(cached) && cached.length > 0) {
               questions = cached;
             } else {
-              // 2. Fetch dari Cloudflare R2 jika belum ada di cache
               const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
               const correctUrl = `${R2_BASE}/${r2Key}`;
               try {
@@ -284,7 +319,6 @@ export function useAuth({
                 if (res.ok) {
                   const fetched = await res.json();
                   if (Array.isArray(fetched) && fetched.length > 0) {
-                    const oldUrl = questions.r2_url;
                     questions = fetched;
                     // Simpan ke cache browser untuk kunjungan berikutnya
                     setCachedQuestions(r2Key, fetched);
@@ -311,6 +345,29 @@ export function useAuth({
                 }
                 questions = [];
               }
+            }
+          } else if (row.questions_json !== undefined) {
+            // ---- Row legacy (fallback select): array inline langsung dipakai ----
+            let qj: any = row.questions_json;
+            if (typeof qj === 'string') qj = JSON.parse(qj);
+            questions = Array.isArray(qj) ? qj : [];
+          } else {
+            // ---- Row lama belum termigrasi (masih array inline di Supabase) ----
+            // Ambil kontennya SEKALI secara ter-target (1 row saja) agar bank tidak hilang,
+            // lalu JALANKAN scripts/migrate_banks_to_r2.mjs untuk migrasi permanen.
+            console.warn(`[Egress-Guard] Bank "${row.name}" masih inline di Supabase. Jalankan: node scripts/migrate_banks_to_r2.mjs --apply`);
+            try {
+              const one = await supabase
+                .from('question_banks')
+                .select('questions_json')
+                .eq('name', row.name)
+                .eq('user_id', row.user_id)
+                .maybeSingle();
+              let qj: any = one.error ? null : one.data?.questions_json ?? null;
+              if (typeof qj === 'string') qj = JSON.parse(qj);
+              questions = Array.isArray(qj) ? qj : [];
+            } catch {
+              questions = [];
             }
           }
           return { row, questions };
@@ -341,9 +398,18 @@ export function useAuth({
       if (username === 'admin' && Object.keys(mappedData).length === 0) {
         console.log('Akun admin kosong. Melakukan seeding sampel bawaan...');
         for (const [name, questions] of Object.entries(SAMPLE_BANKS)) {
+          // ANTI-EGRESS: R2 = penyimpanan primer; Supabase hanya menerima pointer kecil.
+          // Jika R2 gagal → fallback inline (perilaku lama) agar seeding tidak pernah hilang.
+          let payload: any = questions;
+          try {
+            const r2 = await uploadQuestionsToR2(name, questions as any[]);
+            if (r2) payload = r2;
+          } catch (err) {
+            console.warn('R2 seed upload gagal, fallback inline untuk:', name, err);
+          }
           await supabase
             .from('question_banks')
-            .upsert({ user_id: userId, name, questions_json: questions }, { onConflict: 'user_id,name' });
+            .upsert({ user_id: userId, name, questions_json: payload }, { onConflict: 'user_id,name' });
           mappedData[name] = questions as any;
           globals.push(name);
         }
