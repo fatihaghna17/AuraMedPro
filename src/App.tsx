@@ -1050,7 +1050,7 @@ export default function App() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser, quizSecondsLeft]);
+  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser]);
 
   useEffect(() => {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
