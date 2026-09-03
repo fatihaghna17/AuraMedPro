@@ -35,27 +35,59 @@ export function useMabarRoom(roomId: string) {
     
     fetchRoomData();
 
-    // Subscribe to room changes (status updates, etc)
-    const roomSub = supabase.channel(`public:mabar_rooms:id=eq.${roomId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mabar_rooms', filter: `id=eq.${roomId}` }, (payload) => {
-        setRoom(payload.new as MabarRoom);
+    // 1. Subscribe to Broadcast channel mabar-room-${roomId} for instant game_starting / room updates
+    const broadcastChannel = supabase.channel(`mabar-room-${roomId}`, {
+      config: { broadcast: { self: true } }
+    })
+      .on('broadcast', { event: 'game_starting' }, () => {
+        setRoom(prev => prev ? { ...prev, status: 'in_progress' } : null);
+        fetchRoomData();
+      })
+      .on('broadcast', { event: 'room_cancelled' }, () => {
+        setRoom(prev => prev ? { ...prev, status: 'cancelled' } : null);
+      })
+      .on('broadcast', { event: 'player_joined' }, () => {
+        fetchRoomData();
+      })
+      .on('broadcast', { event: 'player_left' }, () => {
+        fetchRoomData();
       })
       .subscribe();
 
-    // Subscribe to player changes (join, leave, score updates)
-    const playerSub = supabase.channel(`public:mabar_room_players:room_id=eq.${roomId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mabar_room_players', filter: `room_id=eq.${roomId}` }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setPlayers(prev => [...prev, payload.new as MabarRoomPlayer].sort((a, b) => b.score - a.score));
-        } else if (payload.eventType === 'UPDATE') {
-          setPlayers(prev => prev.map(p => p.id === payload.new.id ? (payload.new as MabarRoomPlayer) : p).sort((a, b) => b.score - a.score));
-        } else if (payload.eventType === 'DELETE') {
-          setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+    // 2. Subscribe to postgres_changes for room updates
+    const roomSub = supabase.channel(`db-mabar-rooms-${roomId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mabar_rooms', filter: `id=eq.${roomId}` }, (payload) => {
+        if (payload.new) {
+          setRoom(payload.new as MabarRoom);
         }
       })
       .subscribe();
 
+    // 3. Subscribe to postgres_changes for player updates
+    const playerSub = supabase.channel(`db-mabar-players-${roomId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mabar_room_players', filter: `room_id=eq.${roomId}` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setPlayers(prev => {
+            const exists = prev.some(p => p.id === payload.new.id || p.user_id === payload.new.user_id);
+            if (exists) return prev.map(p => (p.id === payload.new.id || p.user_id === payload.new.user_id) ? (payload.new as MabarRoomPlayer) : p);
+            return [...prev, payload.new as MabarRoomPlayer].sort((a, b) => b.score - a.score);
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          setPlayers(prev => prev.map(p => (p.id === payload.new.id || p.user_id === payload.new.user_id) ? (payload.new as MabarRoomPlayer) : p).sort((a, b) => b.score - a.score));
+        } else if (payload.eventType === 'DELETE') {
+          setPlayers(prev => prev.filter(p => p.id !== payload.old.id && p.user_id !== payload.old.user_id));
+        }
+      })
+      .subscribe();
+
+    // 4. Polling fallback every 1.5 seconds while room is in 'waiting' status
+    const pollInterval = setInterval(() => {
+      fetchRoomData();
+    }, 1500);
+
     return () => {
+      clearInterval(pollInterval);
+      supabase.removeChannel(broadcastChannel);
       supabase.removeChannel(roomSub);
       supabase.removeChannel(playerSub);
     };

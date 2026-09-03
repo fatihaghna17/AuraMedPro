@@ -131,7 +131,23 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
 
   const startGame = async () => {
     if (room) {
+      // 1. Update database
       await supabase.from('mabar_rooms').update({ status: 'in_progress', started_at: new Date().toISOString() }).eq('id', room.id);
+      
+      // 2. Broadcast game_starting to all players in the room
+      const channel = supabase.channel(`mabar-room-${room.id}`, {
+        config: { broadcast: { self: true } }
+      });
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.send({
+            type: 'broadcast',
+            event: 'game_starting',
+            payload: { roomId: room.id }
+          });
+        }
+      });
+
       setView('host');
     }
   };
@@ -146,7 +162,7 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
     if (room && room.status === 'in_progress' && view === 'waiting') {
       setView(isHost ? 'host' : 'player');
     }
-  }, [room, view, isHost]);
+  }, [room?.status, view, isHost]);
 
   return (
     <div className="w-full min-h-[80vh]">

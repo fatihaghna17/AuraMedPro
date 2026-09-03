@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import MabarLeaderboard from './MabarLeaderboard';
 import type { MabarRoomPlayer, MabarRoom } from '../../lib/mabar/mabarTypes';
 import { supabase } from '../../supabaseClient';
-import { broadcastToRoom } from '../../lib/mabar/mabarRealtime';
+import { joinRoomChannel, leaveRoomChannel, broadcastToRoom } from '../../lib/mabar/mabarRealtime';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface MabarGameHostProps {
   room: MabarRoom;
@@ -18,12 +19,21 @@ export default function MabarGameHost({
   questionDatabase,
   onFinishGame
 }: MabarGameHostProps) {
-  const [questionIndex, setQuestionIndex] = useState(room.current_question_index);
-  const [timeRemaining, setTimeRemaining] = useState(room.time_limit_per_question);
+  const [questionIndex, setQuestionIndex] = useState(room.current_question_index || 0);
+  const [timeRemaining, setTimeRemaining] = useState(room.time_limit_per_question || 15);
   const [isQuestionActive, setIsQuestionActive] = useState(false);
   const [currentQuestionData, setCurrentQuestionData] = useState<any>(null);
   
   const timerRef = useRef<number | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Setup persistent Realtime channel on mount
+  useEffect(() => {
+    channelRef.current = joinRoomChannel(room.id, {});
+    return () => {
+      leaveRoomChannel(channelRef.current);
+    };
+  }, [room.id]);
 
   const startQuestion = async (idx: number) => {
     let qData = null;
@@ -34,7 +44,7 @@ export default function MabarGameHost({
         .select('question_id')
         .eq('room_id', room.id)
         .eq('order_index', idx)
-        .single();
+        .maybeSingle();
         
       if (rq && rq.question_id) {
         const originalIndex = parseInt(rq.question_id, 10);
@@ -48,31 +58,30 @@ export default function MabarGameHost({
     setCurrentQuestionData(qData);
     setQuestionIndex(idx);
     setIsQuestionActive(true);
-    setTimeRemaining(room.time_limit_per_question);
+    setTimeRemaining(room.time_limit_per_question || 15);
 
     // Update DB
     await supabase.from('mabar_rooms').update({ current_question_index: idx }).eq('id', room.id);
 
-    // Broadcast
-    const channel = supabase.channel(`public:mabar_rooms:id=eq.${room.id}`);
-    channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await channel.send({
-          type: 'broadcast',
-          event: 'question_start',
-          payload: {
-            questionIndex: idx,
-            question: { text: qData?.pertanyaan || qData?.text || 'Soal tidak ditemukan', options: qData?.pilihan || qData?.options || [] }
-          }
-        });
-        supabase.removeChannel(channel);
+    // Normalize options
+    const rawOptions = qData?.pilihan || qData?.options || [];
+    const normalizedOptions = rawOptions.map((opt: any) => ({
+      text: typeof opt === 'string' ? opt : (opt?.text || opt?.label || String(opt || ''))
+    }));
+
+    // Broadcast question_start to all players on mabar-room-${room.id}
+    await broadcastToRoom(channelRef.current, 'question_start', {
+      questionIndex: idx,
+      question: { 
+        text: qData?.pertanyaan || qData?.text || 'Soal tidak ditemukan', 
+        options: normalizedOptions 
       }
     });
   };
 
   useEffect(() => {
-    // Start first question on mount if it's 0
-    if (room.current_question_index === 0 && !isQuestionActive && !currentQuestionData) {
+    // Start first question on mount
+    if (!isQuestionActive && !currentQuestionData) {
       startQuestion(0);
     }
   }, []);
@@ -98,19 +107,9 @@ export default function MabarGameHost({
   const endQuestion = async () => {
     setIsQuestionActive(false);
     
-    // Broadcast end
-    const channel = supabase.channel(`public:mabar_rooms:id=eq.${room.id}`);
-    channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await channel.send({
-          type: 'broadcast',
-          event: 'question_end',
-          payload: {
-            correctAnswer: currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || ''
-          }
-        });
-        supabase.removeChannel(channel);
-      }
+    // Broadcast end to all players
+    await broadcastToRoom(channelRef.current, 'question_end', {
+      correctAnswer: currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || ''
     });
   };
 
@@ -122,6 +121,10 @@ export default function MabarGameHost({
 
   const handleFinish = async () => {
     await supabase.from('mabar_rooms').update({ status: 'finished', finished_at: new Date().toISOString() }).eq('id', room.id);
+    await broadcastToRoom(channelRef.current, 'game_finished', {
+      roomId: room.id,
+      scores: scores
+    });
     onFinishGame();
   };
 
