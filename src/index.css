@@ -41,6 +41,21 @@
   contain: paint;
 }
 
+/* Stabilise images inside quiz cards & inline HTML (dangerouslySetInnerHTML)
+   so Safari does not re-paint / flicker them on every 1-second timer re-render */
+.quiz-img,
+.quiz-card img,
+.quiz-card span[dangerouslysetinnerhtml] img,
+.quiz-card [data-quiz-html] img {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: auto;          /* reset – do NOT keep will-change: transform permanently */
+  image-rendering: auto;
+  content-visibility: auto;   /* skip off-screen painting */
+}
+
 /* Glassmorphism Card Style */
 @layer components {
   .glass-card {

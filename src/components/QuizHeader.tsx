@@ -1,3 +1,4 @@
+import React from 'react';
 import { ArrowLeft, Maximize2, Minimize2, Menu } from 'lucide-react';
 import { formatTimer } from '../utils/quizUtils';
 
@@ -14,7 +15,7 @@ interface QuizHeaderProps {
   onOpenMobileNav: () => void;
 }
 
-export default function QuizHeader({
+export default React.memo(function QuizHeader({
   theme, currentIndex, totalQuestions, isAdaptiveMode, currentDifficulty,
   quizSecondsLeft, isFullscreen, onExit, onToggleFullscreen, onOpenMobileNav,
 }: QuizHeaderProps) {
@@ -94,4 +95,4 @@ export default function QuizHeader({
       </div>
     </header>
   );
-}
+});

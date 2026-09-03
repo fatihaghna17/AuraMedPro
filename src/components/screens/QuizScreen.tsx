@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Bookmark, Check, CheckCircle2, Copy, Eye, Flame, Lock, Sparkles, XCircle, ChevronRight, Share2, MessageCircleQuestion } from 'lucide-react';
 import QuizHeader from '../QuizHeader';
 import MobileQuizNavDrawer from '../MobileQuizNavDrawer';
@@ -172,13 +172,15 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     </div>
 
-                    {/* Question text block */}
-                    <div className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6">
-                      {renderHtmlText(currentQuiz[currentIndex].pertanyaan)}
-                    </div>
+                    {/* Question text block — memoized to avoid Safari repainting on timer tick */}
+                    {useMemo(() => (
+                      <div className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6">
+                        {renderHtmlText(currentQuiz[currentIndex].pertanyaan)}
+                      </div>
+                    ), [currentQuiz[currentIndex].pertanyaan])}
 
-                    {/* Clinical Image with max-height 200px, object-fit cover, tap for fullscreen */}
-                    {(() => {
+                    {/* Clinical Image — memoized & no transition-transform to prevent iOS Safari flickering */}
+                    {useMemo(() => {
                       const imageUrl = getQuestionImage(currentQuiz[currentIndex]);
                       if (!imageUrl) return null;
                       return (
@@ -187,11 +189,11 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             src={imageUrl} 
                             alt="Visual Klinis" 
                             referrerPolicy="no-referrer"
-                            className="w-full h-[200px] object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-102"
+                            className="w-full h-[200px] object-cover cursor-zoom-in quiz-img"
                             onClick={() => setLightboxImage(imageUrl)}
                           />
                           <div 
-                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer backdrop-blur-sm transition-all"
+                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                             onClick={() => setLightboxImage(imageUrl)}
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -199,7 +201,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           </div>
                         </div>
                       );
-                    })()}
+                    }, [currentQuiz[currentIndex]])}
 
                     {/* Answer Options List (pilihan) OR Short Answer Input (isian) */}
                     {currentQuiz[currentIndex].pilihan && currentQuiz[currentIndex].pilihan.length > 0 ? (

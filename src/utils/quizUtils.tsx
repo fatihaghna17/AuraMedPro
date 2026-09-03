@@ -524,9 +524,15 @@ export const renderMarkdown = (text: string): React.ReactElement | null => {
 };
 
 const htmlSanitizeCache = new Map<string, string>();
+const htmlElementCache = new Map<string, React.JSX.Element>();
 
 export const renderHtmlText = (text: any) => {
   if (!text || typeof text !== 'string') return text || null;
+
+  // Return cached React element for referential stability (prevents Safari repaint on timer ticks)
+  let cached = htmlElementCache.get(text);
+  if (cached) return cached;
+
   let clean = htmlSanitizeCache.get(text);
   if (!clean) {
     clean = DOMPurify.sanitize(text, {
@@ -536,10 +542,14 @@ export const renderHtmlText = (text: any) => {
     });
     if (htmlSanitizeCache.size > 2000) {
       htmlSanitizeCache.clear();
+      htmlElementCache.clear();
     }
     htmlSanitizeCache.set(text, clean);
   }
-  return <span dangerouslySetInnerHTML={{ __html: clean }} />;
+
+  const el = <span dangerouslySetInnerHTML={{ __html: clean }} />;
+  htmlElementCache.set(text, el);
+  return el;
 };
 
 export const getQuestionImage = (q: Question): string | null => {
@@ -564,11 +574,11 @@ export const renderQuestionImage = (q: Question, setLightbox: (url: string | nul
           src={imageUrl} 
           alt="Soal Visual" 
           referrerPolicy="no-referrer"
-          className="max-h-[320px] object-contain transition-transform duration-300 group-hover:scale-[1.01] cursor-zoom-in p-2"
+          className="max-h-[320px] object-contain cursor-zoom-in p-2 quiz-img"
           onClick={() => setLightbox(imageUrl)}
         />
         <div 
-          className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer backdrop-blur-sm transition-all"
+          className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
           onClick={() => setLightbox(imageUrl)}
         >
           <Eye className="w-3.5 h-3.5" />
