@@ -10,6 +10,8 @@ interface KeyboardNavigationOptions {
   toggleDoubt?: () => void;
   setIsQuestionMapOpen?: (updater: (prev: boolean) => boolean) => void;
   handleNext?: () => void;
+  checkAnswer?: () => void;
+  isRevealed?: Record<number, boolean> | boolean[];
   closeModals?: () => void;
   toggleImageZoom?: () => void;
 }
@@ -24,6 +26,8 @@ export function useKeyboardNavigation({
   toggleDoubt,
   setIsQuestionMapOpen,
   handleNext,
+  checkAnswer,
+  isRevealed,
   closeModals,
   toggleImageZoom
 }: KeyboardNavigationOptions) {
@@ -34,11 +38,26 @@ export function useKeyboardNavigation({
     if (!isActive || screen !== 'quiz' || currentQuiz.length === 0) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in text inputs
+      // Ignore if typing in text inputs, EXCEPT if Enter is pressed (to check answer)
       const activeEl = document.activeElement;
       const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
       setIsInputFocused(isInput);
-      
+
+      // Enter: Cek Jawaban jika belum terbuka pembahasannya, atau Selanjutnya jika sudah
+      if (e.key === 'Enter') {
+        const revealed = isRevealed ? Boolean((isRevealed as any)[currentIndex]) : false;
+        if (!revealed && checkAnswer) {
+          e.preventDefault();
+          checkAnswer();
+          return;
+        }
+        if (revealed && handleNext) {
+          e.preventDefault();
+          handleNext();
+          return;
+        }
+      }
+
       if (isInput) return;
       if (isModalOpen && e.key !== 'Escape') return; // Only allow Escape when modal is open
 
@@ -72,12 +91,6 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // Enter: Next / Confirm
-      if (e.key === 'Enter' && handleNext) {
-        handleNext();
-        return;
-      }
-
       // Arrow Left / P: Previous
       if (e.key === 'ArrowLeft' || key === 'P') {
         if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
@@ -90,21 +103,22 @@ export function useKeyboardNavigation({
         return;
       }
       
-      // 1-5 keys for MCQ answers selection
+      // 1-5 or A-E keys for MCQ answers selection
+      const letters = ['A', 'B', 'C', 'D', 'E'];
       const numbers = ['1', '2', '3', '4', '5'];
+      let selectedIdx = -1;
+
       if (numbers.includes(e.key)) {
+        selectedIdx = numbers.indexOf(e.key);
+      } else if (letters.includes(key)) {
+        selectedIdx = letters.indexOf(key);
+      }
+
+      if (selectedIdx !== -1) {
         const q = currentQuiz[currentIndex];
-        if (q?.pilihan && q.pilihan.length > 0) {
-          const idx = numbers.indexOf(e.key);
-          if (idx < q.pilihan.length) {
-            selectAnswer(q.pilihan[idx]);
-            // Auto-next delay requested by user: 300ms
-            if (handleNext && currentIndex < currentQuiz.length - 1) {
-              setTimeout(() => {
-                handleNext();
-              }, 300);
-            }
-          }
+        if (q?.pilihan && q.pilihan.length > selectedIdx) {
+          selectAnswer(q.pilihan[selectedIdx]);
+          return;
         }
       }
     };
@@ -113,7 +127,7 @@ export function useKeyboardNavigation({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isActive, screen, currentQuiz, currentIndex, selectAnswer, toggleDoubt, setIsQuestionMapOpen, handleNext, closeModals, toggleImageZoom, isModalOpen]);
+  }, [isActive, screen, currentQuiz, currentIndex, selectAnswer, toggleDoubt, setIsQuestionMapOpen, handleNext, checkAnswer, isRevealed, closeModals, toggleImageZoom, isModalOpen]);
 
   return { isModalOpen, setIsModalOpen, isInputFocused };
 }

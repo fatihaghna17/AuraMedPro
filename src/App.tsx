@@ -1882,7 +1882,7 @@ export default function App() {
     triggerToast(`Latihan ${processedPool.length} soal bookmark dimulai!`, '🔖');
   };
 
-  const checkAnswerNow = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const checkAnswerNow = (event?: React.MouseEvent<HTMLButtonElement>) => {
     const userAnswer = userAnswers[currentIndex];
     const q = currentQuiz[currentIndex];
     const isIsian = !q.pilihan || q.pilihan.length === 0;
@@ -2427,6 +2427,8 @@ export default function App() {
     toggleDoubt,
     setIsQuestionMapOpen: () => {},
     handleNext: handleNextQuestion,
+    checkAnswer: () => checkAnswerNow(),
+    isRevealed,
     closeModals: () => {
       setModalOpen(false);
       setLightboxImage(null);

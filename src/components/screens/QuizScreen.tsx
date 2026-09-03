@@ -269,6 +269,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               updated[currentIndex] = e.target.value;
                               setUserAnswers(updated);
                             }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                checkAnswerNow();
+                              }
+                            }}
                             placeholder="Ketik jawaban Anda disini..."
                             className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold outline-none transition-all duration-200 ${
                               isRevealed[currentIndex]
