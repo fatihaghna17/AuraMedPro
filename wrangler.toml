@@ -11,7 +11,7 @@ bucket_name = "auramedpro-questions"
 [[d1_databases]]
 binding = "DB"
 database_name = "auramedpro-db"
-database_id = "auramedpro-db"
+database_id = "be74e469-34a0-45bb-8117-098f801a9c9c"
 
 # Environment Variables
 [vars]
