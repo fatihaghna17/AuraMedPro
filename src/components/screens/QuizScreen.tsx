@@ -61,6 +61,8 @@ interface QuizScreenProps {
   userXP: number;
   currentStreak: number;
   currentCombo?: number;
+  openFinishModal?: any;
+  finishQuiz?: any;
 
 }
 
@@ -751,7 +753,13 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               onPrev={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
               onNext={() => setCurrentIndex(prev => Math.min(currentQuiz.length - 1, prev + 1))}
               onCheck={() => checkAnswerNow({} as any)}
-              onFinish={() => finishQuiz()}
+              onFinish={() => {
+                if (openFinishModal) {
+                  openFinishModal();
+                } else if (finishQuiz) {
+                  finishQuiz();
+                }
+              }}
             />
           </div>
     </>
