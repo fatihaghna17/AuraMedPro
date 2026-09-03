@@ -523,13 +523,22 @@ export const renderMarkdown = (text: string): React.ReactElement | null => {
   return <span dangerouslySetInnerHTML={{ __html: clean }} />;
 };
 
+const htmlSanitizeCache = new Map<string, string>();
+
 export const renderHtmlText = (text: any) => {
   if (!text || typeof text !== 'string') return text || null;
-  const clean = DOMPurify.sanitize(text, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 's', 'sub', 'sup', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'img'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'colspan', 'rowspan'],
-    ALLOW_DATA_ATTR: false
-  });
+  let clean = htmlSanitizeCache.get(text);
+  if (!clean) {
+    clean = DOMPurify.sanitize(text, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 's', 'sub', 'sup', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'img'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'colspan', 'rowspan'],
+      ALLOW_DATA_ATTR: false
+    });
+    if (htmlSanitizeCache.size > 2000) {
+      htmlSanitizeCache.clear();
+    }
+    htmlSanitizeCache.set(text, clean);
+  }
   return <span dangerouslySetInnerHTML={{ __html: clean }} />;
 };
 

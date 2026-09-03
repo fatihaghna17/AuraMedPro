@@ -19,8 +19,8 @@ export default function QuizHeader({
   quizSecondsLeft, isFullscreen, onExit, onToggleFullscreen, onOpenMobileNav,
 }: QuizHeaderProps) {
   return (
-    <header className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors ${
-      theme === 'dark' ? 'bg-slate-950/85 border-slate-900 text-white' : 'bg-white/85 border-slate-200 text-slate-900'
+    <header className={`sticky top-0 z-40 border-b transition-colors quiz-card ${
+      theme === 'dark' ? 'bg-slate-950 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-900'
     }`}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between relative">
         <button
@@ -46,7 +46,7 @@ export default function QuizHeader({
             </span>
           )}
           
-          <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-all ${
+          <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-colors ${
             quizSecondsLeft < 300
               ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-black animate-pulse'
               : quizSecondsLeft < 600

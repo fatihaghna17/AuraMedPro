@@ -101,10 +101,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 <div className="lg:col-span-8 space-y-6 w-full max-w-[800px] mx-auto">
                   
                   {/* Main Question Card with Rounded-2xl */}
-                  <div className={`p-6 rounded-2xl transition-all duration-300 border ${
+                  <div className={`p-6 rounded-2xl border transition-colors duration-200 quiz-card ${
                     theme === 'dark'
-                      ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
-                      : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+                      ? 'bg-slate-900 border-slate-800 shadow-2xl'
+                      : 'bg-white border-slate-200 shadow-sm'
                   }`}>
                     
                     {/* Sub-kompetensi & Kesulitan tag */}
@@ -593,10 +593,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 <aside className="hidden lg:block lg:col-span-4 sticky top-24 w-full max-w-[320px] space-y-6">
                   
                   {/* Gamification Level stats */}
-                  <div className={`p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+                  <div className={`p-5 rounded-2xl border transition-colors duration-200 relative overflow-hidden quiz-card ${
                     theme === 'dark'
-                      ? 'bg-slate-900/40 border-white/[0.08] shadow-2xl backdrop-blur-md'
-                      : 'bg-white/50 border-slate-200/60 shadow-sm backdrop-blur-md'
+                      ? 'bg-slate-900 border-slate-800 shadow-2xl'
+                      : 'bg-white border-slate-200 shadow-sm'
                   }`}>
                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 via-emerald-400 to-amber-400" />
                     
@@ -630,8 +630,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                   </div>
 
                   {/* Question navigation grid sidebar */}
-                  <div className={`p-5 rounded-2xl border transition-all duration-300 ${
-                    theme === 'dark' ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl' : 'bg-white border-slate-200 shadow-sm'
+                  <div className={`p-5 rounded-2xl border transition-colors duration-200 quiz-card ${
+                    theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-2xl' : 'bg-white border-slate-200 shadow-sm'
                   }`}>
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center justify-between">
                       <span>Peta Soal</span>
