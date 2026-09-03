@@ -56,15 +56,37 @@ export async function joinRoom(
   displayName: string,
   avatarUrl?: string
 ): Promise<{ room: MabarRoom; player: MabarRoomPlayer }> {
-  // Get room
-  const { data: room, error: roomError } = await supabase
+  const cleanCode = (roomCode || '').trim().toUpperCase();
+  if (!cleanCode) throw new Error('Kode room tidak boleh kosong.');
+
+  // Ambil semua room dengan kode ini, urutkan dari yang terbaru
+  const { data: rooms, error: roomError } = await supabase
     .from('mabar_rooms')
     .select('*')
-    .eq('code', roomCode.trim().toUpperCase())
-    .single();
+    .eq('code', cleanCode)
+    .order('created_at', { ascending: false });
 
-  if (roomError || !room) throw new Error('Room tidak ditemukan.');
-  if (room.status !== 'waiting') throw new Error('Game sudah dimulai atau selesai.');
+  if (roomError) {
+    console.error('[Mabar joinRoom Error]', roomError);
+    throw new Error('Gagal menghubungi server room: ' + roomError.message);
+  }
+
+  if (!rooms || rooms.length === 0) {
+    throw new Error(`Room dengan kode "${cleanCode}" tidak ditemukan.`);
+  }
+
+  // Prioritaskan room yang statusnya masih 'waiting'
+  const room = rooms.find(r => r.status === 'waiting') || rooms[0];
+
+  if (room.status !== 'waiting') {
+    if (room.status === 'in_progress') {
+      throw new Error(`Room "${cleanCode}" sedang dalam pertandingan.`);
+    }
+    if (room.status === 'finished' || room.status === 'cancelled') {
+      throw new Error(`Room "${cleanCode}" sudah selesai atau dibatalkan.`);
+    }
+    throw new Error(`Room "${cleanCode}" tidak dapat dimasuki (status: ${room.status}).`);
+  }
 
   // Check players count
   const { count } = await supabase
@@ -73,36 +95,43 @@ export async function joinRoom(
     .eq('room_id', room.id);
 
   if ((count || 0) >= room.max_players) {
-    throw new Error('Room penuh.');
+    throw new Error('Room sudah penuh.');
   }
 
-  // Insert player (handle unique constraint properly in production, here upsert or handle error)
+  // Insert or update player
   const { data: player, error: playerError } = await supabase
     .from('mabar_room_players')
     .upsert({
       room_id: room.id,
       user_id: userId,
-      display_name: displayName,
-      avatar_url: avatarUrl,
+      display_name: displayName || 'Player',
+      avatar_url: avatarUrl || '',
       is_ready: true
     }, { onConflict: 'room_id,user_id' })
     .select()
-    .single();
+    .maybeSingle();
 
-  if (playerError) throw new Error(playerError.message);
+  if (playerError) {
+    console.error('[Mabar joinRoom player error]', playerError);
+    throw new Error('Gagal mendaftar ke room: ' + playerError.message);
+  }
 
-  return { room: room as MabarRoom, player: player as MabarRoomPlayer };
+  return { room: room as MabarRoom, player: (player || {}) as MabarRoomPlayer };
 }
 
 export async function getRoomByCode(code: string): Promise<MabarRoom | null> {
-  const { data, error } = await supabase
+  const cleanCode = (code || '').trim().toUpperCase();
+  if (!cleanCode) return null;
+
+  const { data: rooms, error } = await supabase
     .from('mabar_rooms')
     .select('*')
-    .eq('code', code.trim().toUpperCase())
-    .maybeSingle();
+    .eq('code', cleanCode)
+    .order('created_at', { ascending: false });
     
-  if (error) return null;
-  return data as MabarRoom;
+  if (error || !rooms || rooms.length === 0) return null;
+  const room = rooms.find(r => r.status === 'waiting') || rooms[0];
+  return room as MabarRoom;
 }
 
 export async function getRoomPlayers(roomId: string): Promise<MabarRoomPlayer[]> {

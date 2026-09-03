@@ -165,18 +165,23 @@ export default function App() {
   const [guestRoomCode, setGuestRoomCode] = useState('');
   
   const handleGuestJoin = async (nickname: string, roomCode: string) => {
-    if (!nickname || !roomCode) {
+    const cleanNick = (nickname || '').trim();
+    const cleanCode = (roomCode || '').trim().toUpperCase();
+
+    if (!cleanNick || !cleanCode) {
       triggerToast('Nama dan Kode Room wajib diisi!', '⚠️');
       return;
     }
     
-    triggerToast('Mendaftarkan guest...', '⏳');
+    triggerToast('Mendaftarkan akun tamu...', '⏳');
     const guestEmail = `guest_${Date.now()}_${Math.floor(Math.random()*1000)}@guest.auramed.id`;
+    const guestPassword = 'GuestPassword123!';
+
     const { data, error } = await supabase.auth.signUp({
       email: guestEmail,
-      password: 'GuestPassword123!',
+      password: guestPassword,
       options: {
-        data: { username: nickname }
+        data: { username: cleanNick }
       }
     });
     
@@ -184,10 +189,27 @@ export default function App() {
       triggerToast('Gagal masuk guest: ' + error.message, '❌');
       return;
     }
+
+    let user = data?.user;
+    if (!data?.session) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: guestEmail,
+        password: guestPassword
+      });
+      if (signInError) {
+        triggerToast('Gagal autentikasi guest: ' + signInError.message, '❌');
+        return;
+      }
+      user = signInData?.user;
+    }
+
+    if (user) {
+      setCurrentUser(user);
+    }
     
-    setGuestRoomCode(roomCode);
+    setGuestRoomCode(cleanCode);
     setDashboardTab('mabar');
-    triggerToast('Berhasil join! Tunggu sebentar...', '✅');
+    triggerToast(`Selamat datang ${cleanNick}! Masuk ke room...`, '✅');
   };
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [pendingSessions, setPendingSessions] = useState<any[]>([]);

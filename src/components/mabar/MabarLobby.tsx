@@ -12,10 +12,13 @@ export default function MabarLobby({ onNavigate, onJoin }: MabarLobbyProps) {
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (joinCode.length === 6) {
-      onJoin(joinCode.toUpperCase());
+    const clean = joinCode.trim().toUpperCase();
+    if (clean.length === 6) {
+      onJoin(clean);
     }
   };
+
+  const cleanCurrentCode = joinCode.trim().toUpperCase();
 
   return (
     <motion.div 
@@ -46,10 +49,16 @@ export default function MabarLobby({ onNavigate, onJoin }: MabarLobbyProps) {
               placeholder="Kode 6 Digit" 
               maxLength={6}
               value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-2 font-mono text-center text-xl uppercase"
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase().trim())}
+              className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-2 font-mono text-center text-xl uppercase tracking-widest font-bold"
             />
-            <button type="submit" disabled={joinCode.length < 6} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50">Join</button>
+            <button 
+              type="submit" 
+              disabled={cleanCurrentCode.length < 6} 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50 cursor-pointer"
+            >
+              Join
+            </button>
           </form>
         </motion.div>
       </div>

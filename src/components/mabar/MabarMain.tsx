@@ -21,22 +21,53 @@ interface MabarMainProps {
 }
 
 export default function MabarMain({ currentUser, availableTopics, questionDatabase, initialRoomCode }: MabarMainProps) {
-    useEffect(() => {
-    if (initialRoomCode) {
-      handleJoinSubmit(initialRoomCode);
-    }
-  }, [initialRoomCode]);
-
   const [view, setView] = useState<'lobby' | 'create' | 'join' | 'waiting' | 'host' | 'player' | 'podium' | 'history' | 'stats'>('lobby');
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [podiumPlayers, setPodiumPlayers] = useState<MabarRoomPlayer[]>([]);
-  
-
-
+  const hasAutoJoinedRef = React.useRef(false);
 
   // If we have an active room, fetch it
   const { room, players } = useMabarRoom(activeRoomId || '');
+
+  const handleJoinSubmit = React.useCallback(async (code: string) => {
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (!cleanCode) return;
+
+    try {
+      let user = currentUser;
+      if (!user || !user.id) {
+        // Fallback: cek session langsung dari Supabase
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          user = sessionData.session.user;
+        } else {
+          alert('Sesi belum siap. Mohon tunggu sebentar lalu coba lagi.');
+          return;
+        }
+      }
+
+      const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Player';
+      const { room: joinedRoom } = await joinRoom(
+        cleanCode, 
+        user.id, 
+        displayName
+      );
+      setActiveRoomId(joinedRoom.id);
+      setIsHost(false);
+      setView('waiting');
+    } catch (error) {
+      console.error('[Mabar handleJoinSubmit]', error);
+      alert(error instanceof Error ? error.message : 'Gagal gabung room');
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (initialRoomCode && !hasAutoJoinedRef.current) {
+      hasAutoJoinedRef.current = true;
+      handleJoinSubmit(initialRoomCode);
+    }
+  }, [initialRoomCode, handleJoinSubmit]);
 
   const handleCreateSubmit = async (params: {
     mode: MabarGameMode;
@@ -47,9 +78,20 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
     maxPlayers: number;
   }) => {
     try {
+      let user = currentUser;
+      if (!user || !user.id) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          user = sessionData.session.user;
+        } else {
+          alert('Sesi belum siap. Mohon login terlebih dahulu.');
+          return;
+        }
+      }
+
       const newRoom = await createRoom({
-        hostId: currentUser.id,
-        hostName: currentUser.user_metadata?.username || 'Host',
+        hostId: user.id,
+        hostName: user.user_metadata?.username || user.email?.split('@')[0] || 'Host',
         hostAvatarUrl: '',
         ...params
       });
@@ -84,21 +126,6 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
       setView('waiting');
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Gagal membuat room');
-    }
-  };
-
-  const handleJoinSubmit = async (code: string) => {
-    try {
-      const { room: joinedRoom } = await joinRoom(
-        code, 
-        currentUser.id, 
-        currentUser.user_metadata?.username || 'Player'
-      );
-      setActiveRoomId(joinedRoom.id);
-      setIsHost(false);
-      setView('waiting');
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Gagal gabung room');
     }
   };
 
