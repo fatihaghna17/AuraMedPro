@@ -35,14 +35,20 @@
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  -webkit-perspective: 1000;
-  perspective: 1000;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
   isolation: isolate;
   contain: paint;
 }
 
 /* Stabilise images inside quiz cards & inline HTML (dangerouslySetInnerHTML)
-   so Safari does not re-paint / flicker them on every 1-second timer re-render */
+   so Safari does not re-paint / flicker them on every 1-second timer re-render.
+
+   PENTING (iOS bug fix): JANGAN pakai `content-visibility: auto` pada <img>.
+   WebKit iOS menerapkan size-containment pada elemen yg dianggap "not relevant"
+   sesaat (scroll momentum, re-layout timer) → img tanpa tinggi eksplisit COLLAPSE
+   ke 0px → pilihan jawaban melompat naik → gambar muncul lagi → flicker berulang.
+   Ruang gambar kini dicadangkan via aspect-ratio di komponen StableImage. */
 .quiz-img,
 .quiz-card img,
 .quiz-card span[dangerouslysetinnerhtml] img,
@@ -53,7 +59,7 @@
   backface-visibility: hidden;
   will-change: auto;          /* reset – do NOT keep will-change: transform permanently */
   image-rendering: auto;
-  content-visibility: auto;   /* skip off-screen painting */
+  object-fit: contain;        /* konten tetap center di dalam box ber-aspect-ratio stabil */
 }
 
 /* Glassmorphism Card Style */

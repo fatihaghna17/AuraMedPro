@@ -30,6 +30,7 @@ export default function LightboxModal({ imageUrl, onClose }: LightboxModalProps)
           src={imageUrl}
           alt="Detail Gambar"
           referrerPolicy="no-referrer"
+          decoding="async"
           className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-slate-800/80 bg-slate-900/40 p-2"
         />
         <p className="mt-4 text-xs font-semibold text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-sm">

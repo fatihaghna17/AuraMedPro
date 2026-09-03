@@ -8,6 +8,7 @@ import { EXPLAIN_MODES } from '../../utils/aiExplain';
 import { generateQuestionFingerprint } from '../../utils/srsAlgorithm';
 import { getLevelInfo } from '../../utils/appHelpers';
 import { getCorrectLetterForQuestion, renderHtmlText, getQuestionImage, renderQuestionImage, isUserAnswerCorrect, renderMarkdown } from '../../utils/quizUtils';
+import StableImage from '../StableImage';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface QuizScreenProps {
@@ -180,15 +181,15 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     ), [currentQuiz[currentIndex].pertanyaan])}
 
-                    {/* Clinical Image — memoized & no transition-transform to prevent iOS Safari flickering */}
+                    {/* Clinical Image — memoized; StableImage reserves space via aspect-ratio so iOS WebKit never collapses the layout (anti-flicker) */}
                     {useMemo(() => {
                       const imageUrl = getQuestionImage(currentQuiz[currentIndex]);
                       if (!imageUrl) return null;
                       return (
                         <div className="my-5 relative group max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-250 dark:border-slate-800">
-                          <img 
-                            src={imageUrl} 
-                            alt="Visual Klinis" 
+                          <StableImage
+                            src={imageUrl}
+                            alt="Visual Klinis"
                             referrerPolicy="no-referrer"
                             className="w-full object-contain cursor-zoom-in quiz-img"
                             onClick={() => setLightboxImage(imageUrl)}

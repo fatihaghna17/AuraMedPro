@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import * as jsYaml from 'js-yaml';
 import { Question } from '../types';
+import StableImage from '../components/StableImage';
 
 // Configure marked for safe rendering
 marked.setOptions({
@@ -565,16 +566,17 @@ export const renderQuestionImage = (q: Question, setLightbox: (url: string | nul
   const imageUrl = getQuestionImage(q);
   if (!imageUrl) return null;
 
+  // StableImage: aspect-ratio tercadang (cache per-URL) — mencegah layout collapse & flicker di iOS WebKit
   return (
     <div className="my-4 relative group max-w-xl mx-auto">
       <div className={`overflow-hidden rounded-xl border shadow-sm flex justify-center items-center relative ${
         theme === 'dark' ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-100'
       }`}>
-        <img 
-          src={imageUrl} 
-          alt="Soal Visual" 
+        <StableImage
+          src={imageUrl}
+          alt="Soal Visual"
           referrerPolicy="no-referrer"
-          className="max-h-[320px] object-contain cursor-zoom-in p-2 quiz-img"
+          className="w-full max-h-[320px] object-contain cursor-zoom-in p-2 quiz-img"
           onClick={() => setLightbox(imageUrl)}
         />
         <div 
