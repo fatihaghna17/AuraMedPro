@@ -97,15 +97,30 @@ import { useAchievements } from './hooks/useAchievements';
 import { getIntervalLabel, generateQuestionFingerprint, type SRSCard, type QualityRating } from './utils/srsAlgorithm';
 import { getRarityColor, getRarityBg, type AchievementStats } from './utils/achievements';
 
-// Lazy loaded heavy components & secondary screens
-const DashboardCharts = React.lazy(() => import('./components/DashboardCharts').then(m => ({ default: m.DashboardCharts })));
-const MabarMain = React.lazy(() => import("./components/mabar/MabarMain"));
-const SetupReportsTab = React.lazy(() => import('./components/tabs/SetupReportsTab').then(m => ({ default: m.SetupReportsTab })));
-const SetupBanksTab = React.lazy(() => import('./components/tabs/SetupBanksTab').then(m => ({ default: m.SetupBanksTab })));
-const SetupNewQuizTab = React.lazy(() => import('./components/tabs/SetupNewQuizTab').then(m => ({ default: m.SetupNewQuizTab })));
-const SetupProfileTab = React.lazy(() => import('./components/tabs/SetupProfileTab').then(m => ({ default: m.SetupProfileTab })));
-const SetupSRSTab = React.lazy(() => import('./components/tabs/SetupSRSTab').then(m => ({ default: m.SetupSRSTab })));
-const SetupNotesTab = React.lazy(() => import('./components/tabs/SetupNotesTab').then(m => ({ default: m.SetupNotesTab })));
+import { SetupReportsTab } from './components/tabs/SetupReportsTab';
+import { SetupBanksTab } from './components/tabs/SetupBanksTab';
+import { SetupNewQuizTab } from './components/tabs/SetupNewQuizTab';
+import { SetupProfileTab } from './components/tabs/SetupProfileTab';
+import { SetupSRSTab } from './components/tabs/SetupSRSTab';
+import { SetupNotesTab } from './components/tabs/SetupNotesTab';
+
+// Helper for dynamic imports with auto-reload on stale deployment chunk
+const lazyWithRetry = <T extends React.ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+) =>
+  React.lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.warn('Dynamic import failed, reloading page for latest version...', error);
+      window.location.reload();
+      throw error;
+    }
+  });
+
+// Lazy loaded heavy external components
+const DashboardCharts = lazyWithRetry(() => import('./components/DashboardCharts').then(m => ({ default: m.DashboardCharts })));
+const MabarMain = lazyWithRetry(() => import("./components/mabar/MabarMain"));
 import LightboxModal from './components/LightboxModal';
 import IosInstallModal from './components/IosInstallModal';
 import SkeletonLoader from './components/SkeletonLoader';

@@ -5,6 +5,12 @@ import './index.css';
 
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
+// Auto reload on new deployment / stale dynamic import chunk
+window.addEventListener('vite:preloadError', (event) => {
+  console.warn('Vite preload error detected, refreshing page for latest version...', event);
+  window.location.reload();
+});
+
 // Register Service Worker for PWA (background notifications + offline caching)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
