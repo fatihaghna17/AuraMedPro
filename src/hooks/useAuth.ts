@@ -4,6 +4,7 @@ import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
 import { getCachedQuestions, setCachedQuestions } from '../utils/questionCache';
+import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useAuth({
   triggerToast,
@@ -155,6 +156,14 @@ export function useAuth({
 
   const checkActiveQuizSession = async (userId: string) => {
     try {
+      // 1. Coba ambil sesi dari Cloudflare D1
+      const cfSession = await cloudflareApi.getQuizSession(userId);
+      if (cfSession && cfSession.is_multi_session === true && Array.isArray(cfSession.sessions) && cfSession.sessions.length > 0) {
+        setPendingSessions(cfSession.sessions);
+        return;
+      }
+
+      // 2. Fallback ke Supabase
       const { data, error } = await supabase
         .from('quiz_sessions')
         .select('*')
@@ -223,6 +232,15 @@ export function useAuth({
 
   const fetchGlobalSettings = async () => {
     try {
+      // 1. Coba ambil dari Cloudflare D1
+      const cfSettings = await cloudflareApi.getAppSettings();
+      if (cfSettings && (cfSettings.customFolders || cfSettings.quizFolderMap)) {
+        if (cfSettings.customFolders) setGlobalCustomFolders(cfSettings.customFolders);
+        if (cfSettings.quizFolderMap) setGlobalQuizFolderMap(cfSettings.quizFolderMap);
+        return;
+      }
+
+      // 2. Fallback ke Supabase
       const { data, error } = await supabase
         .from('app_settings')
         .select('key, value');
@@ -232,8 +250,14 @@ export function useAuth({
       }
       if (data) {
         data.forEach(row => {
-          if (row.key === 'customFolders') setGlobalCustomFolders(row.value || []);
-          if (row.key === 'quizFolderMap') setGlobalQuizFolderMap(row.value || {});
+          if (row.key === 'customFolders') {
+            setGlobalCustomFolders(row.value || []);
+            cloudflareApi.saveAppSettings('customFolders', row.value).catch(() => {});
+          }
+          if (row.key === 'quizFolderMap') {
+            setGlobalQuizFolderMap(row.value || {});
+            cloudflareApi.saveAppSettings('quizFolderMap', row.value).catch(() => {});
+          }
         });
       }
     } catch (err) {
@@ -243,18 +267,33 @@ export function useAuth({
 
   const fetchUserQuestions = async (userId: string, username: string) => {
     try {
-      const { data, error } = await supabase
-        .from('question_banks')
-        .select(`
-          name,
-          questions_json,
-          user_id,
-          profiles (
-            username
-          )
-        `);
+      // 1. Ambil metadata bank soal dari Cloudflare D1 (0 Egress!)
+      const cfBanks = await cloudflareApi.getQuestionBanks();
       
-      if (error) throw error;
+      let data: any[] = [];
+      if (cfBanks && cfBanks.length > 0) {
+        data = cfBanks.map(b => ({
+          name: b.name,
+          user_id: b.user_id,
+          questions_json: b.r2_key ? { r2_key: b.r2_key, r2_url: b.r2_url } : null,
+          profiles: { username: b.uploader_username || 'admin' }
+        }));
+      } else {
+        // Fallback ke Supabase jika D1 belum terisi
+        const { data: supaData, error } = await supabase
+          .from('question_banks')
+          .select(`
+            name,
+            questions_json,
+            user_id,
+            profiles (
+              username
+            )
+          `);
+        if (!error && supaData) {
+          data = supaData;
+        }
+      }
       
       const mappedData: Record<string, Question[]> = {};
       const globals: string[] = [];

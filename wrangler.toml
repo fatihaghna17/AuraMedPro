@@ -5,7 +5,13 @@ pages_build_output_dir = "dist"
 # R2 Bucket Binding
 [[r2_buckets]]
 binding = "QUESTIONS_BUCKET"
-bucket_name = "auramedpro-questions"  # GANTI dengan nama bucket R2 yang aktif
+bucket_name = "auramedpro-questions"
+
+# D1 Database Binding (Cloudflare SQLite)
+[[d1_databases]]
+binding = "DB"
+database_name = "auramedpro-db"
+database_id = "auramedpro-db"
 
 # Environment Variables
 [vars]

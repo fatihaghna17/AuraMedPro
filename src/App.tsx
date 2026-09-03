@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
+import { cloudflareApi } from './services/cloudflareApi';
 import {
   CheckCircle2,
   XCircle,
@@ -607,6 +608,13 @@ export default function App() {
     const q = currentQuiz[reportModal.questionIndex];
     
     try {
+      cloudflareApi.reportQuestion({
+        user_id: currentUser.id,
+        question_id: selectedDatabases[0] || 'Kuis',
+        reason: reportIssueType,
+        details: reportDescription,
+      }).catch(() => {});
+
       const { error } = await supabase.from('question_reports').insert([{
         user_id: currentUser.id,
         question_bank_name: selectedDatabases[0] || 'Kuis',
@@ -1032,6 +1040,10 @@ export default function App() {
         try { localStorage.setItem('cbt_active_sessions', JSON.stringify(localList)); } catch(e) { console.warn('localStorage full'); }
         setPendingSessions(localList);
 
+        // 1. Simpan ke Cloudflare D1 (0 Egress!)
+        cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: localList }).catch(() => {});
+
+        // 2. Fallback Supabase
         await supabase
           .from('quiz_sessions')
           .upsert({
@@ -1185,6 +1197,7 @@ export default function App() {
           const newGlobal = [...globalCustomFolders, name];
           setGlobalCustomFolders(newGlobal);
           try {
+            cloudflareApi.saveAppSettings('customFolders', newGlobal).catch(() => {});
             await supabase.from('app_settings').upsert({ key: 'customFolders', value: newGlobal });
             triggerToast(`Folder global "${name}" berhasil dibuat!`, '🌍');
           } catch (e) {
@@ -1225,6 +1238,7 @@ export default function App() {
       });
 
       try {
+        cloudflareApi.saveAppSettings('quizFolderMap', newMap).catch(() => {});
         await supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: newMap });
       } catch (e) {
         console.error(e);
@@ -1273,13 +1287,33 @@ export default function App() {
         // Simpan ke database Supabase
         (async () => {
           try {
-            // R2 upload sebagai backup saja (best-effort), jangan blok jika gagal
-            uploadQuestionsToR2(file.name, finalQuestions).catch(err =>
-              console.warn('R2 upload skipped:', err)
-            );
+            // 1. Upload ke Cloudflare R2 (0 Egress)
+            const r2Res = await uploadQuestionsToR2(file.name, finalQuestions);
+
+            // 2. Simpan metadata ke Cloudflare D1
+            if (r2Res) {
+              await cloudflareApi.saveQuestionBank({
+                name: file.name,
+                user_id: currentUser.id,
+                r2_key: r2Res.r2_key,
+                r2_url: r2Res.r2_url,
+              });
+            } else {
+              await cloudflareApi.saveQuestionBank({
+                name: file.name,
+                user_id: currentUser.id,
+                questions_json: finalQuestions,
+              });
+            }
+
+            // 3. Simpan ke Supabase hanya referensi R2 agar tidak boros egress!
+            const supaPayload = r2Res 
+              ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
+              : finalQuestions;
+
             const { error } = await supabase
               .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
+              .upsert({ user_id: currentUser.id, name: file.name, questions_json: supaPayload }, { onConflict: 'user_id,name' });
             if (error) throw error;
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
@@ -1353,16 +1387,28 @@ export default function App() {
 
     if (loadedCount > 0) {
       try {
-        // Simpan setiap bank soal ke Supabase
+        // Simpan setiap bank soal ke Cloudflare R2 & D1 (0 Egress)
         for (const [name, questions] of Object.entries(newDatabases)) {
-          // R2 upload sebagai backup saja (best-effort)
-          uploadQuestionsToR2(name, questions).catch(err =>
-            console.warn('R2 upload skipped:', err)
-          );
-          const { error } = await supabase
+          const r2Res = await uploadQuestionsToR2(name, questions);
+          if (r2Res) {
+            cloudflareApi.saveQuestionBank({
+              name,
+              user_id: currentUser.id,
+              r2_key: r2Res.r2_key,
+              r2_url: r2Res.r2_url,
+            }).catch(() => {});
+          } else {
+            cloudflareApi.saveQuestionBank({
+              name,
+              user_id: currentUser.id,
+              questions_json: questions,
+            }).catch(() => {});
+          }
+
+          const supaPayload = r2Res ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } : questions;
+          await supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
-          if (error) throw error;
+            .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' });
         }
 
         const updated = { ...questionDatabase, ...newDatabases };
@@ -1462,6 +1508,9 @@ export default function App() {
     if (!window.confirm(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`)) return;
     (async () => {
       try {
+        // Hapus dari Cloudflare D1
+        cloudflareApi.deleteQuestionBank(name).catch(() => {});
+
         // Hapus dari Supabase tanpa filter user_id (karena global)
         const { data: bankData, error: fetchErr } = await supabase
           .from('question_banks')
@@ -1495,7 +1544,8 @@ export default function App() {
         setGlobalQuizFolderMap((prev) => {
           const next = { ...prev };
           delete next[name];
-          // Simpan perubahan ke Supabase
+          // Simpan perubahan ke Cloudflare D1 + Supabase
+          cloudflareApi.saveAppSettings('quizFolderMap', next).catch(() => {});
           supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: next }).then(() => {}, console.error);
           return next;
         });
@@ -1519,8 +1569,9 @@ export default function App() {
       if (keysToRemove.length === 0) return;
 
       try {
-        // Hapus setiap file dari Supabase
+        // Hapus setiap file dari Cloudflare D1 & Supabase
         for (const key of keysToRemove) {
+          cloudflareApi.deleteQuestionBank(key).catch(() => {});
           const { error } = await supabase
             .from('question_banks')
             .delete()
@@ -1624,8 +1675,9 @@ export default function App() {
 
   const loadSampleQuestions = async () => {
     try {
-      // Simpan semua SAMPLE_BANKS ke Supabase
+      // Simpan semua SAMPLE_BANKS ke Cloudflare D1 & Supabase
       for (const [name, questions] of Object.entries(SAMPLE_BANKS)) {
+        cloudflareApi.saveQuestionBank({ user_id: currentUser.id, name, questions_json: questions }).catch(() => {});
         const { error } = await supabase
           .from('question_banks')
           .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });

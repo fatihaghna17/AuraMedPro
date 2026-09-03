@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { generateQuestionFingerprint } from '../utils/srsAlgorithm';
 import { isUserAnswerCorrect, getCorrectLetterForQuestion } from '../utils/quizUtils';
 import { Question } from '../types';
+import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useAnswerNotes(
   currentUser: any,
@@ -20,6 +21,19 @@ export function useAnswerNotes(
   const fetchAnswerNotes = useCallback(async () => {
     if (!currentUser) return;
     try {
+      // 1. Coba ambil dari Cloudflare D1
+      const cfNotes = await cloudflareApi.getAnswerNotes(currentUser.id);
+      if (cfNotes && cfNotes.length > 0) {
+        const notesMap: Record<string, string> = {};
+        cfNotes.forEach(d => {
+          const key = generateQuestionFingerprint({ pertanyaan: d.question_text });
+          notesMap[key] = d.note_content;
+        });
+        setAnswerNotes(notesMap);
+        return;
+      }
+
+      // 2. Fallback ke Supabase
       const { data, error } = await supabase
         .from('answer_notes')
         .select('question_text, note_content')
@@ -43,6 +57,10 @@ export function useAnswerNotes(
     setNoteSaving(true);
     try {
       const fp = generateQuestionFingerprint({ pertanyaan: questionText });
+      
+      // Simpan ke Cloudflare D1 (0 Egress)
+      cloudflareApi.saveAnswerNote(currentUser.id, fp, content.trim()).catch(() => {});
+
       const { error } = await supabase
         .from('answer_notes')
         .upsert({

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useLeaderboard(currentUser: any, profileUsername: string, triggerToast: (msg: string, icon?: string) => void) {
   const [globalLeaderboard, setGlobalLeaderboard] = useState<any[]>([]);
@@ -16,6 +17,25 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
   async function fetchGlobalLeaderboard() {
     try {
       setIsLeaderboardLoading(true);
+
+      // 1. Coba ambil dari Cloudflare D1 terlebih dahulu
+      const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter);
+      if (cfData && cfData.length > 0) {
+        const userRankIndex = cfData.findIndex(u => u.username === profileUsername);
+        let top10 = cfData.slice(0, 10);
+        if (userRankIndex > 9) {
+          top10.push({
+            ...cfData[userRankIndex],
+            isCurrentUserOutOfTop10: true,
+            actualRank: userRankIndex + 1
+          });
+        }
+        setGlobalLeaderboard(top10);
+        setIsLeaderboardLoading(false);
+        return;
+      }
+
+      // 2. Fallback ke Supabase
       let allData: any[] = [];
 
       if (globalTimeFilter === 'all') {
@@ -133,6 +153,24 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
     try {
       setIsLeaderboardLoading(true);
       
+      // 1. Coba ambil dari Cloudflare D1 terlebih dahulu
+      const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter);
+      if (cfData && cfData.length > 0) {
+        const userRankIndex = cfData.findIndex(u => u.username === profileUsername);
+        let top10 = cfData.slice(0, 10);
+        if (userRankIndex > 9) {
+          top10.push({
+            ...cfData[userRankIndex],
+            isCurrentUserOutOfTop10: true,
+            actualRank: userRankIndex + 1
+          });
+        }
+        setFileLeaderboard(top10);
+        setIsLeaderboardLoading(false);
+        return;
+      }
+
+      // 2. Fallback ke Supabase
       let query = supabase
         .from('leaderboard')
         .select(`
@@ -216,6 +254,15 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
     const score = Math.round((correctCount / totalCount) * 100);
 
     try {
+      // 0. Simpan ke Cloudflare D1 (0 Egress!)
+      cloudflareApi.recordQuizResult({
+        user_id: currentUser.id,
+        file_name: fileName,
+        score,
+        correct_count: correctCount,
+        total_count: totalCount,
+      }).catch(err => console.warn('Failed to sync to Cloudflare D1 leaderboard:', err));
+
       // 1. Insert ke quiz_history_logs (untuk time-filtered global leaderboard)
       const { error: logError } = await supabase
         .from('quiz_history_logs')
