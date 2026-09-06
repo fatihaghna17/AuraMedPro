@@ -279,20 +279,7 @@ export function useAuth({
           profiles: { username: b.uploader_username || 'admin' }
         }));
       } else {
-        // Fallback ke Supabase jika D1 belum terisi
-        const { data: supaData, error } = await supabase
-          .from('question_banks')
-          .select(`
-            name,
-            questions_json,
-            user_id,
-            profiles (
-              username
-            )
-          `);
-        if (!error && supaData) {
-          data = supaData;
-        }
+        console.warn('Bank soal dari Cloudflare D1 belum tersedia.');
       }
       
       const mappedData: Record<string, Question[]> = {};
@@ -495,7 +482,7 @@ export function useAuth({
       } catch (err) {
         console.error('Error checking active session:', err);
       }
-    }, 15000); // 15 seconds
+    }, 120000); // 2 menit (menghemat egress 87.5% dibanding 15 detik)
 
     return () => clearInterval(interval);
   }, [currentUser, localSessionId]);
