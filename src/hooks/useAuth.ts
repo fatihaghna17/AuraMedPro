@@ -328,9 +328,8 @@ export function useAuth({
             if (cached && Array.isArray(cached) && cached.length > 0) {
               questions = cached;
             } else {
-              // 2. Fetch dari Cloudflare R2 jika belum ada di cache
-              const R2_BASE = 'https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev';
-              const correctUrl = `${R2_BASE}/${r2Key}`;
+              // 2. Fetch dari R2 via same-origin proxy (hindari CORS block)
+              const correctUrl = `/api/r2-questions?key=${encodeURIComponent(r2Key)}`;
               try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
@@ -339,17 +338,9 @@ export function useAuth({
                 if (res.ok) {
                   const fetched = await res.json();
                   if (Array.isArray(fetched) && fetched.length > 0) {
-                    const oldUrl = questions.r2_url;
                     questions = fetched;
                     // Simpan ke cache browser untuk kunjungan berikutnya
                     setCachedQuestions(r2Key, fetched);
-                    // Auto-migrate: perbaiki r2_url di Supabase jika URL lama salah
-                    if (oldUrl !== correctUrl) {
-                      supabase.from('question_banks')
-                        .update({ questions_json: { r2_url: correctUrl, r2_key: r2Key } })
-                        .eq('name', row.name)
-                        .then(() => console.log('Auto-migrated R2 URL for:', row.name));
-                    }
                   } else {
                     console.warn('R2 returned empty/invalid data for:', row.name);
                     questions = [];
