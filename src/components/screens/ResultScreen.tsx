@@ -17,6 +17,7 @@ interface ResultScreenProps {
   selectedDatabases: string[];
   submitScoreToLeaderboard: any;
   lastQuizScore: number;
+  lastQuizXPGained?: number;
   setLightboxImage: any;
 
   startQuiz: any;
@@ -35,7 +36,7 @@ interface ResultScreenProps {
 export const ResultScreen: React.FC<ResultScreenProps> = ({
   theme, currentQuiz, userAnswers, studyRoom, currentUser, openNotePopup,
   answerNotes, setScreen, setDashboardTab, selectedDatabases,
-  submitScoreToLeaderboard, lastQuizScore, setLightboxImage, setReportModal, startQuiz, shareResult, srs, hasSubmittedLeaderboard, isLeaderboardLoading, analytics, weaknessesList, openReviewIndices, toggleReviewAccordion
+  submitScoreToLeaderboard, lastQuizScore, lastQuizXPGained = 0, setLightboxImage, setReportModal, startQuiz, shareResult, srs, hasSubmittedLeaderboard, isLeaderboardLoading, analytics, weaknessesList, openReviewIndices, toggleReviewAccordion
 }) => {
   return (
     <>
@@ -121,7 +122,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 );
               })()}
 
-              <div className="grid grid-cols-3 gap-2 mt-8 max-w-md mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-8 max-w-lg mx-auto">
                 <div className={`p-3.5 rounded-xl border ${
                   theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
                 }`}>
@@ -152,7 +153,18 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   </div>
                   <div className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mt-1">
                     Kosong
-                    </div>
+                  </div>
+                </div>
+
+                <div className={`p-3.5 rounded-xl border ${
+                  theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200/80'
+                }`}>
+                  <div className="text-xl font-extrabold text-amber-500">
+                    +{lastQuizXPGained || 0}
+                  </div>
+                  <div className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 mt-1">
+                    XP Masuk
+                  </div>
                 </div>
               </div>
 

@@ -333,6 +333,7 @@ export default function App() {
   const [pasteError, setPasteError] = useState('');
   const activeQuizSessionIdRef = useRef<string | null>(null);
   const hasRecordedLeaderboard = useRef(false);
+  const [lastQuizXPGained, setLastQuizXPGained] = useState<number>(0);
 // extracted leaderboard state
 // extracted leaderboard state
 // extracted leaderboard state
@@ -503,13 +504,24 @@ export default function App() {
             updated_at: new Date().toISOString()
           })
           .eq('id', currentUser.id);
+
+        // Sinkronkan juga data profil terbaru ke Cloudflare D1
+        cloudflareApi.saveProfile({
+          id: currentUser.id,
+          username: profileUsername,
+          xp: userXP,
+          level: currentLevel,
+          streak: currentStreak,
+          total_questions_answered: totalQuestionsAnswered,
+          last_active: lastActiveDate || new Date().toISOString()
+        }).catch(err => console.warn('Gagal sinkronisasi gamifikasi ke D1:', err));
       } catch (err) {
         console.error('Gagal sinkronisasi data gamifikasi ke cloud:', err);
       }
     };
     
     updateProfile();
-  }, [userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate, currentUser, authLoading]);
+  }, [userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate, currentUser, authLoading, profileUsername, totalQuestionsAnswered]);
 
   // Floating text / XP notification
   const [floatingXP, setFloatingXP] = useState<{ id: number; text: string; isBenar: boolean; x: number; y: number } | null>(null);
@@ -1850,6 +1862,7 @@ export default function App() {
     setUnlockedHints({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
+    setLastQuizXPGained(0);
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -1890,6 +1903,7 @@ export default function App() {
     setUnlockedHints({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
+    setLastQuizXPGained(0);
     setIsDailyChallenge(true);
 
     activeQuizSessionIdRef.current = 'quiz_daily_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -1938,6 +1952,7 @@ export default function App() {
     setUnlockedHints({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
+    setLastQuizXPGained(0);
     setIsDailyChallenge(false);
 
     activeQuizSessionIdRef.current = 'quiz_bookmark_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -2157,19 +2172,119 @@ export default function App() {
     setQuizTimerActive(false);
     let correct = 0;
     let empty = 0;
+    let unrevealedCorrect = 0;
+    let batchXPGained = 0;
+    let totalQuizXP = 0;
+    let runningCombo = currentCombo;
 
     currentQuiz.forEach((q, i) => {
       const ans = userAnswers[i];
-      if (ans === null) {
+      if (ans === null || ans === undefined || ans === '') {
         empty++;
       } else if (isUserAnswerCorrect(ans, q)) {
         correct++;
+
+        // Hitung base XP soal
+        let baseXP = q.metadata?.xp || 100;
+        const isIsian = !q.pilihan || q.pilihan.length === 0;
+        if (isIsian) {
+          const hintsUsed = unlockedHints[i] || 0;
+          const penaltyRate = q.featureFlags?.hintPenalty !== undefined ? q.featureFlags.hintPenalty : 0.25;
+          baseXP = Math.max(10, Math.floor(baseXP * (1 - (hintsUsed * penaltyRate))));
+        }
+
+        // Hitung XP untuk soal yang belum di-reveal secara per-nomor ("Cek Jawaban")
+        if (!isRevealed[i]) {
+          unrevealedCorrect++;
+          runningCombo += 1;
+          let qXP = baseXP + (runningCombo - 1) * 20; // 20 XP combo bonus
+          if (isDailyChallenge) {
+            qXP *= 2;
+          }
+          if (isAdaptiveMode && q.metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar') {
+            qXP = Math.floor(qXP * 1.5);
+          }
+          batchXPGained += qXP;
+          totalQuizXP += qXP;
+        } else {
+          totalQuizXP += baseXP;
+        }
+      } else {
+        if (!isRevealed[i]) {
+          runningCombo = 0;
+        }
       }
     });
 
     const total = currentQuiz.length;
     const wrong = total - correct - empty;
     const finalScore = Math.round((correct / total) * 100);
+
+    // Tambahkan XP hasil submit batch ke profil user
+    if (batchXPGained > 0) {
+      setUserXP((prev) => {
+        const nextXP = prev + batchXPGained;
+        setXpHistory((history) => [...history, nextXP]);
+        return nextXP;
+      });
+      setCurrentCombo(runningCombo);
+    }
+    
+    // Simpan total XP yang diperoleh di sesi ini untuk ditampilkan di ResultScreen
+    setLastQuizXPGained(totalQuizXP > 0 ? totalQuizXP : batchXPGained);
+
+    // Tambahkan total_questions_answered di state untuk soal yang belum di-reveal
+    if (unrevealedCorrect > 0) {
+      setTotalQuestionsAnswered((prev) => prev + unrevealedCorrect);
+    }
+
+    // Update Daily Streak saat submit batch (jika ada jawaban benar)
+    if (currentUser && correct > 0) {
+      const nowInJakarta = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+      const todayStr = nowInJakarta.toISOString().split('T')[0];
+
+      let nextDailyStreak = currentStreak;
+      let nextLongestStreak = longestStreak;
+      let isStreakUpdated = false;
+
+      if (lastActiveDate !== todayStr) {
+        if (lastActiveDate) {
+          const lastActiveDateObj = new Date(lastActiveDate);
+          lastActiveDateObj.setHours(0, 0, 0, 0);
+          const todayDateObj = new Date(todayStr);
+          todayDateObj.setHours(0, 0, 0, 0);
+          const diffDays = Math.floor((todayDateObj.getTime() - lastActiveDateObj.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            nextDailyStreak += 1;
+            isStreakUpdated = true;
+          } else if (diffDays > 1) {
+            if (diffDays === 2 && streakFreezeLeft > 0) {
+              setStreakFreezeLeft((prev) => prev - 1);
+              nextDailyStreak += 1;
+              isStreakUpdated = true;
+            } else {
+              nextDailyStreak = 1;
+              isStreakUpdated = true;
+            }
+          }
+        } else {
+          nextDailyStreak = 1;
+          isStreakUpdated = true;
+        }
+
+        if (isStreakUpdated) {
+          if (nextDailyStreak > nextLongestStreak) nextLongestStreak = nextDailyStreak;
+          setCurrentStreak(nextDailyStreak);
+          setLongestStreak(nextLongestStreak);
+          setLastActiveDate(todayStr);
+          triggerToast(`🔥 Daily Streak bertambah: ${nextDailyStreak} Hari!`, '🔥');
+        }
+      }
+    }
+
+    // Buka kunci semua soal agar pengguna dapat melihat pembahasan di ResultScreen
+    setIsRevealed(new Array(currentQuiz.length).fill(true));
 
     // Adaptive Mode Finish Toast
     if (isAdaptiveMode) {
@@ -2217,14 +2332,16 @@ export default function App() {
     setLastQuizScore(finalScore);
 
     if (currentUser) {
+      const nextTotalAnswered = totalQuestionsAnswered + unrevealedCorrect;
+      const nextTotalXP = userXP + batchXPGained;
       const achStats: AchievementStats = {
         totalQuizzes: quizHistory.length + 1,
-        totalQuestionsAnswered: totalQuestionsAnswered + currentQuiz.length,
+        totalQuestionsAnswered: nextTotalAnswered,
         totalCorrect: correct,
         currentStreak,
         longestStreak,
-        level: getLevelInfo(userXP).level,
-        xp: userXP,
+        level: getLevelInfo(nextTotalXP).level,
+        xp: nextTotalXP,
         perfectScores: finalScore === 100 ? (quizHistory.filter(h => h.score === 100).length + 1) : quizHistory.filter(h => h.score === 100).length,
         dailyChallengesCompleted: quizHistory.filter(h => h.files.includes('daily')).length,
         uniqueBanksAttempted: new Set(quizHistory.flatMap(h => h.files)).size,
@@ -2271,6 +2388,7 @@ export default function App() {
     }
 
     if (currentUser) {
+      hasRecordedLeaderboard.current = true;
       const quizFileName = selectedDatabases.length === 1
         ? selectedDatabases[0]
         : selectedDatabases.length > 1
@@ -2280,7 +2398,11 @@ export default function App() {
     }
 
     setScreen('result');
-    triggerToast('Kuis diselesaikan! Lihat analisis performa Anda.', '🏆');
+    if (batchXPGained > 0) {
+      triggerToast(`Kuis Selesai! +${batchXPGained} XP berhasil masuk ke profil! 🌟`, '🏆');
+    } else {
+      triggerToast('Kuis diselesaikan! Lihat analisis performa Anda.', '🏆');
+    }
 
     // Celebration confetti if score is >= 80
     if (finalScore >= 80) {
@@ -3213,7 +3335,7 @@ export default function App() {
         {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} finishQuiz={finishQuiz} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} />}
 
         {/* === RESULT & ANALYTICS SUMMARY SCREEN === */}
-        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} />}
+        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} lastQuizXPGained={lastQuizXPGained} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} />}
 
       </div>
 
