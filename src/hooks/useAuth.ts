@@ -284,12 +284,29 @@ export function useAuth({
       
       let data: any[] = [];
       if (cfBanks && cfBanks.length > 0) {
-        data = cfBanks.map(b => ({
-          name: b.name,
-          user_id: b.user_id,
-          questions_json: b.questions_json || (b.r2_key ? { r2_key: b.r2_key, r2_url: b.r2_url } : null),
-          profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
-        }));
+        data = cfBanks
+          .filter(b => {
+            // Soal global bawaan dari admin
+            const isGlobal = b.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || b.uploader_username === 'admin';
+            // Soal pribadi milik user yang sedang login
+            const isMine = b.user_id === userId;
+            // Hak pantau semua soal khusus akun collector
+            const isCollector = username === 'collector';
+            return isGlobal || isMine || isCollector;
+          })
+          .map(b => {
+            // Utamakan r2_key untuk menarik berkas soal lengkap dari Cloudflare R2
+            const hasDirectJson = b.questions_json && b.questions_json !== 'null' && b.questions_json !== 'undefined';
+            const questionsPayload = b.r2_key 
+              ? { r2_key: b.r2_key, r2_url: b.r2_url } 
+              : (hasDirectJson ? b.questions_json : null);
+            return {
+              name: b.name,
+              user_id: b.user_id,
+              questions_json: questionsPayload,
+              profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
+            };
+          });
       } else {
         console.warn('Bank soal dari Cloudflare D1 belum tersedia.');
       }
@@ -367,7 +384,7 @@ export function useAuth({
           const ownerProfile = row.profiles as any;
           if (ownerProfile) {
             uploaders[row.name] = ownerProfile.username;
-            if (ownerProfile.username === 'admin') {
+            if (row.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || ownerProfile.username === 'admin') {
               globals.push(row.name);
             }
           }

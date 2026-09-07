@@ -31,7 +31,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         qb.user_id, 
         qb.r2_key, 
         qb.r2_url,
-        qb.questions_json,
+        CASE WHEN qb.questions_json = 'null' THEN NULL ELSE qb.questions_json END as questions_json,
         qb.created_at,
         p.username as uploader_username
       FROM question_banks qb
@@ -89,7 +89,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       user_id,
       r2_key || null,
       r2_url || null,
-      typeof questions_json === 'object' ? JSON.stringify(questions_json) : (questions_json || null),
+      questions_json && typeof questions_json === 'object' ? JSON.stringify(questions_json) : (questions_json || null),
       now
     ).run();
 
