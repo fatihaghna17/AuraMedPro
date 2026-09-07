@@ -819,9 +819,25 @@ export default function App() {
     return { folders, rootItems };
   }, [groupedDatabases, searchQuery, bankFilter]);
 
-  // Apply theme class to document
+  // Apply theme class to document & body
   useEffect(() => {
     localStorage.setItem('cbt_theme', theme);
+    const root = document.documentElement;
+    const metaThemeColor = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      root.style.backgroundColor = '#0B1120';
+      document.body.style.backgroundColor = '#0B1120';
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#0B1120');
+    } else {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.style.backgroundColor = '#F8FAFC';
+      document.body.style.backgroundColor = '#F8FAFC';
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#F8FAFC');
+    }
   }, [theme]);
 
   // Save custom folders to local storage

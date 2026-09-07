@@ -10,7 +10,27 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AuraMed" />
+    <meta name="theme-color" content="#0B1120" id="theme-color-meta" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('cbt_theme');
+          var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+            root.style.backgroundColor = '#0B1120';
+          } else {
+            root.classList.add('light');
+            root.style.backgroundColor = '#F8FAFC';
+            var meta = document.getElementById('theme-color-meta');
+            if (meta) meta.setAttribute('content', '#F8FAFC');
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
