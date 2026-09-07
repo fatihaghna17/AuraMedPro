@@ -6,6 +6,7 @@ import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import { cloudflareApi } from './services/cloudflareApi';
+import { setCachedQuestions, saveLocalUserBank } from './utils/questionCache';
 import {
   CheckCircle2,
   XCircle,
@@ -1300,50 +1301,57 @@ export default function App() {
 
       const finalQuestions = parseRawFileToQuestions(raw, ext);
       if (finalQuestions && finalQuestions.length > 0) {
-        // Simpan ke database Supabase
         (async () => {
           try {
-            // 1. Upload ke Cloudflare R2 (0 Egress)
-            const r2Res = await uploadQuestionsToR2(file.name, finalQuestions);
+            // 1. Simpan ke storage lokal browser terlebih dahulu sebagai jaminan offline
+            saveLocalUserBank(file.name, finalQuestions);
 
-            // 2. Simpan metadata ke Cloudflare D1
-            if (r2Res) {
-              await cloudflareApi.saveQuestionBank({
-                name: file.name,
-                user_id: currentUser.id,
-                r2_key: r2Res.r2_key,
-                r2_url: r2Res.r2_url,
-              });
-            } else {
-              await cloudflareApi.saveQuestionBank({
-                name: file.name,
-                user_id: currentUser.id,
-                questions_json: finalQuestions,
-              });
+            // 2. Upload ke Cloudflare R2 (0 Egress)
+            const r2Res = await uploadQuestionsToR2(file.name, finalQuestions);
+            if (r2Res?.r2_key) {
+              setCachedQuestions(r2Res.r2_key, finalQuestions);
             }
 
-            // 3. Simpan ke Supabase hanya referensi R2 agar tidak boros egress!
-            const supaPayload = r2Res 
-              ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
-              : finalQuestions;
+            // 3. Simpan metadata ke Cloudflare D1
+            if (currentUser) {
+              if (r2Res) {
+                await cloudflareApi.saveQuestionBank({
+                  name: file.name,
+                  user_id: currentUser.id,
+                  r2_key: r2Res.r2_key,
+                  r2_url: r2Res.r2_url,
+                });
+              } else {
+                await cloudflareApi.saveQuestionBank({
+                  name: file.name,
+                  user_id: currentUser.id,
+                  questions_json: finalQuestions,
+                });
+              }
 
-            const { error } = await supabase
-              .from('question_banks')
-              .upsert({ user_id: currentUser.id, name: file.name, questions_json: supaPayload }, { onConflict: 'user_id,name' });
-            if (error) throw error;
+              // 4. Cadangan ke Supabase (best-effort, non-blocking jika ditolak RLS)
+              const supaPayload = r2Res 
+                ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
+                : finalQuestions;
+
+              supabase
+                .from('question_banks')
+                .upsert({ user_id: currentUser.id, name: file.name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
+                .then(() => {})
+                .catch(() => {});
+            }
+
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
-            // Data disimpan di Supabase, tidak perlu localStorage
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
-            triggerToast(`Berhasil memuat ${finalQuestions.length} soal dari "${file.name}"`, '✅');
+            triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal dari "${file.name}"`, '✅');
           } catch (err) {
             console.error(err);
-            // Fallback lokal jika database cloud bermasalah
+            saveLocalUserBank(file.name, finalQuestions);
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
-            // Data disimpan di Supabase, tidak perlu localStorage
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
-            triggerToast(`Berhasil memuat soal secara lokal, gagal menyimpan di cloud Supabase`, '⚠️');
+            triggerToast(`Berhasil memuat ${finalQuestions.length} soal (tersimpan di browser lokal)`, '✅');
           }
         })();
       } else {
@@ -1403,33 +1411,47 @@ export default function App() {
 
     if (loadedCount > 0) {
       try {
-        // Simpan setiap bank soal ke Cloudflare R2 & D1 (0 Egress)
+        // Simpan setiap bank soal ke Cloudflare R2 & D1 (0 Egress) serta storage lokal
         for (const [name, questions] of Object.entries(newDatabases)) {
-          const r2Res = await uploadQuestionsToR2(name, questions);
-          if (r2Res) {
-            cloudflareApi.saveQuestionBank({
-              name,
-              user_id: currentUser.id,
-              r2_key: r2Res.r2_key,
-              r2_url: r2Res.r2_url,
-            }).catch(() => {});
-          } else {
-            cloudflareApi.saveQuestionBank({
-              name,
-              user_id: currentUser.id,
-              questions_json: questions,
-            }).catch(() => {});
-          }
+          saveLocalUserBank(name, questions);
 
-          const supaPayload = r2Res ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } : questions;
-          await supabase
-            .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' });
+          try {
+            const r2Res = await uploadQuestionsToR2(name, questions);
+            if (r2Res?.r2_key) {
+              setCachedQuestions(r2Res.r2_key, questions);
+            }
+
+            if (currentUser) {
+              if (r2Res) {
+                await cloudflareApi.saveQuestionBank({
+                  name,
+                  user_id: currentUser.id,
+                  r2_key: r2Res.r2_key,
+                  r2_url: r2Res.r2_url,
+                });
+              } else {
+                await cloudflareApi.saveQuestionBank({
+                  name,
+                  user_id: currentUser.id,
+                  questions_json: questions,
+                });
+              }
+
+              // Supabase cadangan (best-effort, non-blocking jika ditolak RLS)
+              const supaPayload = r2Res ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } : questions;
+              supabase
+                .from('question_banks')
+                .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
+                .then(() => {})
+                .catch(() => {});
+            }
+          } catch (itemErr) {
+            console.warn('Gagal menyimpan file folder ke cloud:', name, itemErr);
+          }
         }
 
         const updated = { ...questionDatabase, ...newDatabases };
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
         
         // Auto-select all newly loaded databases
         const newKeys = Object.keys(newDatabases);
@@ -1448,13 +1470,11 @@ export default function App() {
         triggerToast(`Berhasil memuat ${loadedCount} bank soal (${totalQuestionsCount} soal) dari folder!`, '✅');
       } catch (err) {
         console.error(err);
-        // Tetap simpan lokal sebagai fallback
         const updated = { ...questionDatabase, ...newDatabases };
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
         const newKeys = Object.keys(newDatabases);
         setSelectedDatabases((prev) => [...new Set([...prev, ...newKeys])]);
-        triggerToast(`Berhasil memuat folder secara lokal, gagal menyimpan di cloud Supabase`, '⚠️');
+        triggerToast(`Berhasil memuat folder (${loadedCount} bank soal)`, '✅');
       }
     } else {
       triggerToast('Tidak ditemukan berkas soal .json/.yaml valid di dalam folder', '⚠️');
@@ -1486,20 +1506,48 @@ export default function App() {
 
     const finalQuestions = parseRawFileToQuestions(pasteContent, ext);
     if (finalQuestions && finalQuestions.length > 0) {
+      // 1. Selalu simpan di storage lokal browser terlebih dahulu
+      saveLocalUserBank(name, finalQuestions);
+
       if (currentUser) {
         try {
-          // R2 upload sebagai backup saja (best-effort)
-          uploadQuestionsToR2(name, finalQuestions).catch(err =>
-            console.warn('R2 upload skipped:', err)
-          );
-          const { error } = await supabase
+          // 2. Upload ke Cloudflare R2
+          const r2Res = await uploadQuestionsToR2(name, finalQuestions);
+          if (r2Res?.r2_key) {
+            setCachedQuestions(r2Res.r2_key, finalQuestions);
+          }
+
+          // 3. Simpan ke Cloudflare D1
+          if (r2Res) {
+            await cloudflareApi.saveQuestionBank({
+              name,
+              user_id: currentUser.id,
+              r2_key: r2Res.r2_key,
+              r2_url: r2Res.r2_url,
+            });
+          } else {
+            await cloudflareApi.saveQuestionBank({
+              name,
+              user_id: currentUser.id,
+              questions_json: finalQuestions,
+            });
+          }
+
+          // 4. Cadangan ke Supabase (best-effort, non-blocking jika ditolak RLS)
+          const supaPayload = r2Res 
+            ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
+            : finalQuestions;
+
+          supabase
             .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: finalQuestions }, { onConflict: 'user_id,name' });
-          if (error) throw error;
+            .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
+            .then(() => {})
+            .catch(() => {});
           
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
         } catch (err) {
-          triggerToast(`Berhasil menyimpan secara lokal, gagal upload ke cloud`, '⚠️');
+          console.warn('Gagal upload ke cloud, tersimpan di browser lokal:', err);
+          triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}" (tersimpan lokal)`, '✅');
         }
       } else {
         triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
@@ -1507,7 +1555,6 @@ export default function App() {
 
       const updated = { ...questionDatabase, [name]: finalQuestions };
       setQuestionDatabase(updated);
-      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases((prev) => [...new Set([...prev, name])]);
       
       setPasteModalOpen(false);

@@ -21,6 +21,7 @@ export interface QuestionBankMeta {
   user_id: string;
   r2_key?: string;
   r2_url?: string;
+  questions_json?: any;
   created_at?: string;
   uploader_username?: string;
 }

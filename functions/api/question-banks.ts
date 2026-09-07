@@ -31,6 +31,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         qb.user_id, 
         qb.r2_key, 
         qb.r2_url,
+        qb.questions_json,
         qb.created_at,
         p.username as uploader_username
       FROM question_banks qb
@@ -78,6 +79,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
+        user_id = excluded.user_id,
         r2_key = coalesce(excluded.r2_key, question_banks.r2_key),
         r2_url = coalesce(excluded.r2_url, question_banks.r2_url),
         questions_json = coalesce(excluded.questions_json, question_banks.questions_json)

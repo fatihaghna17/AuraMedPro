@@ -69,3 +69,52 @@ export async function clearQuestionCache(): Promise<void> {
     console.warn('[Cache] Gagal menghapus cache:', err);
   }
 }
+
+const LOCAL_BANKS_KEY = 'cbt_local_user_banks';
+
+/**
+ * Membaca bank soal kustom pengguna yang tersimpan di storage browser lokal
+ */
+export function getLocalUserBanks(): Record<string, Question[]> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(LOCAL_BANKS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch (e) {
+    console.warn('[LocalBanks] Gagal membaca bank soal lokal:', e);
+    return {};
+  }
+}
+
+/**
+ * Menyimpan bank soal kustom pengguna ke storage browser lokal sebagai cadangan offline
+ */
+export function saveLocalUserBank(name: string, questions: Question[]): void {
+  if (typeof window === 'undefined' || !name || !questions || questions.length === 0) return;
+  try {
+    const current = getLocalUserBanks();
+    current[name] = questions;
+    localStorage.setItem(LOCAL_BANKS_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.warn('[LocalBanks] Gagal menyimpan bank soal lokal:', e);
+  }
+}
+
+/**
+ * Menghapus bank soal kustom pengguna dari storage browser lokal
+ */
+export function deleteLocalUserBank(name: string): void {
+  if (typeof window === 'undefined' || !name) return;
+  try {
+    const current = getLocalUserBanks();
+    if (name in current) {
+      delete current[name];
+      localStorage.setItem(LOCAL_BANKS_KEY, JSON.stringify(current));
+    }
+  } catch (e) {
+    console.warn('[LocalBanks] Gagal menghapus bank soal lokal:', e);
+  }
+}
+

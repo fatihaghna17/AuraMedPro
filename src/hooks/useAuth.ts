@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
-import { getCachedQuestions, setCachedQuestions } from '../utils/questionCache';
+import { getCachedQuestions, setCachedQuestions, getLocalUserBanks, deleteLocalUserBank } from '../utils/questionCache';
 import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useAuth({
@@ -132,6 +132,18 @@ export function useAuth({
         setXpHistory([profile.xp || 0]);
         setProfileUsername(profile.username || 'user');
         isProfileSyncedRef.current = true;
+
+        // Sinkronkan profil ke Cloudflare D1 agar ID non-admin dikenali dengan username yang benar
+        cloudflareApi.saveProfile({
+          id: userId,
+          username: profile.username || defaultUsername,
+          role: profile.role || (profile.username === 'admin' ? 'admin' : 'user'),
+          xp: profile.xp || 0,
+          streak: savedStreak,
+          level: profile.level || 1,
+          total_questions_answered: profile.total_questions_answered || 0,
+          last_active: lastActive || new Date().toISOString()
+        }).catch((cfErr) => console.warn('Sync profile to D1 failed (best-effort):', cfErr));
       }
 
       // 3-5. Paralel: tarik data kuis, sesi tertunda, dan leaderboard sekaligus
@@ -275,8 +287,8 @@ export function useAuth({
         data = cfBanks.map(b => ({
           name: b.name,
           user_id: b.user_id,
-          questions_json: b.r2_key ? { r2_key: b.r2_key, r2_url: b.r2_url } : null,
-          profiles: { username: b.uploader_username || 'admin' }
+          questions_json: b.questions_json || (b.r2_key ? { r2_key: b.r2_key, r2_url: b.r2_url } : null),
+          profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
         }));
       } else {
         console.warn('Bank soal dari Cloudflare D1 belum tersedia.');
@@ -361,6 +373,22 @@ export function useAuth({
           }
         });
       }
+
+      // Muat juga bank soal kustom lokal jika belum ada di mappedData
+      try {
+        const localBanks = getLocalUserBanks();
+        Object.entries(localBanks).forEach(([bName, bQuestions]) => {
+          if (!mappedData[bName] || mappedData[bName].length === 0) {
+            mappedData[bName] = bQuestions;
+            if (!uploaders[bName]) {
+              uploaders[bName] = username;
+            }
+          }
+        });
+      } catch (e) {
+        console.warn('Gagal memuat bank soal lokal:', e);
+      }
+
       setUploaderMap(uploaders);
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
@@ -535,27 +563,35 @@ export function useAuth({
     e.stopPropagation();
     (async () => {
       try {
-        const { error } = await supabase
-          .from('question_banks')
-          .delete()
-          .eq('name', name)
-          .eq('user_id', currentUser.id);
-        if (error) throw error;
+        // 1. Hapus dari Cloudflare D1 & R2
+        cloudflareApi.deleteQuestionBank(name).catch((cfErr) => console.warn('Gagal hapus D1:', cfErr));
+        // 2. Hapus dari storage browser lokal
+        deleteLocalUserBank(name);
+
+        // 3. Hapus dari Supabase (best-effort, non-blocking)
+        if (currentUser) {
+          supabase
+            .from('question_banks')
+            .delete()
+            .eq('name', name)
+            .eq('user_id', currentUser.id)
+            .then(() => {})
+            .catch(() => {});
+        }
+
         const updated = { ...questionDatabase };
         delete updated[name];
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
         triggerToast(`File "${name}" dihapus dari database`, '🗑');
       } catch (err) {
         console.error(err);
-        // Hapus lokal saja jika server gagal
+        deleteLocalUserBank(name);
         const updated = { ...questionDatabase };
         delete updated[name];
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => d !== name));
-        triggerToast(`File "${name}" dihapus secara lokal, gagal menghapus di cloud`, '⚠️');
+        triggerToast(`File "${name}" dihapus secara lokal`, '⚠️');
       }
     })();
   };
