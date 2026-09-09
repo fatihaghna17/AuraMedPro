@@ -176,6 +176,14 @@ export const cloudflareApi = {
     return !res.error;
   },
 
+  async deleteAnswerNote(userId: string, questionText: string): Promise<boolean> {
+    const res = await fetchJson(
+      `${API_BASE}/notes?user_id=${encodeURIComponent(userId)}&question_text=${encodeURIComponent(questionText)}`,
+      { method: 'DELETE' }
+    );
+    return !res.error;
+  },
+
   // Achievements
   async getAchievements(userId: string): Promise<string[]> {
     const res = await fetchJson<Array<{ achievement_id: string }>>(
@@ -204,5 +212,85 @@ export const cloudflareApi = {
       body: JSON.stringify(data),
     });
     return !res.error;
+  },
+
+  // SRS Cards
+  async getSRSCards(userId: string): Promise<any[]> {
+    const res = await fetchJson<any[]>(`${API_BASE}/srs?user_id=${encodeURIComponent(userId)}`);
+    return res.data || [];
+  },
+
+  async saveSRSCards(cards: any[]): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/srs`, {
+      method: 'POST',
+      body: JSON.stringify(cards),
+    });
+    return !res.error;
+  },
+
+  async updateSRSCard(card: any): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/srs`, {
+      method: 'POST',
+      body: JSON.stringify(card),
+    });
+    return !res.error;
+  },
+
+  async deleteSRSCard(cardId: string): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/srs?id=${encodeURIComponent(cardId)}`, {
+      method: 'DELETE',
+    });
+    return !res.error;
+  },
+
+  // Study Room (Notes & Bookmarks)
+  async getStudyData(userId: string): Promise<{ notes: any[]; bookmarks: any[] }> {
+    const res = await fetchJson<{ notes: any[]; bookmarks: any[] }>(
+      `${API_BASE}/study?user_id=${encodeURIComponent(userId)}`
+    );
+    return res.data || { notes: [], bookmarks: [] };
+  },
+
+  async saveStudyNote(note: any): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/study`, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'note', ...note }),
+    });
+    return !res.error;
+  },
+
+  async deleteStudyNote(id: string): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/study?type=note&id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    return !res.error;
+  },
+
+  async saveBookmark(bookmark: any): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/study`, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'bookmark', ...bookmark }),
+    });
+    return !res.error;
+  },
+
+  async deleteBookmark(userId: string, questionRef: string): Promise<boolean> {
+    const res = await fetchJson(
+      `${API_BASE}/study?type=bookmark&user_id=${encodeURIComponent(userId)}&question_ref=${encodeURIComponent(questionRef)}`,
+      { method: 'DELETE' }
+    );
+    return !res.error;
+  },
+
+  // Atomically increment total answered questions in profiles
+  async incrementTotalAnswered(userId: string, count: number): Promise<boolean> {
+    const profile = await this.getProfile(userId);
+    if (!profile) return false;
+    const current = profile.total_questions_answered || 0;
+    const updated = await this.saveProfile({
+      ...profile,
+      total_questions_answered: current + count,
+    });
+    return Boolean(updated);
   },
 };

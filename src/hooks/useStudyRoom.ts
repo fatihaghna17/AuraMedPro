@@ -1,6 +1,6 @@
 // src/hooks/useStudyRoom.ts
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
+import { cloudflareApi } from '../services/cloudflareApi';
 import { Question } from '../types';
 import { generateQuestionFingerprint } from '../utils/srsAlgorithm';
 
@@ -35,16 +35,9 @@ export function useStudyRoom(userId: string | null) {
     if (!userId) return;
     setIsLoading(true);
     try {
-      const [notesRes, bookmarksRes] = await Promise.all([
-        supabase.from('study_notes').select('*').eq('user_id', userId)
-          .order('is_pinned', { ascending: false }).order('updated_at', { ascending: false }),
-        supabase.from('bookmarks').select('*').eq('user_id', userId)
-          .order('created_at', { ascending: false }),
-      ]);
-      if (notesRes.error) throw notesRes.error;
-      if (bookmarksRes.error) throw bookmarksRes.error;
-      setNotes(notesRes.data || []);
-      setBookmarks(bookmarksRes.data || []);
+      const data = await cloudflareApi.getStudyData(userId);
+      setNotes(data.notes || []);
+      setBookmarks(data.bookmarks || []);
     } catch (err) {
       console.error('Error fetching study room data:', err);
     } finally {
@@ -56,42 +49,37 @@ export function useStudyRoom(userId: string | null) {
 
   const createNote = async (note: Omit<StudyNote, 'id' | 'created_at' | 'updated_at'>) => {
     if (!userId) return;
-    const { error } = await supabase.from('study_notes').insert({ ...note, user_id: userId });
-    if (error) throw error;
+    await cloudflareApi.saveStudyNote({ ...note, user_id: userId });
     await fetchData();
   };
 
   const updateNote = async (id: string, updates: Partial<StudyNote>) => {
-    const { error } = await supabase.from('study_notes')
-      .update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
-    if (error) throw error;
+    if (!userId) return;
+    await cloudflareApi.saveStudyNote({ id, ...updates, user_id: userId });
     await fetchData();
   };
 
   const deleteNote = async (id: string) => {
-    const { error } = await supabase.from('study_notes').delete().eq('id', id);
-    if (error) throw error;
+    if (!userId) return;
+    await cloudflareApi.deleteStudyNote(id);
     await fetchData();
   };
 
   const addBookmark = async (question: Question, bankName: string, note?: string) => {
     if (!userId) return;
-    const { error } = await supabase.from('bookmarks').upsert({
+    await cloudflareApi.saveBookmark({
       user_id: userId,
       question_ref: generateQuestionFingerprint(question),
       question_bank_name: bankName,
       question_json: question,
       note: note || '',
-    }, { onConflict: 'user_id,question_ref' });
-    if (error) throw error;
+    });
     await fetchData();
   };
 
   const removeBookmark = async (questionRef: string) => {
     if (!userId) return;
-    const { error } = await supabase.from('bookmarks')
-      .delete().eq('user_id', userId).eq('question_ref', questionRef);
-    if (error) throw error;
+    await cloudflareApi.deleteBookmark(userId, questionRef);
     await fetchData();
   };
 

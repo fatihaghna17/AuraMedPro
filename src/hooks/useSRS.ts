@@ -1,6 +1,6 @@
 // src/hooks/useSRS.ts
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
+import { cloudflareApi } from '../services/cloudflareApi';
 import { SRSCard, QualityRating, calculateSM2, generateQuestionFingerprint, categorizeCards } from '../utils/srsAlgorithm';
 import { Question } from '../types';
 import { isUserAnswerCorrect } from '../utils/quizUtils';
@@ -16,12 +16,7 @@ export function useSRS(userId: string | null) {
     if (!userId) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('srs_cards')
-        .select('*')
-        .eq('user_id', userId)
-        .order('next_review_date', { ascending: true });
-      if (error) throw error;
+      const data = await cloudflareApi.getSRSCards(userId);
       setCards(data || []);
     } catch (err) {
       console.error('Error fetching SRS cards:', err);
@@ -64,10 +59,7 @@ export function useSRS(userId: string | null) {
     }));
 
     try {
-      const { error } = await supabase
-        .from('srs_cards')
-        .upsert(inserts, { onConflict: 'user_id,question_ref' });
-      if (error) throw error;
+      await cloudflareApi.saveSRSCards(inserts);
       await fetchCards();
     } catch (err) {
       console.error('Error adding wrong answers to SRS:', err);
@@ -80,11 +72,7 @@ export function useSRS(userId: string | null) {
     const updated = calculateSM2(card, quality);
 
     try {
-      const { error } = await supabase
-        .from('srs_cards')
-        .update(updated)
-        .eq('id', card.id);
-      if (error) throw error;
+      await cloudflareApi.updateSRSCard({ id: card.id, ...updated });
 
       if (currentReviewIndex < dueCards.length - 1) {
         setCurrentReviewIndex(prev => prev + 1);
@@ -101,9 +89,7 @@ export function useSRS(userId: string | null) {
   const removeCard = useCallback(async (cardId: string) => {
     if (!userId) return;
     try {
-      const { error } = await supabase
-        .from('srs_cards').delete().eq('id', cardId);
-      if (error) throw error;
+      await cloudflareApi.deleteSRSCard(cardId);
       await fetchCards();
     } catch (err) {
       console.error('Error removing SRS card:', err);

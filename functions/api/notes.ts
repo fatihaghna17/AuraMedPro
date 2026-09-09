@@ -5,7 +5,7 @@ interface Env {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 };
 
 export const onRequestOptions: PagesFunction = async () => {
@@ -90,3 +90,40 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     });
   }
 };
+
+export const onRequestDelete: PagesFunction<Env> = async (context) => {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('user_id');
+  const questionText = url.searchParams.get('question_text');
+
+  if (!env.DB) {
+    return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  if (!userId || !questionText) {
+    return new Response(JSON.stringify({ error: 'user_id dan question_text wajib diisi' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
+    await env.DB.prepare('DELETE FROM answer_notes WHERE user_id = ? AND question_text = ?')
+      .bind(userId, questionText)
+      .run();
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+};
+

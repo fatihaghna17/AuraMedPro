@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
+import { cloudflareApi } from '../services/cloudflareApi';
 import { formatNotifTime } from '../utils/appHelpers';
 
 export function useNotifications(currentUser: any, srs: any, triggerToast: (msg: string, icon?: string) => void) {
@@ -79,28 +79,22 @@ export function useNotifications(currentUser: any, srs: any, triggerToast: (msg:
         }
       }
 
-      // 2. Kuis baru dari admin/collector sejak lastCheck
-      const { data: newBanks } = await supabase
-        .from('question_banks')
-        .select(`name, created_at, profiles!inner(username)`)
-        .gte('created_at', lastCheckDate.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // 2. Kuis baru sejak lastCheck dari Cloudflare D1
+      const allBanks = await cloudflareApi.getQuestionBanks();
+      const newBanks = (allBanks || []).filter((b: any) => {
+        if (!b.created_at) return false;
+        return new Date(b.created_at) >= lastCheckDate;
+      }).slice(0, 10);
 
-      if (newBanks && newBanks.length > 0) {
-        const adminBanks = newBanks.filter((b: any) =>
-          b.profiles && (b.profiles.username === 'admin' || b.profiles.username === 'collector')
-        );
-        adminBanks.forEach((b: any) => {
-          newNotifs.push({
-            id: `quiz-${b.name}-${b.created_at}`,
-            type: 'new_quiz',
-            text: `Kuis baru: ${b.name}`,
-            time: formatNotifTime(b.created_at),
-            bankName: b.name,
-          });
+      newBanks.forEach((b: any) => {
+        newNotifs.push({
+          id: `quiz-${b.name}-${b.created_at}`,
+          type: 'new_quiz',
+          text: `Kuis baru: ${b.name}`,
+          time: formatNotifTime(b.created_at),
+          bankName: b.name,
         });
-      }
+      });
 
       setNotifList(newNotifs);
       setNotifCount(newNotifs.length);

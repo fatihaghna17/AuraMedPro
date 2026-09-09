@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
 import { generateQuestionFingerprint } from '../utils/srsAlgorithm';
 import { isUserAnswerCorrect, getCorrectLetterForQuestion } from '../utils/quizUtils';
 import { Question } from '../types';
@@ -21,34 +20,15 @@ export function useAnswerNotes(
   const fetchAnswerNotes = useCallback(async () => {
     if (!currentUser) return;
     try {
-      // 1. Coba ambil dari Cloudflare D1
       const cfNotes = await cloudflareApi.getAnswerNotes(currentUser.id);
-      if (cfNotes && cfNotes.length > 0) {
-        const notesMap: Record<string, string> = {};
-        cfNotes.forEach(d => {
-          const key = generateQuestionFingerprint({ pertanyaan: d.question_text });
-          notesMap[key] = d.note_content;
-        });
-        setAnswerNotes(notesMap);
-        return;
-      }
-
-      // 2. Fallback ke Supabase
-      const { data, error } = await supabase
-        .from('answer_notes')
-        .select('question_text, note_content')
-        .eq('user_id', currentUser.id);
-      if (!error && data) {
-        const notesMap: Record<string, string> = {};
-        data.forEach((d: { question_text: string; note_content: string }) => {
-          // Always compute fingerprint so both old (raw HTML) and new (hash) rows work
-          const key = generateQuestionFingerprint({ pertanyaan: d.question_text });
-          notesMap[key] = d.note_content;
-        });
-        setAnswerNotes(notesMap);
-      }
+      const notesMap: Record<string, string> = {};
+      (cfNotes || []).forEach(d => {
+        const key = generateQuestionFingerprint({ pertanyaan: d.question_text });
+        notesMap[key] = d.note_content;
+      });
+      setAnswerNotes(notesMap);
     } catch (e) {
-      console.error('Failed to fetch answer notes:', e);
+      console.error('Failed to fetch answer notes from D1:', e);
     }
   }, [currentUser]);
 
@@ -57,24 +37,12 @@ export function useAnswerNotes(
     setNoteSaving(true);
     try {
       const fp = generateQuestionFingerprint({ pertanyaan: questionText });
-      
-      // Simpan ke Cloudflare D1 (0 Egress)
-      cloudflareApi.saveAnswerNote(currentUser.id, fp, content.trim()).catch(() => {});
-
-      const { error } = await supabase
-        .from('answer_notes')
-        .upsert({
-          user_id: currentUser.id,
-          question_text: fp,
-          note_content: content.trim(),
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,question_text' });
-      if (!error) {
+      const success = await cloudflareApi.saveAnswerNote(currentUser.id, fp, content.trim());
+      if (success) {
         setAnswerNotes(prev => ({ ...prev, [fp]: content.trim() }));
         setNotePopupOpen(null);
         triggerToast('Catatan berhasil disimpan!', '📝');
       } else {
-        console.error('Save note error:', error);
         triggerToast('Gagal menyimpan catatan', '❌');
       }
     } catch (e) {
@@ -82,19 +50,15 @@ export function useAnswerNotes(
       triggerToast('Gagal menyimpan catatan', '❌');
     }
     setNoteSaving(false);
-  }, [currentUser]);
+  }, [currentUser, triggerToast]);
 
   const deleteAnswerNote = useCallback(async (questionText: string) => {
     if (!currentUser) return;
     setNoteSaving(true);
     try {
       const fp = generateQuestionFingerprint({ pertanyaan: questionText });
-      const { error } = await supabase
-        .from('answer_notes')
-        .delete()
-        .eq('user_id', currentUser.id)
-        .eq('question_text', fp);
-      if (!error) {
+      const success = await cloudflareApi.deleteAnswerNote(currentUser.id, fp);
+      if (success) {
         setAnswerNotes(prev => {
           const next = { ...prev };
           delete next[fp];
@@ -110,7 +74,7 @@ export function useAnswerNotes(
       triggerToast('Gagal menghapus catatan', '❌');
     }
     setNoteSaving(false);
-  }, [currentUser]);
+  }, [currentUser, triggerToast]);
 
   const openNotePopup = (questionText: string, userAnswer: string, correctAnswer: string, isCorrect: boolean) => {
     const key = generateQuestionFingerprint({ pertanyaan: questionText });
