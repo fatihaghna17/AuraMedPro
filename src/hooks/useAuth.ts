@@ -5,6 +5,7 @@ import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils'
 import { SAMPLE_BANKS } from '../data/sampleBanks';
 import { getCachedQuestions, setCachedQuestions, getLocalUserBanks, deleteLocalUserBank } from '../utils/questionCache';
 import { cloudflareApi } from '../services/cloudflareApi';
+import { authClient } from '../lib/authClient';
 
 export function useAuth({
   triggerToast,
@@ -41,52 +42,41 @@ export function useAuth({
     const email = user.email || '';
     const defaultUsername = email ? email.split('@')[0] : 'user';
     try {
-      // 1. Ambil data profil dari Supabase profiles
-      let { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // 1. Ambil data profil dari Cloudflare D1
+      let profile = await cloudflareApi.getProfile(userId);
 
-      if (error && error.code === 'PGRST116') {
-        // Profil belum dibuat (trigger Supabase lambat), kita buat manual
-        const newProfile = {
+      if (!profile) {
+        const newProfile: any = {
           id: userId,
-          username: defaultUsername,
+          username: user.user_metadata?.username || defaultUsername,
+          role: 'user',
           xp: 0,
           streak: 0,
           level: 1,
+          total_questions_answered: 0,
           active_session_id: currentSessionId
         };
-        await supabase.from('profiles').insert(newProfile);
+        await cloudflareApi.saveProfile(newProfile);
         profile = newProfile;
-      } else if (error) {
-        throw error;
       }
 
       if (profile) {
         // 2. Cek Single Device Session
         if (isLoggingInRef.current) {
           // Jika proses login baru, langsung update session ID di DB dan matikan flag
-          await supabase
-            .from('profiles')
-            .update({ active_session_id: currentSessionId })
-            .eq('id', userId);
+          await cloudflareApi.saveProfile({ ...profile, active_session_id: currentSessionId });
           isLoggingInRef.current = false;
         } else {
           // Jika background check biasa, cek apakah session ID bentrok dengan device lain
           if (profile.active_session_id && profile.active_session_id !== currentSessionId) {
             setIsSessionKicked(true);
-            await supabase.auth.signOut();
+            await authClient.signOut();
             return;
           }
 
           // Update active_session_id di database jika masih kosong
           if (!profile.active_session_id) {
-            await supabase
-              .from('profiles')
-              .update({ active_session_id: currentSessionId })
-              .eq('id', userId);
+            await cloudflareApi.saveProfile({ ...profile, active_session_id: currentSessionId });
           }
         }
 
@@ -423,7 +413,7 @@ export function useAuth({
     const checkSession = async () => {
       try {
         await fetchGlobalSettings();
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await authClient.getSession();
         if (session) {
           setCurrentUser(session.user);
 
@@ -457,7 +447,7 @@ export function useAuth({
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = authClient.onAuthStateChange(async (event, session) => {
       try {
         if (event === 'SIGNED_IN' && session) {
           setCurrentUser(session.user);
@@ -503,17 +493,11 @@ export function useAuth({
 
     const interval = setInterval(async () => {
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('active_session_id')
-          .eq('id', currentUser.id)
-          .single();
-
-        if (error) throw error;
+        const profile = await cloudflareApi.getProfile(currentUser.id);
         
-        if (profile && profile.active_session_id !== localSessionId) {
+        if (profile && profile.active_session_id && profile.active_session_id !== localSessionId) {
           setIsSessionKicked(true);
-          await supabase.auth.signOut();
+          await authClient.signOut();
         }
       } catch (err) {
         console.error('Error checking active session:', err);
@@ -543,7 +527,7 @@ export function useAuth({
         ? emailInput.trim() 
         : `${emailInput.trim().toLowerCase()}@ai.online`;
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await authClient.signInWithPassword({
         email,
         password: passwordInput,
       });

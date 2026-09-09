@@ -68,7 +68,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const body = await request.json() as any;
-    const { id, username, role, xp, streak, level, total_questions_answered, last_active } = body;
+    const { id, username, role, xp, streak, level, total_questions_answered, last_active, active_session_id } = body;
 
     if (!id || !username) {
       return new Response(JSON.stringify({ error: 'ID dan username wajib diisi' }), {
@@ -80,8 +80,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const now = new Date().toISOString();
 
     await env.DB.prepare(`
-      INSERT INTO profiles (id, username, role, xp, streak, level, total_questions_answered, last_active, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO profiles (id, username, role, xp, streak, level, total_questions_answered, last_active, active_session_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         username = coalesce(excluded.username, profiles.username),
         role = coalesce(excluded.role, profiles.role),
@@ -89,7 +89,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         streak = MAX(profiles.streak, coalesce(excluded.streak, 0)),
         level = MAX(profiles.level, coalesce(excluded.level, 1)),
         total_questions_answered = MAX(profiles.total_questions_answered, coalesce(excluded.total_questions_answered, 0)),
-        last_active = coalesce(excluded.last_active, profiles.last_active)
+        last_active = coalesce(excluded.last_active, profiles.last_active),
+        active_session_id = coalesce(excluded.active_session_id, profiles.active_session_id)
     `).bind(
       id,
       username,
@@ -99,6 +100,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       level !== undefined ? level : 1,
       total_questions_answered !== undefined ? total_questions_answered : 0,
       last_active || now,
+      active_session_id || null,
       now
     ).run();
 

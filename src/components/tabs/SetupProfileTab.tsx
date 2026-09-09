@@ -4,8 +4,7 @@ import { getRarityColor, getRarityBg } from '../../utils/achievements';
 import { getLevelInfo } from '../../utils/appHelpers';
 
 
-
-import { supabase } from '../../supabaseClient';
+import { authClient } from '../../lib/authClient';
 
 interface SetupProfileTabProps {
   theme: string;
@@ -197,7 +196,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
                   <button
                     onClick={async () => {
-                      await supabase.auth.signOut();
+                      await authClient.signOut();
                       triggerToast('Sampai jumpa lagi!', '👋');
                     }}
                     className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/15 transition-all cursor-pointer"

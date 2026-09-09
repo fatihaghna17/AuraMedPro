@@ -28,7 +28,7 @@ function runSqlBatch(sqlStatements, batchName = 'batch') {
   fs.writeFileSync(tempFile, sqlStatements.join(';\n') + ';\n', 'utf8');
 
   try {
-    const cmd = `./node_modules/.bin/wrangler d1 execute auramedpro-db --remote --file="${tempFile}"`;
+    const cmd = `./node_modules/.bin/wrangler d1 execute auramedpro-db --remote -y --file="${tempFile}"`;
     execSync(cmd, { cwd: rootDir, stdio: 'inherit' });
   } finally {
     if (fs.existsSync(tempFile)) {
@@ -47,10 +47,8 @@ async function importAuthUsers() {
   const raw = fs.readFileSync(authUsersFile, 'utf8');
   let users = [];
   try {
-    users = JSON.parse(raw);
-    if (!Array.isArray(users) && typeof users === 'object' && users.users_json) {
-      users = users.users_json;
-    }
+    const parsed = JSON.parse(raw);
+    users = parsed[0]?.data || parsed?.data || parsed[0]?.users_json || parsed?.users_json || (Array.isArray(parsed) ? parsed : [parsed]);
   } catch (err) {
     console.error('❌ Gagal parse export/auth_users.json:', err.message);
     return;

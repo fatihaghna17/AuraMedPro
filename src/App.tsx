@@ -6,6 +6,7 @@ import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import { cloudflareApi } from './services/cloudflareApi';
+import { authClient } from './lib/authClient';
 import { setCachedQuestions, saveLocalUserBank } from './utils/questionCache';
 import {
   CheckCircle2,
@@ -192,9 +193,8 @@ export default function App() {
     
     triggerToast('Masuk sebagai tamu...', '⏳');
 
-    // Use anonymous sign-in — signUp with fake email fails because
-    // Supabase requires email confirmation, so no session is created.
-    const { data, error } = await supabase.auth.signInAnonymously({
+    // Gunakan authClient untuk sesi guest di Cloudflare D1
+    const { data, error } = await authClient.signInAnonymously({
       options: {
         data: { username: cleanNick, is_guest: true }
       }
@@ -2686,7 +2686,7 @@ export default function App() {
                 isAdmin={currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector'}
                 onTabChange={(tab) => setDashboardTab(tab as any)}
                 onLogout={async () => {
-                  await supabase.auth.signOut();
+                  await authClient.signOut();
                   triggerToast('Sampai jumpa lagi!', '👋');
                 }}
               />

@@ -11,6 +11,7 @@ import { createRoom, joinRoom } from '../../lib/mabar/mabarRoomManager';
 import { useMabarRoom } from '../../hooks/mabar/useMabarRoom';
 
 import { supabase } from '../../supabaseClient';
+import { authClient } from '../../lib/authClient';
 import type { MabarGameMode, MabarSubMode, MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 
 interface MabarMainProps {
@@ -37,8 +38,8 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
     try {
       let user = currentUser;
       if (!user || !user.id) {
-        // Fallback: cek session langsung dari Supabase
-        const { data: sessionData } = await supabase.auth.getSession();
+        // Fallback: cek session langsung dari authClient
+        const { data: sessionData } = await authClient.getSession();
         if (sessionData?.session?.user) {
           user = sessionData.session.user;
         } else {
@@ -80,7 +81,7 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
     try {
       let user = currentUser;
       if (!user || !user.id) {
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await authClient.getSession();
         if (sessionData?.session?.user) {
           user = sessionData.session.user;
         } else {

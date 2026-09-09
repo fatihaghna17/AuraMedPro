@@ -13,6 +13,7 @@ export interface ProfileData {
   total_questions_answered?: number;
   last_active?: string;
   created_at?: string;
+  active_session_id?: string;
 }
 
 export interface QuestionBankMeta {
