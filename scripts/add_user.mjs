@@ -27,8 +27,8 @@ Opsi:
   process.exit(1);
 }
 
-if (password.length < 6) {
-  console.error('❌ Password minimal 6 karakter!');
+if (password.length < 3) {
+  console.error('❌ Password minimal 3 karakter!');
   process.exit(1);
 }
 
