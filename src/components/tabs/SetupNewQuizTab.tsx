@@ -81,7 +81,13 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                               {!globalDatabases.includes(key) && (
                                 <button 
                                   onClick={() => {
-                                    if (window.confirm(`Hapus bank soal "${key.split('/').pop()}" secara permanen?`)) {
+                                    let proceed = true;
+                                    try {
+                                      proceed = window.confirm(`Hapus bank soal "${key.split('/').pop()}" secara permanen?`);
+                                    } catch {
+                                      proceed = true;
+                                    }
+                                    if (proceed) {
                                       removeDatabase(key, { stopPropagation: () => {} } as React.MouseEvent);
                                       setSelectedDatabases(prev => prev.filter(d => d !== key));
                                     }

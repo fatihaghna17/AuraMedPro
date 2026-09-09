@@ -137,6 +137,7 @@ import { DownloadCollectorModal } from './components/DownloadCollectorModal';
 import NoteEditorModal from './components/NoteEditorModal';
 import ReportQuestionModal from './components/ReportQuestionModal';
 import MoveQuizModal from './components/MoveQuizModal';
+import CreateFolderModal from './components/CreateFolderModal';
 import AnswerNotePopup from './components/AnswerNotePopup';
 import AchievementPopup from './components/AchievementPopup';
 import QuizHeader from './components/QuizHeader';
@@ -534,6 +535,7 @@ export default function App() {
   const [modalTitle, setModalTitle] = useState('');
   const [modalDesc, setModalDesc] = useState('');
   const [modalAction, setModalAction] = useState<(() => void) | null>(null);
+  const [createFolderModalOpen, setCreateFolderModalOpen] = useState(false);
 
   // Accordion review states
   const [openReviewIndices, setOpenReviewIndices] = useState<Record<number, boolean>>({});
@@ -1185,37 +1187,30 @@ export default function App() {
 
   // Auth Submit Handler
 
-  const handleCreateFolder = async () => {
-    const folderName = window.prompt("Masukkan nama folder baru:");
-    if (folderName && folderName.trim() !== "") {
-      const name = folderName.trim();
-      const isAdmin = isCollector || profileUsername === 'admin';
-      
-      let isGlobal = false;
-      if (isAdmin) {
-        isGlobal = window.confirm("Jadikan folder ini global (terlihat untuk semua pengguna)?\nBatal (Cancel) untuk folder personal.");
-      }
+  const handleCreateFolder = () => {
+    setCreateFolderModalOpen(true);
+  };
 
-      if (isGlobal) {
-        if (!globalCustomFolders.includes(name)) {
-          const newGlobal = [...globalCustomFolders, name];
-          setGlobalCustomFolders(newGlobal);
-          try {
-            await cloudflareApi.saveAppSettings('customFolders', newGlobal);
-            triggerToast(`Folder global "${name}" berhasil dibuat!`, '🌍');
-          } catch (e) {
-            triggerToast(`Gagal menyimpan ke server`, '❌');
-          }
-        } else {
-          triggerToast(`Folder "${name}" sudah ada.`, '⚠️');
+  const handleCreateFolderSubmit = async (name: string, isGlobal: boolean) => {
+    if (isGlobal) {
+      if (!globalCustomFolders.includes(name)) {
+        const newGlobal = [...globalCustomFolders, name];
+        setGlobalCustomFolders(newGlobal);
+        try {
+          await cloudflareApi.saveAppSettings('customFolders', newGlobal);
+          triggerToast(`Folder global "${name}" berhasil dibuat!`, '🌍');
+        } catch (e) {
+          triggerToast(`Gagal menyimpan ke server`, '❌');
         }
       } else {
-        if (!customFolders.includes(name)) {
-          setCustomFolders(prev => [...prev, name]);
-          triggerToast(`Folder "${name}" berhasil dibuat secara personal!`, '📁');
-        } else {
-          triggerToast(`Folder "${name}" sudah ada.`, '⚠️');
-        }
+        triggerToast(`Folder "${name}" sudah ada.`, '⚠️');
+      }
+    } else {
+      if (!customFolders.includes(name)) {
+        setCustomFolders(prev => [...prev, name]);
+        triggerToast(`Folder "${name}" berhasil dibuat secara personal!`, '📁');
+      } else {
+        triggerToast(`Folder "${name}" sudah ada.`, '⚠️');
       }
     }
   };
@@ -1262,11 +1257,14 @@ export default function App() {
   };
 
   const handleResetPersonal = () => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus semua susunan folder personal Anda dan kembali ke susunan Global/Admin?")) {
+    setModalTitle("Reset Susunan Folder Personal");
+    setModalDesc("Apakah Anda yakin ingin menghapus semua susunan folder personal Anda dan kembali ke susunan Global/Admin?");
+    setModalAction(() => () => {
       setCustomFolders([]);
       setQuizFolderMap({});
       triggerToast("Susunan folder personal direset", "♻️");
-    }
+    });
+    setModalOpen(true);
   };
 
   // === DATABASE METHODS ===
@@ -1523,8 +1521,9 @@ export default function App() {
 
   const removeGlobalDatabase = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`)) return;
-    (async () => {
+    setModalTitle('Hapus Kuis Global?');
+    setModalDesc(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`);
+    setModalAction(() => async () => {
       try {
         // Hapus dari Cloudflare D1 & R2
         await cloudflareApi.deleteQuestionBank(name);
@@ -1550,7 +1549,8 @@ export default function App() {
         console.error(err);
         triggerToast(`Gagal menghapus kuis global "${name}"`, '❌');
       }
-    })();
+    });
+    setModalOpen(true);
   };
 
   const removeFolder = (folderPath: string, e: React.MouseEvent) => {
@@ -3753,6 +3753,16 @@ export default function App() {
       folders={[...globalCustomFolders, ...customFolders]}
       onMove={handleMoveQuiz}
       onClose={() => setMoveQuizModal(null)}
+    />
+
+    <CreateFolderModal
+      isOpen={createFolderModalOpen}
+      theme={theme}
+      isAdmin={isCollector || profileUsername === 'admin'}
+      globalFolders={globalCustomFolders}
+      personalFolders={customFolders}
+      onClose={() => setCreateFolderModalOpen(false)}
+      onCreateFolder={handleCreateFolderSubmit}
     />
 
     <AnswerNotePopup

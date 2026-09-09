@@ -44,6 +44,24 @@
       <button onclick="document.getElementById('error-overlay').style.display='none'">Tutup</button>
     </div>
     <script>
+      (function() {
+        try {
+          var _origPrompt = window.prompt;
+          window.prompt = function(msg, def) {
+            try {
+              if (typeof _origPrompt === 'function') return _origPrompt.call(window, msg, def);
+            } catch(e) { console.warn('Native prompt not supported:', e); }
+            return null;
+          };
+          var _origConfirm = window.confirm;
+          window.confirm = function(msg) {
+            try {
+              if (typeof _origConfirm === 'function') return _origConfirm.call(window, msg);
+            } catch(e) { console.warn('Native confirm not supported:', e); }
+            return true;
+          };
+        } catch(e) {}
+      })();
       window.onerror = function(msg, url, line, col, error) {
         document.getElementById('error-overlay').style.display = 'block';
         document.getElementById('error-message').innerText += msg + '\n' + (error ? error.stack : '') + '\n\n';

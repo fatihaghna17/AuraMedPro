@@ -180,7 +180,15 @@ export const SetupNotesTab: React.FC<SetupNotesTabProps> = ({
                             <button onClick={() => { setEditingNote(note); setIsNoteModalOpen(true); }} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-indigo-500 transition">
                               <Eye className="w-3.5 h-3.5" />
                             </button>
-                            <button onClick={() => { if(window.confirm('Hapus catatan?')) studyRoom.deleteNote(note.id!); }} className="p-1.5 rounded-md text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-500 transition">
+                            <button onClick={() => {
+                              let proceed = true;
+                              try {
+                                proceed = window.confirm('Hapus catatan?');
+                              } catch {
+                                proceed = true;
+                              }
+                              if (proceed) studyRoom.deleteNote(note.id!);
+                            }} className="p-1.5 rounded-md text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-500 transition">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
