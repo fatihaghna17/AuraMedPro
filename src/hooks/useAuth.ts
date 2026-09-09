@@ -229,7 +229,7 @@ export function useAuth({
             // Soal pribadi milik user yang sedang login
             const isMine = b.user_id === userId;
             // Hak pantau semua soal khusus akun collector
-            const isCollector = username === 'collector';
+            const isCollector = username === 'collector' || profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online';
             return isGlobal || isMine || isCollector;
           })
           .map(b => {

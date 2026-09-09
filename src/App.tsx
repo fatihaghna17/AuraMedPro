@@ -133,6 +133,7 @@ import NotificationDropdown from './components/NotificationDropdown';
 import SidebarNav from './components/SidebarNav';
 import LoginForm from './components/LoginForm';
 import PasteJsonModal from './components/PasteJsonModal';
+import { DownloadCollectorModal } from './components/DownloadCollectorModal';
 import NoteEditorModal from './components/NoteEditorModal';
 import ReportQuestionModal from './components/ReportQuestionModal';
 import MoveQuizModal from './components/MoveQuizModal';
@@ -260,7 +261,8 @@ export default function App() {
 // removed auth state
 // removed auth state
 // removed auth state
-// removed for TDZ
+  const isCollector = profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online';
+  const [downloadCollectorModalOpen, setDownloadCollectorModalOpen] = useState(false);
   const [questionLimits, setQuestionLimits] = useState<Record<string, number>>({});
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(false);
@@ -1187,7 +1189,7 @@ export default function App() {
     const folderName = window.prompt("Masukkan nama folder baru:");
     if (folderName && folderName.trim() !== "") {
       const name = folderName.trim();
-      const isAdmin = profileUsername === 'collector' || profileUsername === 'admin';
+      const isAdmin = isCollector || profileUsername === 'admin';
       
       let isGlobal = false;
       if (isAdmin) {
@@ -1219,7 +1221,7 @@ export default function App() {
   };
 
   const handleMoveQuiz = async (quizKey: string, targetFolder: string) => {
-    const isAdmin = profileUsername === 'collector' || profileUsername === 'admin';
+    const isAdmin = isCollector || profileUsername === 'admin';
     if (isAdmin) {
       const newMap = { ...globalQuizFolderMap };
       if (targetFolder === 'root') {
@@ -2546,7 +2548,7 @@ export default function App() {
                 streakFreezeLeft={streakFreezeLeft}
                 username={profileUsername || ''}
                 userLevel={getLevelInfo(userXP).level}
-                isAdmin={currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector'}
+                isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
                 onTabChange={(tab) => setDashboardTab(tab as any)}
                 onLogout={async () => {
                   await authClient.signOut();
@@ -2559,7 +2561,7 @@ export default function App() {
                 theme={theme}
                 activeTab={dashboardTab}
                 srsDueCount={srs.stats.dueCount}
-                isAdmin={currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector'}
+                isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
                 onTabChange={(tab) => setDashboardTab(tab as any)}
               />
             </>
@@ -2668,6 +2670,34 @@ export default function App() {
                     ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
                     : 'bg-white border-slate-200 shadow-sm'
                 }`}>
+                  {isCollector && (
+                    <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-100">Akun Collector Aktif</span>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                              {Object.keys(questionDatabase).length} Bank Soal • {Object.values(questionDatabase).reduce((a: number, b: any) => a + (b?.length || 0), 0)} Soal
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Anda memiliki izin pemantauan untuk mengunduh seluruh soal dari database pusat.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setDownloadCollectorModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                      >
+                        <Download className="w-4 h-4" />
+                        Unduh Semua Soal
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Pilih Soal yang Ingin Diujikan</h3>
@@ -2687,6 +2717,15 @@ export default function App() {
                       >
                         <Plus className="w-3 h-3" /> Buat Folder
                       </button>
+                      {isCollector && (
+                        <button 
+                          onClick={() => setDownloadCollectorModalOpen(true)}
+                          className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors border border-emerald-500/20 cursor-pointer"
+                          title="Unduh semua bank soal sekaligus"
+                        >
+                          <Download className="w-3 h-3" /> Unduh Semua Soal
+                        </button>
+                      )}
                     </div>
                     {selectedDatabases.length > 0 && (
                       <button 
@@ -2843,12 +2882,23 @@ export default function App() {
                                       <h4 className={`font-bold text-sm leading-snug flex-1 pr-2 break-words ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
                                         {displayName}
                                       </h4>
-                                      <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${
-                                        isSelected 
-                                          ? 'bg-amber-400 border-amber-400 text-slate-900' 
-                                          : theme === 'dark' ? 'border-slate-600 bg-slate-900/50' : 'border-slate-300 bg-slate-50'
-                                      }`}>
-                                        {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={4} />}
+                                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        {isCollector && (
+                                          <button
+                                            onClick={(e) => downloadDatabase(key, questions, e)}
+                                            className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors cursor-pointer"
+                                            title="Unduh bank soal ini (.json)"
+                                          >
+                                            <Download className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
+                                          isSelected 
+                                            ? 'bg-amber-400 border-amber-400 text-slate-900' 
+                                            : theme === 'dark' ? 'border-slate-600 bg-slate-900/50' : 'border-slate-300 bg-slate-50'
+                                        }`}>
+                                          {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={4} />}
+                                        </div>
                                       </div>
                                     </div>
                                     
@@ -2891,10 +2941,10 @@ export default function App() {
                                           className={`w-16 px-2 py-1.5 rounded-lg text-center border text-xs font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500`}
                                         />
                                         
-                                        {profileUsername === 'collector' && (
+                                        {isCollector && (
                                           <button
                                             onClick={(e) => downloadDatabase(key, questions, e)}
-                                            className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors"
+                                            className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors cursor-pointer"
                                             title="Unduh bank soal"
                                           >
                                             <Download className="w-4 h-4" />
@@ -2920,7 +2970,7 @@ export default function App() {
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
-                                        ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                        ) : (profileUsername === 'admin' || isCollector) ? (
                                           <button
                                             onClick={(e) => removeGlobalDatabase(key, e)}
                                             className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -2992,12 +3042,23 @@ export default function App() {
                                     <h4 className={`font-bold text-sm leading-snug flex-1 pr-2 break-words ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
                                       {displayName}
                                     </h4>
-                                    <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border transition-colors ${
-                                      isSelected 
-                                        ? 'bg-amber-400 border-amber-400 text-slate-900' 
-                                        : theme === 'dark' ? 'border-slate-600 bg-slate-900/50' : 'border-slate-300 bg-slate-50'
-                                    }`}>
-                                      {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={4} />}
+                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                      {isCollector && (
+                                        <button
+                                          onClick={(e) => downloadDatabase(key, questions, e)}
+                                          className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors cursor-pointer"
+                                          title="Unduh bank soal ini (.json)"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
+                                        isSelected 
+                                          ? 'bg-amber-400 border-amber-400 text-slate-900' 
+                                          : theme === 'dark' ? 'border-slate-600 bg-slate-900/50' : 'border-slate-300 bg-slate-50'
+                                      }`}>
+                                        {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={4} />}
+                                      </div>
                                     </div>
                                   </div>
                                   
@@ -3038,7 +3099,7 @@ export default function App() {
                                         className={`w-16 px-2 py-1.5 rounded-lg text-center border text-xs font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500`}
                                       />
                                       
-                                      {profileUsername === 'collector' && (
+                                      {isCollector && (
                                         <button
                                           onClick={(e) => downloadDatabase(key, questions, e)}
                                           className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors"
@@ -3067,7 +3128,7 @@ export default function App() {
                                         >
                                           <Trash2 className="w-4 h-4" />
                                         </button>
-                                      ) : (profileUsername === 'admin' || profileUsername === 'collector') ? (
+                                      ) : (profileUsername === 'admin' || isCollector) ? (
                                         <button
                                           onClick={(e) => removeGlobalDatabase(key, e)}
                                           className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"
@@ -3654,6 +3715,16 @@ export default function App() {
         error={pasteError}
         onClose={() => setPasteModalOpen(false)}
         onSubmit={handlePasteSubmit}
+      />
+
+      <DownloadCollectorModal
+        isOpen={downloadCollectorModalOpen}
+        theme={theme}
+        onClose={() => setDownloadCollectorModalOpen(false)}
+        questionDatabase={questionDatabase}
+        selectedDatabases={selectedDatabases}
+        triggerToast={triggerToast}
+        profileUsername={profileUsername}
       />
 
       </div>
