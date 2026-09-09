@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
 import confetti from 'canvas-confetti';
-import { supabase } from './supabaseClient';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import { cloudflareApi } from './services/cloudflareApi';
@@ -371,13 +370,13 @@ export default function App() {
   useEffect(() => {
     if (dashboardTab === 'reports' && (currentUser?.user_metadata?.username === 'admin' || currentUser?.user_metadata?.username === 'collector')) {
       const fetchReports = async () => {
-        const { data, error } = await supabase
-          .from('question_reports')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (!error && data) {
-          setAdminReports(data);
+        try {
+          const data = await cloudflareApi.getQuestionReports();
+          if (data) {
+            setAdminReports(data);
+          }
+        } catch (e) {
+          console.error('[App] Failed to fetch question reports:', e);
         }
       };
       fetchReports();
@@ -491,30 +490,16 @@ export default function App() {
     const updateProfile = async () => {
       try {
         const currentLevel = Math.min(100, Math.floor(0.5 + 0.5 * Math.sqrt(1 + userXP / 12.5))) || 1;
-        await supabase
-          .from('profiles')
-          .update({
-            xp: userXP,
-            level: currentLevel,
-            streak: currentStreak, // legacy
-            current_streak: currentStreak,
-            longest_streak: longestStreak,
-            streak_freeze_left: streakFreezeLeft,
-            last_active_date: lastActiveDate,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentUser.id);
-
-        // Sinkronkan juga data profil terbaru ke Cloudflare D1
-        cloudflareApi.saveProfile({
+        // Sinkronkan data profil terbaru ke Cloudflare D1
+        await cloudflareApi.saveProfile({
           id: currentUser.id,
           username: profileUsername,
           xp: userXP,
           level: currentLevel,
           streak: currentStreak,
           total_questions_answered: totalQuestionsAnswered,
-          last_active: lastActiveDate || new Date().toISOString()
-        }).catch(err => console.warn('Gagal sinkronisasi gamifikasi ke D1:', err));
+          last_active: lastActiveDate || new Date().toISOString(),
+        });
       } catch (err) {
         console.error('Gagal sinkronisasi data gamifikasi ke cloud:', err);
       }
@@ -621,22 +606,14 @@ export default function App() {
     const q = currentQuiz[reportModal.questionIndex];
     
     try {
-      cloudflareApi.reportQuestion({
+      const ok = await cloudflareApi.reportQuestion({
         user_id: currentUser.id,
         question_id: selectedDatabases[0] || 'Kuis',
         reason: reportIssueType,
-        details: reportDescription,
-      }).catch(() => {});
+        details: `${q?.question ? `Soal: ${q.question}\n` : ''}${reportDescription}`,
+      });
 
-      const { error } = await supabase.from('question_reports').insert([{
-        user_id: currentUser.id,
-        question_bank_name: selectedDatabases[0] || 'Kuis',
-        question_text: q.question,
-        issue_type: reportIssueType,
-        description: reportDescription
-      }]);
-
-      if (error) throw error;
+      if (!ok) throw new Error('Gagal menyimpan laporan');
       triggerToast('Laporan berhasil dikirim. Terima kasih!', '🚩');
     } catch (e: any) {
       console.error(e);
@@ -957,18 +934,9 @@ export default function App() {
         setPendingSessions(updatedList);
 
         if (updatedList.length > 0) {
-          await supabase
-            .from('quiz_sessions')
-            .upsert({
-              user_id: currentUser.id,
-              current_quiz_json: { is_multi_session: true, sessions: updatedList },
-              updated_at: new Date().toISOString()
-            });
+          await cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: updatedList });
         } else {
-          await supabase
-            .from('quiz_sessions')
-            .delete()
-            .eq('user_id', currentUser.id);
+          await cloudflareApi.deleteQuizSession(currentUser.id);
         }
         
         triggerToast('Sesi kuis tertunda dihapus.', '🗑');
@@ -987,17 +955,15 @@ export default function App() {
     try {
       setIsLeaderboardLoading(true);
       const dbName = selectedDatabases[0];
-      const { error } = await supabase
-        .from('leaderboard')
-        .upsert({
-          user_id: currentUser.id,
-          file_name: dbName,
-          score: lastQuizScore,
-          questions_count: currentQuiz.length,
-          created_at: new Date().toISOString()
-        }, { onConflict: 'user_id,file_name' });
+      const success = await cloudflareApi.recordQuizResult({
+        user_id: currentUser.id,
+        file_name: dbName,
+        score: lastQuizScore,
+        correct_count: Math.round((lastQuizScore / 100) * currentQuiz.length),
+        total_count: currentQuiz.length,
+      });
 
-      if (error) throw error;
+      if (!success) throw new Error('Gagal mengunggah skor ke leaderboard');
       setHasSubmittedLeaderboard(true);
       triggerToast('Skor Anda berhasil diunggah ke leaderboard!', '🏆');
       await fetchFileLeaderboard(dbName);
@@ -1085,17 +1051,8 @@ export default function App() {
         try { localStorage.setItem('cbt_active_sessions', JSON.stringify(localList)); } catch(e) { console.warn('localStorage full'); }
         setPendingSessions(localList);
 
-        // 1. Simpan ke Cloudflare D1 (0 Egress!)
-        cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: localList }).catch(() => {});
-
-        // 2. Fallback Supabase
-        await supabase
-          .from('quiz_sessions')
-          .upsert({
-            user_id: currentUser.id,
-            current_quiz_json: { is_multi_session: true, sessions: localList },
-            updated_at: new Date().toISOString()
-          });
+        // Simpan ke Cloudflare D1 (0 Egress!)
+        await cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: localList });
       } catch (err) {
         console.error('Gagal menyimpan sesi kuis otomatis:', err);
       }
@@ -1242,8 +1199,7 @@ export default function App() {
           const newGlobal = [...globalCustomFolders, name];
           setGlobalCustomFolders(newGlobal);
           try {
-            cloudflareApi.saveAppSettings('customFolders', newGlobal).catch(() => {});
-            await supabase.from('app_settings').upsert({ key: 'customFolders', value: newGlobal });
+            await cloudflareApi.saveAppSettings('customFolders', newGlobal);
             triggerToast(`Folder global "${name}" berhasil dibuat!`, '🌍');
           } catch (e) {
             triggerToast(`Gagal menyimpan ke server`, '❌');
@@ -1283,8 +1239,7 @@ export default function App() {
       });
 
       try {
-        cloudflareApi.saveAppSettings('quizFolderMap', newMap).catch(() => {});
-        await supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: newMap });
+        await cloudflareApi.saveAppSettings('quizFolderMap', newMap);
       } catch (e) {
         console.error(e);
       }
@@ -1356,17 +1311,6 @@ export default function App() {
                   questions_json: finalQuestions,
                 });
               }
-
-              // 4. Cadangan ke Supabase (best-effort, non-blocking jika ditolak RLS)
-              const supaPayload = r2Res 
-                ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
-                : finalQuestions;
-
-              supabase
-                .from('question_banks')
-                .upsert({ user_id: currentUser.id, name: file.name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
-                .then(() => {})
-                .catch(() => {});
             }
 
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
@@ -1464,14 +1408,6 @@ export default function App() {
                   questions_json: questions,
                 });
               }
-
-              // Supabase cadangan (best-effort, non-blocking jika ditolak RLS)
-              const supaPayload = r2Res ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } : questions;
-              supabase
-                .from('question_banks')
-                .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
-                .then(() => {})
-                .catch(() => {});
             }
           } catch (itemErr) {
             console.warn('Gagal menyimpan file folder ke cloud:', name, itemErr);
@@ -1561,17 +1497,6 @@ export default function App() {
             });
           }
 
-          // 4. Cadangan ke Supabase (best-effort, non-blocking jika ditolak RLS)
-          const supaPayload = r2Res 
-            ? { r2_key: r2Res.r2_key, r2_url: r2Res.r2_url } 
-            : finalQuestions;
-
-          supabase
-            .from('question_banks')
-            .upsert({ user_id: currentUser.id, name, questions_json: supaPayload }, { onConflict: 'user_id,name' })
-            .then(() => {})
-            .catch(() => {});
-          
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
         } catch (err) {
           console.warn('Gagal upload ke cloud, tersimpan di browser lokal:', err);
@@ -1599,29 +1524,8 @@ export default function App() {
     if (!window.confirm(`Hapus kuis global "${name}"?\n\nKuis ini akan dihapus untuk SEMUA pengguna. Tindakan ini tidak bisa dibatalkan.`)) return;
     (async () => {
       try {
-        // Hapus dari Cloudflare D1
-        cloudflareApi.deleteQuestionBank(name).catch(() => {});
-
-        // Hapus dari Supabase tanpa filter user_id (karena global)
-        const { data: bankData, error: fetchErr } = await supabase
-          .from('question_banks')
-          .select('questions_json')
-          .eq('name', name)
-          .single();
-
-        if (!fetchErr && bankData?.questions_json) {
-          const qj = bankData.questions_json;
-          // Jika data berupa referensi R2, hapus file dari R2 juga
-          if (qj && !Array.isArray(qj) && qj.r2_key) {
-            await deleteQuestionsFromR2(qj.r2_key);
-          }
-        }
-
-        const { error } = await supabase
-          .from('question_banks')
-          .delete()
-          .eq('name', name);
-        if (error) throw error;
+        // Hapus dari Cloudflare D1 & R2
+        await cloudflareApi.deleteQuestionBank(name);
 
         // Update semua local state
         const updated = { ...questionDatabase };
@@ -1635,9 +1539,7 @@ export default function App() {
         setGlobalQuizFolderMap((prev) => {
           const next = { ...prev };
           delete next[name];
-          // Simpan perubahan ke Cloudflare D1 + Supabase
           cloudflareApi.saveAppSettings('quizFolderMap', next).catch(() => {});
-          supabase.from('app_settings').upsert({ key: 'quizFolderMap', value: next }).then(() => {}, console.error);
           return next;
         });
 
@@ -1660,22 +1562,15 @@ export default function App() {
       if (keysToRemove.length === 0) return;
 
       try {
-        // Hapus setiap file dari Cloudflare D1 & Supabase
+        // Hapus setiap file dari Cloudflare D1 & R2
         for (const key of keysToRemove) {
-          cloudflareApi.deleteQuestionBank(key).catch(() => {});
-          const { error } = await supabase
-            .from('question_banks')
-            .delete()
-            .eq('name', key)
-            .eq('user_id', currentUser.id);
-          if (error) throw error;
+          await cloudflareApi.deleteQuestionBank(key);
         }
 
         const updated = { ...questionDatabase };
         keysToRemove.forEach((k) => delete updated[k]);
 
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
 
         setSelectedDatabases((prev) => prev.filter((d) => !keysToRemove.includes(d)));
         setQuestionLimits((prev) => {
@@ -1691,7 +1586,6 @@ export default function App() {
         const updated = { ...questionDatabase };
         keysToRemove.forEach((k) => delete updated[k]);
         setQuestionDatabase(updated);
-        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases((prev) => prev.filter((d) => !keysToRemove.includes(d)));
         triggerToast(`Folder dihapus secara lokal, gagal menghapus beberapa file di cloud`, '⚠️');
       }
@@ -1704,19 +1598,15 @@ export default function App() {
     setModalDesc('Semua bank soal yang tersimpan di server dan browser akan dihapus permanen.');
     setModalAction(() => async () => {
       try {
-        const { error } = await supabase
-          .from('question_banks')
-          .delete()
-          .eq('user_id', currentUser.id);
-        if (error) throw error;
+        for (const key of Object.keys(questionDatabase)) {
+          cloudflareApi.deleteQuestionBank(key).catch(() => {});
+        }
         setQuestionDatabase({});
-        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases([]);
         triggerToast('Seluruh database berhasil dibersihkan', '🗑');
       } catch (err) {
         console.error(err);
         setQuestionDatabase({});
-        // Data disimpan di Supabase, tidak perlu localStorage
         setSelectedDatabases([]);
         triggerToast('Database dibersihkan lokal, gagal membersihkan di cloud', '⚠️');
       }
@@ -1766,18 +1656,13 @@ export default function App() {
 
   const loadSampleQuestions = async () => {
     try {
-      // Simpan semua SAMPLE_BANKS ke Cloudflare D1 & Supabase
+      // Simpan semua SAMPLE_BANKS ke Cloudflare D1
       for (const [name, questions] of Object.entries(SAMPLE_BANKS)) {
-        cloudflareApi.saveQuestionBank({ user_id: currentUser.id, name, questions_json: questions }).catch(() => {});
-        const { error } = await supabase
-          .from('question_banks')
-          .upsert({ user_id: currentUser.id, name, questions_json: questions }, { onConflict: 'user_id,name' });
-        if (error) throw error;
+        await cloudflareApi.saveQuestionBank(currentUser.id, name, questions);
       }
       
       const updated = { ...questionDatabase, ...SAMPLE_BANKS };
       setQuestionDatabase(updated);
-      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases(Object.keys(SAMPLE_BANKS));
       triggerToast('Bank soal sampel kedokteran & sains berhasil dimuat!', '✨');
     } catch (err) {
@@ -1785,7 +1670,6 @@ export default function App() {
       // Fallback lokal
       const updated = { ...questionDatabase, ...SAMPLE_BANKS };
       setQuestionDatabase(updated);
-      // Data disimpan di Supabase, tidak perlu localStorage
       setSelectedDatabases(Object.keys(SAMPLE_BANKS));
       triggerToast('Bank soal sampel dimuat lokal, gagal memuat ke cloud', '⚠️');
     }
@@ -2081,13 +1965,7 @@ export default function App() {
       if (currentUser) {
         setTotalQuestionsAnswered((prev) => {
           const nextTotal = prev + 1;
-          supabase
-            .from('profiles')
-            .update({ total_questions_answered: nextTotal })
-            .eq('id', currentUser.id)
-            .then(({ error }) => {
-              if (error) console.error('Error updating live total_questions_answered:', error);
-            });
+          cloudflareApi.incrementTotalAnswered(currentUser.id, 1).catch(console.error);
           return nextTotal;
         });
       }
@@ -2384,18 +2262,9 @@ export default function App() {
           setPendingSessions(updatedList);
 
           if (updatedList.length > 0) {
-            await supabase
-              .from('quiz_sessions')
-              .upsert({
-                user_id: currentUser.id,
-                current_quiz_json: { is_multi_session: true, sessions: updatedList },
-                updated_at: new Date().toISOString()
-              });
+            await cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: updatedList });
           } else {
-            await supabase
-              .from('quiz_sessions')
-              .delete()
-              .eq('user_id', currentUser.id);
+            await cloudflareApi.deleteQuizSession(currentUser.id);
           }
         } catch (err) {
           console.error('Error updating session after quiz completion:', err);
@@ -2508,13 +2377,7 @@ export default function App() {
           try { localStorage.setItem('cbt_active_sessions', JSON.stringify(localList)); } catch(e) { console.warn('localStorage full'); }
           setPendingSessions(localList);
 
-          await supabase
-            .from('quiz_sessions')
-            .upsert({
-              user_id: currentUser.id,
-              current_quiz_json: { is_multi_session: true, sessions: localList },
-              updated_at: new Date().toISOString()
-            });
+          await cloudflareApi.saveQuizSession(currentUser.id, { is_multi_session: true, sessions: localList });
         } catch (err) {
           console.error('Gagal menyimpan sesi kuis sebelum keluar:', err);
         }

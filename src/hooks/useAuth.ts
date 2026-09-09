@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
 import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
@@ -158,48 +157,19 @@ export function useAuth({
 
   const checkActiveQuizSession = async (userId: string) => {
     try {
-      // 1. Coba ambil sesi dari Cloudflare D1
+      // 1. Ambil sesi dari Cloudflare D1
       const cfSession = await cloudflareApi.getQuizSession(userId);
-      if (cfSession && cfSession.is_multi_session === true && Array.isArray(cfSession.sessions) && cfSession.sessions.length > 0) {
-        setPendingSessions(cfSession.sessions);
-        return;
-      }
-
-      // 2. Fallback ke Supabase
-      const { data, error } = await supabase
-        .from('quiz_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      
       let cloudSessions: any[] = [];
-      if (data && data.current_quiz_json) {
-        const parsedQuiz = typeof data.current_quiz_json === 'string'
-          ? JSON.parse(data.current_quiz_json)
-          : data.current_quiz_json;
-        
-        if (parsedQuiz && parsedQuiz.is_multi_session === true) {
-          cloudSessions = parsedQuiz.sessions || [];
-        } else if (parsedQuiz) {
-          const selectedDbs = typeof data.selected_databases === 'string'
-            ? JSON.parse(data.selected_databases)
-            : data.selected_databases;
-          cloudSessions = [{
-            id: `legacy_${new Date(data.updated_at).getTime()}`,
-            title: selectedDbs ? selectedDbs.join(', ') : 'Kuis Sebelumnya',
-            current_quiz_json: data.current_quiz_json,
-            current_index: data.current_index,
-            user_answers_json: data.user_answers_json,
-            doubt_status_json: data.doubt_status_json,
-            is_revealed_json: data.is_revealed_json,
-            unlocked_hints_json: data.unlocked_hints_json,
-            selected_databases: selectedDbs,
-            quiz_mode: data.quiz_mode,
-            updated_at: data.updated_at
-          }];
+      if (cfSession) {
+        if (cfSession.is_multi_session === true && Array.isArray(cfSession.sessions)) {
+          cloudSessions = cfSession.sessions;
+        } else if (Array.isArray(cfSession.sessions)) {
+          cloudSessions = cfSession.sessions;
         }
+      }
+      if (cloudSessions.length > 0) {
+        setPendingSessions(cloudSessions);
+        return;
       }
 
       let localSessions: any[] = [];
@@ -234,33 +204,11 @@ export function useAuth({
 
   const fetchGlobalSettings = async () => {
     try {
-      // 1. Coba ambil dari Cloudflare D1
+      // Ambil dari Cloudflare D1
       const cfSettings = await cloudflareApi.getAppSettings();
-      if (cfSettings && (cfSettings.customFolders || cfSettings.quizFolderMap)) {
+      if (cfSettings) {
         if (cfSettings.customFolders) setGlobalCustomFolders(cfSettings.customFolders);
         if (cfSettings.quizFolderMap) setGlobalQuizFolderMap(cfSettings.quizFolderMap);
-        return;
-      }
-
-      // 2. Fallback ke Supabase
-      const { data, error } = await supabase
-        .from('app_settings')
-        .select('key, value');
-      if (error) {
-        if (error.code !== '42P01') console.error('Error fetching global settings:', error);
-        return;
-      }
-      if (data) {
-        data.forEach(row => {
-          if (row.key === 'customFolders') {
-            setGlobalCustomFolders(row.value || []);
-            cloudflareApi.saveAppSettings('customFolders', row.value).catch(() => {});
-          }
-          if (row.key === 'quizFolderMap') {
-            setGlobalQuizFolderMap(row.value || {});
-            cloudflareApi.saveAppSettings('quizFolderMap', row.value).catch(() => {});
-          }
-        });
       }
     } catch (err) {
       console.error('Error in fetchGlobalSettings:', err);
@@ -393,9 +341,7 @@ export function useAuth({
       if (username === 'admin' && Object.keys(mappedData).length === 0) {
         console.log('Akun admin kosong. Melakukan seeding sampel bawaan...');
         for (const [name, questions] of Object.entries(SAMPLE_BANKS)) {
-          await supabase
-            .from('question_banks')
-            .upsert({ user_id: userId, name, questions_json: questions }, { onConflict: 'user_id,name' });
+          await cloudflareApi.saveQuestionBank(userId, name, questions);
           mappedData[name] = questions as any;
           globals.push(name);
         }
@@ -559,17 +505,6 @@ export function useAuth({
         cloudflareApi.deleteQuestionBank(name).catch((cfErr) => console.warn('Gagal hapus D1:', cfErr));
         // 2. Hapus dari storage browser lokal
         deleteLocalUserBank(name);
-
-        // 3. Hapus dari Supabase (best-effort, non-blocking)
-        if (currentUser) {
-          supabase
-            .from('question_banks')
-            .delete()
-            .eq('name', name)
-            .eq('user_id', currentUser.id)
-            .then(() => {})
-            .catch(() => {});
-        }
 
         const updated = { ...questionDatabase };
         delete updated[name];

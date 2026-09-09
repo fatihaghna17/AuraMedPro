@@ -13,7 +13,7 @@ export async function uploadQuestionsToR2(filename: string, questions: any[]): P
       throw new Error('Gagal mengunggah file ke Cloudflare R2');
     }
 
-    const { fileUrl, key } = await res.json();
+    const { fileUrl, key } = (await res.json()) as any;
     return { r2_url: fileUrl, r2_key: key };
   } catch (error) {
     console.error('Error uploading to R2:', error);

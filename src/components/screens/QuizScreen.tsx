@@ -61,9 +61,7 @@ interface QuizScreenProps {
   userXP: number;
   currentStreak: number;
   currentCombo?: number;
-  openFinishModal?: any;
   finishQuiz?: any;
-
 }
 
 export const QuizScreen: React.FC<QuizScreenProps> = ({

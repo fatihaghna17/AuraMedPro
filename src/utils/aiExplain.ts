@@ -27,7 +27,7 @@ export const requestAIExplanation = async (params: AIExplanationParams): Promise
       body: JSON.stringify(params)
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
 
     if (!response.ok) {
       throw new Error(data.error || 'Gagal terhubung ke AI Tutor');

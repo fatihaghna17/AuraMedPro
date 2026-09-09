@@ -60,7 +60,7 @@ class AuthClient {
         }),
       });
 
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as any;
       if (!res.ok || body.error) {
         return {
           data: { user: null, session: null },
@@ -100,7 +100,7 @@ class AuthClient {
         body: JSON.stringify({ username: customUsername }),
       });
 
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as any;
       if (!res.ok || body.error) {
         return {
           data: { user: null, session: null },
@@ -167,7 +167,7 @@ class AuthClient {
         return { data: { session: null }, error: null };
       }
 
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as any;
       const session: AuthSession | null = body.data?.session || null;
       this.currentSession = session;
 

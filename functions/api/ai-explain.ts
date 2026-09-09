@@ -32,7 +32,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       throw new Error('Server configuration error: Missing OMNIROUTE_API_KEY or OMNIROUTE_BASE_URL');
     }
 
-    const { question, correctAnswer, explanation, userAnswer, context: ctx, mode, followUp } = await request.json();
+    const { question, correctAnswer, explanation, userAnswer, context: ctx, mode, followUp } =
+      (await request.json()) as any;
 
     if (!question || !mode) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: corsHeaders });
@@ -109,7 +110,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           continue; // Try next model
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as any;
         const generatedText = data.choices?.[0]?.message?.content;
 
         if (!generatedText) {

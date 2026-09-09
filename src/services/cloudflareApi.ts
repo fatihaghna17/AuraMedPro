@@ -9,6 +9,10 @@ export interface ProfileData {
   role?: string;
   xp?: number;
   streak?: number;
+  current_streak?: number;
+  longest_streak?: number;
+  streak_freeze_left?: number;
+  last_active_date?: string;
   level?: number;
   total_questions_answered?: number;
   last_active?: string;
@@ -38,11 +42,11 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<{ data?
     });
 
     if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
+      const errBody = (await res.json().catch(() => ({}))) as any;
       return { error: errBody.error || `HTTP error ${res.status}` };
     }
 
-    return await res.json();
+    return (await res.json()) as any;
   } catch (err: any) {
     console.warn(`[CloudflareApi] Request to ${url} failed:`, err.message);
     return { error: err.message || 'Network error' };
@@ -75,16 +79,27 @@ export const cloudflareApi = {
     return res.data || [];
   },
 
-  async saveQuestionBank(bank: {
-    name: string;
-    user_id: string;
-    r2_key?: string;
-    r2_url?: string;
-    questions_json?: any;
-  }): Promise<boolean> {
+  async saveQuestionBank(
+    bankOrUserId:
+      | string
+      | {
+          name: string;
+          user_id: string;
+          r2_key?: string;
+          r2_url?: string;
+          questions_json?: any;
+        },
+    name?: string,
+    questionsJson?: any
+  ): Promise<boolean> {
+    const payload =
+      typeof bankOrUserId === 'string'
+        ? { user_id: bankOrUserId, name: name!, questions_json: questionsJson }
+        : bankOrUserId;
+
     const res = await fetchJson(`${API_BASE}/question-banks`, {
       method: 'POST',
-      body: JSON.stringify(bank),
+      body: JSON.stringify(payload),
     });
     return !res.error;
   },
@@ -212,6 +227,11 @@ export const cloudflareApi = {
       body: JSON.stringify(data),
     });
     return !res.error;
+  },
+
+  async getQuestionReports(): Promise<any[]> {
+    const res = await fetchJson<any[]>(`${API_BASE}/question-reports`);
+    return res.data || [];
   },
 
   // SRS Cards

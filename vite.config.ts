@@ -24,7 +24,6 @@ export default defineConfig(() => {
           manualChunks: {
             'vendor-motion': ['motion'],
             'vendor-charts': ['recharts'],
-            'vendor-supabase': ['@supabase/supabase-js'],
             'vendor-icons': ['lucide-react'],
             'vendor-utils': ['marked', 'js-yaml', 'canvas-confetti', 'dompurify'],
           },

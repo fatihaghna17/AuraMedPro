@@ -20,7 +20,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }
     }
 
-    const { key } = await request.json();
+    const { key } = (await request.json()) as any;
     if (!key) {
       return new Response(JSON.stringify({ error: 'Key is required' }), { status: 400, headers: corsHeaders });
     }

@@ -12,7 +12,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   };
 
   try {
-    const { filename, content } = await request.json();
+    const { filename, content } = (await request.json()) as any;
 
     if (!filename || !content) {
       return new Response(JSON.stringify({ error: 'Filename and content are required' }), { status: 400, headers: corsHeaders });
