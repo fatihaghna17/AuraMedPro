@@ -1,5 +1,8 @@
+// src/hooks/mabar/useMabarPlayer.ts
+// Hook untuk status pemain mabar via Cloudflare D1
+
 import { useState, useEffect } from 'react';
-import { supabase } from '../../supabaseClient';
+import { cloudflareApi } from '../../services/cloudflareApi';
 import type { MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 import { leaveRoom } from '../../lib/mabar/mabarRoomManager';
 
@@ -9,29 +12,28 @@ export function useMabarPlayer(roomId: string, userId: string) {
   useEffect(() => {
     if (!roomId || !userId) return;
 
+    let isMounted = true;
+
     const fetchPlayer = async () => {
-      const { data } = await supabase
-        .from('mabar_room_players')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (data) setPlayer(data as MabarRoomPlayer);
+      try {
+        const res = await cloudflareApi.mabarGetState(roomId);
+        if (!isMounted) return;
+        const players = res.data?.players || [];
+        const found = players.find((p: any) => p.user_id === userId);
+        if (found) setPlayer(found as MabarRoomPlayer);
+      } catch (e) {
+        console.error('[useMabarPlayer] Fetch error:', e);
+      }
     };
 
     fetchPlayer();
 
-    // Subscribe to own player changes
-    const playerSub = supabase.channel(`public:mabar_room_players:room_id=eq.${roomId}:user_id=eq.${userId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mabar_room_players', filter: `room_id=eq.${roomId}` }, (payload) => {
-        if (payload.new.user_id === userId) {
-          setPlayer(payload.new as MabarRoomPlayer);
-        }
-      })
-      .subscribe();
+    // Polling player status every 2 seconds
+    const interval = setInterval(fetchPlayer, 2000);
 
     return () => {
-      supabase.removeChannel(playerSub);
+      isMounted = false;
+      clearInterval(interval);
     };
   }, [roomId, userId]);
 

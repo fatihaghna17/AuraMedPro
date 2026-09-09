@@ -293,4 +293,29 @@ export const cloudflareApi = {
     });
     return Boolean(updated);
   },
+
+  // Mabar (Multiplayer)
+  async mabarAction(body: any): Promise<{ data?: any; error?: string; success?: boolean }> {
+    return fetchJson(`${API_BASE}/mabar/action`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async mabarGetState(room: string, since?: string): Promise<{ data?: any; error?: string }> {
+    const q = new URLSearchParams({ room });
+    if (since) q.set('since', since);
+    return fetchJson(`${API_BASE}/mabar/state?${q.toString()}`);
+  },
+
+  async mabarGetPlayerStats(userId: string): Promise<any | null> {
+    const res = await fetchJson<any>(`${API_BASE}/mabar/stats?user_id=${encodeURIComponent(userId)}`);
+    return res.data || null;
+  },
+
+  async mabarGetMatchHistory(userId: string): Promise<any[]> {
+    const res = await fetchJson<any[]>(`${API_BASE}/mabar/history?user_id=${encodeURIComponent(userId)}`);
+    return res.data || [];
+  },
 };
+

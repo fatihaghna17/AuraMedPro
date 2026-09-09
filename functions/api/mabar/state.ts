@@ -62,6 +62,20 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       ORDER BY question_index ASC
     `).bind(room.id).all();
 
+    const formattedQuestions = (questions || []).map((q: any) => {
+      let parsed = q.question_data;
+      if (typeof parsed === 'string') {
+        try { parsed = JSON.parse(parsed); } catch (_) {}
+      }
+      return {
+        ...q,
+        data: parsed,
+        question_id: parsed?.question_id || q.question_index?.toString(),
+        order_index: q.question_index,
+        correct_answer: parsed?.correct_answer || parsed?.jawaban_benar || '',
+      };
+    });
+
     // 4. Ambil jawaban terbaru (sejak timestamp `since` klien jika ada)
     let answersQuery = 'SELECT * FROM mabar_answers WHERE room_id = ?';
     const answerBinds: any[] = [room.id];
@@ -82,7 +96,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         data: {
           room,
           players: players || [],
-          questions: questions || [],
+          questions: formattedQuestions,
           recent_answers: recentAnswers || [],
           server_time: serverTime,
         },

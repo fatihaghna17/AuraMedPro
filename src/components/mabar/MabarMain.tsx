@@ -9,8 +9,8 @@ import MabarPlayerStats from './MabarPlayerStats';
 import MabarMatchHistory from './MabarMatchHistory';
 import { createRoom, joinRoom } from '../../lib/mabar/mabarRoomManager';
 import { useMabarRoom } from '../../hooks/mabar/useMabarRoom';
-
-import { supabase } from '../../supabaseClient';
+import { cloudflareApi } from '../../services/cloudflareApi';
+import { joinRoomChannel, broadcastToRoom } from '../../lib/mabar/mabarRealtime';
 import { authClient } from '../../lib/authClient';
 import type { MabarGameMode, MabarSubMode, MabarRoomPlayer } from '../../lib/mabar/mabarTypes';
 
@@ -90,14 +90,8 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
         }
       }
 
-      const newRoom = await createRoom({
-        hostId: user.id,
-        hostName: user.user_metadata?.username || user.email?.split('@')[0] || 'Host',
-        hostAvatarUrl: '',
-        ...params
-      });
-      
       // Setup Questions from Bank
+      let roomQuestions: any[] = [];
       if (questionDatabase && questionDatabase[params.topic]) {
         // Create array of original indices
         let indices = Array.from({ length: questionDatabase[params.topic].length }, (_, i) => i);
@@ -107,20 +101,25 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
         indices = indices.slice(0, params.totalQuestions);
         
         // Map to DB insert format
-        const roomQuestions = indices.map((originalIdx, idx) => {
+        roomQuestions = indices.map((originalIdx, idx) => {
           const q = questionDatabase[params.topic][originalIdx];
           return {
-            room_id: newRoom.id,
-            question_id: originalIdx.toString(), // Save original index as question_id
+            question_id: originalIdx.toString(),
             order_index: idx,
-            correct_answer: q.jawaban_benar || q.correctAnswer || ''
+            correct_answer: q.jawaban_benar || q.correctAnswer || '',
+            text: q.pertanyaan || q.text || '',
+            options: q.pilihan || q.options || [],
           };
         });
-        
-        if (roomQuestions.length > 0) {
-           await supabase.from('mabar_room_questions').insert(roomQuestions);
-        }
       }
+
+      const newRoom = await createRoom({
+        hostId: user.id,
+        hostName: user.user_metadata?.username || user.email?.split('@')[0] || 'Host',
+        hostAvatarUrl: '',
+        questions: roomQuestions,
+        ...params
+      });
 
       setActiveRoomId(newRoom.id);
       setIsHost(true);
@@ -133,21 +132,11 @@ export default function MabarMain({ currentUser, availableTopics, questionDataba
   const startGame = async () => {
     if (room) {
       // 1. Update database
-      await supabase.from('mabar_rooms').update({ status: 'in_progress', started_at: new Date().toISOString() }).eq('id', room.id);
+      await cloudflareApi.mabarAction({ action: 'start', roomId: room.id });
       
-      // 2. Broadcast game_starting to all players in the room
-      const channel = supabase.channel(`mabar-room-${room.id}`, {
-        config: { broadcast: { self: true } }
-      });
-      channel.subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.send({
-            type: 'broadcast',
-            event: 'game_starting',
-            payload: { roomId: room.id }
-          });
-        }
-      });
+      // 2. Broadcast game_starting to all players in the room locally
+      const channel = joinRoomChannel(room.id, {});
+      await broadcastToRoom(channel, 'game_starting', { roomId: room.id });
 
       setView('host');
     }

@@ -1,4 +1,8 @@
-import { supabase } from '../../supabaseClient';
+// src/lib/mabar/mabarMatchmaking.ts
+// Quick match logic via Cloudflare D1
+
+import { cloudflareApi } from '../../services/cloudflareApi';
+import { createRoom } from './mabarRoomManager';
 import type { MabarGameMode, MabarRoom } from './mabarTypes';
 
 export async function findOrCreateQuickMatch(
@@ -7,46 +11,31 @@ export async function findOrCreateQuickMatch(
   mode: MabarGameMode,
   topic: string = 'General'
 ): Promise<MabarRoom> {
-  
-  // 1. Find waiting room with same mode (and topic if needed)
-  const { data: rooms, error } = await supabase
-    .from('mabar_rooms')
-    .select('*')
-    .eq('mode', mode)
-    .eq('status', 'waiting')
-    .neq('host_id', userId) // not my own room
-    .order('created_at', { ascending: true })
-    .limit(1);
+  // 1. Coba cari room yang sedang waiting via server D1
+  try {
+    const res = await cloudflareApi.mabarAction({
+      action: 'quick_match',
+      userId,
+      userName,
+      mode,
+    });
 
-  if (error) throw error;
-
-  if (rooms && rooms.length > 0) {
-    const roomToJoin = rooms[0];
-    
-    // Check if full (simplified check)
-    const { count } = await supabase
-      .from('mabar_room_players')
-      .select('*', { count: 'exact', head: true })
-      .eq('room_id', roomToJoin.id);
-
-    if ((count || 0) < roomToJoin.max_players) {
-      // Join this room
-      const { import: joinLib } = await import('./mabarRoomManager').then(m => ({ import: m.joinRoom }));
-      await joinLib(roomToJoin.code, userId, userName);
-      return roomToJoin as MabarRoom;
+    if (res.data?.room) {
+      return res.data.room as MabarRoom;
     }
+  } catch (e) {
+    console.warn('[findOrCreateQuickMatch] Quick match check failed, creating new room:', e);
   }
 
-  // 2. If no room found, create a new one
-  const { import: createLib } = await import('./mabarRoomManager').then(m => ({ import: m.createRoom }));
-  const newRoom = await createLib({
+  // 2. Jika tidak ada room yang cocok, buat room baru
+  const newRoom = await createRoom({
     hostId: userId,
     hostName: userName,
     mode: mode,
     topic: topic,
     totalQuestions: 10,
     timeLimitPerQuestion: 15,
-    maxPlayers: 10 // 1v1
+    maxPlayers: 10,
   });
 
   return newRoom;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { supabase } from '../../supabaseClient';
+import { cloudflareApi } from '../../services/cloudflareApi';
 
 interface MabarMatchHistoryProps {
   userId: string;
@@ -13,15 +13,14 @@ export default function MabarMatchHistory({ userId, onBack }: MabarMatchHistoryP
 
   useEffect(() => {
     const fetchHistory = async () => {
-      const { data } = await supabase
-        .from('mabar_match_history')
-        .select('*, mabar_rooms(topic, mode)')
-        .eq('user_id', userId)
-        .order('played_at', { ascending: false })
-        .limit(20);
-      
-      if (data) setHistory(data);
-      setLoading(false);
+      try {
+        const data = await cloudflareApi.mabarGetMatchHistory(userId);
+        if (data) setHistory(data);
+      } catch (err) {
+        console.error('[MabarMatchHistory] Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchHistory();
   }, [userId]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { supabase } from '../../supabaseClient';
+import { cloudflareApi } from '../../services/cloudflareApi';
 
 interface MabarPlayerStatsProps {
   userId: string;
@@ -13,22 +13,24 @@ export default function MabarPlayerStats({ userId, onBack }: MabarPlayerStatsPro
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { data } = await supabase
-        .from('mabar_player_stats')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      setStats(data || {
-        total_matches: 0,
-        total_wins: 0,
-        total_losses: 0,
-        total_draws: 0,
-        highest_score: 0,
-        elo_rating: 1000,
-        best_streak: 0
-      });
-      setLoading(false);
+      try {
+        const data = await cloudflareApi.mabarGetPlayerStats(userId);
+        setStats(
+          data || {
+            total_matches: 0,
+            total_wins: 0,
+            total_losses: 0,
+            total_draws: 0,
+            highest_score: 0,
+            elo_rating: 1000,
+            best_streak: 0,
+          }
+        );
+      } catch (err) {
+        console.error('[MabarPlayerStats] Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchStats();
   }, [userId]);

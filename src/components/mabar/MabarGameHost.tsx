@@ -2,9 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import MabarLeaderboard from './MabarLeaderboard';
 import type { MabarRoomPlayer, MabarRoom } from '../../lib/mabar/mabarTypes';
-import { supabase } from '../../supabaseClient';
-import { joinRoomChannel, leaveRoomChannel, broadcastToRoom } from '../../lib/mabar/mabarRealtime';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import {
+  joinRoomChannel,
+  leaveRoomChannel,
+  broadcastToRoom,
+  type RealtimeChannel,
+} from '../../lib/mabar/mabarRealtime';
+import { cloudflareApi } from '../../services/cloudflareApi';
 
 interface MabarGameHostProps {
   room: MabarRoom;
@@ -17,13 +21,13 @@ export default function MabarGameHost({
   room,
   scores,
   questionDatabase,
-  onFinishGame
+  onFinishGame,
 }: MabarGameHostProps) {
   const [questionIndex, setQuestionIndex] = useState(room.current_question_index || 0);
   const [timeRemaining, setTimeRemaining] = useState(room.time_limit_per_question || 15);
   const [isQuestionActive, setIsQuestionActive] = useState(false);
   const [currentQuestionData, setCurrentQuestionData] = useState<any>(null);
-  
+
   const timerRef = useRef<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
@@ -37,45 +41,50 @@ export default function MabarGameHost({
 
   const startQuestion = async (idx: number) => {
     let qData = null;
-    if (questionDatabase && questionDatabase[room.topic]) {
-      // Fetch the actual question_id (which is the original index) from DB
-      const { data: rq } = await supabase
-        .from('mabar_room_questions')
-        .select('question_id')
-        .eq('room_id', room.id)
-        .eq('order_index', idx)
-        .maybeSingle();
-        
-      if (rq && rq.question_id) {
+    try {
+      const stateRes = await cloudflareApi.mabarGetState(room.id);
+      const questions = stateRes.data?.questions || [];
+      const rq =
+        questions.find(
+          (item: any) => item.order_index === idx || item.question_index === idx
+        ) || questions[idx];
+
+      if (rq && rq.question_id && questionDatabase && questionDatabase[room.topic]) {
         const originalIndex = parseInt(rq.question_id, 10);
         qData = questionDatabase[room.topic][originalIndex];
-      } else {
-        // Fallback
-        qData = questionDatabase[room.topic][idx]; 
+      } else if (rq?.data) {
+        qData = rq.data;
+      } else if (questionDatabase && questionDatabase[room.topic]) {
+        qData = questionDatabase[room.topic][idx];
+      }
+    } catch (e) {
+      console.warn('[MabarGameHost] Question lookup fallback:', e);
+      if (questionDatabase && questionDatabase[room.topic]) {
+        qData = questionDatabase[room.topic][idx];
       }
     }
-    
+
     setCurrentQuestionData(qData);
     setQuestionIndex(idx);
     setIsQuestionActive(true);
     setTimeRemaining(room.time_limit_per_question || 15);
 
-    // Update DB
-    await supabase.from('mabar_rooms').update({ current_question_index: idx }).eq('id', room.id);
+    // Update D1
+    await cloudflareApi.mabarAction({ action: 'next', roomId: room.id, nextIndex: idx });
 
     // Normalize options
     const rawOptions = qData?.pilihan || qData?.options || [];
     const normalizedOptions = rawOptions.map((opt: any) => ({
-      text: typeof opt === 'string' ? opt : (opt?.text || opt?.label || String(opt || ''))
+      text: typeof opt === 'string' ? opt : opt?.text || opt?.label || String(opt || ''),
     }));
 
     // Broadcast question_start to all players on mabar-room-${room.id}
     await broadcastToRoom(channelRef.current, 'question_start', {
       questionIndex: idx,
-      question: { 
-        text: qData?.pertanyaan || qData?.text || 'Soal tidak ditemukan', 
-        options: normalizedOptions 
-      }
+      question: {
+        text: qData?.pertanyaan || qData?.text || 'Soal tidak ditemukan',
+        options: normalizedOptions,
+      },
     });
   };
 
@@ -89,7 +98,7 @@ export default function MabarGameHost({
   useEffect(() => {
     if (isQuestionActive && timeRemaining > 0) {
       timerRef.current = window.setInterval(() => {
-        setTimeRemaining(prev => {
+        setTimeRemaining((prev) => {
           if (prev <= 1) {
             if (timerRef.current) window.clearInterval(timerRef.current);
             endQuestion();
@@ -106,10 +115,11 @@ export default function MabarGameHost({
 
   const endQuestion = async () => {
     setIsQuestionActive(false);
-    
+
     // Broadcast end to all players
     await broadcastToRoom(channelRef.current, 'question_end', {
-      correctAnswer: currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || ''
+      correctAnswer:
+        currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || '',
     });
   };
 
@@ -120,10 +130,14 @@ export default function MabarGameHost({
   };
 
   const handleFinish = async () => {
-    await supabase.from('mabar_rooms').update({ status: 'finished', finished_at: new Date().toISOString() }).eq('id', room.id);
+    await cloudflareApi.mabarAction({
+      action: 'finish',
+      roomId: room.id,
+      finalScores: scores,
+    });
     await broadcastToRoom(channelRef.current, 'game_finished', {
       roomId: room.id,
-      scores: scores
+      scores: scores,
     });
     onFinishGame();
   };
@@ -137,45 +151,51 @@ export default function MabarGameHost({
         </div>
         <div className="text-right">
           <p className="text-gray-500 text-sm font-bold uppercase">SOAL</p>
-          <h2 className="text-3xl font-black text-blue-600">{questionIndex + 1} / {room.total_questions}</h2>
+          <h2 className="text-3xl font-black text-blue-600">
+            {questionIndex + 1} / {room.total_questions}
+          </h2>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center">
-        {isQuestionActive ? (
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center flex flex-col items-center gap-8 w-full px-4">
-            {currentQuestionData && (
-              <div className="w-full max-w-4xl bg-white border-2 border-blue-100 p-8 md:p-12 rounded-3xl shadow-sm text-center">
-                <h2 className="text-3xl md:text-5xl font-black text-gray-800 leading-tight">
-                  {currentQuestionData.pertanyaan || currentQuestionData.text}
-                </h2>
-              </div>
-            )}
-            
-            <div className="flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full bg-gray-50 border-8 border-blue-500 flex items-center justify-center shadow-inner">
-                <h1 className="text-6xl font-black text-blue-600">{timeRemaining}</h1>
-              </div>
-              <p className="text-gray-500 font-bold mt-4 tracking-wider uppercase">Menunggu pemain menjawab...</p>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8">Waktu Habis!</h1>
-            {questionIndex + 1 < room.total_questions ? (
-              <button onClick={handleNextQuestion} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-xl shadow-lg">
-                Soal Berikutnya
-              </button>
-            ) : (
-              <button onClick={handleFinish} className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-bold text-xl shadow-lg">
-                Akhiri Game & Lihat Podium
-              </button>
-            )}
-          </motion.div>
+      <div className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center justify-center min-h-[300px] mb-8">
+        <div className="w-24 h-24 rounded-full border-4 border-blue-500 flex items-center justify-center mb-6">
+          <span className="text-4xl font-black text-blue-600">{timeRemaining}</span>
+        </div>
+
+        <h3 className="text-2xl font-bold text-gray-800 text-center max-w-2xl mb-8">
+          {currentQuestionData?.pertanyaan || currentQuestionData?.text || 'Memuat pertanyaan...'}
+        </h3>
+
+        {!isQuestionActive && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 font-bold mb-4">
+            Kunci Jawaban:{' '}
+            {currentQuestionData?.jawaban_benar || currentQuestionData?.correctAnswer || '-'}
+          </div>
         )}
+
+        <div className="flex gap-4">
+          {!isQuestionActive && questionIndex + 1 < room.total_questions && (
+            <button
+              onClick={handleNextQuestion}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow hover:bg-blue-700 transition"
+            >
+              Soal Berikutnya →
+            </button>
+          )}
+
+          {!isQuestionActive && questionIndex + 1 >= room.total_questions && (
+            <button
+              onClick={handleFinish}
+              className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold shadow hover:bg-green-700 transition"
+            >
+              Selesaikan Kuis 🏁
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="mt-auto pt-8">
+      <div className="mt-auto">
+        <h4 className="font-bold text-gray-700 mb-2">Live Leaderboard</h4>
         <MabarLeaderboard scores={scores} currentUserId="" />
       </div>
     </div>

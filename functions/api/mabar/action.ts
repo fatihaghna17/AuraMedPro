@@ -334,6 +334,41 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
+    // 9. ACTION: QUICK MATCH
+    if (action === 'quick_match') {
+      const { userId, userName, mode } = body;
+      const room = (await env.DB.prepare(`
+        SELECT * FROM mabar_rooms
+        WHERE mode = ? AND status = 'waiting' AND host_id != ?
+        ORDER BY created_at ASC
+        LIMIT 1
+      `).bind(mode || 'kahoot', userId).first()) as any;
+
+      if (room) {
+        const countRes = (await env.DB.prepare(
+          'SELECT count(*) as total FROM mabar_room_players WHERE room_id = ?'
+        ).bind(room.id).first()) as any;
+
+        if (countRes && countRes.total < room.max_players) {
+          await env.DB.prepare(`
+            INSERT INTO mabar_room_players (id, room_id, user_id, username, display_name, is_ready, joined_at)
+            VALUES (?, ?, ?, ?, ?, 1, ?)
+            ON CONFLICT(room_id, user_id) DO UPDATE SET is_ready = 1
+          `).bind(crypto.randomUUID(), room.id, userId, userName, userName, now).run();
+
+          return new Response(JSON.stringify({ data: { room } }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ data: { room: null } }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: `Aksi "${action}" tidak dikenali` }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
