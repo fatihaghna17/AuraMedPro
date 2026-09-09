@@ -7,4 +7,8 @@ coverage/
 .env*
 !.env.example
 .dev.vars
+export/
+.wrangler/
+_worker.bundle
+
 
