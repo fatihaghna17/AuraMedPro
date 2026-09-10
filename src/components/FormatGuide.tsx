@@ -1,8 +1,25 @@
+import React, { useState } from 'react';
+import { Zap, Download, Copy, Check } from 'lucide-react';
+
 interface FormatGuideProps {
   theme: 'light' | 'dark';
 }
 
 export default function FormatGuide({ theme }: FormatGuideProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopySkill = async () => {
+    try {
+      const res = await fetch('/speedrun_ub_skill.md');
+      const text = await res.text();
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Failed to copy skill:', e);
+    }
+  };
+
   return (
     <div className={`p-6 rounded-3xl border transition-all duration-350 flex flex-col justify-between ${
       theme === 'dark'
@@ -98,6 +115,76 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
         >
           🤖 Panduan Memori Prompt AI (.txt)
         </a>
+
+        {/* Speedrun PPT Tutor Skill */}
+        <div className={`p-3.5 rounded-2xl border transition-all ${
+          theme === 'dark'
+            ? 'bg-gradient-to-br from-amber-500/10 via-purple-500/10 to-indigo-500/10 border-amber-500/25 shadow-lg shadow-amber-500/5'
+            : 'bg-gradient-to-br from-amber-50/90 via-indigo-50/60 to-purple-50/90 border-amber-200 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500/20 text-amber-500 text-xs font-bold">
+                <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+              </span>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${
+                theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
+              }`}>
+                Speedrun UB Tutor
+              </span>
+            </div>
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              SKILL.md
+            </span>
+          </div>
+
+          <p className={`text-[10px] leading-relaxed mb-3 font-medium ${
+            theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
+          }`}>
+            mau belajar ppt hanya dalam 15 menit, download ini, dan kirim ke AI yang kalian gunakan
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href="/speedrun_ub_skill.md"
+              download="SKILL.md"
+              className={`py-2 px-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 ${
+                theme === 'dark'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/20'
+              }`}
+              title="Download SKILL.md untuk Speedrun PPT"
+            >
+              <Download className="w-3 h-3" />
+              <span>Unduh File</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={handleCopySkill}
+              className={`py-2 px-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer border active:scale-95 ${
+                copied
+                  ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
+                  : theme === 'dark'
+                  ? 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+              }`}
+              title="Salin isi teks prompt SKILL.md"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-500" />
+                  <span className="text-emerald-500">Tersalin!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" />
+                  <span>Salin Teks</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
