@@ -156,26 +156,28 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            const prompt = formatQuestionForGemini(
-                              currentQuiz[currentIndex],
-                              currentIndex,
-                              userAnswers[currentIndex],
-                              isRevealed[currentIndex]
-                            );
-                            openGeminiTutor(prompt, triggerToast);
-                          }}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
-                            theme === 'dark'
-                              ? 'bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 border-indigo-700/40'
-                              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
-                          }`}
-                          title="Salin konteks soal & buka Gemini AI"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span>Tanya Gemini</span>
-                        </button>
+                        {Boolean(isRevealed[currentIndex] && userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== '') && (
+                          <button
+                            onClick={() => {
+                              const prompt = formatQuestionForGemini(
+                                currentQuiz[currentIndex],
+                                currentIndex,
+                                userAnswers[currentIndex],
+                                isRevealed[currentIndex]
+                              );
+                              openGeminiTutor(prompt, triggerToast);
+                            }}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                              theme === 'dark'
+                                ? 'bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 border-indigo-700/40'
+                                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
+                            }`}
+                            title="Salin konteks soal & buka Gemini AI"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>Tanya Gemini</span>
+                          </button>
+                        )}
                         <button
                           onClick={copyQuestionToClipboard}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
@@ -512,52 +514,54 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               )}
 
                               {/* Shortcut AI Tutor (Gemini) */}
-                              <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-slate-800/60' : 'border-slate-200/60'}`}>
-                                <div className={`p-4 rounded-2xl border transition-all ${
-                                  theme === 'dark' 
-                                    ? 'bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border-indigo-500/20' 
-                                    : 'bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-white border-indigo-200/70 shadow-sm'
-                                }`}>
-                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div className="flex items-start gap-3 min-w-0">
-                                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-md shrink-0 mt-0.5">
-                                        <Sparkles className="w-4.5 h-4.5 text-amber-300" />
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">
-                                            AI Tutor (Gemini Web Chat)
-                                          </h4>
-                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
-                                            Shortcut Bebas Kuota
-                                          </span>
+                              {Boolean(isRevealed[currentIndex] && userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== '') && (
+                                <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-slate-800/60' : 'border-slate-200/60'}`}>
+                                  <div className={`p-4 rounded-2xl border transition-all ${
+                                    theme === 'dark' 
+                                      ? 'bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border-indigo-500/20' 
+                                      : 'bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-white border-indigo-200/70 shadow-sm'
+                                  }`}>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                      <div className="flex items-start gap-3 min-w-0">
+                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-md shrink-0 mt-0.5">
+                                          <Sparkles className="w-4.5 h-4.5 text-amber-300" />
                                         </div>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                                          Otomatis salin soal, opsi & pembahasan ke clipboard, lalu buka Gemini untuk bedah kasus klinis.
-                                        </p>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">
+                                              AI Tutor (Gemini Web Chat)
+                                            </h4>
+                                            <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                                              Shortcut Bebas Kuota
+                                            </span>
+                                          </div>
+                                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                            Otomatis salin soal, opsi & pembahasan ke clipboard, lalu buka Gemini untuk bedah kasus klinis.
+                                          </p>
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    <button
-                                      onClick={() => {
-                                        const prompt = formatQuestionForGemini(
-                                          currentQuiz[currentIndex],
-                                          currentIndex,
-                                          userAnswers[currentIndex],
-                                          isRevealed[currentIndex]
-                                        );
-                                        openGeminiTutor(prompt, triggerToast);
-                                      }}
-                                      className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer transition-all"
-                                      title="Salin konteks soal & buka web Gemini"
-                                    >
-                                      <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
-                                      <span>Tanya Gemini (Salin & Buka)</span>
-                                      <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
-                                    </button>
+                                      <button
+                                        onClick={() => {
+                                          const prompt = formatQuestionForGemini(
+                                            currentQuiz[currentIndex],
+                                            currentIndex,
+                                            userAnswers[currentIndex],
+                                            isRevealed[currentIndex]
+                                          );
+                                          openGeminiTutor(prompt, triggerToast);
+                                        }}
+                                        className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer transition-all"
+                                        title="Salin konteks soal & buka web Gemini"
+                                      >
+                                        <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+                                        <span>Tanya Gemini (Salin & Buka)</span>
+                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
+                              )}
 
                             </div>
                           </div>
