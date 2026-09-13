@@ -14,7 +14,9 @@ export const onRequestOptions: PagesFunction = async () => {
 };
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { env } = context;
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const angkatan = url.searchParams.get('angkatan');
 
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
@@ -24,7 +26,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const { results } = await env.DB.prepare(`
+    let query = `
       SELECT 
         qb.id, 
         qb.name, 
@@ -33,11 +35,21 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         qb.r2_url,
         CASE WHEN qb.questions_json = 'null' THEN NULL ELSE qb.questions_json END as questions_json,
         qb.created_at,
+        qb.angkatan,
         p.username as uploader_username
       FROM question_banks qb
       LEFT JOIN profiles p ON qb.user_id = p.id
-      ORDER BY qb.name ASC
-    `).all();
+    `;
+    const binds: any[] = [];
+
+    if (angkatan) {
+      query += ` WHERE (qb.angkatan = ? OR qb.angkatan = 'all' OR qb.angkatan IS NULL)`;
+      binds.push(angkatan);
+    }
+
+    query += ` ORDER BY qb.name ASC`;
+
+    const { results } = await env.DB.prepare(query).bind(...binds).all();
 
     return new Response(JSON.stringify({ data: results || [] }), {
       status: 200,
@@ -63,7 +75,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const body = await request.json() as any;
-    const { name, user_id, r2_key, r2_url, questions_json } = body;
+    const { name, user_id, r2_key, r2_url, questions_json, angkatan = 'all' } = body;
 
     if (!name || !user_id) {
       return new Response(JSON.stringify({ error: 'Name dan user_id wajib diisi' }), {
@@ -76,13 +88,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const now = new Date().toISOString();
 
     await env.DB.prepare(`
-      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at, angkatan)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
         user_id = excluded.user_id,
         r2_key = coalesce(excluded.r2_key, question_banks.r2_key),
         r2_url = coalesce(excluded.r2_url, question_banks.r2_url),
-        questions_json = coalesce(excluded.questions_json, question_banks.questions_json)
+        questions_json = coalesce(excluded.questions_json, question_banks.questions_json),
+        angkatan = coalesce(excluded.angkatan, question_banks.angkatan)
     `).bind(
       id,
       name,
@@ -90,7 +103,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       r2_key || null,
       r2_url || null,
       questions_json && typeof questions_json === 'object' ? JSON.stringify(questions_json) : (questions_json || null),
-      now
+      now,
+      angkatan
     ).run();
 
     return new Response(JSON.stringify({ success: true, name }), {

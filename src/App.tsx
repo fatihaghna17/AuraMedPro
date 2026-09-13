@@ -7,6 +7,8 @@ import { uploadQuestionsToR2, deleteQuestionsFromR2 } from './r2Storage';
 import { cloudflareApi } from './services/cloudflareApi';
 import { authClient } from './lib/authClient';
 import { setCachedQuestions, saveLocalUserBank } from './utils/questionCache';
+import { playCorrectSound, playWrongSound, playGameOverSound } from './utils/audioEffects';
+import { saveSuddenDeathStreak, incrementTodayQuestionsAnswered } from './utils/avatarFrames';
 import {
   CheckCircle2,
   XCircle,
@@ -62,10 +64,11 @@ import {
   Upload,
   Coffee,
   Save,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Layers
 } from 'lucide-react';
 
-import { Question, HistoryEntry, FeatureFlags, QuestionMetadata } from './types';
+import { Question, HistoryEntry, FeatureFlags, QuestionMetadata, QuizMode } from './types';
 import { requestAIExplanation, EXPLAIN_MODES, type ExplainMode } from './utils/aiExplain';
 import { getLevelInfo, shuffleArray, shuffleQuestionOptions, formatNotifTime } from './utils/appHelpers';
 import { saveHistoryToLocalStorage, loadHistoryFromLocalStorage, safeLocalStorageParse } from './utils/quizStorage';
@@ -132,12 +135,15 @@ import PomodoroWidget from './components/PomodoroWidget';
 import NotificationDropdown from './components/NotificationDropdown';
 import SidebarNav from './components/SidebarNav';
 import LoginForm from './components/LoginForm';
+import AngkatanSelectModal from './components/AngkatanSelectModal';
+import SubscriptionGate from './components/SubscriptionGate';
 import PasteJsonModal from './components/PasteJsonModal';
 import { DownloadCollectorModal } from './components/DownloadCollectorModal';
 import NoteEditorModal from './components/NoteEditorModal';
 import ReportQuestionModal from './components/ReportQuestionModal';
 import MoveQuizModal from './components/MoveQuizModal';
 import CreateFolderModal from './components/CreateFolderModal';
+import ParentFolderModal from './components/ParentFolderModal';
 import AnswerNotePopup from './components/AnswerNotePopup';
 import AchievementPopup from './components/AchievementPopup';
 import QuizHeader from './components/QuizHeader';
@@ -224,13 +230,15 @@ export default function App() {
   const [globalQuizFolderMap, setGlobalQuizFolderMap] = useState<Record<string, string>>({});
   const {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
-    isSessionKicked, profileUsername, globalDatabases, uploaderMap, questionDatabase,
+    isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
-    setLocalSessionId, setIsSessionKicked, setProfileUsername, setGlobalDatabases,
+    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
+    setSubscriptionStatus, setCanAccess, setGlobalDatabases,
     setUploaderMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
-    checkActiveQuizSession, removeDatabase
+    checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
     triggerToast,
     setUserXP,
@@ -247,6 +255,28 @@ export default function App() {
     setGlobalQuizFolderMap,
   });
 
+  const [isSettingAngkatan, setIsSettingAngkatan] = useState(false);
+  const handleSelectAngkatan = async (angkatan: '24' | '25' | '26') => {
+    if (!currentUser) return;
+    setIsSettingAngkatan(true);
+    try {
+      const ok = await authClient.setAngkatan(currentUser.id, angkatan);
+      if (ok) {
+        setUserAngkatan(angkatan);
+        triggerToast(`Angkatan 20${angkatan} berhasil dipilih!`, '🎓');
+        await fetchUserQuestions(currentUser.id, profileUsername, angkatan);
+        await fetchGlobalLeaderboard();
+      } else {
+        triggerToast('Gagal menyimpan angkatan. Coba lagi.', '❌');
+      }
+    } catch (e) {
+      console.error(e);
+      triggerToast('Gagal menyimpan angkatan.', '❌');
+    } finally {
+      setIsSettingAngkatan(false);
+    }
+  };
+
 // removed auth state
 // removed auth state
 // removed auth state
@@ -262,20 +292,82 @@ export default function App() {
 // removed auth state
 // removed auth state
 // removed auth state
-  const isCollector = profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online';
+  const isSuperAdmin = (
+    profileUsername === 'admin' ||
+    userProfile?.role === 'super_admin' ||
+    (userProfile?.role === 'admin' && !userAngkatan) ||
+    currentUser?.user_metadata?.username === 'admin'
+  ) && !(userAngkatan && profileUsername !== 'admin');
+
+  const isCollector = userProfile?.role === 'collector' ||
+    userProfile?.role === 'admin_angkatan' ||
+    profileUsername === 'collector' ||
+    profileUsername.toLowerCase().startsWith('collector') ||
+    (profileUsername.toLowerCase().startsWith('admin') && profileUsername !== 'admin') ||
+    currentUser?.user_metadata?.role === 'collector' ||
+    currentUser?.user_metadata?.username === 'collector' ||
+    currentUser?.email === 'collector@ai.online';
+
+  const isAdminAngkatan = isCollector && !isSuperAdmin;
   const [downloadCollectorModalOpen, setDownloadCollectorModalOpen] = useState(false);
   const [questionLimits, setQuestionLimits] = useState<Record<string, number>>({});
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(false);
-  const [quizMode, setQuizMode] = useState<'utuh' | 'simulasi'>('utuh');
+  const [quizMode, setQuizMode] = useState<QuizMode>('utuh');
   const [customFolders, setCustomFolders] = useState<string[]>(() =>
     safeLocalStorageParse<string[]>('cbt_custom_folders', [], Array.isArray)
   );
   const [quizFolderMap, setQuizFolderMap] = useState<Record<string, string>>(() =>
     safeLocalStorageParse<Record<string, string>>('cbt_quiz_folder_map', {}, (v) => !!v && typeof v === 'object' && !Array.isArray(v))
   );
-  
-// removed for TDZ
+
+  // Opsi Timer Mode Biasa
+  const [regularTimerEnabled, setRegularTimerEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('cbt_regular_timer_enabled');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cbt_regular_timer_enabled', String(regularTimerEnabled));
+  }, [regularTimerEnabled]);
+
+  // Minimize Kanban Columns
+  const [minimizedFolders, setMinimizedFolders] = useState<Record<string, boolean>>(() =>
+    safeLocalStorageParse<Record<string, boolean>>('cbt_minimized_folders', {}, (v) => !!v && typeof v === 'object' && !Array.isArray(v))
+  );
+
+  useEffect(() => {
+    localStorage.setItem('cbt_minimized_folders', JSON.stringify(minimizedFolders));
+  }, [minimizedFolders]);
+
+  // Folder Besar (Parent Folders)
+  const [parentFolders, setParentFolders] = useState<string[]>(() =>
+    safeLocalStorageParse<string[]>('cbt_parent_folders', [], Array.isArray)
+  );
+
+  useEffect(() => {
+    localStorage.setItem('cbt_parent_folders', JSON.stringify(parentFolders));
+  }, [parentFolders]);
+
+  const [folderParentMap, setFolderParentMap] = useState<Record<string, string>>(() =>
+    safeLocalStorageParse<Record<string, string>>('cbt_folder_parent_map', {}, (v) => !!v && typeof v === 'object' && !Array.isArray(v))
+  );
+
+  useEffect(() => {
+    localStorage.setItem('cbt_folder_parent_map', JSON.stringify(folderParentMap));
+  }, [folderParentMap]);
+
+  const [activeParentFilter, setActiveParentFilter] = useState<string>('all');
+
+  const [parentFolderModal, setParentFolderModal] = useState<{
+    isOpen: boolean;
+    mode: 'create' | 'assign' | 'manage';
+    targetFolder?: string | null;
+  }>({
+    isOpen: false,
+    mode: 'create',
+    targetFolder: null,
+  });
   const [moveQuizModal, setMoveQuizModal] = useState<{ quizKey: string; quizName: string } | null>(null);
 
 // removed for TDZ
@@ -343,10 +435,12 @@ export default function App() {
   const {
     globalLeaderboard, fileLeaderboard, isLeaderboardLoading, hasSubmittedLeaderboard,
     lastQuizScore, globalTimeFilter, fileTimeFilter, leaderboardType, selectedLeaderboardFile, activeDashboardTab,
+    adminAngkatanFilter, setAdminAngkatanFilter,
+    leaderboardScope, setLeaderboardScope,
     setIsLeaderboardLoading, setHasSubmittedLeaderboard, setLastQuizScore, setGlobalTimeFilter, setFileTimeFilter,
     setLeaderboardType, setSelectedLeaderboardFile, setActiveDashboardTab,
     fetchGlobalLeaderboard, fetchFileLeaderboard, recordQuizToLeaderboard
-  } = useLeaderboard(currentUser, profileUsername, triggerToast);
+  } = useLeaderboard(currentUser, profileUsername, triggerToast, userAngkatan || undefined, isSuperAdmin, isAdminAngkatan);
 // extracted leaderboard state
 // extracted leaderboard state
 // extracted leaderboard state
@@ -771,12 +865,14 @@ export default function App() {
 
   // Filtered databases memo based on search query and category filter
   const filteredDatabases = React.useMemo(() => {
-    const q = searchQuery.toLowerCase();
+    const q = (searchQuery || '').toLowerCase();
     const matchFilter = (key: string) => {
+      if (!key) return false;
+      const k = key.toLowerCase();
       if (bankFilter === 'all') return true;
-      if (bankFilter === 'ukmppd') return key.toLowerCase().includes('ukmppd');
-      if (bankFilter === 'flashcard') return key.toLowerCase().includes('flashcard') || key.toLowerCase().includes('isian') || key.toLowerCase().includes('kombinasi') || key.toLowerCase().includes('card');
-      if (bankFilter === 'custom') return !key.toLowerCase().includes('ukmppd') && !key.toLowerCase().includes('flashcard') && !key.toLowerCase().includes('isian') && !key.toLowerCase().includes('kombinasi') && !key.toLowerCase().includes('card');
+      if (bankFilter === 'ukmppd') return k.includes('ukmppd');
+      if (bankFilter === 'flashcard') return k.includes('flashcard') || k.includes('isian') || k.includes('kombinasi') || k.includes('card');
+      if (bankFilter === 'custom') return !k.includes('ukmppd') && !k.includes('flashcard') && !k.includes('isian') && !k.includes('kombinasi') && !k.includes('card');
       return true;
     };
 
@@ -784,7 +880,9 @@ export default function App() {
     const rootItems: { key: string; displayName: string; questions: Question[] }[] = [];
 
     Object.entries(groupedDatabases.folders).forEach(([folderPath, files]) => {
-      const filteredFiles = (files as { key: string; displayName: string; questions: Question[] }[]).filter(f => f.displayName.toLowerCase().includes(q) && matchFilter(f.key));
+      const filteredFiles = (files as { key: string; displayName: string; questions: Question[] }[]).filter(
+        f => (f?.displayName || f?.key || '').toLowerCase().includes(q) && matchFilter(f?.key || '')
+      );
       // Include empty folders only if not searching
       if (filteredFiles.length > 0 || (q === '' && bankFilter === 'all')) {
         folders[folderPath] = filteredFiles;
@@ -792,7 +890,7 @@ export default function App() {
     });
 
     groupedDatabases.rootItems.forEach(item => {
-      if (item.displayName.toLowerCase().includes(q) && matchFilter(item.key)) {
+      if ((item?.displayName || item?.key || '').toLowerCase().includes(q) && matchFilter(item?.key || '')) {
         rootItems.push(item);
       }
     });
@@ -1069,13 +1167,13 @@ export default function App() {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType]);
+  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin]);
 
   useEffect(() => {
     if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
       fetchGlobalLeaderboard();
     }
-  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername]);
+  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin]);
 
 
 
@@ -1265,6 +1363,74 @@ export default function App() {
       triggerToast("Susunan folder personal direset", "♻️");
     });
     setModalOpen(true);
+  };
+
+  // === KANBAN MINIMIZE & PARENT FOLDER METHODS ===
+  const toggleMinimizeFolder = (folderPath: string) => {
+    setMinimizedFolders(prev => ({
+      ...prev,
+      [folderPath]: !prev[folderPath]
+    }));
+  };
+
+  const toggleMinimizeAllFolders = (allFolderKeys: string[]) => {
+    const allMinimized = allFolderKeys.every(k => minimizedFolders[k]);
+    const newMap: Record<string, boolean> = {};
+    allFolderKeys.forEach(k => {
+      newMap[k] = !allMinimized;
+    });
+    setMinimizedFolders(newMap);
+    triggerToast(allMinimized ? 'Semua kolom dibuka' : 'Semua kolom diminimize', '📂');
+  };
+
+  const handleCreateParentFolderSubmit = (name: string, assignedFolders: string[] = []) => {
+    const clean = name.trim();
+    if (!clean) return;
+    if (parentFolders.includes(clean)) {
+      triggerToast(`Folder besar "${clean}" sudah ada!`, '⚠️');
+      return;
+    }
+    setParentFolders(prev => [...prev, clean]);
+    if (assignedFolders.length > 0) {
+      setFolderParentMap(prev => {
+        const next = { ...prev };
+        assignedFolders.forEach(fp => {
+          next[fp] = clean;
+        });
+        return next;
+      });
+    }
+    setActiveParentFilter(clean);
+    triggerToast(`Folder besar "${clean}" berhasil dibuat!`, '📁');
+  };
+
+  const handleDeleteParentFolderSubmit = (name: string) => {
+    setParentFolders(prev => prev.filter(p => p !== name));
+    setFolderParentMap(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(k => {
+        if (next[k] === name) delete next[k];
+      });
+      return next;
+    });
+    if (activeParentFilter === name) {
+      setActiveParentFilter('all');
+    }
+    triggerToast(`Folder besar "${name}" dihapus.`, '🗑️');
+  };
+
+  const handleAssignFolderParentSubmit = (folderPath: string, parentName: string | null) => {
+    setFolderParentMap(prev => {
+      const next = { ...prev };
+      if (!parentName) {
+        delete next[folderPath];
+        triggerToast(`Folder "${folderPath}" dikeluarkan dari folder besar`, '📦');
+      } else {
+        next[folderPath] = parentName;
+        triggerToast(`Folder "${folderPath}" dimasukkan ke "${parentName}"`, '📂');
+      }
+      return next;
+    });
   };
 
   // === DATABASE METHODS ===
@@ -1704,29 +1870,80 @@ export default function App() {
     }
 
     let pool: Question[] = [];
-    selectedDatabases.forEach((dbName) => {
-      let qList = [...(questionDatabase[dbName] || [])];
-      if (qList.length === 0) return;
 
-      const hasShuffleCards = qList.some((q) => q.featureFlags?.shuffleCards === true);
-      if (shuffleQuestions || hasShuffleCards) {
+    if (quizMode === 'blok') {
+      const bankPools: Record<string, Question[]> = {};
+      let totalAvailable = 0;
+      selectedDatabases.forEach((dbName) => {
+        let qList = [...(questionDatabase[dbName] || [])];
+        if (qList.length === 0) return;
+        if (shuffleOptions) {
+          qList = qList.map(shuffleQuestionOptions);
+        }
         qList = shuffleArray(qList);
+        bankPools[dbName] = qList;
+        totalAvailable += qList.length;
+      });
+
+      const targetCount = Math.min(100, totalAvailable);
+      let remainingTarget = targetCount;
+      let remainingBanks = selectedDatabases.filter(db => (bankPools[db]?.length || 0) > 0);
+      const allocated: Record<string, Question[]> = {};
+      selectedDatabases.forEach(db => { allocated[db] = []; });
+
+      while (remainingTarget > 0 && remainingBanks.length > 0) {
+        const fairShare = Math.ceil(remainingTarget / remainingBanks.length);
+        const nextRemainingBanks: string[] = [];
+
+        for (const db of remainingBanks) {
+          const available = bankPools[db].length - allocated[db].length;
+          const toTake = Math.min(available, fairShare, remainingTarget);
+          if (toTake > 0) {
+            const currentCount = allocated[db].length;
+            allocated[db].push(...bankPools[db].slice(currentCount, currentCount + toTake));
+            remainingTarget -= toTake;
+          }
+          if (bankPools[db].length > allocated[db].length && remainingTarget > 0) {
+            nextRemainingBanks.push(db);
+          }
+        }
+
+        if (nextRemainingBanks.length === remainingBanks.length && remainingTarget > 0 &&
+            nextRemainingBanks.every(db => bankPools[db].length === allocated[db].length)) {
+          break;
+        }
+        remainingBanks = nextRemainingBanks;
       }
 
-      if (shuffleOptions) {
-        qList = qList.map(shuffleQuestionOptions);
+      pool = Object.values(allocated).flat();
+      if (shuffleQuestions) {
+        pool = shuffleArray(pool);
       }
+    } else {
+      selectedDatabases.forEach((dbName) => {
+        let qList = [...(questionDatabase[dbName] || [])];
+        if (qList.length === 0) return;
 
-      const limit = questionLimits[dbName] || 0;
-      if (limit > 0 && limit < qList.length) {
-        qList = qList.slice(0, limit);
+        const hasShuffleCards = qList.some((q) => q.featureFlags?.shuffleCards === true);
+        if (shuffleQuestions || hasShuffleCards) {
+          qList = shuffleArray(qList);
+        }
+
+        if (shuffleOptions) {
+          qList = qList.map(shuffleQuestionOptions);
+        }
+
+        const limit = questionLimits[dbName] || 0;
+        if (limit > 0 && limit < qList.length) {
+          qList = qList.slice(0, limit);
+        }
+
+        pool = pool.concat(qList);
+      });
+
+      if ((quizMode === 'simulasi' || quizMode === 'rmo') && selectedDatabases.length > 1) {
+        pool = shuffleArray(pool);
       }
-
-      pool = pool.concat(qList);
-    });
-
-    if (quizMode === 'simulasi' && selectedDatabases.length > 1) {
-      pool = shuffleArray(pool);
     }
 
     if (pool.length === 0) {
@@ -1734,7 +1951,11 @@ export default function App() {
       return;
     }
 
-    if (isAdaptiveMode) {
+    const effectiveAdaptive = (quizMode === 'rmo' || quizMode === 'blok') ? false : isAdaptiveMode;
+    const isRegularMode = quizMode === 'utuh' || quizMode === 'simulasi' || quizMode === 'biasa';
+    const enableTimer = isRegularMode ? regularTimerEnabled : true;
+
+    if (effectiveAdaptive) {
       setAdaptiveQuestionPool(pool);
       // Pick first question (sedang if possible)
       let firstQ = pool.find(q => q.metadata?.tingkat_kesulitan?.toLowerCase() === 'sedang');
@@ -1747,14 +1968,14 @@ export default function App() {
       setAdaptiveHistory([]);
       setCurrentDifficulty('sedang');
       setCurrentIndex(0);
-      setQuizSecondsLeft(Math.min(pool.length, 30) * 60); // Max 30 questions limit for adaptive
+      setQuizSecondsLeft(enableTimer ? Math.min(pool.length, 30) * 60 : 0);
     } else {
       setCurrentQuiz(pool);
       setUserAnswers(new Array(pool.length).fill(null));
       setDoubtStatus(new Array(pool.length).fill(false));
       setIsRevealed(new Array(pool.length).fill(false));
       setCurrentIndex(0);
-      setQuizSecondsLeft(pool.length * 60);
+      setQuizSecondsLeft(enableTimer ? pool.length * 60 : 0);
     }
 
     // Reset Gamification (keep persistent lifetime stats)
@@ -1769,10 +1990,19 @@ export default function App() {
 
     activeQuizSessionIdRef.current = 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     hasRecordedLeaderboard.current = false;
-    setQuizTimerActive(true);
+    setQuizTimerActive(enableTimer);
     setScreen('quiz');
     setShowSidebar(true);
-    triggerToast('Kuis dimulai! Selamat mengerjakan, semoga sukses!', '🚀');
+
+    if (quizMode === 'rmo') {
+      triggerToast('🏆 Simulasi RMO dimulai! Aturan Benar +4, Salah -1. Selamat berjuang!', '🚀');
+    } else if (quizMode === 'blok') {
+      triggerToast(`📝 Simulasi Ujian Blok dimulai (${pool.length} butir soal, alokasi 1 mnt/soal)!`, '🚀');
+    } else if (!enableTimer) {
+      triggerToast('Kuis dimulai (Mode Santai / Tanpa Batas Waktu)! Selamat belajar!', '☕');
+    } else {
+      triggerToast('Kuis dimulai! Selamat mengerjakan, semoga sukses!', '🚀');
+    }
   };
 
   const startDailyChallenge = () => {
@@ -1866,6 +2096,7 @@ export default function App() {
   };
 
   const checkAnswerNow = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    if (quizMode === 'rmo' || quizMode === 'blok') return;
     const userAnswer = userAnswers[currentIndex];
     const q = currentQuiz[currentIndex];
     const isIsian = !q.pilihan || q.pilihan.length === 0;
@@ -1938,8 +2169,18 @@ export default function App() {
 
     let nextCombo = currentCombo;
     if (isCorrect) {
+      playCorrectSound();
       nextCombo += 1;
-      xpGained = baseXP + (nextCombo - 1) * 20; // 20 XP combo bonus
+      
+      if (quizMode === 'suddendeath') {
+        xpGained = 25 * nextCombo;
+        saveSuddenDeathStreak(nextCombo);
+        if (nextCombo % 5 === 0) {
+          confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+        }
+      } else {
+        xpGained = baseXP + (nextCombo - 1) * 20; // 20 XP combo bonus
+      }
       
       // Daily Challenge 2x XP bonus
       if (isDailyChallenge) {
@@ -1961,7 +2202,7 @@ export default function App() {
       setCurrentCombo(nextCombo);
       setXpHistory((prev) => [...prev, nextXP]);
       triggerFloatingXP(`+${xpGained} XP! 🔥`, true, event);
-      triggerToast('Jawaban Benar! Anda mendapatkan XP bonus.', '✅');
+      triggerToast(quizMode === 'suddendeath' ? `Benar! Streak ${nextCombo} Soal! 🔥` : 'Jawaban Benar! Anda mendapatkan XP bonus.', '✅');
 
       // Live update total_questions_answered
       if (currentUser) {
@@ -1972,6 +2213,19 @@ export default function App() {
         });
       }
     } else {
+      playWrongSound();
+      if (quizMode === 'suddendeath') {
+        playGameOverSound();
+        triggerToast(`💀 GUGUR DI SOAL INI! Rekor: ${currentCombo} Soal Benar.`, '💀');
+        const updatedRevealed = [...isRevealed];
+        updatedRevealed[currentIndex] = true;
+        setIsRevealed(updatedRevealed);
+        setTimeout(() => {
+          finishQuiz();
+        }, 1300);
+        return;
+      }
+
       let xpLoss = Math.floor(baseXP / 2);
       const nextXP = Math.max(0, userXP - xpLoss);
       setUserXP(nextXP);
@@ -1989,6 +2243,13 @@ export default function App() {
     const updatedRevealed = [...isRevealed];
     updatedRevealed[currentIndex] = true;
     setIsRevealed(updatedRevealed);
+
+    // Track daily question count for Marathon 500 Quest
+    const dailyCount = incrementTodayQuestionsAnswered(1);
+    if (dailyCount === 500) {
+      confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 } });
+      triggerToast('🔥 SELAMAT! Quest Maraton 500 Soal Hari Ini Tercapai! Bingkai Aura Maraton Terbuka!', '🎉');
+    }
   };
 
   const selectAnswer = (ans: string) => {
@@ -2114,7 +2375,22 @@ export default function App() {
 
     const total = currentQuiz.length;
     const wrong = total - correct - empty;
-    const finalScore = Math.round((correct / total) * 100);
+    let finalScore = Math.round((correct / total) * 100);
+
+    if (quizMode === 'rmo') {
+      finalScore = (correct * 4) - (wrong * 1);
+      batchXPGained = Math.max(0, finalScore * 20);
+      totalQuizXP = batchXPGained;
+    } else if (quizMode === 'blok') {
+      finalScore = correct;
+      batchXPGained = finalScore * 10;
+      totalQuizXP = batchXPGained;
+    } else if (quizMode === 'suddendeath') {
+      finalScore = correct;
+      batchXPGained = correct * 25;
+      totalQuizXP = batchXPGained;
+      saveSuddenDeathStreak(correct);
+    }
 
     // Tambahkan XP hasil submit batch ke profil user
     if (batchXPGained > 0) {
@@ -2132,6 +2408,16 @@ export default function App() {
     // Tambahkan total_questions_answered di state untuk soal yang belum di-reveal
     if (unrevealedCorrect > 0) {
       setTotalQuestionsAnswered((prev) => prev + unrevealedCorrect);
+    }
+
+    // Tambahkan progres Quest Harian untuk soal yang belum di-reveal per-nomor
+    const unrevealedAnswered = currentQuiz.filter((_, i) => !isRevealed[i] && userAnswers[i] !== undefined && userAnswers[i] !== null && userAnswers[i] !== '').length;
+    if (unrevealedAnswered > 0) {
+      const dailyCount = incrementTodayQuestionsAnswered(unrevealedAnswered);
+      if (dailyCount >= 500 && (dailyCount - unrevealedAnswered) < 500) {
+        confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 } });
+        triggerToast('🔥 SELAMAT! Quest Maraton 500 Soal Hari Ini Tercapai! Bingkai Aura Maraton Terbuka!', '🎉');
+      }
     }
 
     // Update Daily Streak saat submit batch (jika ada jawaban benar)
@@ -2291,8 +2577,14 @@ export default function App() {
       triggerToast('Kuis diselesaikan! Lihat analisis performa Anda.', '🏆');
     }
 
-    // Celebration confetti if score is >= 80
-    if (finalScore >= 80) {
+    const isHighScore = quizMode === 'rmo'
+      ? (total > 0 && (finalScore / (total * 4)) >= 0.7)
+      : quizMode === 'blok'
+      ? (total > 0 && (correct / total) >= 0.75)
+      : finalScore >= 80;
+
+    // Celebration confetti if score is high
+    if (isHighScore) {
       // Primary burst
       confetti({
         particleCount: 150,
@@ -2511,7 +2803,7 @@ export default function App() {
   });
 
   return (
-    <div className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${theme === 'dark' ? 'dark text-brand-text bg-brand-bg' : 'text-slate-900 bg-slate-50'}`}>
+    <div className={`min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-300 ${theme === 'dark' ? 'dark text-brand-text bg-brand-bg' : 'text-slate-900 bg-slate-50'}`}>
       
       {/* Dynamic Background Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -2535,8 +2827,25 @@ export default function App() {
           onPasswordChange={setPasswordInput}
           onGuestJoin={handleGuestJoin}
         />
+      ) : !canAccess ? (
+        <SubscriptionGate
+          theme={theme}
+          userId={currentUser.id}
+          trialEndsAt={trialEndsAt}
+          onRefreshStatus={refreshSubscriptionStatus}
+        />
       ) : (
-        <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-brand-bg text-brand-text' : 'bg-slate-50 text-slate-900'}`}>
+        <>
+          {/* Modal Pemilihan Angkatan jika belum dipilih (Wajib bagi seluruh akun non-admin, termasuk collector) */}
+          {!userAngkatan && !isSuperAdmin && (
+            <AngkatanSelectModal
+              theme={theme}
+              onSelect={handleSelectAngkatan}
+              loading={isSettingAngkatan}
+            />
+          )}
+
+          <div className={`min-h-screen w-full max-w-full flex flex-col min-w-0 overflow-x-hidden ${theme === 'dark' ? 'bg-brand-bg text-brand-text' : 'bg-slate-50 text-slate-900'}`}>
           {screen === 'setup' && (
             <>
               {/* SIDEBAR DESKTOP */}
@@ -2568,7 +2877,7 @@ export default function App() {
           )}
 
           {/* MAIN WRAPPER CONTAINER */}
-          <div className={`flex flex-col min-h-screen flex-1 transition-all ${screen === 'setup' ? 'lg:pl-60' : ''}`}>
+          <div className={`flex flex-col min-h-screen flex-1 w-full max-w-full min-w-0 overflow-x-hidden transition-all ${screen === 'setup' ? 'lg:pl-60' : ''}`}>
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
@@ -2583,8 +2892,8 @@ export default function App() {
                     <span className="font-black text-base tracking-tight">AuraMed</span>
                   </div>
 
-                  <div className="hidden lg:block text-xs font-bold text-slate-450">
-                    Dashboard Platform
+                  <div className="hidden lg:block text-xs font-extrabold text-slate-400 tracking-wide">
+                    Aura-Infused Question Drilling Platform
                   </div>
 
                   {/* Header actions (XP, Theme, Bell) */}
@@ -2633,7 +2942,7 @@ export default function App() {
               </div>
             }>
             {/* 🏠 TAB 1: BERANDA */}
-            {dashboardTab === 'home' && <SetupHomeTab theme={theme} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} />}
+            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} />}
 
             {/* 📚 TAB 2: BANK SOAL */}
             {dashboardTab === 'banks' && (
@@ -2678,13 +2987,17 @@ export default function App() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-100">Akun Collector Aktif</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                              Akun Collector {userAngkatan ? `(Angkatan 20${userAngkatan})` : 'Aktif'}
+                            </span>
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                               {Object.keys(questionDatabase).length} Bank Soal • {Object.values(questionDatabase).reduce((a: number, b: any) => a + (b?.length || 0), 0)} Soal
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Anda memiliki izin pemantauan untuk mengunduh seluruh soal dari database pusat.
+                            {userAngkatan 
+                              ? `Anda memiliki izin pemantauan untuk mengunduh bank soal khusus Angkatan 20${userAngkatan}.` 
+                              : 'Anda memiliki izin pemantauan untuk mengunduh bank soal sesuai angkatan Anda.'}
                           </p>
                         </div>
                       </div>
@@ -2736,6 +3049,86 @@ export default function App() {
                       </button>
                     )}
                   </div>
+
+                  {/* Bilah Navigasi & Filter Folder Besar */}
+                  {Object.keys(questionDatabase).length > 0 && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
+                      <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
+                          <Layers className="w-3.5 h-3.5 text-amber-500" />
+                          Folder Besar:
+                        </span>
+                        <button
+                          onClick={() => setActiveParentFilter('all')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
+                            activeParentFilter === 'all'
+                              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                              : theme === 'dark' ? 'bg-slate-800/60 text-slate-400 hover:text-slate-200' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          Semua ({Object.keys(filteredDatabases.folders).length})
+                        </button>
+                        {parentFolders.map((pName) => {
+                          const count = Object.entries(filteredDatabases.folders).filter(([fp]) => folderParentMap[fp] === pName).length;
+                          return (
+                            <button
+                              key={pName}
+                              onClick={() => setActiveParentFilter(pName)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                                activeParentFilter === pName
+                                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                                  : theme === 'dark' ? 'bg-slate-800/60 text-slate-400 hover:text-slate-200' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              <span>📁</span>
+                              <span>{pName}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                activeParentFilter === pName ? 'bg-white/20 text-white' : 'bg-slate-500/15 text-slate-400'
+                              }`}>
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        <button
+                          onClick={() => setActiveParentFilter('__unassigned__')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
+                            activeParentFilter === '__unassigned__'
+                              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                              : theme === 'dark' ? 'bg-slate-800/60 text-slate-400 hover:text-slate-200' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          Tanpa Folder Besar
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                        <button
+                          onClick={() => {
+                            const allKeys = [...Object.keys(filteredDatabases.folders), 'root'];
+                            toggleMinimizeAllFolders(allKeys);
+                          }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition-all border cursor-pointer ${
+                            theme === 'dark'
+                              ? 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'
+                              : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                          }`}
+                          title="Minimize atau Buka semua kolom kanban"
+                        >
+                          <Minimize2 className="w-3.5 h-3.5" />
+                          <span>{Object.values(minimizedFolders).filter(Boolean).length > 0 ? 'Buka Semua Kolom' : 'Minimize Semua'}</span>
+                        </button>
+                        <button
+                          onClick={() => setParentFolderModal({ isOpen: true, mode: 'create' })}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 hover:scale-102 transition-all cursor-pointer"
+                          title="Buat Folder Besar baru"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Folder Besar</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {Object.keys(questionDatabase).length === 0 ? (
                     <div className="text-center p-12">
@@ -2818,12 +3211,81 @@ export default function App() {
                         )}
                       </AnimatePresence>
                       {/* Foldered databases */}
-                      {Object.entries(filteredDatabases.folders).map(([folderPath, files]) => {
+                      {Object.entries(filteredDatabases.folders)
+                        .filter(([folderPath]) => {
+                          if (activeParentFilter === 'all') return true;
+                          if (activeParentFilter === '__unassigned__') return !folderParentMap[folderPath];
+                          return folderParentMap[folderPath] === activeParentFilter;
+                        })
+                        .map(([folderPath, files]) => {
                         const filesTyped = files as any[];
+                        const isMinimized = !!minimizedFolders[folderPath];
+                        const assignedParent = folderParentMap[folderPath];
                         
                         // Count selected items in this folder
                         const selectedInFolder = filesTyped.filter(f => selectedDatabases.includes(f.key)).length;
                         const totalQuestionsInFolder = filesTyped.reduce((acc, f) => acc + (f.questions?.length || 0), 0);
+
+                        if (isMinimized) {
+                          return (
+                            <div 
+                              key={folderPath} 
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const quizKey = e.dataTransfer.getData('quizKey');
+                                if (quizKey) handleMoveQuiz(quizKey, folderPath);
+                              }}
+                              onClick={() => toggleMinimizeFolder(folderPath)}
+                              className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group ${
+                                theme === 'dark'
+                                  ? 'bg-slate-900/60 border-white/[0.08] hover:border-amber-500/40 hover:bg-slate-900/90'
+                                  : 'bg-slate-100/80 border-slate-200 hover:border-amber-500/40 hover:bg-slate-100'
+                              }`}
+                              title={`Buka kolom ${folderPath} (${totalQuestionsInFolder} soal)`}
+                            >
+                              <div className="flex flex-col items-center gap-2 mb-3">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMinimizeFolder(folderPath);
+                                  }}
+                                  className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all shadow-sm cursor-pointer"
+                                  title="Buka Kolom Kanban"
+                                >
+                                  <Maximize2 className="w-4 h-4" />
+                                </button>
+                                <div className="text-xl">
+                                  {folderPath.toLowerCase().includes('digestif') ? '🫀' : 
+                                   folderPath.toLowerCase().includes('kardiorespi') ? '🫁' :
+                                   folderPath.toLowerCase().includes('muskulo') ? '🦴' :
+                                   folderPath.toLowerCase().includes('neuro') ? '🧠' :
+                                   folderPath.toLowerCase().includes('urogenital') ? '🩸' : '📁'}
+                                </div>
+                              </div>
+
+                              <div className="flex-1 flex items-center justify-center my-2 py-4">
+                                <span 
+                                  className="text-xs font-black uppercase tracking-wider text-amber-500 truncate whitespace-nowrap [writing-mode:vertical-rl] rotate-180 max-h-64"
+                                  title={folderPath}
+                                >
+                                  {folderPath}
+                                </span>
+                              </div>
+
+                              <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
+                                <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-[10px] font-black border border-amber-500/20">
+                                  {totalQuestionsInFolder}
+                                </span>
+                                {selectedInFolder > 0 && (
+                                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-black shadow-sm" title={`${selectedInFolder} terpilih`}>
+                                    {selectedInFolder}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
 
                         return (
                           <div 
@@ -2839,7 +3301,7 @@ export default function App() {
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1 px-1">
-                              <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                 <div className="w-8 h-8 rounded-lg bg-slate-800/50 dark:bg-slate-950/50 flex items-center justify-center flex-shrink-0 text-sm">
                                   {folderPath.toLowerCase().includes('digestif') ? '🫀' : 
                                    folderPath.toLowerCase().includes('kardiorespi') ? '🫁' :
@@ -2847,11 +3309,46 @@ export default function App() {
                                    folderPath.toLowerCase().includes('neuro') ? '🧠' :
                                    folderPath.toLowerCase().includes('urogenital') ? '🩸' : '📁'}
                                 </div>
-                                <span className="font-extrabold text-xs uppercase tracking-wider truncate text-amber-500">{folderPath}</span>
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-extrabold text-xs uppercase tracking-wider truncate text-amber-500 block">{folderPath}</span>
+                                  {assignedParent ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setParentFolderModal({ isOpen: true, mode: 'assign', targetFolder: folderPath });
+                                      }}
+                                      className="text-[10px] text-amber-500/80 hover:text-amber-400 font-semibold flex items-center gap-1 truncate transition-colors cursor-pointer"
+                                      title="Klik untuk mengubah Folder Besar"
+                                    >
+                                      <Layers className="w-2.5 h-2.5 flex-shrink-0" />
+                                      <span className="truncate">{assignedParent}</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setParentFolderModal({ isOpen: true, mode: 'assign', targetFolder: folderPath });
+                                      }}
+                                      className="text-[9px] text-slate-400 hover:text-amber-500 font-semibold flex items-center gap-0.5 transition-colors cursor-pointer"
+                                      title="Masukkan folder ini ke dalam Folder Besar"
+                                    >
+                                      <Plus className="w-2.5 h-2.5" /> Folder Besar
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                              <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black whitespace-nowrap border border-amber-500/20">
-                                {totalQuestionsInFolder} soal
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                                <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black whitespace-nowrap border border-amber-500/20">
+                                  {totalQuestionsInFolder} soal
+                                </span>
+                                <button
+                                  onClick={() => toggleMinimizeFolder(folderPath)}
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                                  title="Minimize kolom ini"
+                                >
+                                  <Minimize2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
 
                             <div className="flex flex-col gap-3">
@@ -2991,28 +3488,83 @@ export default function App() {
                       })}
 
                       {/* Loose / Root items */}
-                      {true && (
-                        <div 
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            const quizKey = e.dataTransfer.getData('quizKey');
-                            if (quizKey) handleMoveQuiz(quizKey, 'root');
-                          }}
-                          className={`w-80 sm:w-88 flex-shrink-0 flex flex-col gap-4 rounded-[24px] p-5 border snap-start ${
-                          theme === 'dark' ? 'bg-slate-900/40 border-white/[0.08]' : 'bg-slate-50/50 border-slate-200'
-                        }`}>
-                          <div className="flex items-center justify-between mb-1 px-1">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-slate-800/50 dark:bg-slate-950/50 flex items-center justify-center flex-shrink-0 text-sm">
-                                📁
-                              </div>
-                              <span className="font-extrabold text-xs uppercase tracking-wider truncate text-slate-400">LAINNYA</span>
+                      {(activeParentFilter === 'all' || activeParentFilter === '__unassigned__') && filteredDatabases.rootItems.length > 0 && (
+                        minimizedFolders['root'] ? (
+                          <div 
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const quizKey = e.dataTransfer.getData('quizKey');
+                              if (quizKey) handleMoveQuiz(quizKey, 'root');
+                            }}
+                            onClick={() => toggleMinimizeFolder('root')}
+                            className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group ${
+                              theme === 'dark'
+                                ? 'bg-slate-900/60 border-white/[0.08] hover:border-slate-500/40 hover:bg-slate-900/90'
+                                : 'bg-slate-100/80 border-slate-200 hover:border-slate-500/40 hover:bg-slate-100'
+                            }`}
+                            title={`Buka kolom Tanpa Folder (${filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)} soal)`}
+                          >
+                            <div className="flex flex-col items-center gap-2 mb-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleMinimizeFolder('root');
+                                }}
+                                className="w-8 h-8 rounded-xl bg-slate-500/15 text-slate-400 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-all shadow-sm cursor-pointer"
+                                title="Buka Kolom Kanban"
+                              >
+                                <Maximize2 className="w-4 h-4" />
+                              </button>
+                              <div className="text-xl">📁</div>
                             </div>
-                            <span className="px-2.5 py-1 bg-slate-500/10 text-slate-500 rounded-full text-[10px] font-black whitespace-nowrap border border-slate-500/20">
-                              {filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)} soal
-                            </span>
+
+                            <div className="flex-1 flex items-center justify-center my-2 py-4">
+                              <span 
+                                className="text-xs font-black uppercase tracking-wider text-slate-400 truncate whitespace-nowrap [writing-mode:vertical-rl] rotate-180 max-h-64"
+                                title="Lainnya"
+                              >
+                                LAINNYA
+                              </span>
+                            </div>
+
+                            <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
+                              <span className="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-400 flex items-center justify-center text-[10px] font-black border border-slate-500/20">
+                                {filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)}
+                              </span>
+                            </div>
                           </div>
+                        ) : (
+                          <div 
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const quizKey = e.dataTransfer.getData('quizKey');
+                              if (quizKey) handleMoveQuiz(quizKey, 'root');
+                            }}
+                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col gap-4 rounded-[24px] p-5 border snap-start ${
+                            theme === 'dark' ? 'bg-slate-900/40 border-white/[0.08]' : 'bg-slate-50/50 border-slate-200'
+                          }`}>
+                            <div className="flex items-center justify-between mb-1 px-1">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-slate-800/50 dark:bg-slate-950/50 flex items-center justify-center flex-shrink-0 text-sm">
+                                  📁
+                                </div>
+                                <span className="font-extrabold text-xs uppercase tracking-wider truncate text-slate-400">LAINNYA</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                                <span className="px-2.5 py-1 bg-slate-500/10 text-slate-500 rounded-full text-[10px] font-black whitespace-nowrap border border-slate-500/20">
+                                  {filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)} soal
+                                </span>
+                                <button
+                                  onClick={() => toggleMinimizeFolder('root')}
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 transition-colors cursor-pointer"
+                                  title="Minimize kolom ini"
+                                >
+                                  <Minimize2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
 
                           <div className="flex flex-col gap-3">
                             {filteredDatabases.rootItems.map(({ key, displayName, questions }) => {
@@ -3145,7 +3697,8 @@ export default function App() {
                             })}
                           </div>
                         </div>
-                      )}
+                      )
+                    )}
                     </div>
                     </div>
                   )}
@@ -3167,10 +3720,10 @@ export default function App() {
             )}
 
             {/* 🎯 TAB 3: BARU (QUIZ CONFIGURATION) */}
-            {dashboardTab === 'new' && <SetupNewQuizTab theme={theme} selectedDatabases={selectedDatabases} setSelectedDatabases={setSelectedDatabases} setDashboardTab={setDashboardTab} quizMode={quizMode} setQuizMode={setQuizMode} shuffleQuestions={shuffleQuestions} setShuffleQuestions={setShuffleQuestions} shuffleOptions={shuffleOptions} setShuffleOptions={setShuffleOptions} startQuiz={startQuiz} globalDatabases={globalDatabases} removeDatabase={removeDatabase} keyboardNavEnabled={keyboardNavEnabled} setKeyboardNavEnabled={setKeyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} setIsAdaptiveMode={setIsAdaptiveMode} />}
+            {dashboardTab === 'new' && <SetupNewQuizTab theme={theme} selectedDatabases={selectedDatabases} setSelectedDatabases={setSelectedDatabases} setDashboardTab={setDashboardTab} quizMode={quizMode} setQuizMode={setQuizMode} shuffleQuestions={shuffleQuestions} setShuffleQuestions={setShuffleQuestions} shuffleOptions={shuffleOptions} setShuffleOptions={setShuffleOptions} startQuiz={startQuiz} globalDatabases={globalDatabases} removeDatabase={removeDatabase} keyboardNavEnabled={keyboardNavEnabled} setKeyboardNavEnabled={setKeyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} setIsAdaptiveMode={setIsAdaptiveMode} regularTimerEnabled={regularTimerEnabled} setRegularTimerEnabled={setRegularTimerEnabled} />}
 
             {/* 👤 TAB 5: PROFIL */}
-            {dashboardTab === 'profile' && <SetupProfileTab theme={theme} currentUser={currentUser} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} totalQuestionsAnswered={totalQuestionsAnswered} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} exportData={exportData} importData={importData} triggerToast={triggerToast} achievementFilter={achievementFilter} setAchievementFilter={setAchievementFilter} achievements={achievements} />}
+            {dashboardTab === 'profile' && <SetupProfileTab theme={theme} currentUser={currentUser} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} totalQuestionsAnswered={totalQuestionsAnswered} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} exportData={exportData} importData={importData} triggerToast={triggerToast} achievementFilter={achievementFilter} setAchievementFilter={setAchievementFilter} achievements={achievements} userAngkatan={userAngkatan} quizHistory={quizHistory} trialEndsAt={trialEndsAt} />}
 
             {/* Box 3: History & Leaderboard (Beranda) */}
 
@@ -3272,10 +3825,10 @@ export default function App() {
         )}
 
         {/* === ACTIVE CBT SIMULATOR SCREEN === */}
-        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} finishQuiz={finishQuiz} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} />}
+        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} quizTimerActive={quizTimerActive} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} finishQuiz={finishQuiz} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} quizMode={quizMode} />}
 
         {/* === RESULT & ANALYTICS SUMMARY SCREEN === */}
-        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} lastQuizXPGained={lastQuizXPGained} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} />}
+        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} lastQuizXPGained={lastQuizXPGained} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} quizMode={quizMode} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} totalQuestionsAnswered={totalQuestionsAnswered} userAngkatan={userAngkatan} triggerToast={triggerToast} suddenDeathStreak={currentCombo} />}
 
       </div>
 
@@ -3322,8 +3875,20 @@ export default function App() {
               <div>
                 <h3 className="text-sm sm:text-base font-extrabold flex items-center gap-2">
                   <span>🏆 Detail Evaluasi Kuis</span>
-                  <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 px-2 py-0.5 rounded-full capitalize">
-                    {selectedHistoryDetail.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
+                  <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${
+                    selectedHistoryDetail.mode === 'rmo'
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                      : selectedHistoryDetail.mode === 'blok'
+                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                      : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                  }`}>
+                    {selectedHistoryDetail.mode === 'rmo'
+                      ? '🏆 Simulasi RMO'
+                      : selectedHistoryDetail.mode === 'blok'
+                      ? '📝 Simulasi Ujian Blok'
+                      : selectedHistoryDetail.mode === 'simulasi'
+                      ? 'Simulasi'
+                      : 'Sequential'}
                   </span>
                 </h3>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
@@ -3348,8 +3913,18 @@ export default function App() {
               }`}>
                 {/* Score Circle */}
                 <div className="col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15">
-                  <span className="text-3xl font-black text-indigo-500">{selectedHistoryDetail.score}</span>
-                  <span className="text-[9px] font-extrabold text-indigo-400 uppercase tracking-widest mt-1">Skor Akhir</span>
+                  <span className="text-3xl font-black text-indigo-500">
+                    {selectedHistoryDetail.mode === 'rmo' && selectedHistoryDetail.score > 0
+                      ? `+${selectedHistoryDetail.score}`
+                      : selectedHistoryDetail.score}
+                  </span>
+                  <span className="text-[9px] font-extrabold text-indigo-400 uppercase tracking-widest mt-1">
+                    {selectedHistoryDetail.mode === 'rmo'
+                      ? `Maks ${selectedHistoryDetail.total * 4}`
+                      : selectedHistoryDetail.mode === 'blok'
+                      ? `Dari ${selectedHistoryDetail.total}`
+                      : 'Skor Akhir'}
+                  </span>
                 </div>
 
                 <div className="text-center p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
@@ -3725,9 +4300,11 @@ export default function App() {
         selectedDatabases={selectedDatabases}
         triggerToast={triggerToast}
         profileUsername={profileUsername}
+        userAngkatan={userAngkatan || undefined}
       />
 
       </div>
+      </>
     )}
 
     <ReportQuestionModal
@@ -3763,6 +4340,27 @@ export default function App() {
       personalFolders={customFolders}
       onClose={() => setCreateFolderModalOpen(false)}
       onCreateFolder={handleCreateFolderSubmit}
+    />
+
+    <ParentFolderModal
+      isOpen={parentFolderModal.isOpen}
+      theme={theme}
+      mode={parentFolderModal.mode}
+      allKanbanFolders={Object.keys(questionDatabase).reduce((acc: string[], key) => {
+        const parts = key.split('/');
+        if (parts.length > 1) {
+          const fName = parts.slice(0, -1).join('/');
+          if (!acc.includes(fName)) acc.push(fName);
+        }
+        return acc;
+      }, [...customFolders, ...globalCustomFolders])}
+      parentFolders={parentFolders}
+      folderParentMap={folderParentMap}
+      targetFolder={parentFolderModal.targetFolder}
+      onClose={() => setParentFolderModal(prev => ({ ...prev, isOpen: false }))}
+      onCreateParentFolder={handleCreateParentFolderSubmit}
+      onDeleteParentFolder={handleDeleteParentFolderSubmit}
+      onAssignFolder={handleAssignFolderParentSubmit}
     />
 
     <AnswerNotePopup

@@ -26,7 +26,6 @@ export default function SidebarNav({
   theme, activeTab, srsDueCount, currentStreak, streakFreezeLeft, username, userLevel, isAdmin, onTabChange, onLogout,
 }: SidebarNavProps) {
   const items: NavItem[] = [
-    { id: 'mabar', label: 'Mabar / Battle', icon: Gamepad2 },
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
     { id: 'new', label: 'Baru', icon: PlusCircle },
@@ -44,12 +43,17 @@ export default function SidebarNav({
       {/* Logo & Header */}
       <div className="p-6">
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-extrabold shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-extrabold shadow-sm shrink-0">
             <Activity className="w-5 h-5 text-white animate-pulse" />
           </div>
           <div>
-            <span className="font-black text-lg tracking-tight">AuraMed</span>
-            <span className="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase tracking-widest">PRO</span>
+            <div className="flex items-center">
+              <span className="font-black text-lg tracking-tight">AuraMed</span>
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase tracking-widest">PRO</span>
+            </div>
+            <p className="text-[9px] font-bold text-slate-400 tracking-tight leading-tight mt-0.5">
+              Aura-Infused Question Drilling Platform
+            </p>
           </div>
         </div>
 

@@ -9,20 +9,29 @@ const cleanArgs = args.filter(a => a !== '--local');
 const username = cleanArgs[0];
 const password = cleanArgs[1];
 const role = cleanArgs[2] || 'user'; // 'user' | 'collector' | 'admin'
+const angkatan = cleanArgs[3] || null; // '24' | '25' | '26' | null
 
 if (!username || !password) {
   console.log(`
 Cara Penggunaan:
-  node scripts/add_user.mjs <username> <password> [role] [--local]
+  node scripts/add_user.mjs <username> <password> [role] [angkatan] [--local]
 
-Contoh:
-  node scripts/add_user.mjs dokter_budi rahasia123
-  node scripts/add_user.mjs collector_baru pass1234 collector
-  node scripts/add_user.mjs admin_kedua adminpass admin
+Contoh Pembuatan Akun:
+  # 1. Admin/Collector Per Angkatan (Akses penuh unduh soal angkatan tersebut):
+  node scripts/add_user.mjs collector24 rahasia24 collector 24
+  node scripts/add_user.mjs collector25 rahasia25 collector 25
+  node scripts/add_user.mjs collector26 rahasia26 collector 26
+
+  # 2. Akun Super Admin:
+  node scripts/add_user.mjs superadmin rahasiaSuper admin
+
+  # 3. Akun Pengguna Biasa:
+  node scripts/add_user.mjs dokter_budi rahasia123 user 24
 
 Opsi:
-  [role]    : 'user' (default), 'collector', atau 'admin'
-  --local   : Tambahkan ke D1 lokal (bawaan: --remote / D1 produksi di Cloudflare)
+  [role]      : 'collector' (PJ Soal Angkatan), 'admin' (Super Admin), atau 'user' (default)
+  [angkatan]  : '24', '25', atau '26'
+  --local     : Tambahkan ke D1 lokal (bawaan: --remote / D1 produksi Cloudflare)
 `);
   process.exit(1);
 }
@@ -63,9 +72,12 @@ async function main() {
   const passwordHash = await hashPasswordPBKDF2(password);
   const now = new Date().toISOString();
 
-  console.log(`\n⏳ Menambahkan user "${username}" (role: ${role})...`);
+  const subStatus = (role === 'admin' || role === 'collector') ? 'active' : 'trial';
+  const angkatanSql = angkatan ? `'${angkatan}'` : 'NULL';
 
-  const sql = `INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active) VALUES ('${id}', '${username.replace(/'/g, "''")}', '${email}', '${passwordHash}', 0, '${role}', 0, 0, 1, 0, '${now}', '${now}');`;
+  console.log(`\n⏳ Menambahkan user "${username}" (role: ${role}, angkatan: ${angkatan || 'Semua'})...`);
+
+  const sql = `INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, subscription_status) VALUES ('${id}', '${username.replace(/'/g, "''")}', '${email}', '${passwordHash}', 0, '${role}', 0, 0, 1, 0, '${now}', '${now}', ${angkatanSql}, '${subStatus}');`;
 
   const targetFlag = isLocal ? '--local' : '--remote';
   const wranglerArgs = ['wrangler', 'd1', 'execute', 'auramedpro-db', targetFlag, `--command=${sql}`];
@@ -81,6 +93,8 @@ async function main() {
     console.log(`  - Username : ${username}`);
     console.log(`  - Password : ${password}`);
     console.log(`  - Role     : ${role}`);
+    console.log(`  - Angkatan : ${angkatan ? `20${angkatan}` : 'Lintas Angkatan / Bebas'}`);
+    console.log(`  - Status   : ${subStatus}`);
     console.log(`  - Email    : ${email}\n`);
   } catch (err) {
     console.error('❌ Gagal menjalankan wrangler d1 execute:', err.message);

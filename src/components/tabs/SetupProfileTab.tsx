@@ -1,10 +1,20 @@
-import React from 'react';
-import { Download, Upload, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Upload, LogOut, Volume2, Sparkles, Check, Play } from 'lucide-react';
 import { getRarityColor, getRarityBg } from '../../utils/achievements';
 import { getLevelInfo } from '../../utils/appHelpers';
-
-
 import { authClient } from '../../lib/authClient';
+import { SOUND_PACKS, SoundPackId, getSavedSoundPack, setSavedSoundPack, playCorrectSound } from '../../utils/audioEffects';
+import { 
+  AVATAR_FRAMES, 
+  AvatarFrameId, 
+  getSavedAvatarFrame, 
+  setSavedAvatarFrame, 
+  getSuddenDeathBestStreak,
+  getTodayQuestionsAnswered,
+  isQuest500Completed
+} from '../../utils/avatarFrames';
+import { AvatarFrameModal } from '../AvatarFrameModal';
+import { TrialCountdownBanner } from '../TrialCountdownBanner';
 
 interface SetupProfileTabProps {
   theme: string;
@@ -22,33 +32,127 @@ interface SetupProfileTabProps {
   achievementFilter: string;
   setAchievementFilter: any;
   achievements: any[];
+  userAngkatan?: string | null;
+  quizHistory?: any[];
+  trialEndsAt?: string | null;
 }
 
 export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   theme, currentUser, profileUsername, userXP, currentStreak, longestStreak,
   totalQuestionsAnswered, streakFreezeLeft, lastActiveDate, exportData,
-  importData, triggerToast, achievementFilter, setAchievementFilter, achievements
+  importData, triggerToast, achievementFilter, setAchievementFilter, achievements,
+  userAngkatan, quizHistory = [], trialEndsAt
 }) => {
+  const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
+  const [currentFrameId, setCurrentFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
+  const [currentSoundPack, setCurrentSoundPack] = useState<SoundPackId>(getSavedSoundPack());
+
+  const suddenDeathBest = getSuddenDeathBestStreak();
+  const todayQuestions = getTodayQuestionsAnswered(quizHistory);
+  const isQuestDone = isQuest500Completed() || todayQuestions >= 500;
+  const activeFrame = AVATAR_FRAMES.find(f => f.id === currentFrameId) || AVATAR_FRAMES[0];
+  const levelInfo = getLevelInfo(userXP);
+
+  const handleSelectFrame = (id: AvatarFrameId) => {
+    setCurrentFrameId(id);
+    setSavedAvatarFrame(id);
+    const chosen = AVATAR_FRAMES.find(f => f.id === id);
+    triggerToast(`Bingkai "${chosen?.name}" berhasil dipasang!`, '✨');
+  };
+
+  const handleSelectSoundPack = (packId: SoundPackId) => {
+    setCurrentSoundPack(packId);
+    setSavedSoundPack(packId);
+    playCorrectSound(packId);
+    triggerToast(`Sound pack diubah ke: ${SOUND_PACKS.find(p => p.id === packId)?.name}`, '🔊');
+  };
+
+  const getAuraCardClass = (frameId: AvatarFrameId) => {
+    switch (frameId) {
+      case 'caduceus_mythic':
+        return 'aura-mythic-row border-amber-400/90 shadow-[0_0_32px_rgba(245,158,11,0.45)]';
+      case 'veteran_3000':
+        return 'aura-veteran-row border-teal-400/80 shadow-[0_0_24px_rgba(20,184,166,0.35)]';
+      case 'quest_500_today':
+        return 'aura-quest-row border-purple-400/80 shadow-[0_0_24px_rgba(168,85,247,0.35)]';
+      case 'sudden_death_master':
+        return 'border-rose-500/80 shadow-[0_0_22px_rgba(244,63,94,0.35)]';
+      default:
+        return '';
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-md mx-auto animate-fade-in">
+    <div className="space-y-6 max-w-md mx-auto animate-fade-in px-4 sm:px-0 pb-32 sm:pb-16 pt-1">
+      {/* ⏱️ Top Trial Countdown Banner */}
+      <TrialCountdownBanner
+        theme={theme}
+        trialEndsAt={trialEndsAt}
+        userAngkatan={userAngkatan}
+        isSuperAdmin={currentUser?.role === 'super_admin' || currentUser?.role === 'admin'}
+      />
               
-                <div className={`p-6 rounded-3xl border transition-all duration-300 space-y-6 ${
-                  theme === 'dark'
-                    ? 'bg-slate-900/40 border-white/[0.08] shadow-2xl'
-                    : 'bg-white border-slate-200 shadow-sm'
-                }`}>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-teal-500 p-1 mb-4 shadow-xl">
-                      <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-black text-xl text-white">
-                        {profileUsername.slice(0, 2).toUpperCase()}
+      <div className={`p-4 sm:p-6 rounded-3xl border transition-all duration-300 space-y-6 relative overflow-hidden ${getAuraCardClass(activeFrame.id)} ${
+        theme === 'dark'
+          ? 'bg-slate-900/40 border-white/[0.08] shadow-2xl'
+          : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+                  {/* Active Aura Prestige Badge */}
+                  {activeFrame.auraClass && (
+                    <div className="flex justify-center -mt-1 mb-1">
+                      <div className={`px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg border animate-pulse ${
+                        activeFrame.id === 'caduceus_mythic'
+                          ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-slate-950 border-yellow-200 shadow-amber-500/30'
+                          : activeFrame.id === 'veteran_3000'
+                          ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white border-teal-300 shadow-teal-500/30'
+                          : activeFrame.id === 'quest_500_today'
+                          ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white border-purple-300 shadow-purple-500/30'
+                          : 'bg-gradient-to-r from-rose-600 to-amber-600 text-white border-rose-300 shadow-rose-500/30'
+                      }`}>
+                        <span>✨</span>
+                        <span>AURA AKTIF: {activeFrame.name.toUpperCase()}</span>
                       </div>
                     </div>
+                  )}
+
+                  <div className="flex flex-col items-center text-center">
+                    {/* Interactive Framed Avatar */}
+                    <div 
+                      className="relative group cursor-pointer"
+                      onClick={() => setIsFrameModalOpen(true)}
+                      title="Klik untuk mengganti bingkai avatar"
+                    >
+                      <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-2 transition-all ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
+                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-xl text-white">
+                          {profileUsername.slice(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      <span className="absolute -bottom-0.5 -right-0.5 text-base drop-shadow bg-slate-900 rounded-full p-0.5 border border-slate-700">
+                        {activeFrame.badge}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => setIsFrameModalOpen(true)}
+                      className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 hover:bg-indigo-500/20 transition flex items-center gap-1 cursor-pointer mb-2"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Ganti Bingkai Avatar</span>
+                    </button>
+
                     <h2 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                       {profileUsername}
                     </h2>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mt-1.5">
-                      Gelar: {getLevelInfo(userXP).rank}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        Gelar: {levelInfo.rank}
+                      </span>
+                      {userAngkatan && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                          '{userAngkatan}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -92,9 +196,147 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                       <span className="font-semibold text-slate-400">Streak Freeze (❄️)</span>
                       <span className="font-extrabold text-sky-500">{streakFreezeLeft} Tersisa</span>
                     </div>
-                    <div className="py-3 flex justify-between">
+                    <div className="py-3 flex justify-between items-center">
                       <span className="font-semibold text-slate-400">Tipe Akun</span>
                       <span className="font-extrabold text-teal-500 uppercase tracking-widest text-[9px] bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">Pro</span>
+                    </div>
+                    <div className="py-3 flex justify-between items-center">
+                      <span className="font-semibold text-slate-400">Masa Berlaku</span>
+                      <span className="font-extrabold text-indigo-500 dark:text-indigo-400 text-[10px] flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        Trial Diperpanjang (Gratis)
+                      </span>
+                    </div>
+                  </div>
+
+                  <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
+
+                  {/* Quest Harian Section */}
+                  <div className={`p-4 rounded-2xl border transition-all ${
+                    isQuestDone
+                      ? 'bg-gradient-to-br from-purple-950/30 via-indigo-950/20 to-purple-950/30 border-purple-500/40 shadow-lg shadow-purple-500/10'
+                      : theme === 'dark'
+                      ? 'bg-slate-950/40 border-slate-800'
+                      : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-base border border-purple-500/30 shadow-sm shrink-0">
+                          🔥
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className={`text-xs font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                              Quest Harian: Maraton 500 Soal
+                            </h4>
+                            <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                              Hard
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Selesaikan 500 soal hari ini untuk mendapatkan bingkai <span className="font-extrabold text-purple-400">Aura Maraton</span>
+                          </p>
+                        </div>
+                      </div>
+                      {isQuestDone && (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Selesai
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-400 font-semibold">Progres Hari Ini:</span>
+                        <span className="font-black text-purple-500 dark:text-purple-300">
+                          {todayQuestions} / 500 Soal ({Math.min(100, Math.round((todayQuestions / 500) * 100))}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-500 rounded-full"
+                          style={{ width: `${Math.min(100, (todayQuestions / 500) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1 flex-wrap gap-1">
+                        <span>
+                          {isQuestDone ? '🎉 Bingkai Aura Maraton siap digunakan!' : `Kurang ${Math.max(0, 500 - todayQuestions)} soal lagi.`}
+                        </span>
+                        {isQuestDone && currentFrameId !== 'quest_500_today' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSelectFrame('quest_500_today')}
+                            className="text-purple-400 hover:text-purple-300 font-extrabold underline cursor-pointer"
+                          >
+                            Pasang Aura Ini ✨
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
+
+                  {/* Sound Pack Selector */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="w-4 h-4 text-indigo-500" />
+                        <h3 className={`text-xs font-black uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                          Efek Suara Kuis (Sound Pack)
+                        </h3>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">Web Audio API</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      {SOUND_PACKS.map((pack) => {
+                        const isSelected = currentSoundPack === pack.id;
+                        return (
+                          <div
+                            key={pack.id}
+                            onClick={() => handleSelectSoundPack(pack.id)}
+                            className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-indigo-500/10 border-indigo-500/50 shadow-sm'
+                                : 'bg-slate-100/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/80 hover:border-slate-400'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-base">{pack.icon}</span>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-extrabold">{pack.name}</span>
+                                  {isSelected && (
+                                    <span className="px-1.5 py-0.2 rounded text-[8px] font-black bg-indigo-500 text-white">
+                                      Aktif
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-450 line-clamp-1">
+                                  {pack.description}
+                                </span>
+                              </div>
+                            </div>
+
+                            {pack.id !== 'mute' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playCorrectSound(pack.id);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white text-[10px] font-bold flex items-center gap-1 transition"
+                                title="Tes Bunyi"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                                <span>Tes</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -204,6 +446,24 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                     Logout Akun
                   </button>
                 </div>
+
+      {/* Avatar Frame Modal */}
+      {isFrameModalOpen && (
+        <AvatarFrameModal
+          isOpen={isFrameModalOpen}
+          onClose={() => setIsFrameModalOpen(false)}
+          currentFrameId={currentFrameId}
+          onSelectFrame={handleSelectFrame}
+          userStats={{
+            level: levelInfo.level,
+            totalQuestions: currentUser?.total_questions_answered || totalQuestionsAnswered || 0,
+            suddenDeathBest,
+            todayQuestions
+          }}
+          username={profileUsername}
+          theme={theme}
+        />
+      )}
               
     </div>
   );

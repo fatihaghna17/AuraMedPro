@@ -18,6 +18,25 @@ export interface AuthSession {
   access_token: string;
 }
 
+export interface SubscriptionInfo {
+  status: 'trial' | 'active' | 'expired';
+  canAccess: boolean;
+  trialEndsAt: string | null;
+  subscriptionExpiresAt: string | null;
+}
+
+export interface PaymentInfo {
+  paymentId: string;
+  amount: number;
+  uniqueCode: number;
+  totalAmount: number;
+  bankInfo: {
+    bank: string;
+    accountNumber: string;
+    accountName: string;
+  };
+}
+
 export interface AuthResponse {
   data: {
     user: AuthUser | null;
@@ -186,6 +205,108 @@ class AuthClient {
       data: { user: data.session?.user || null },
       error,
     };
+  }
+
+  /**
+   * Register akun baru (password di-generate server)
+   * Catatan: Listener SIGNED_IN sengaja tidak dipanggil langsung agar LoginForm
+   * dapat menampilkan popup kata sandi dan username terlebih dahulu ke pengguna.
+   */
+  async signUp(data: { username: string; angkatan: '24' | '25' | '26' }): Promise<AuthResponse & { generatedPassword?: string; createdUsername?: string }> {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      const body = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok || body.error) {
+        return {
+          data: { user: null, session: null },
+          error: new Error(body.error || 'Registrasi gagal'),
+        };
+      }
+
+      const session: AuthSession = body.data.session;
+      this.currentSession = session;
+
+      return {
+        data: {
+          user: session.user,
+          session,
+        },
+        error: null,
+        generatedPassword: body.data.generatedPassword || body.data.generated_password,
+        createdUsername: body.data.username || session.user?.user_metadata?.username,
+      };
+    } catch (err: any) {
+      return {
+        data: { user: null, session: null },
+        error: new Error(err.message || 'Network error'),
+      };
+    }
+  }
+
+  /**
+   * Aktifkan sesi dan masuk ke dashboard setelah user melihat/menyalin password
+   */
+  completeSignUpSession(session: AuthSession) {
+    this.currentSession = session;
+    this.notifyListeners('SIGNED_IN', session);
+  }
+
+  /**
+   * Cek status langganan user
+   */
+  async getSubscriptionStatus(userId: string): Promise<SubscriptionInfo | null> {
+    try {
+      const res = await fetch(`/api/subscription?user_id=${encodeURIComponent(userId)}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) return null;
+      const body = (await res.json().catch(() => ({}))) as any;
+      return body.data || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Set angkatan untuk akun lama
+   */
+  async setAngkatan(userId: string, angkatan: '24' | '25' | '26'): Promise<boolean> {
+    try {
+      const res = await fetch('/api/set-angkatan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ user_id: userId, angkatan }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Buat payment request (untuk transfer manual via Moota)
+   */
+  async createPayment(userId: string): Promise<PaymentInfo | null> {
+    try {
+      const res = await fetch('/api/payment/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ user_id: userId }),
+      });
+      if (!res.ok) return null;
+      const body = (await res.json().catch(() => ({}))) as any;
+      return body.data || null;
+    } catch {
+      return null;
+    }
   }
 
   /**

@@ -1,7 +1,14 @@
 import { useState, useCallback } from 'react';
 import { cloudflareApi } from '../services/cloudflareApi';
 
-export function useLeaderboard(currentUser: any, profileUsername: string, triggerToast: (msg: string, icon?: string) => void) {
+export function useLeaderboard(
+  currentUser: any,
+  profileUsername: string,
+  triggerToast: (msg: string, icon?: string) => void,
+  angkatan?: string,
+  isSuperAdmin?: boolean,
+  isAdminAngkatan?: boolean
+) {
   const [globalLeaderboard, setGlobalLeaderboard] = useState<any[]>([]);
   const [fileLeaderboard, setFileLeaderboard] = useState<any[]>([]);
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
@@ -12,21 +19,46 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
   const [leaderboardType, setLeaderboardType] = useState<'global' | 'file'>('global');
   const [selectedLeaderboardFile, setSelectedLeaderboardFile] = useState<string>('');
   const [activeDashboardTab, setActiveDashboardTab] = useState<'riwayat' | 'leaderboard'>('riwayat');
+  const [leaderboardScope, setLeaderboardScope] = useState<'my' | 'all'>('my');
+  const [adminAngkatanFilter, setAdminAngkatanFilter] = useState<'all' | '24' | '25' | '26'>('all');
 
-  async function fetchGlobalLeaderboard() {
+  const getTargetAngkatan = useCallback(() => {
+    if (isSuperAdmin) {
+      // Super admin bisa melihat semua peringkat ('all') atau memilih angkatan tertentu via dropdown
+      return adminAngkatanFilter;
+    }
+    if (isAdminAngkatan) {
+      // Admin angkatan hanya bisa melihat di angkatannya saja
+      return angkatan || undefined;
+    }
+    // Pengguna biasa bisa beralih antara 'my' (Angkatan Saya) atau 'all' (Lintas Angkatan)
+    if (leaderboardScope === 'all') {
+      return 'all';
+    }
+    return angkatan || undefined;
+  }, [isSuperAdmin, isAdminAngkatan, adminAngkatanFilter, leaderboardScope, angkatan]);
+
+  async function fetchGlobalLeaderboard(angkatanOverride?: string) {
     try {
       setIsLeaderboardLoading(true);
-      const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter);
-      const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
-      let top10 = (cfData || []).slice(0, 10);
-      if (userRankIndex > 9) {
-        top10.push({
-          ...cfData[userRankIndex],
-          isCurrentUserOutOfTop10: true,
-          actualRank: userRankIndex + 1,
-        });
+      const target = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
+      const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter, target);
+      const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
+      if (isAnyAdmin) {
+        // Admin (super admin maupun admin angkatan) melihat seluruh user
+        setGlobalLeaderboard(cfData || []);
+      } else {
+        const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
+        let top10 = (cfData || []).slice(0, 10);
+        if (userRankIndex > 9) {
+          top10.push({
+            ...cfData[userRankIndex],
+            isCurrentUserOutOfTop10: true,
+            actualRank: userRankIndex + 1,
+          });
+        }
+        setGlobalLeaderboard(top10);
       }
-      setGlobalLeaderboard(top10);
     } catch (err) {
       console.error('Gagal mengambil leaderboard global dari D1:', err);
     } finally {
@@ -34,21 +66,28 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
     }
   }
 
-  const fetchFileLeaderboard = async (fileName: string) => {
+  const fetchFileLeaderboard = async (fileName: string, angkatanOverride?: string) => {
     if (!fileName) return;
     try {
       setIsLeaderboardLoading(true);
-      const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter);
-      const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
-      let top10 = (cfData || []).slice(0, 10);
-      if (userRankIndex > 9) {
-        top10.push({
-          ...cfData[userRankIndex],
-          isCurrentUserOutOfTop10: true,
-          actualRank: userRankIndex + 1,
-        });
+      const target = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
+      const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter, target);
+      const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
+      if (isAnyAdmin) {
+        // Admin (super admin maupun admin angkatan) melihat seluruh user
+        setFileLeaderboard(cfData || []);
+      } else {
+        const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
+        let top10 = (cfData || []).slice(0, 10);
+        if (userRankIndex > 9) {
+          top10.push({
+            ...cfData[userRankIndex],
+            isCurrentUserOutOfTop10: true,
+            actualRank: userRankIndex + 1,
+          });
+        }
+        setFileLeaderboard(top10);
       }
-      setFileLeaderboard(top10);
     } catch (err) {
       console.error('Gagal mengambil leaderboard file dari D1:', err);
     } finally {
@@ -85,6 +124,8 @@ export function useLeaderboard(currentUser: any, profileUsername: string, trigge
   return {
     globalLeaderboard, fileLeaderboard, isLeaderboardLoading, hasSubmittedLeaderboard,
     lastQuizScore, globalTimeFilter, fileTimeFilter, leaderboardType, selectedLeaderboardFile, activeDashboardTab,
+    adminAngkatanFilter, setAdminAngkatanFilter,
+    leaderboardScope, setLeaderboardScope,
     setGlobalLeaderboard, setFileLeaderboard, setIsLeaderboardLoading, setHasSubmittedLeaderboard,
     setLastQuizScore, setGlobalTimeFilter, setFileTimeFilter, setLeaderboardType, setSelectedLeaderboardFile, setActiveDashboardTab,
     fetchGlobalLeaderboard, fetchFileLeaderboard, recordQuizToLeaderboard

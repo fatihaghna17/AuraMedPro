@@ -3,6 +3,7 @@ import {
   hashPasswordPBKDF2,
   signJwt,
   createAuthCookie,
+  checkSubscriptionStatus,
 } from './_utils';
 
 interface Env {
@@ -49,7 +50,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Cari user di profiles (bisa via username atau email)
     const profile = await env.DB.prepare(`
       SELECT * FROM profiles
-      WHERE username = ? OR email = ? OR username = ?
+      WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)
       LIMIT 1
     `).bind(identifier, identifier, cleanUsername).first() as any;
 
@@ -86,12 +87,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const jwt = await signJwt({ sub: profile.id, guest: false }, jwtSecret);
 
     // Format objek user kompatibel dengan format Supabase auth
+    const subStatus = checkSubscriptionStatus(profile);
+    
     const userPayload = {
       id: profile.id,
       email: profile.email || cleanEmail,
       user_metadata: {
         username: profile.username,
         is_guest: false,
+        angkatan: profile.angkatan,
+        subscription_status: profile.subscription_status,
+        trial_ends_at: profile.trial_ends_at,
+        subscription_expires_at: profile.subscription_expires_at,
+        canAccess: subStatus.canAccess,
       },
       is_anonymous: false,
     };

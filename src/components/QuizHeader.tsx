@@ -9,6 +9,7 @@ interface QuizHeaderProps {
   isAdaptiveMode: boolean;
   currentDifficulty: string;
   quizSecondsLeft: number;
+  quizTimerActive?: boolean;
   isFullscreen: boolean;
   onExit: () => void;
   onToggleFullscreen: () => void;
@@ -17,7 +18,7 @@ interface QuizHeaderProps {
 
 export default React.memo(function QuizHeader({
   theme, currentIndex, totalQuestions, isAdaptiveMode, currentDifficulty,
-  quizSecondsLeft, isFullscreen, onExit, onToggleFullscreen, onOpenMobileNav,
+  quizSecondsLeft, quizTimerActive = true, isFullscreen, onExit, onToggleFullscreen, onOpenMobileNav,
 }: QuizHeaderProps) {
   return (
     <header className={`sticky top-0 z-40 border-b transition-colors quiz-card ${
@@ -47,17 +48,27 @@ export default React.memo(function QuizHeader({
             </span>
           )}
           
-          <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-colors ${
-            quizSecondsLeft < 300
-              ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-black animate-pulse'
-              : quizSecondsLeft < 600
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold'
-                : theme === 'dark'
-                  ? 'bg-slate-900 border-slate-800 text-slate-300 font-bold'
-                  : 'bg-slate-100 border-slate-200 text-slate-750 font-bold'
-          }`}>
-            ⏱️ {formatTimer(quizSecondsLeft)}
-          </span>
+          {!quizTimerActive ? (
+            <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border ${
+              theme === 'dark'
+                ? 'bg-slate-900/80 border-slate-800 text-slate-400 font-bold'
+                : 'bg-slate-100 border-slate-200 text-slate-600 font-bold'
+            }`}>
+              ⏱️ Tanpa Batas Waktu
+            </span>
+          ) : (
+            <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-colors ${
+              quizSecondsLeft < 300
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-black animate-pulse'
+                : quizSecondsLeft < 600
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold'
+                  : theme === 'dark'
+                    ? 'bg-slate-900 border-slate-800 text-slate-300 font-bold'
+                    : 'bg-slate-100 border-slate-200 text-slate-750 font-bold'
+            }`}>
+              ⏱️ {formatTimer(quizSecondsLeft)}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

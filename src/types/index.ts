@@ -29,6 +29,8 @@ export interface Question {
   featureFlags?: FeatureFlags;
 }
 
+export type QuizMode = 'utuh' | 'simulasi' | 'rmo' | 'blok' | 'suddendeath';
+
 export interface HistoryEntry {
   id: number;
   date: string;
@@ -38,7 +40,7 @@ export interface HistoryEntry {
   empty: number;
   total: number;
   files: string[];
-  mode: 'utuh' | 'simulasi';
+  mode: QuizMode;
   questions?: Question[];
   userAnswers?: (string | null)[];
 }

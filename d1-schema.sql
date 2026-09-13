@@ -2,7 +2,7 @@
 -- Skema Database Cloudflare D1 (SQLite) untuk AuraMedPro
 -- ==========================================================
 
--- 1. Tabel Profil Pengguna (XP, Level, Streak)
+-- 1. Tabel Profil Pengguna (XP, Level, Streak, Subscription & Angkatan)
 CREATE TABLE IF NOT EXISTS profiles (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
@@ -12,12 +12,17 @@ CREATE TABLE IF NOT EXISTS profiles (
     level INTEGER DEFAULT 1,
     total_questions_answered INTEGER DEFAULT 0,
     last_active TEXT,
+    angkatan TEXT, -- '24', '25', '26'
+    subscription_status TEXT DEFAULT 'trial', -- 'trial', 'active', 'expired'
+    trial_ends_at TEXT DEFAULT '2026-09-14T05:00:00Z',
+    subscription_expires_at TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
 CREATE INDEX IF NOT EXISTS idx_profiles_xp ON profiles(xp DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_questions ON profiles(total_questions_answered DESC);
+CREATE INDEX IF NOT EXISTS idx_profiles_angkatan ON profiles(angkatan);
 
 -- 2. Tabel Bank Soal (Hanya menyimpan metadata & R2 link, 0 egress!)
 CREATE TABLE IF NOT EXISTS question_banks (
@@ -27,6 +32,7 @@ CREATE TABLE IF NOT EXISTS question_banks (
     r2_key TEXT,
     r2_url TEXT,
     questions_json TEXT, -- fallback jika masih ada data JSON lama
+    angkatan TEXT DEFAULT 'all', -- '24', '25', '26', atau 'all' (bersama)
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -101,7 +107,25 @@ CREATE TABLE IF NOT EXISTS question_reports (
     created_at TEXT DEFAULT (datetime('now'))
 );
 
--- 10. Tabel-Tabel Mode Mabar (Multiplayer)
+-- 10. Tabel Transaksi Pembayaran (Moota / Mayar / Manual)
+CREATE TABLE IF NOT EXISTS payments (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    source TEXT NOT NULL,          -- 'moota', 'mayar', 'manual'
+    reference_id TEXT,             -- ID transaksi dari gateway
+    amount INTEGER NOT NULL,       -- Nominal dalam Rupiah
+    unique_code INTEGER,           -- 3 digit kode unik (untuk Moota matching)
+    status TEXT DEFAULT 'pending', -- 'pending', 'paid', 'expired'
+    plan TEXT DEFAULT '1_month',   
+    paid_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_unique_code ON payments(unique_code);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+
+-- 11. Tabel-Tabel Mode Mabar (Multiplayer)
 CREATE TABLE IF NOT EXISTS mabar_rooms (
     id TEXT PRIMARY KEY,
     room_code TEXT UNIQUE,

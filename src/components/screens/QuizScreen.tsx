@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Bookmark, Check, CheckCircle2, Copy, Eye, Flame, Lock, Sparkles, XCircle, ChevronRight, Share2, MessageCircleQuestion } from 'lucide-react';
+import { Bookmark, Check, CheckCircle2, Copy, Eye, Flame, Lock, Sparkles, XCircle, ChevronRight, Share2, MessageCircleQuestion, ExternalLink } from 'lucide-react';
 import QuizHeader from '../QuizHeader';
 import MobileQuizNavDrawer from '../MobileQuizNavDrawer';
 import KeyboardHintPanel from '../KeyboardHintPanel';
@@ -8,6 +8,7 @@ import { EXPLAIN_MODES } from '../../utils/aiExplain';
 import { generateQuestionFingerprint } from '../../utils/srsAlgorithm';
 import { getLevelInfo } from '../../utils/appHelpers';
 import { getCorrectLetterForQuestion, renderHtmlText, getQuestionImage, renderQuestionImage, isUserAnswerCorrect, renderMarkdown } from '../../utils/quizUtils';
+import { formatQuestionForGemini, openGeminiTutor } from '../../utils/geminiTutor';
 import StableImage from '../StableImage';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -62,18 +63,21 @@ interface QuizScreenProps {
   currentStreak: number;
   currentCombo?: number;
   finishQuiz?: any;
+  quizMode?: string;
+  quizTimerActive?: boolean;
 }
 
 export const QuizScreen: React.FC<QuizScreenProps> = ({
   theme, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed,
-  quizSecondsLeft, keyboardNavEnabled, isAdaptiveMode, currentDifficulty,
+  quizSecondsLeft, quizTimerActive = true, keyboardNavEnabled, isAdaptiveMode, currentDifficulty,
   aiPanelOpen, aiLoading, aiExplanation, aiFollowUp, aiMode, mobileQuizNavOpen,
   studyRoom, currentUser, triggerToast, copyQuestionToClipboard, setLightboxImage,
   selectAnswer, handleAIRequest, navigateQuestion, checkAnswerNow, toggleDoubt,
   handleNextQuestion, openFinishModal, unlockedHints, setMobileQuizNavOpen,
   setUserAnswers, setUnlockedHints, setModalTitle, setModalDesc, setModalAction,
   setModalOpen, setAiFollowUp, setCurrentIndex, setDoubtStatus, exitQuiz,
-  toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, currentCombo = 0, finishQuiz
+  toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, currentCombo = 0, finishQuiz,
+  quizMode = 'utuh'
 }) => {
   return (
     <>
@@ -87,6 +91,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               isAdaptiveMode={isAdaptiveMode}
               currentDifficulty={currentDifficulty}
               quizSecondsLeft={quizSecondsLeft}
+              quizTimerActive={quizTimerActive}
               isFullscreen={isFullscreen}
               onExit={exitQuiz}
               onToggleFullscreen={toggleFullscreen}
@@ -118,25 +123,59 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           {currentQuiz[currentIndex].metadata?.sub_kompetensi_klinis || 'Sains Medis'}
                         </span>
                         <span>•</span>
-                        <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] uppercase font-extrabold ${
-                          currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
-                            ? 'bg-rose-500/20 text-rose-400'
-                            : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
-                            ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-amber-500/20 text-amber-400'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
+                        {quizMode === 'rmo' ? (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] uppercase font-black bg-amber-500/15 text-amber-500 border border-amber-500/25">
+                            🏆 RMO (+4 / -1 / 0)
+                          </span>
+                        ) : quizMode === 'blok' ? (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] uppercase font-black bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+                            📝 Ujian Blok
+                          </span>
+                        ) : quizMode === 'suddendeath' ? (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] uppercase font-black bg-rose-500/20 text-rose-500 border border-rose-500/30 animate-pulse">
+                            💀 Sudden Death (1 Nyawa)
+                          </span>
+                        ) : (
+                          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] uppercase font-extrabold ${
                             currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
-                              ? 'bg-rose-500'
+                              ? 'bg-rose-500/20 text-rose-400'
                               : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
-                              ? 'bg-emerald-500'
-                              : 'bg-amber-500'
-                          }`} />
-                          {currentQuiz[currentIndex].metadata?.tingkat_kesulitan || 'Sedang'}
-                        </span>
+                              ? 'bg-emerald-500/20 text-emerald-400'
+                              : 'bg-amber-500/20 text-amber-400'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
+                                ? 'bg-rose-500'
+                                : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
+                                ? 'bg-emerald-500'
+                                : 'bg-amber-500'
+                            }`} />
+                            {currentQuiz[currentIndex].metadata?.tingkat_kesulitan || 'Sedang'}
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const prompt = formatQuestionForGemini(
+                              currentQuiz[currentIndex],
+                              currentIndex,
+                              userAnswers[currentIndex],
+                              isRevealed[currentIndex]
+                            );
+                            openGeminiTutor(prompt, triggerToast);
+                          }}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                            theme === 'dark'
+                              ? 'bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 border-indigo-700/40'
+                              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
+                          }`}
+                          title="Salin konteks soal & buka Gemini AI"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>Tanya Gemini</span>
+                        </button>
                         <button
                           onClick={copyQuestionToClipboard}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
@@ -174,6 +213,23 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         )}
                       </div>
                     </div>
+
+                    {/* Sudden Death Tension Banner */}
+                    {quizMode === 'suddendeath' && (
+                      <div className="mb-5 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-600/20 via-red-500/15 to-amber-500/20 border border-rose-500/40 flex items-center justify-between animate-pulse">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xl drop-shadow">💀</span>
+                          <div>
+                            <span className="text-xs font-black text-rose-500 dark:text-rose-400 uppercase tracking-wider block">Mode Sudden Death (1 Nyawa)</span>
+                            <span className="text-[10px] text-slate-400">1 kali salah = Langsung Gugur! Presisi klinis tanpa kompromi.</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm">
+                          <span className="text-xs font-black">Streak:</span>
+                          <span className="text-base font-black text-white">{currentCombo} 🔥</span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Question text block — memoized to avoid Safari repainting on timer tick */}
                     {useMemo(() => (
@@ -412,113 +468,95 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               {currentQuiz[currentIndex].eliminasi_opsi && Object.keys(currentQuiz[currentIndex].eliminasi_opsi!).length > 0 && (
                                 <div className="border-t border-slate-200/40 dark:border-slate-800/40 pt-4">
                                   <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                                    🔍 Eliminasi Opsi & Rationale:
+                                    🔍 Analisis Opsi & Eliminasi Jawaban:
                                   </h4>
                                   <div className="grid grid-cols-1 gap-2">
-                                    {Object.entries(currentQuiz[currentIndex].eliminasi_opsi!).map(([key, desc]) => {
-                                      const isKunci = key === correctLetter;
-                                      return (
-                                        <div
-                                          key={key}
-                                          className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs leading-relaxed ${
-                                            isKunci
-                                              ? 'bg-emerald-500/5 border-emerald-500/25 text-slate-700 dark:text-slate-300'
-                                              : 'bg-slate-500/[0.02] border-slate-200/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400'
-                                          }`}
-                                        >
-                                          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 ${
-                                            isKunci
-                                              ? 'bg-emerald-500 text-white'
-                                              : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                                          }`}>
-                                            {key}
-                                          </span>
-                                          <span>{renderHtmlText(desc)}</span>
-                                        </div>
-                                      );
-                                    })}
+                                    {Object.entries(currentQuiz[currentIndex].eliminasi_opsi!)
+                                      .sort(([a], [b]) => a.localeCompare(b))
+                                      .map(([key, desc]) => {
+                                        const isKunci = key.toUpperCase() === correctLetter.toUpperCase();
+                                        const optIdx = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].indexOf(key.toUpperCase());
+                                        const optText = optIdx !== -1 && currentQuiz[currentIndex].pilihan ? currentQuiz[currentIndex].pilihan[optIdx] : null;
+
+                                        return (
+                                          <div
+                                            key={key}
+                                            className={`flex items-start gap-3 p-3 rounded-xl border text-xs leading-relaxed transition-all ${
+                                              isKunci
+                                                ? 'bg-emerald-500/5 border-emerald-500/30 text-slate-800 dark:text-slate-200 ring-1 ring-emerald-500/10'
+                                                : 'bg-slate-500/[0.02] border-slate-200/60 dark:border-slate-800/80 text-slate-600 dark:text-slate-350'
+                                            }`}
+                                          >
+                                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-[11px] flex-shrink-0 mt-0.5 shadow-sm ${
+                                              isKunci
+                                                ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                                                : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                            }`}>
+                                              {key}
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                              {optText && (
+                                                <div className="font-bold text-[11px] text-slate-800 dark:text-slate-200 mb-1 leading-snug">
+                                                  {renderHtmlText(optText)}
+                                                </div>
+                                              )}
+                                              <div className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+                                                {renderHtmlText(desc)}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
                                   </div>
                                 </div>
                               )}
 
-                              {/* AI Tutor Panel */}
-                              <div className="mt-4 pt-4 border-t border-slate-200/40 dark:border-slate-800/40">
-                                <button
-                                  onClick={() => !aiPanelOpen && handleAIRequest('explain')}
-                                  disabled={aiLoading}
-                                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                                    aiPanelOpen
-                                      ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20'
-                                      : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer'
-                                  }`}
-                                >
-                                  <Sparkles className="w-4 h-4" />
-                                  AI Tutor (Gemini)
-                                </button>
-
-                                {aiPanelOpen && (
-                                  <div className={`mt-3 p-4 rounded-xl border ${
-                                    theme === 'dark' ? 'bg-slate-900/50 border-indigo-500/20' : 'bg-indigo-50/50 border-indigo-200/50'
-                                  }`}>
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                      {EXPLAIN_MODES.map((m) => (
-                                        <button
-                                          key={m.mode}
-                                          onClick={() => handleAIRequest(m.mode)}
-                                          disabled={aiLoading}
-                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                                            aiMode === m.mode
-                                              ? 'bg-indigo-500 text-white shadow-sm'
-                                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
-                                          } disabled:opacity-50`}
-                                        >
-                                          <span>{m.icon}</span>
-                                          {m.label}
-                                        </button>
-                                      ))}
+                              {/* Shortcut AI Tutor (Gemini) */}
+                              <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-slate-800/60' : 'border-slate-200/60'}`}>
+                                <div className={`p-4 rounded-2xl border transition-all ${
+                                  theme === 'dark' 
+                                    ? 'bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border-indigo-500/20' 
+                                    : 'bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-white border-indigo-200/70 shadow-sm'
+                                }`}>
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="flex items-start gap-3 min-w-0">
+                                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-md shrink-0 mt-0.5">
+                                        <Sparkles className="w-4.5 h-4.5 text-amber-300" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">
+                                            AI Tutor (Gemini Web Chat)
+                                          </h4>
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                                            Shortcut Bebas Kuota
+                                          </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                          Otomatis salin soal, opsi & pembahasan ke clipboard, lalu buka Gemini untuk bedah kasus klinis.
+                                        </p>
+                                      </div>
                                     </div>
 
-                                    {aiLoading ? (
-                                      <div className="space-y-2 animate-pulse">
-                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></div>
-                                      </div>
-                                    ) : aiExplanation ? (
-                                      <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                        {renderMarkdown(aiExplanation)}
-                                      </div>
-                                    ) : null}
-
-                                    {aiMode === 'clarify' && (
-                                      <div className="mt-4 flex gap-2">
-                                        <input
-                                          type="text"
-                                          placeholder="Tanyakan bagian yang belum jelas..."
-                                          value={aiFollowUp}
-                                          onChange={(e) => setAiFollowUp(e.target.value)}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && aiFollowUp.trim()) {
-                                              handleAIRequest('clarify');
-                                            }
-                                          }}
-                                          className={`flex-1 px-3 py-2 text-xs rounded-lg border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                            theme === 'dark'
-                                              ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500'
-                                              : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                                          }`}
-                                        />
-                                        <button
-                                          onClick={() => aiFollowUp.trim() && handleAIRequest('clarify')}
-                                          disabled={!aiFollowUp.trim() || aiLoading}
-                                          className="px-3 py-2 rounded-lg bg-indigo-500 text-white text-xs font-bold disabled:opacity-50 cursor-pointer"
-                                        >
-                                          Kirim
-                                        </button>
-                                      </div>
-                                    )}
+                                    <button
+                                      onClick={() => {
+                                        const prompt = formatQuestionForGemini(
+                                          currentQuiz[currentIndex],
+                                          currentIndex,
+                                          userAnswers[currentIndex],
+                                          isRevealed[currentIndex]
+                                        );
+                                        openGeminiTutor(prompt, triggerToast);
+                                      }}
+                                      className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer transition-all"
+                                      title="Salin konteks soal & buka web Gemini"
+                                    >
+                                      <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+                                      <span>Tanya Gemini (Salin & Buka)</span>
+                                      <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                                    </button>
                                   </div>
-                                )}
+                                </div>
                               </div>
 
                             </div>
@@ -542,20 +580,26 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </button>
 
                       <div className="flex items-center gap-2">
-                        {!isRevealed[currentIndex] ? (
-                          <button
-                            onClick={checkAnswerNow}
-                            disabled={userAnswers[currentIndex] === null}
-                            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <Check className="w-4 h-4 stroke-[3]" />
-                            Cek Jawaban
-                          </button>
-                        ) : (
-                          <span className="text-[11px] font-extrabold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/10">
-                            <Lock className="w-3 h-3" />
-                            Terkunci
-                          </span>
+                        {quizMode !== 'rmo' && quizMode !== 'blok' && (
+                          !isRevealed[currentIndex] ? (
+                            <button
+                              onClick={checkAnswerNow}
+                              disabled={userAnswers[currentIndex] === null}
+                              className={`inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md transition-all duration-200 active:scale-105 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer ${
+                                quizMode === 'suddendeath'
+                                  ? 'bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 shadow-rose-600/30 ring-1 ring-rose-400/40'
+                                  : 'bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/10'
+                              }`}
+                            >
+                              <Check className="w-4 h-4 stroke-[3]" />
+                              {quizMode === 'suddendeath' ? '💀 Kunci Jawaban' : 'Cek Jawaban'}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-extrabold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/10">
+                              <Lock className="w-3 h-3" />
+                              Terkunci
+                            </span>
+                          )
                         )}
 
                         <button
@@ -654,9 +698,11 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     <div className="grid grid-cols-5 gap-2 max-h-[350px] overflow-y-auto pr-1">
                       {currentQuiz.map((_, idx) => {
-                        const isAnswered = userAnswers[idx] !== null;
+                        const isAnswered = userAnswers[idx] !== null && userAnswers[idx] !== undefined && userAnswers[idx] !== '';
                         const isDoubt = doubtStatus[idx];
                         const isActive = idx === currentIndex;
+                        const revealed = !!isRevealed[idx];
+                        const isCorrect = isAnswered && isUserAnswerCorrect(userAnswers[idx], currentQuiz[idx]);
                         
                         const diff = currentQuiz[idx].metadata?.tingkat_kesulitan?.toLowerCase();
                         let diffBorder = 'border-l-[3px] border-l-amber-500';
@@ -665,10 +711,31 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                         let btnClass = "";
                         if (isActive) {
-                          btnClass = `border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-1 ring-indigo-500/20 ${diffBorder}`;
+                          if (isDoubt) {
+                            btnClass = `bg-amber-500 border-amber-400 text-white font-black shadow-md ring-2 ring-amber-400 ring-offset-2 ${diffBorder}`;
+                          } else if (revealed) {
+                            if (isCorrect) {
+                              btnClass = `bg-blue-600 border-blue-500 text-white font-black shadow-md ring-2 ring-blue-400 ring-offset-2 ${diffBorder}`;
+                            } else {
+                              btnClass = `bg-rose-600 border-rose-500 text-white font-black shadow-md ring-2 ring-rose-400 ring-offset-2 ${diffBorder}`;
+                            }
+                          } else if (isAnswered) {
+                            btnClass = `bg-emerald-600 border-emerald-500 text-white font-black shadow-md ring-2 ring-emerald-400 ring-offset-2 ${diffBorder}`;
+                          } else {
+                            btnClass = `border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-2 ring-indigo-500/30 ${diffBorder}`;
+                          }
                         } else if (isDoubt) {
                           btnClass = `bg-amber-500 border-amber-500 text-white shadow-sm shadow-amber-500/10 ${diffBorder}`;
+                        } else if (revealed) {
+                          if (isCorrect) {
+                            // SUDAH DICEK & BENAR: Biru / Indigo (bukan hijau!)
+                            btnClass = `bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/20 ${diffBorder}`;
+                          } else {
+                            // SUDAH DICEK & SALAH: Merah
+                            btnClass = `bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-500/20 ${diffBorder}`;
+                          }
                         } else if (isAnswered) {
+                          // TERJAWAB TAPI BELUM DICEK: Hijau
                           btnClass = `bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/10 ${diffBorder}`;
                         } else {
                           btnClass = theme === 'dark' 
@@ -692,18 +759,26 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold text-slate-500">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                        <span>Terjawab</span>
+                        <span>Terjawab (Belum Cek)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                        <span>Benar (Sudah Cek)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                        <span>Salah (Sudah Cek)</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                         <span>Ragu-ragu</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                        <span>Aktif</span>
+                        <span className="w-2.5 h-2.5 rounded-full border-2 border-indigo-500" />
+                        <span>Sedang Aktif</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2.5 h-2.5 rounded-full ${theme === 'dark' ? 'bg-slate-850' : 'bg-slate-200'}`} />
+                        <span className={`w-2.5 h-2.5 rounded-full ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
                         <span>Belum Dijawab</span>
                       </div>
                     </div>
@@ -735,6 +810,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               currentQuiz={currentQuiz}
               userAnswers={userAnswers}
               doubtStatus={doubtStatus}
+              isRevealed={isRevealed}
               currentIndex={currentIndex}
               onNavigate={(idx) => { setCurrentIndex(idx); setMobileQuizNavOpen(false); }}
               onClose={() => setMobileQuizNavOpen(false)}
@@ -747,6 +823,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               isDoubt={doubtStatus[currentIndex]}
               isRevealed={isRevealed[currentIndex]}
               hasAnswer={userAnswers[currentIndex] !== null}
+              hideCheckAnswer={quizMode === 'rmo' || quizMode === 'blok'}
               onDoubtToggle={() => setDoubtStatus(prev => { const u = [...prev]; u[currentIndex] = !u[currentIndex]; return u; })}
               onPrev={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
               onNext={() => setCurrentIndex(prev => Math.min(currentQuiz.length - 1, prev + 1))}

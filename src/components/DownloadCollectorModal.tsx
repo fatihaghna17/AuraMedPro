@@ -10,6 +10,7 @@ interface DownloadCollectorModalProps {
   selectedDatabases: string[];
   triggerToast: (msg: string, icon?: string) => void;
   profileUsername: string;
+  userAngkatan?: string;
 }
 
 export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
@@ -20,6 +21,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
   selectedDatabases,
   triggerToast,
   profileUsername,
+  userAngkatan,
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
@@ -58,6 +60,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
             version: '2.0',
             exported_at: new Date().toISOString(),
             exported_by: profileUsername || 'collector',
+            angkatan: userAngkatan ? `20${userAngkatan}` : 'all',
             scope: onlySelected ? 'selected' : 'all',
             total_banks: targetKeys.length,
             total_questions: totalCount,
@@ -66,9 +69,10 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
         };
 
         const dateStr = new Date().toISOString().split('T')[0];
+        const angkatanTag = userAngkatan ? `_angkatan${userAngkatan}` : '';
         const filename = onlySelected 
-          ? `auramedpro_terpilih_${targetKeys.length}_bank_${dateStr}.json`
-          : `auramedpro_semua_bank_soal_${dateStr}.json`;
+          ? `auramedpro_terpilih_${targetKeys.length}_bank${angkatanTag}_${dateStr}.json`
+          : `auramedpro_bank_soal${angkatanTag}_${dateStr}.json`;
 
         const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -130,9 +134,9 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black">Unduh Semua Soal</h3>
+              <h3 className="text-base font-black">Unduh Soal Collector</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Fitur eksklusif Akun Collector AuraMedPro
+                Fitur eksklusif Akun Collector AuraMedPro {userAngkatan ? `(Angkatan 20${userAngkatan})` : ''}
               </p>
             </div>
           </div>
@@ -145,8 +149,15 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
           </button>
         </div>
 
+        {userAngkatan && (
+          <div className="mt-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+            <span>🎓</span>
+            <span>Daftar soal dibatasi khusus untuk <strong>Angkatan 20{userAngkatan}</strong> sesuai hak akses akun Anda.</span>
+          </div>
+        )}
+
         {/* Ringkasan Bank Soal */}
-        <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+        <div className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Bank Soal</span>

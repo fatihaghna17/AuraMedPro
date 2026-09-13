@@ -19,15 +19,15 @@ interface SetupNewQuizTabProps {
   setKeyboardNavEnabled: any;
   isAdaptiveMode: boolean;
   setIsAdaptiveMode: any;
-
-  
-
+  regularTimerEnabled?: boolean;
+  setRegularTimerEnabled?: (enabled: boolean) => void;
 }
 
 export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
   theme, selectedDatabases, setSelectedDatabases, setDashboardTab,
   quizMode, setQuizMode, shuffleQuestions, setShuffleQuestions,
-  shuffleOptions, setShuffleOptions, startQuiz, globalDatabases, removeDatabase, keyboardNavEnabled, setKeyboardNavEnabled, isAdaptiveMode, setIsAdaptiveMode
+  shuffleOptions, setShuffleOptions, startQuiz, globalDatabases, removeDatabase, keyboardNavEnabled, setKeyboardNavEnabled, isAdaptiveMode, setIsAdaptiveMode,
+  regularTimerEnabled = true, setRegularTimerEnabled
 }) => {
   return (
     <>
@@ -103,38 +103,157 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                         </div>
                       </div>
 
-                      {/* Mode selection (Utuh/Simulasi) if multiple databases are selected */}
-                      {selectedDatabases.length > 1 && (
-                        <div className="space-y-2.5">
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Metode Integrasi Soal
-                          </label>
-                          <div className="grid grid-cols-2 gap-3">
+                      {/* Mode selection (Utuh/Simulasi/RMO/Blok) */}
+                      <div className="space-y-2.5">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Pilihan Mode Pengerjaan Kuis
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setQuizMode('utuh')}
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                              quizMode === 'utuh'
+                                ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-500 dark:text-indigo-400 font-bold shadow-sm'
+                                : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xs font-extrabold uppercase tracking-wide">Sequential (Standar)</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-500/10 font-bold">Bebas</span>
+                            </div>
+                            <span className="text-[10px] opacity-70 mt-1 leading-relaxed">
+                              Latihan fleksibel dengan pembahasan langsung per nomor & urutan asli file.
+                            </span>
+                          </button>
+
+                          {selectedDatabases.length > 1 && (
                             <button
-                              onClick={() => setQuizMode('utuh')}
-                              className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                                quizMode === 'utuh'
-                                  ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500 dark:text-indigo-400 font-bold'
-                                  : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500'
-                              }`}
-                            >
-                              <span className="text-xs font-extrabold uppercase">Sequential</span>
-                              <span className="text-[10px] opacity-70 mt-0.5 leading-relaxed">Soal diuji per file secara berurutan</span>
-                            </button>
-                            <button
+                              type="button"
                               onClick={() => setQuizMode('simulasi')}
                               className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                                 quizMode === 'simulasi'
-                                  ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500 dark:text-indigo-400 font-bold'
-                                  : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500'
+                                  ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-500 dark:text-indigo-400 font-bold shadow-sm'
+                                  : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
                               }`}
                             >
-                              <span className="text-xs font-extrabold uppercase">Simulasi Acak</span>
-                              <span className="text-[10px] opacity-70 mt-0.5 leading-relaxed">Gabung seluruh bank soal & acak merata</span>
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-xs font-extrabold uppercase tracking-wide">Simulasi Acak</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-500 font-bold">Campuran</span>
+                              </div>
+                              <span className="text-[10px] opacity-70 mt-1 leading-relaxed">
+                                Gabung seluruh bank soal terpilih & acak merata dengan fitur cek jawaban.
+                              </span>
                             </button>
-                          </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuizMode('rmo');
+                              setIsAdaptiveMode(false);
+                            }}
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                              quizMode === 'rmo'
+                                ? 'bg-amber-500/10 border-amber-500/50 text-amber-600 dark:text-amber-400 font-bold shadow-sm'
+                                : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
+                                🏆 Simulasi RMO
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 font-black">
+                                +4 / -1 / 0
+                              </span>
+                            </div>
+                            <span className="text-[10px] opacity-70 mt-1 leading-relaxed">
+                              Olimpiade RMO: Benar +4, Salah -1, Kosong 0. EXP × 20. Tanpa cek jawaban saat kuis.
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuizMode('blok');
+                              setIsAdaptiveMode(false);
+                            }}
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                              quizMode === 'blok'
+                                ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 font-bold shadow-sm'
+                                : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
+                                📝 Simulasi Ujian Blok
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-black">
+                                Maks 100 Soal
+                              </span>
+                            </div>
+                            <span className="text-[10px] opacity-70 mt-1 leading-relaxed">
+                              Ujian Blok: 100 soal dibagi rata dari bank soal, 1 mnt/soal, Skor +1, EXP × 10.
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuizMode('suddendeath');
+                              setIsAdaptiveMode(false);
+                            }}
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                              quizMode === 'suddendeath'
+                                ? 'bg-rose-500/10 border-rose-500/50 text-rose-600 dark:text-rose-400 font-bold shadow-sm ring-1 ring-rose-500/30'
+                                : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
+                                💀 Sudden Death
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 font-black">
+                                1 Nyawa
+                              </span>
+                            </div>
+                            <span className="text-[10px] opacity-70 mt-1 leading-relaxed">
+                              1 kali salah langsung gugur! Berapa banyak soal sanggup kamu jawab? Bonus EXP × 25 per soal.
+                            </span>
+                          </button>
                         </div>
-                      )}
+
+                        {/* Mode Context Info Banner */}
+                        {quizMode === 'rmo' && (
+                          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-600 dark:text-amber-300 flex items-start gap-2 animate-fade-in">
+                            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="font-extrabold block">Aturan Simulasi RMO Aktif:</strong>
+                              Skor dihitung Benar +4, Salah -1, Tidak Dijawab 0. Fitur cek jawaban dinonaktifkan (pembahasan muncul setelah kuis dikumpulkan). Bonus EXP = Total Skor × 20. Bobot kesulitan XP dinonaktifkan.
+                            </div>
+                          </div>
+                        )}
+
+                        {quizMode === 'suddendeath' && (
+                          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-600 dark:text-rose-300 flex items-start gap-2 animate-fade-in">
+                            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="font-extrabold block">Aturan Sudden Death (1 Nyawa) Aktif:</strong>
+                              Tantangan presisi tanpa ampun: Salah satu soal saja langsung Game Over! Capai rekor streak benar beruntun setinggi mungkin. Capai streak ≥ 10 untuk membuka Bingkai Avatar Tengkorak Emas!
+                            </div>
+                          </div>
+                        )}
+
+                        {quizMode === 'blok' && (
+                          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-600 dark:text-emerald-300 flex items-start gap-2 animate-fade-in">
+                            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="font-extrabold block">Aturan Simulasi Ujian Blok Aktif:</strong>
+                              Sistem otomatis mengambil maksimal 100 butir soal secara berimbang dari bank soal terpilih. Alokasi waktu 1 menit per soal. Skor dihitung Benar +1, Salah 0, Kosong 0. EXP = Skor × 10. Pembahasan tampil di akhir.
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Checkbox configs */}
                       <div className="flex flex-col gap-3.5 pt-2">
@@ -168,15 +287,59 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                           <span>Aktifkan Navigasi Keyboard (1-5, Panah, R, M)</span>
                         </label>
                         
-                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label className={`flex items-center gap-2.5 text-xs font-bold ${
+                          quizMode === 'rmo' || quizMode === 'blok'
+                            ? 'opacity-40 cursor-not-allowed text-slate-400'
+                            : 'cursor-pointer text-slate-700 dark:text-slate-300'
+                        }`}>
                           <input
                             type="checkbox"
-                            checked={isAdaptiveMode}
+                            disabled={quizMode === 'rmo' || quizMode === 'blok'}
+                            checked={quizMode === 'rmo' || quizMode === 'blok' ? false : isAdaptiveMode}
                             onChange={(e) => setIsAdaptiveMode(e.target.checked)}
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
                           />
-                          <span>Mode Adaptif (Kecerdasan Buatan menyesuaikan level kesulitan)</span>
+                          <span>
+                            Mode Adaptif (Kecerdasan Buatan menyesuaikan level kesulitan)
+                            {(quizMode === 'rmo' || quizMode === 'blok') && (
+                              <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                                (Tidak tersedia pada Simulasi RMO / Ujian Blok karena seluruh bobot soal disetarakan)
+                              </span>
+                            )}
+                          </span>
                         </label>
+
+                        {/* Opsi Timer Pengerjaan */}
+                        <div className={`p-3.5 rounded-2xl border transition-all ${
+                          (quizMode === 'rmo' || quizMode === 'blok' || regularTimerEnabled)
+                            ? theme === 'dark' ? 'bg-indigo-500/5 border-indigo-500/20' : 'bg-indigo-50/50 border-indigo-500/20'
+                            : theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <label className="flex items-center justify-between cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">⏱️</span>
+                              <div>
+                                <span className={`text-xs font-bold block ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                                  Batas Waktu (Timer)
+                                </span>
+                                <span className="text-[11px] text-slate-400">
+                                  {quizMode === 'rmo' || quizMode === 'blok'
+                                    ? 'Wajib aktif untuk mode simulasi kompetisi/blok (1 menit/soal)'
+                                    : regularTimerEnabled
+                                    ? 'Timer aktif (1 menit/soal). Kuis otomatis dikumpulkan jika waktu habis.'
+                                    : 'Mode Santai: Kerjakan tanpa batas waktu (Timer dimatikan)'}
+                                </span>
+                              </div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              disabled={quizMode === 'rmo' || quizMode === 'blok'}
+                              checked={quizMode === 'rmo' || quizMode === 'blok' ? true : regularTimerEnabled}
+                              onChange={(e) => setRegularTimerEnabled && setRegularTimerEnabled(e.target.checked)}
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-5 h-5 cursor-pointer disabled:opacity-50"
+                            />
+                          </label>
+                        </div>
                       </div>
 
                       <hr className={`border-t my-2 ${theme === 'dark' ? 'border-slate-800/80' : 'border-slate-200/60'}`} />

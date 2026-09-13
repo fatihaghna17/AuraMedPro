@@ -17,7 +17,6 @@ interface BottomNavProps {
 
 export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTabChange }: BottomNavProps) {
   const items: NavItem[] = [
-    { id: 'mabar', label: 'Mabar', icon: Gamepad2 },
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
     { id: 'new', label: 'Baru', icon: PlusCircle },

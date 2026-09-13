@@ -5,6 +5,7 @@ interface MobileBottomActionBarProps {
   isDoubt: boolean;
   isRevealed: boolean;
   hasAnswer: boolean;
+  hideCheckAnswer?: boolean;
   onDoubtToggle: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -13,7 +14,7 @@ interface MobileBottomActionBarProps {
 }
 
 export default function MobileBottomActionBar({
-  theme, currentIndex, totalQuestions, isDoubt, isRevealed, hasAnswer,
+  theme, currentIndex, totalQuestions, isDoubt, isRevealed, hasAnswer, hideCheckAnswer = false,
   onDoubtToggle, onPrev, onNext, onCheck, onFinish,
 }: MobileBottomActionBarProps) {
   return (
@@ -46,7 +47,7 @@ export default function MobileBottomActionBar({
           ←
         </button>
 
-        {!isRevealed && (
+        {!isRevealed && !hideCheckAnswer && (
           <button
             onClick={() => onCheck()}
             disabled={!hasAnswer}

@@ -217,3 +217,41 @@ export function shouldRefreshJwt(payload: JwtPayload): boolean {
   const remaining = payload.exp - nowSec;
   return remaining < FIFTEEN_DAYS_SEC;
 }
+
+export function generatePassword(): string {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  const digits = '0123456789';
+  let pass = '';
+  for (let i = 0; i < 4; i++) {
+    pass += letters.charAt(Math.floor(Math.random() * letters.length));
+  }
+  for (let i = 0; i < 2; i++) {
+    pass += digits.charAt(Math.floor(Math.random() * digits.length));
+  }
+  return pass;
+}
+
+export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired', expiresAt: string | null } {
+  if (profile.role === 'admin' || profile.role === 'super_admin') {
+    return { canAccess: true, status: 'active', expiresAt: null };
+  }
+  
+  const now = new Date();
+  
+  if (profile.subscription_status === 'active' && profile.subscription_expires_at) {
+    const expiresAt = new Date(profile.subscription_expires_at);
+    if (expiresAt > now) {
+      return { canAccess: true, status: 'active', expiresAt: profile.subscription_expires_at };
+    }
+  }
+  
+  if (profile.subscription_status === 'trial' || !profile.subscription_status) {
+    if (profile.trial_ends_at && new Date(profile.trial_ends_at) > now) {
+      return { canAccess: true, status: 'trial', expiresAt: profile.trial_ends_at };
+    }
+    // Sistem pembayaran belum siap: akses diperpanjang sementara
+    return { canAccess: true, status: 'trial', expiresAt: profile.trial_ends_at || null };
+  }
+  
+  return { canAccess: true, status: 'trial', expiresAt: null };
+}

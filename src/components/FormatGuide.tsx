@@ -48,61 +48,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
 
       <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 space-y-3">
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Unduh Template & Panduan
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <a 
-            href="/template_mcq.json" 
-            download="template_mcq.json"
-            className={`py-2 px-2.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-              theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-indigo-400' : 'border-slate-200 hover:bg-slate-50 text-indigo-600'
-            }`}
-          >
-            📦 Template MCQ (.json)
-          </a>
-          <a 
-            href="/template_flashcard.json" 
-            download="template_flashcard.json"
-            className={`py-2 px-2.5 border rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-              theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-purple-400' : 'border-slate-200 hover:bg-slate-50 text-purple-600'
-            }`}
-          >
-            📦 Template Flashcard (.json)
-          </a>
-        </div>
-
-        <div className="grid grid-cols-3 gap-1.5">
-          <a 
-            href="/panduan_pembuatan_soal.txt" 
-            download="panduan_pembuatan_soal.txt"
-            className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-              theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-350' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-            }`}
-            title="Panduan Pembuatan Soal MCQ"
-          >
-            📄 Panduan MCQ
-          </a>
-          <a 
-            href="/panduan_flashcard.md" 
-            download="panduan_flashcard.md"
-            className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-              theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-            }`}
-            title="Panduan Pembuatan Flashcard"
-          >
-            📄 Flashcard
-          </a>
-          <a 
-            href="/aturan_konten.txt" 
-            download="aturan_konten.txt"
-            className={`py-2 px-1 border rounded-xl text-[8px] font-bold uppercase tracking-wider transition-colors text-center block cursor-pointer ${
-              theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-            }`}
-            title="Aturan Konten / Konversi Soal"
-          >
-            📄 Aturan Konten
-          </a>
+          Panduan Prompt & Skill
         </div>
 
         <a 

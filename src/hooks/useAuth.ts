@@ -29,6 +29,12 @@ export function useAuth({
   const [localSessionId, setLocalSessionId] = useState<string | null>(null);
   const [isSessionKicked, setIsSessionKicked] = useState(false);
   const [profileUsername, setProfileUsername] = useState('user');
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userAngkatan, setUserAngkatan] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'expired'>('trial');
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>('2026-09-14T05:00:00Z');
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
+  const [canAccess, setCanAccess] = useState<boolean>(true);
   const [globalDatabases, setGlobalDatabases] = useState<string[]>([]);
   const [uploaderMap, setUploaderMap] = useState<Record<string, string>>({});
   const [questionDatabase, setQuestionDatabase] = useState<Record<string, Question[]>>({});
@@ -120,6 +126,28 @@ export function useAuth({
         setTotalQuestionsAnswered(profile.total_questions_answered || 0);
         setXpHistory([profile.xp || 0]);
         setProfileUsername(profile.username || 'user');
+        
+        // Simpan state profil, angkatan, dan subscription
+        setUserProfile(profile);
+        setUserAngkatan(profile.angkatan || null);
+        setSubscriptionStatus(profile.subscription_status || 'trial');
+        
+        const trialEndsMap: Record<string, string> = {
+          '24': '2026-09-14T05:00:00Z',
+          '25': '2026-09-17T05:00:00Z',
+          '26': '2026-09-22T05:00:00Z',
+        };
+        const effectiveTrialEnd = profile.trial_ends_at || (profile.angkatan ? trialEndsMap[profile.angkatan] : '2026-09-14T05:00:00Z');
+        setTrialEndsAt(effectiveTrialEnd);
+        setSubscriptionExpiresAt(profile.subscription_expires_at || null);
+
+        // Validasi akses langganan / trial:
+        // Catatan: Sistem pembayaran belum siap, jadi akses jangan langsung dinonaktifkan.
+        // Pengguna tetap dapat mengakses sistem dengan status trial diperpanjang.
+        const now = new Date();
+        let accessAllowed = true;
+        setCanAccess(accessAllowed);
+
         isProfileSyncedRef.current = true;
 
         // Sinkronkan profil ke Cloudflare D1 agar ID non-admin dikenali dengan username yang benar
@@ -131,7 +159,8 @@ export function useAuth({
           streak: savedStreak,
           level: profile.level || 1,
           total_questions_answered: profile.total_questions_answered || 0,
-          last_active: lastActive || new Date().toISOString()
+          last_active: lastActive || new Date().toISOString(),
+          angkatan: profile.angkatan
         }).catch((cfErr) => console.warn('Sync profile to D1 failed (best-effort):', cfErr));
       }
 
@@ -142,7 +171,7 @@ export function useAuth({
       );
       await Promise.race([
         Promise.all([
-          fetchUserQuestions(userId, profile?.username || 'user'),
+          fetchUserQuestions(userId, profile?.username || 'user', profile?.angkatan),
           checkActiveQuizSession(userId),
           fetchGlobalLeaderboard(),
         ]),
@@ -215,10 +244,12 @@ export function useAuth({
     }
   };
 
-  const fetchUserQuestions = async (userId: string, username: string) => {
+  const fetchUserQuestions = async (userId: string, username: string, angkatan?: string) => {
     try {
       // 1. Ambil metadata bank soal dari Cloudflare D1 (0 Egress!)
-      const cfBanks = await cloudflareApi.getQuestionBanks();
+      // Hanya admin super yang mengambil seluruh soal lintas angkatan
+      const queryAngkatan = username === 'admin' ? undefined : angkatan;
+      const cfBanks = await cloudflareApi.getQuestionBanks(queryAngkatan);
       
       let data: any[] = [];
       if (cfBanks && cfBanks.length > 0) {
@@ -228,9 +259,11 @@ export function useAuth({
             const isGlobal = b.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || b.uploader_username === 'admin';
             // Soal pribadi milik user yang sedang login
             const isMine = b.user_id === userId;
-            // Hak pantau semua soal khusus akun collector
-            const isCollector = username === 'collector' || profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online';
-            return isGlobal || isMine || isCollector;
+            // Hak unduh akun collector
+            const isCollector = username === 'collector' || profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online' || userProfile?.role === 'collector';
+            // Filter angkatan: hanya admin super yang bisa lintas angkatan. Collector dibatasi sesuai angkatannya!
+            const angkatanMatch = !b.angkatan || b.angkatan === 'all' || b.angkatan === angkatan || username === 'admin';
+            return (isGlobal || isMine || isCollector) && angkatanMatch;
           })
           .map(b => {
             // Utamakan r2_key untuk menarik berkas soal lengkap dari Cloudflare R2
@@ -523,14 +556,34 @@ export function useAuth({
     })();
   };
 
+  const refreshSubscriptionStatus = async () => {
+    if (!currentUser) return;
+    try {
+      const statusInfo = await authClient.getSubscriptionStatus(currentUser.id);
+      if (statusInfo) {
+        setSubscriptionStatus(statusInfo.status);
+        setCanAccess(statusInfo.canAccess);
+        setTrialEndsAt(statusInfo.trialEndsAt);
+        setSubscriptionExpiresAt(statusInfo.subscriptionExpiresAt);
+        if (statusInfo.canAccess) {
+          triggerToast('Status langganan aktif!', '🎉');
+        }
+      }
+    } catch (e) {
+      console.error('Error refreshing subscription status:', e);
+    }
+  };
+
   return {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
-    isSessionKicked, profileUsername, globalDatabases, uploaderMap, questionDatabase,
+    isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
-    setLocalSessionId, setIsSessionKicked, setProfileUsername, setGlobalDatabases,
+    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
+    setSubscriptionStatus, setCanAccess, setGlobalDatabases,
     setUploaderMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
-    checkActiveQuizSession, removeDatabase
+    checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };
 }

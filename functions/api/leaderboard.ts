@@ -18,6 +18,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const type = url.searchParams.get('type') || 'global';
   const filter = url.searchParams.get('filter') || 'all';
   const fileName = url.searchParams.get('file_name');
+  const angkatan = url.searchParams.get('angkatan');
 
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
@@ -29,13 +30,21 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     if (type === 'global') {
       if (filter === 'all') {
-        const { results } = await env.DB.prepare(`
-          SELECT id, username, total_questions_answered, level
+        let query = `
+          SELECT id, username, total_questions_answered, level, angkatan
           FROM profiles
           WHERE total_questions_answered > 0
-          ORDER BY total_questions_answered DESC
-          LIMIT 100
-        `).all();
+        `;
+        const binds: any[] = [];
+        
+        if (angkatan && angkatan !== 'all') {
+          query += ` AND angkatan = ?`;
+          binds.push(angkatan);
+        }
+        
+        query += ` ORDER BY total_questions_answered DESC LIMIT 1000`;
+        
+        const { results } = await env.DB.prepare(query).bind(...binds).all();
         return new Response(JSON.stringify({ data: results || [] }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -60,19 +69,31 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         }
         const cutoffIso = new Date(cutoffMs - WIB_OFFSET_MS).toISOString();
 
-        const { results } = await env.DB.prepare(`
+        let query = `
           SELECT 
             p.id, 
             p.username, 
             p.level, 
+            p.angkatan,
             SUM(qhl.correct_count) as total_questions_answered
           FROM quiz_history_logs qhl
           JOIN profiles p ON qhl.user_id = p.id
           WHERE qhl.created_at >= ?
-          GROUP BY p.id, p.username, p.level
+        `;
+        const binds: any[] = [cutoffIso];
+
+        if (angkatan && angkatan !== 'all') {
+          query += ` AND p.angkatan = ?`;
+          binds.push(angkatan);
+        }
+
+        query += `
+          GROUP BY p.id, p.username, p.level, p.angkatan
           ORDER BY total_questions_answered DESC
-          LIMIT 100
-        `).bind(cutoffIso).all();
+          LIMIT 1000
+        `;
+
+        const { results } = await env.DB.prepare(query).bind(...binds).all();
 
         return new Response(JSON.stringify({ data: results || [] }), {
           status: 200,
@@ -96,7 +117,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
           l.questions_count,
           l.created_at,
           p.username,
-          p.level
+          p.level,
+          p.angkatan,
+          p.total_questions_answered
         FROM leaderboard l
         JOIN profiles p ON l.user_id = p.id
         WHERE l.file_name = ?
@@ -125,7 +148,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         binds.push(cutoffIso);
       }
 
-      query += ' ORDER BY l.score DESC, l.questions_count DESC LIMIT 100';
+      if (angkatan && angkatan !== 'all') {
+        query += ' AND p.angkatan = ?';
+        binds.push(angkatan);
+      }
+
+      query += ' ORDER BY l.score DESC, l.questions_count DESC LIMIT 1000';
 
       const { results } = await env.DB.prepare(query).bind(...binds).all();
 

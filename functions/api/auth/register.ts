@@ -1,4 +1,4 @@
-import { hashPasswordPBKDF2, signJwt, createAuthCookie } from './_utils';
+import { hashPasswordPBKDF2, signJwt, createAuthCookie, generatePassword } from './_utils';
 
 interface Env {
   DB: D1Database;
@@ -28,43 +28,67 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const body = await request.json() as any;
     const username = (body.username || '').trim();
-    const password = body.password || '';
-    const email = (body.email || `${username.toLowerCase()}@ai.online`).trim();
+    const angkatan = body.angkatan;
 
-    if (!username || !password) {
-      return new Response(JSON.stringify({ error: 'Username dan password wajib diisi' }), {
+    if (!username || !angkatan) {
+      return new Response(JSON.stringify({ error: 'Username dan angkatan wajib diisi' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (password.length < 3) {
-      return new Response(JSON.stringify({ error: 'Password minimal 3 karakter' }), {
+    if (!['24', '25', '26'].includes(String(angkatan))) {
+      return new Response(JSON.stringify({ error: 'Angkatan tidak valid (harus 24, 25, atau 26)' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Cek username unik
-    const existing = await env.DB.prepare('SELECT id FROM profiles WHERE username = ?')
-      .bind(username)
+    // Cek apakah username / nama panggilan sudah ada
+    let finalUsername = username;
+    const existing = await env.DB.prepare('SELECT id FROM profiles WHERE LOWER(username) = LOWER(?)')
+      .bind(finalUsername)
       .first();
 
     if (existing) {
-      return new Response(JSON.stringify({ error: 'Username sudah digunakan' }), {
-        status: 409,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // Ada nama yang sama: berikan angkatan untuk membedakannya
+      finalUsername = `${username} (${angkatan})`;
+      let checkAgain = await env.DB.prepare('SELECT id FROM profiles WHERE LOWER(username) = LOWER(?)')
+        .bind(finalUsername)
+        .first();
+      let counter = 2;
+      while (checkAgain) {
+        finalUsername = `${username} (${angkatan}) ${counter}`;
+        checkAgain = await env.DB.prepare('SELECT id FROM profiles WHERE LOWER(username) = LOWER(?)')
+          .bind(finalUsername)
+          .first();
+        counter++;
+      }
     }
 
+    const cleanEmailUser = finalUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const email = (body.email || `${cleanEmailUser || 'user'}@ai.online`).trim();
+
     const userId = crypto.randomUUID();
+    const password = generatePassword();
     const passwordHash = await hashPasswordPBKDF2(password);
     const now = new Date().toISOString();
+    
+    // Batas masa trial berbeda per angkatan (pukul 12.00 WIB / 05.00 UTC):
+    // Angkatan 24: 14 September 2026
+    // Angkatan 25: 17 September 2026
+    // Angkatan 26: 22 September 2026
+    const trialEndsMap: Record<string, string> = {
+      '24': '2026-09-14T05:00:00Z',
+      '25': '2026-09-17T05:00:00Z',
+      '26': '2026-09-22T05:00:00Z',
+    };
+    const trialEndsAt = trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z';
 
     await env.DB.prepare(`
-      INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active)
-      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, 0, ?, ?)
-    `).bind(userId, username, email, passwordHash, now, now).run();
+      INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, subscription_status, trial_ends_at)
+      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, 0, ?, ?, ?, 'trial', ?)
+    `).bind(userId, finalUsername, email, passwordHash, now, now, String(angkatan), trialEndsAt).run();
 
     const jwtSecret = env.AUTH_JWT_SECRET || 'auramedpro-jwt-secret-dev-2026-key-fixed-fallback';
     const jwt = await signJwt({ sub: userId, guest: false }, jwtSecret);
@@ -73,8 +97,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       id: userId,
       email,
       user_metadata: {
-        username,
+        username: finalUsername,
         is_guest: false,
+        angkatan: String(angkatan),
       },
       is_anonymous: false,
     };
@@ -95,6 +120,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             user: userPayload,
             access_token: jwt,
           },
+          generated_password: password,
+          username: finalUsername,
         },
       }),
       { status: 201, headers }

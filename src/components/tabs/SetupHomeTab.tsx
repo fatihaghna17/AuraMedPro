@@ -1,6 +1,7 @@
 import React from 'react';
 import { Award, Trash2, Calendar, Trash, Flame, Snowflake, Clock, Check, Target, Trophy, History, Crown, Play, Share2, UploadCloud, TrendingUp, Sparkles, Activity, ShieldAlert, CalendarHeart } from 'lucide-react';
 import { getLevelInfo, formatNotifTime } from '../../utils/appHelpers';
+import { AVATAR_FRAMES, getSavedAvatarFrame } from '../../utils/avatarFrames';
 import { OnboardingTour } from '../OnboardingTour';
 import PomodoroWidget from '../PomodoroWidget';
 import DailyChallengeCard from '../DailyChallengeCard';
@@ -8,10 +9,12 @@ import IosInstallBanner from '../IosInstallBanner';
 import QuickActionsRow from '../QuickActionsRow';
 import PendingSessionsCard from '../PendingSessionsCard';
 import HistoryAnalyticsPanel from '../HistoryAnalyticsPanel';
+import { TrialCountdownBanner } from '../TrialCountdownBanner';
 import { CirclePlay } from 'lucide-react';
 
 interface SetupHomeTabProps {
   theme: string;
+  trialEndsAt?: string | null;
   userXP: number;
   currentStreak: number;
   longestStreak: number;
@@ -56,11 +59,17 @@ interface SetupHomeTabProps {
   setSelectedHistoryDetail: any;
   setOpenHistoryReviewIndices: any;
   deleteHistoryItem: any;
-
+  isSuperAdmin?: boolean;
+  isAdminAngkatan?: boolean;
+  adminAngkatanFilter?: 'all' | '24' | '25' | '26';
+  setAdminAngkatanFilter?: (filter: 'all' | '24' | '25' | '26') => void;
+  userAngkatan?: string;
+  leaderboardScope?: 'my' | 'all';
+  setLeaderboardScope?: (scope: 'my' | 'all') => void;
 }
 
 export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
-  theme, userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate,
+  theme, trialEndsAt, userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate,
   totalQuestionsAnswered, quizHistory, achievements, profileUsername,
   expandedCompetencies, setExpandedCompetencies, pomodoroMode, pomodoroSecondsLeft,
   pomodoroActive, pomodoroCount, setPomodoroActive, setPomodoroSecondsLeft,
@@ -71,58 +80,87 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   startDailyChallenge, setShowIosInstallModal, pendingSessions, setDashboardTab,
   resumeQuizSession, discardQuizSession, historyAnalytics, questionDatabase,
   clearAllHistory, setSelectedHistoryDetail, setOpenHistoryReviewIndices,
-  deleteHistoryItem
+  deleteHistoryItem,
+  isSuperAdmin = false,
+  isAdminAngkatan = false,
+  adminAngkatanFilter = 'all',
+  setAdminAngkatanFilter,
+  userAngkatan,
+  leaderboardScope = 'all',
+  setLeaderboardScope
 }) => {
+  const savedFrameId = getSavedAvatarFrame();
+  const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
+
   return (
     <div className="space-y-6">
-              <div className="space-y-6">
-                <OnboardingTour theme={theme} onComplete={() => console.log('Tour done')} />
-                {/* Greeting & Level progress card */}
-                <div className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900/60 border-indigo-500/10 shadow-2xl'
-                    : 'bg-white border-slate-200 shadow-sm'
-                }`}>
-                  <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
-                  
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
-                    <div>
-                      <h1 className={`text-2xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
-                        👋 Selamat datang, {profileUsername}!
-                      </h1>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <span className="flex items-center gap-1">
-                          <Award className="w-4 h-4 text-indigo-500" />
-                          <span>Level {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="w-4 h-4 text-teal-500" />
-                          <span>{userXP} XP</span>
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                          <Flame className="w-3.5 h-3.5 text-amber-500" />
-                          <span>{currentStreak} Hari Streak</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+      {/* ⏱️ Top Trial Countdown Banner */}
+      <TrialCountdownBanner
+        theme={theme}
+        trialEndsAt={trialEndsAt}
+        userAngkatan={userAngkatan}
+        isSuperAdmin={isSuperAdmin}
+        isAdminAngkatan={isAdminAngkatan}
+      />
 
-                  {/* Level progress bar */}
-                  <div className="mt-6">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
-                      <span>Progres Level</span>
-                      <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
-                        style={{ width: `${getLevelInfo(userXP).progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
+      <div className="space-y-6">
+        <OnboardingTour theme={theme} onComplete={() => console.log('Tour done')} />
+      {/* Greeting & Level progress card */}
+      <div className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
+        theme === 'dark'
+          ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900/60 border-indigo-500/10 shadow-2xl'
+          : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+          <div className="flex items-center gap-3.5">
+            <div className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${currentFrame.ringClass} ${currentFrame.glowClass}`}>
+              <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-sm text-white">
+                {profileUsername.slice(0, 2).toUpperCase()}
+              </div>
+              <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
+                {currentFrame.badge}
+              </span>
+            </div>
+            <div>
+              <h1 className={`text-2xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
+                Selamat datang, {profileUsername}!
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-1">
+                  <Award className="w-4 h-4 text-indigo-500" />
+                  <span>Level {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-4 h-4 text-teal-500" />
+                  <span>{userXP} XP</span>
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{currentStreak} Hari Streak</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Level progress bar */}
+        <div className="mt-6">
+          <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+            <span>Progres Level</span>
+            <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
+          </div>
+          <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
+              style={{ width: `${getLevelInfo(userXP).progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
 
                 <DailyChallengeCard theme={theme} onStart={startDailyChallenge} />
 
@@ -340,8 +378,14 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                   Lihat Pembahasan →
                                 </span>
 
-                                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-500 capitalize">
-                                  {item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                  item.mode === 'rmo'
+                                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                    : item.mode === 'blok'
+                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                    : 'bg-indigo-500/10 text-indigo-500'
+                                }`}>
+                                  {item.mode === 'rmo' ? '🏆 RMO' : item.mode === 'blok' ? '📝 Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
                                 </span>
                                 
                                 <button
@@ -416,37 +460,119 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       )}
                     </div>
 
-                    {/* Time Filter Tabs */}
-                    <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
-                      {[
-                        { key: 'all', label: 'Semua Waktu' },
-                        { key: '1', label: 'Hari Ini' },
-                        { key: '7', label: 'Minggu Ini' },
-                        { key: '30', label: 'Bulan Ini' }
-                      ].map((filter) => {
-                        const isActive = leaderboardType === 'global'
-                          ? globalTimeFilter === filter.key
-                          : fileTimeFilter === filter.key;
-                        return (
+                    {/* Filters Row: Angkatan & Time Filter */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
+                      {/* Left: Info Angkatan (User) / Dropdown Pilih Angkatan (Admin Super) / Badge Angkatan (Admin Angkatan) */}
+                      {isSuperAdmin ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20">
+                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-2">
+                              Pilih Angkatan (Super Admin):
+                            </span>
+                            <select
+                              value={adminAngkatanFilter || 'all'}
+                              onChange={(e) => setAdminAngkatanFilter && setAdminAngkatanFilter(e.target.value as any)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer border ${
+                                theme === 'dark'
+                                  ? 'bg-slate-900 border-slate-700 text-slate-200'
+                                  : 'bg-white border-slate-200 text-slate-800'
+                              }`}
+                            >
+                              <option value="all">🌐 Semua Peringkat (Seluruh User Lintas Angkatan)</option>
+                              <option value="24">Angkatan 2024 (Seluruh User)</option>
+                              <option value="25">Angkatan 2025 (Seluruh User)</option>
+                              <option value="26">Angkatan 2026 (Seluruh User)</option>
+                            </select>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                            {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
+                          </span>
+                        </div>
+                      ) : isAdminAngkatan ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5 shadow-sm">
+                            <span>🛡️</span>
+                            <span>Admin Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'} — Peringkat Seluruh Mahasiswa ({leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} User)</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
                           <button
-                            key={filter.key}
-                            onClick={() => {
-                              if (leaderboardType === 'global') {
-                                setGlobalTimeFilter(filter.key as any);
-                              } else {
-                                setFileTimeFilter(filter.key as any);
-                              }
-                            }}
-                            className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                              isActive
-                                ? 'bg-indigo-500 text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                            type="button"
+                            onClick={() => setLeaderboardScope && setLeaderboardScope('my')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                              leaderboardScope === 'my'
+                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                           >
-                            {filter.label}
+                            <span>🎓</span>
+                            <span>Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'}</span>
                           </button>
-                        );
-                      })}
+                          <button
+                            type="button"
+                            onClick={() => setLeaderboardScope && setLeaderboardScope('all')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                              leaderboardScope === 'all'
+                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            <span>🌐</span>
+                            <span>Lintas Angkatan</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Time Filter Tabs */}
+                      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
+                        {[
+                          { key: 'all', label: 'Semua Waktu' },
+                          { key: '1', label: 'Hari Ini' },
+                          { key: '7', label: 'Minggu Ini' },
+                          { key: '30', label: 'Bulan Ini' }
+                        ].map((filter) => {
+                          const isActive = leaderboardType === 'global'
+                            ? globalTimeFilter === filter.key
+                            : fileTimeFilter === filter.key;
+                          return (
+                            <button
+                              key={filter.key}
+                              onClick={() => {
+                                if (leaderboardType === 'global') {
+                                  setGlobalTimeFilter(filter.key as any);
+                                } else {
+                                  setFileTimeFilter(filter.key as any);
+                                }
+                              }}
+                              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                                isActive
+                                  ? 'bg-indigo-500 text-white shadow-sm'
+                                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                              }`}
+                            >
+                              {filter.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Aura Prestige Legend */}
+                    <div className="flex items-center gap-2 flex-wrap px-1 text-[10px]">
+                      <span className="font-bold text-slate-450 uppercase tracking-wider text-[9px]">Efek Aura:</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-slate-950 shadow-sm border border-yellow-200 flex items-center gap-1">
+                        <span>👑</span>
+                        <span>Level 95+ (Aura Sultan)</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-300 border border-teal-500/35 flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>3000+ Soal (Aura Veteran)</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/35 flex items-center gap-1">
+                        <span>🔥</span>
+                        <span>500 Soal Hari Ini (Aura Maraton)</span>
+                      </span>
                     </div>
 
                     <div className={`overflow-hidden rounded-xl border ${
@@ -529,25 +655,139 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                   globalLeaderboard.map((row, index) => {
                                     const isCurrent = row.username === profileUsername;
                                     const rankNum = row.isCurrentUserOutOfTop10 ? row.actualRank : index + 1;
+                                    const userLvl = Number(row.level) || 1;
+                                    const userQuestions = Number(row.total_questions_answered) || 0;
+                                    const isLevel95 = userLvl >= 95;
+                                    const isOver3000 = !isLevel95 && userQuestions >= 3000;
+
+                                    const hasSultanAura = isCurrent
+                                      ? currentFrame.id === 'caduceus_mythic' || (isLevel95 && currentFrame.id !== 'veteran_3000' && currentFrame.id !== 'quest_500_today')
+                                      : isLevel95;
+
+                                    const hasVeteranAura = isCurrent
+                                      ? currentFrame.id === 'veteran_3000' || (isOver3000 && currentFrame.id !== 'caduceus_mythic' && currentFrame.id !== 'quest_500_today')
+                                      : isOver3000;
+
+                                    const hasQuestAura = isCurrent && currentFrame.id === 'quest_500_today';
+
+                                    let rowClasses = "border-b last:border-0 transition-all duration-300 relative ";
+                                    if (hasSultanAura) {
+                                      rowClasses += "aura-mythic-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-amber-500/20 via-purple-600/25 to-amber-500/20 border-amber-400/80 shadow-[0_0_22px_rgba(245,158,11,0.35)]'
+                                          : 'bg-gradient-to-r from-amber-100/95 via-purple-100/70 to-amber-100/95 border-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.25)]'
+                                      );
+                                    } else if (hasVeteranAura) {
+                                      rowClasses += "aura-veteran-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-teal-500/15 via-cyan-500/15 to-teal-500/15 border-teal-400/70 shadow-[0_0_14px_rgba(20,184,166,0.25)]'
+                                          : 'bg-gradient-to-r from-teal-50/95 via-cyan-50/70 to-teal-50/95 border-teal-400 shadow-[0_0_12px_rgba(20,184,166,0.18)]'
+                                      );
+                                    } else if (hasQuestAura) {
+                                      rowClasses += "aura-quest-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-500/20 border-purple-400/80 shadow-[0_0_18px_rgba(168,85,247,0.3)]'
+                                          : 'bg-gradient-to-r from-purple-50/95 via-indigo-50/70 to-purple-50/95 border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.2)]'
+                                      );
+                                    } else if (isCurrent) {
+                                      rowClasses += (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200');
+                                    } else {
+                                      rowClasses += (theme === 'dark' ? 'border-slate-800/50 hover:bg-slate-800/20' : 'border-slate-200/30 hover:bg-slate-100/40');
+                                    }
+
                                     return (
-                                    <tr key={index} className={`border-b last:border-0 ${
-                                      isCurrent 
-                                        ? (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200')
-                                        : (theme === 'dark' ? 'border-slate-800/50 hover:bg-slate-800/10' : 'border-slate-200/30 hover:bg-slate-100/30')
-                                    }`}>
-                                      <td className="py-3.5 px-4 text-center font-bold">
-                                        {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
+                                    <tr key={index} className={rowClasses}>
+                                      <td className="py-3.5 px-4 text-center font-black">
+                                        <span className={
+                                          hasSultanAura 
+                                            ? "text-amber-500 dark:text-yellow-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] text-sm"
+                                            : hasVeteranAura
+                                            ? "text-teal-500 dark:text-teal-300 drop-shadow-[0_0_6px_rgba(20,184,166,0.5)]"
+                                            : hasQuestAura
+                                            ? "text-purple-500 dark:text-purple-300 drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]"
+                                            : "font-bold"
+                                        }>
+                                          {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
+                                        </span>
                                       </td>
-                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2">
-                                        <span className={`${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2 flex-wrap">
+                                        <span className={
+                                          hasSultanAura
+                                            ? (theme === 'dark' 
+                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-400 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                                : 'text-amber-950 font-black')
+                                            : hasVeteranAura
+                                            ? (theme === 'dark' ? 'text-teal-200 font-black' : 'text-teal-900 font-black')
+                                            : hasQuestAura
+                                            ? (theme === 'dark' ? 'text-purple-200 font-black' : 'text-purple-900 font-black')
+                                            : (isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')
+                                        }>
+                                          {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
-                                        <span className="px-1.5 py-0.5 rounded text-[8px] bg-indigo-500/10 text-indigo-500 font-black uppercase">
-                                          LV {row.level || 1}
-                                        </span>
+                                        {row.angkatan && (
+                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border ${
+                                            hasSultanAura
+                                              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/30'
+                                              : hasVeteranAura
+                                              ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30'
+                                              : hasQuestAura
+                                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30'
+                                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                          }`}>
+                                            '{row.angkatan}
+                                          </span>
+                                        )}
+                                        {hasSultanAura ? (
+                                          <>
+                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/40 border border-yellow-200 flex items-center gap-0.5 animate-pulse">
+                                              <span>✨</span>
+                                              <span>LV {userLvl}</span>
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-500 via-purple-600 to-pink-500 text-white shadow-sm shadow-amber-500/30 border border-amber-300/40 flex items-center gap-1">
+                                              <span>👑</span>
+                                              <span>AURA SULTAN</span>
+                                            </span>
+                                          </>
+                                        ) : hasVeteranAura ? (
+                                          <>
+                                            <span className="px-1.5 py-0.5 rounded text-[8px] bg-teal-500/20 text-teal-600 dark:text-teal-300 font-black uppercase border border-teal-500/35">
+                                              LV {userLvl}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-sm shadow-teal-500/25 border border-teal-300/30 flex items-center gap-0.5">
+                                              <span>⚡</span>
+                                              <span>AURA 3000+</span>
+                                            </span>
+                                          </>
+                                        ) : hasQuestAura ? (
+                                          <>
+                                            <span className="px-1.5 py-0.5 rounded text-[8px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-black uppercase border border-purple-500/35">
+                                              LV {userLvl}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white shadow-sm shadow-purple-500/25 border border-purple-300/30 flex items-center gap-0.5">
+                                              <span>🔥</span>
+                                              <span>AURA MARATON</span>
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <span className="px-1.5 py-0.5 rounded text-[8px] bg-indigo-500/10 text-indigo-500 font-black uppercase">
+                                            LV {userLvl}
+                                          </span>
+                                        )}
                                       </td>
-                                      <td className="py-3.5 px-4 text-center font-extrabold text-indigo-500">
-                                        {row.total_questions_answered || 0} Soal
+                                      <td className={`py-3.5 px-4 text-center font-extrabold ${
+                                        hasSultanAura
+                                          ? 'text-amber-500 dark:text-yellow-300 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]'
+                                          : hasVeteranAura
+                                          ? 'text-teal-500 dark:text-teal-300'
+                                          : hasQuestAura
+                                          ? 'text-purple-500 dark:text-purple-300'
+                                          : 'text-indigo-500'
+                                      }`}>
+                                        {hasSultanAura && '🔥 '}
+                                        {hasVeteranAura && '⚡ '}
+                                        {hasQuestAura && '✨ '}
+                                        {userQuestions} Soal
                                       </td>
                                     </tr>
                                   )})
@@ -561,22 +801,125 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                   fileLeaderboard.map((row, index) => {
                                     const isCurrent = row.username === profileUsername;
                                     const rankNum = row.isCurrentUserOutOfTop10 ? row.actualRank : index + 1;
+                                    const userLvl = Number(row.level) || 1;
+                                    const userQuestions = Number(row.total_questions_answered) || 0;
+                                    const isLevel95 = userLvl >= 95;
+                                    const isOver3000 = !isLevel95 && userQuestions >= 3000;
+
+                                    const hasSultanAura = isCurrent
+                                      ? currentFrame.id === 'caduceus_mythic' || (isLevel95 && currentFrame.id !== 'veteran_3000' && currentFrame.id !== 'quest_500_today')
+                                      : isLevel95;
+
+                                    const hasVeteranAura = isCurrent
+                                      ? currentFrame.id === 'veteran_3000' || (isOver3000 && currentFrame.id !== 'caduceus_mythic' && currentFrame.id !== 'quest_500_today')
+                                      : isOver3000;
+
+                                    const hasQuestAura = isCurrent && currentFrame.id === 'quest_500_today';
+
+                                    let rowClasses = "border-b last:border-0 transition-all duration-300 relative ";
+                                    if (hasSultanAura) {
+                                      rowClasses += "aura-mythic-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-amber-500/20 via-purple-600/25 to-amber-500/20 border-amber-400/80 shadow-[0_0_22px_rgba(245,158,11,0.35)]'
+                                          : 'bg-gradient-to-r from-amber-100/95 via-purple-100/70 to-amber-100/95 border-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.25)]'
+                                      );
+                                    } else if (hasVeteranAura) {
+                                      rowClasses += "aura-veteran-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-teal-500/15 via-cyan-500/15 to-teal-500/15 border-teal-400/70 shadow-[0_0_14px_rgba(20,184,166,0.25)]'
+                                          : 'bg-gradient-to-r from-teal-50/95 via-cyan-50/70 to-teal-50/95 border-teal-400 shadow-[0_0_12px_rgba(20,184,166,0.18)]'
+                                      );
+                                    } else if (hasQuestAura) {
+                                      rowClasses += "aura-quest-row " + (
+                                        theme === 'dark'
+                                          ? 'bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-500/20 border-purple-400/80 shadow-[0_0_18px_rgba(168,85,247,0.3)]'
+                                          : 'bg-gradient-to-r from-purple-50/95 via-indigo-50/70 to-purple-50/95 border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.2)]'
+                                      );
+                                    } else if (isCurrent) {
+                                      rowClasses += (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200');
+                                    } else {
+                                      rowClasses += (theme === 'dark' ? 'border-slate-800/50 hover:bg-slate-800/20' : 'border-slate-200/30 hover:bg-slate-100/40');
+                                    }
+
                                     return (
-                                    <tr key={index} className={`border-b last:border-0 ${
-                                      isCurrent 
-                                        ? (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200')
-                                        : (theme === 'dark' ? 'border-slate-800/50 hover:bg-slate-800/10' : 'border-slate-200/30 hover:bg-slate-100/30')
-                                    }`}>
-                                      <td className="py-3.5 px-4 text-center font-bold">
-                                        {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
+                                    <tr key={index} className={rowClasses}>
+                                      <td className="py-3.5 px-4 text-center font-black">
+                                        <span className={
+                                          hasSultanAura 
+                                            ? "text-amber-500 dark:text-yellow-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] text-sm"
+                                            : hasVeteranAura
+                                            ? "text-teal-500 dark:text-teal-300 drop-shadow-[0_0_6px_rgba(20,184,166,0.5)]"
+                                            : hasQuestAura
+                                            ? "text-purple-500 dark:text-purple-300 drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]"
+                                            : "font-bold"
+                                        }>
+                                          {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
+                                        </span>
                                       </td>
-                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2">
-                                        <span className={`${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2 flex-wrap">
+                                        <span className={
+                                          hasSultanAura
+                                            ? (theme === 'dark' 
+                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-400 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                                : 'text-amber-950 font-black')
+                                            : hasVeteranAura
+                                            ? (theme === 'dark' ? 'text-teal-200 font-black' : 'text-teal-900 font-black')
+                                            : hasQuestAura
+                                            ? (theme === 'dark' ? 'text-purple-200 font-black' : 'text-purple-900 font-black')
+                                            : (isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')
+                                        }>
+                                          {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
-                                        <span className="px-1.5 py-0.5 rounded text-[8px] bg-indigo-500/10 text-indigo-500 font-black uppercase">
-                                          LV {row.level || 1}
-                                        </span>
+                                        {row.angkatan && (
+                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border ${
+                                            hasSultanAura
+                                              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/30'
+                                              : hasVeteranAura
+                                              ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30'
+                                              : hasQuestAura
+                                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30'
+                                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                          }`}>
+                                            '{row.angkatan}
+                                          </span>
+                                        )}
+                                        {hasSultanAura ? (
+                                          <>
+                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/40 border border-yellow-200 flex items-center gap-0.5 animate-pulse">
+                                              <span>✨</span>
+                                              <span>LV {userLvl}</span>
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-gradient-to-r from-amber-500 via-purple-600 to-pink-500 text-white shadow-sm shadow-amber-500/30 border border-amber-300/40 flex items-center gap-1">
+                                              <span>👑</span>
+                                              <span>AURA SULTAN</span>
+                                            </span>
+                                          </>
+                                        ) : hasVeteranAura ? (
+                                          <>
+                                            <span className="px-1.5 py-0.5 rounded text-[8px] bg-teal-500/20 text-teal-600 dark:text-teal-300 font-black uppercase border border-teal-500/35">
+                                              LV {userLvl}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-sm shadow-teal-500/25 border border-teal-300/30 flex items-center gap-0.5">
+                                              <span>⚡</span>
+                                              <span>AURA 3000+</span>
+                                            </span>
+                                          </>
+                                        ) : hasQuestAura ? (
+                                          <>
+                                            <span className="px-1.5 py-0.5 rounded text-[8px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-black uppercase border border-purple-500/35">
+                                              LV {userLvl}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white shadow-sm shadow-purple-500/25 border border-purple-300/30 flex items-center gap-0.5">
+                                              <span>🔥</span>
+                                              <span>AURA MARATON</span>
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <span className="px-1.5 py-0.5 rounded text-[8px] bg-indigo-500/10 text-indigo-500 font-black uppercase">
+                                            LV {userLvl}
+                                          </span>
+                                        )}
                                       </td>
                                       <td className="py-3.5 px-4 text-center font-extrabold text-emerald-500 text-sm">
                                         {row.score}%
