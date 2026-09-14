@@ -323,7 +323,11 @@ export default function App() {
   );
 
   const [uploadTargetAngkatan, setUploadTargetAngkatan] = useState<string>('all');
-  const [changeAngkatanModal, setChangeAngkatanModal] = useState<{ isOpen: boolean; bankName: string; currentAngkatan: string } | null>(null);
+  const [changeAngkatanModal, setChangeAngkatanModal] = useState<{ isOpen: boolean; bankName: string; currentAngkatan: string }>({
+    isOpen: false,
+    bankName: '',
+    currentAngkatan: 'all'
+  });
 
   const getEffectiveUploadAngkatan = () => {
     if (isSuperAdmin) {
@@ -4479,7 +4483,7 @@ export default function App() {
     />
 
     {/* Modal Ubah Angkatan (Super Admin) */}
-    {changeAngkatanModal.isOpen && (
+    {Boolean(changeAngkatanModal?.isOpen) && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
         <div 
           onClick={(e) => e.stopPropagation()}
