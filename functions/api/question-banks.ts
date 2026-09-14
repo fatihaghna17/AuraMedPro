@@ -6,7 +6,7 @@ interface Env {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
 };
 
 export const onRequestOptions: PagesFunction = async () => {
@@ -42,9 +42,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     `;
     const binds: any[] = [];
 
-    if (angkatan) {
-      query += ` WHERE (qb.angkatan = ? OR qb.angkatan = 'all' OR qb.angkatan IS NULL)`;
-      binds.push(angkatan);
+    if (angkatan && angkatan !== 'all') {
+      query += ` WHERE (
+        qb.angkatan = 'all' 
+        OR qb.angkatan = ? 
+        OR instr(',' || coalesce(qb.angkatan, '') || ',', ',' || ? || ',') > 0
+      )`;
+      binds.push(angkatan, angkatan);
     }
 
     query += ` ORDER BY qb.name ASC`;
@@ -162,3 +166,41 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     });
   }
 };
+
+export const onRequestPatch: PagesFunction<Env> = async (context) => {
+  const { request, env } = context;
+
+  if (!env.DB) {
+    return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
+    const body = (await request.json()) as any;
+    const { name, angkatan } = body;
+
+    if (!name || !angkatan) {
+      return new Response(JSON.stringify({ error: 'Name dan angkatan wajib diisi' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    await env.DB.prepare('UPDATE question_banks SET angkatan = ? WHERE name = ?')
+      .bind(angkatan, name)
+      .run();
+
+    return new Response(JSON.stringify({ success: true, name, angkatan }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+};
+

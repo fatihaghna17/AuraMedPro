@@ -84,7 +84,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         username = coalesce(excluded.username, profiles.username),
-        role = coalesce(excluded.role, profiles.role),
+        role = coalesce(excluded.role, profiles.role, 'user'),
         xp = MAX(profiles.xp, coalesce(excluded.xp, 0)),
         streak = MAX(profiles.streak, coalesce(excluded.streak, 0)),
         level = MAX(profiles.level, coalesce(excluded.level, 1)),
@@ -95,7 +95,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     `).bind(
       id,
       username,
-      role || 'user',
+      role || null,
       xp !== undefined ? xp : 0,
       streak !== undefined ? streak : 0,
       level !== undefined ? level : 1,

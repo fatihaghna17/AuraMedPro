@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
-import { getCachedQuestions, setCachedQuestions, getLocalUserBanks, deleteLocalUserBank } from '../utils/questionCache';
+import { getCachedQuestions, setCachedQuestions, getLocalUserBanks, deleteLocalUserBank, cleanupLegacyLocalBanks } from '../utils/questionCache';
 import { cloudflareApi } from '../services/cloudflareApi';
 import { authClient } from '../lib/authClient';
 
@@ -37,6 +37,7 @@ export function useAuth({
   const [canAccess, setCanAccess] = useState<boolean>(true);
   const [globalDatabases, setGlobalDatabases] = useState<string[]>([]);
   const [uploaderMap, setUploaderMap] = useState<Record<string, string>>({});
+  const [bankAngkatanMap, setBankAngkatanMap] = useState<Record<string, string>>({});
   const [questionDatabase, setQuestionDatabase] = useState<Record<string, Question[]>>({});
   
   const isLoggingInRef = useRef(false);
@@ -154,7 +155,7 @@ export function useAuth({
         cloudflareApi.saveProfile({
           id: userId,
           username: profile.username || defaultUsername,
-          role: profile.role || (profile.username === 'admin' ? 'admin' : 'user'),
+          role: profile.role || (profile.username === 'admin' || profile.username === 'admin25' ? 'admin' : undefined),
           xp: profile.xp || 0,
           streak: savedStreak,
           level: profile.level || 1,
@@ -248,22 +249,39 @@ export function useAuth({
     try {
       // 1. Ambil metadata bank soal dari Cloudflare D1 (0 Egress!)
       // Hanya admin super yang mengambil seluruh soal lintas angkatan
-      const queryAngkatan = username === 'admin' ? undefined : angkatan;
+      const isSuper = username === 'admin' || userProfile?.role === 'super_admin';
+      const queryAngkatan = isSuper ? undefined : angkatan;
       const cfBanks = await cloudflareApi.getQuestionBanks(queryAngkatan);
       
       let data: any[] = [];
       if (cfBanks && cfBanks.length > 0) {
         data = cfBanks
           .filter(b => {
-            // Soal global bawaan dari admin
-            const isGlobal = b.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || b.uploader_username === 'admin';
+            if (isSuper) return true;
+
+            const bankAngkatans = (b.angkatan || 'all').split(',').map(s => s.trim());
+            const angkatanMatch = bankAngkatans.includes('all') || (angkatan && bankAngkatans.includes(angkatan));
+
+            // Soal dari admin besar atau admin angkatan
+            const isFromAdmin = 
+              b.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || 
+              b.uploader_username === 'admin' ||
+              (b.uploader_username && b.uploader_username.toLowerCase().startsWith('admin'));
+
             // Soal pribadi milik user yang sedang login
             const isMine = b.user_id === userId;
-            // Hak unduh akun collector
-            const isCollector = username === 'collector' || profileUsername === 'collector' || currentUser?.user_metadata?.username === 'collector' || currentUser?.email === 'collector@ai.online' || userProfile?.role === 'collector';
-            // Filter angkatan: hanya admin super yang bisa lintas angkatan. Collector dibatasi sesuai angkatannya!
-            const angkatanMatch = !b.angkatan || b.angkatan === 'all' || b.angkatan === angkatan || username === 'admin';
-            return (isGlobal || isMine || isCollector) && angkatanMatch;
+
+            // Hak unduh akun collector / admin angkatan
+            const isCollector = 
+              username === 'collector' || 
+              profileUsername === 'collector' || 
+              currentUser?.user_metadata?.username === 'collector' || 
+              currentUser?.email === 'collector@ai.online' || 
+              userProfile?.role === 'collector' ||
+              userProfile?.role === 'admin_angkatan' ||
+              username.toLowerCase().startsWith('admin');
+
+            return (isFromAdmin || isMine || isCollector) && angkatanMatch;
           })
           .map(b => {
             // Utamakan r2_key untuk menarik berkas soal lengkap dari Cloudflare R2
@@ -274,6 +292,7 @@ export function useAuth({
             return {
               name: b.name,
               user_id: b.user_id,
+              angkatan: b.angkatan,
               questions_json: questionsPayload,
               profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
             };
@@ -285,8 +304,13 @@ export function useAuth({
       const mappedData: Record<string, Question[]> = {};
       const globals: string[] = [];
       const uploaders: Record<string, string> = {};
-      
+      const angkatans: Record<string, string> = {};
+
       if (data) {
+        data.forEach((b: any) => {
+          angkatans[b.name] = b.angkatan || 'all';
+        });
+
         const fetchPromises = data.map(async (row: any) => {
           let questions = typeof row.questions_json === 'string'
             ? JSON.parse(row.questions_json)
@@ -346,16 +370,23 @@ export function useAuth({
           const ownerProfile = row.profiles as any;
           if (ownerProfile) {
             uploaders[row.name] = ownerProfile.username;
-            if (row.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || ownerProfile.username === 'admin') {
+            if (
+              row.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || 
+              ownerProfile.username === 'admin' ||
+              (ownerProfile.username && ownerProfile.username.toLowerCase().startsWith('admin'))
+            ) {
               globals.push(row.name);
             }
           }
         });
       }
 
-      // Muat juga bank soal kustom lokal jika belum ada di mappedData
+      // Bersihkan cache lama un-scoped agar tidak mencemari akun lain di perangkat yang sama
+      cleanupLegacyLocalBanks();
+
+      // Muat juga bank soal kustom lokal jika belum ada di mappedData (diisolasi per akun)
       try {
-        const localBanks = getLocalUserBanks();
+        const localBanks = getLocalUserBanks(userId);
         Object.entries(localBanks).forEach(([bName, bQuestions]) => {
           if (!mappedData[bName] || mappedData[bName].length === 0) {
             mappedData[bName] = bQuestions;
@@ -369,6 +400,7 @@ export function useAuth({
       }
 
       setUploaderMap(uploaders);
+      setBankAngkatanMap(angkatans);
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
       if (username === 'admin' && Object.keys(mappedData).length === 0) {
@@ -577,12 +609,12 @@ export function useAuth({
   return {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };

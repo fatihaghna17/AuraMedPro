@@ -42,6 +42,7 @@ import {
   FolderOpen,
   LogOut,
   User,
+  Users,
   Download,
   Copy,
   Bell,
@@ -231,12 +232,12 @@ export default function App() {
   const {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
@@ -320,6 +321,34 @@ export default function App() {
   const [quizFolderMap, setQuizFolderMap] = useState<Record<string, string>>(() =>
     safeLocalStorageParse<Record<string, string>>('cbt_quiz_folder_map', {}, (v) => !!v && typeof v === 'object' && !Array.isArray(v))
   );
+
+  const [uploadTargetAngkatan, setUploadTargetAngkatan] = useState<string>('all');
+  const [changeAngkatanModal, setChangeAngkatanModal] = useState<{ isOpen: boolean; bankName: string; currentAngkatan: string } | null>(null);
+
+  const getEffectiveUploadAngkatan = () => {
+    if (isSuperAdmin) {
+      return uploadTargetAngkatan || 'all';
+    }
+    return userAngkatan || 'all';
+  };
+
+  const handleChangeBankAngkatan = async (bankName: string, newAngkatan: string) => {
+    try {
+      const success = await cloudflareApi.updateQuestionBankAngkatan(bankName, newAngkatan);
+      if (success) {
+        triggerToast(`Target angkatan "${bankName}" diubah ke ${newAngkatan === 'all' ? 'Seluruh Angkatan' : `Angkatan ${newAngkatan}`}`, '✅');
+        setBankAngkatanMap((prev) => ({ ...prev, [bankName]: newAngkatan }));
+        setChangeAngkatanModal(null);
+        if (currentUser) {
+          fetchUserQuestions(currentUser.id, profileUsername, userAngkatan || undefined);
+        }
+      } else {
+        triggerToast('Gagal mengubah target angkatan', '❌');
+      }
+    } catch (err: any) {
+      triggerToast(`Gagal: ${err.message || 'Terjadi kesalahan'}`, '❌');
+    }
+  };
 
   // Opsi Timer Mode Biasa
   const [regularTimerEnabled, setRegularTimerEnabled] = useState<boolean>(() => {
@@ -1453,7 +1482,7 @@ export default function App() {
         (async () => {
           try {
             // 1. Simpan ke storage lokal browser terlebih dahulu sebagai jaminan offline
-            saveLocalUserBank(file.name, finalQuestions);
+            saveLocalUserBank(file.name, finalQuestions, currentUser?.id);
 
             // 2. Upload ke Cloudflare R2 (0 Egress)
             const r2Res = await uploadQuestionsToR2(file.name, finalQuestions);
@@ -1462,6 +1491,7 @@ export default function App() {
             }
 
             // 3. Simpan metadata ke Cloudflare D1
+            const targetAngkatan = getEffectiveUploadAngkatan();
             if (currentUser) {
               if (r2Res) {
                 await cloudflareApi.saveQuestionBank({
@@ -1469,14 +1499,17 @@ export default function App() {
                   user_id: currentUser.id,
                   r2_key: r2Res.r2_key,
                   r2_url: r2Res.r2_url,
+                  angkatan: targetAngkatan,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
                   name: file.name,
                   user_id: currentUser.id,
                   questions_json: finalQuestions,
+                  angkatan: targetAngkatan,
                 });
               }
+              setBankAngkatanMap((prev) => ({ ...prev, [file.name]: targetAngkatan }));
             }
 
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
@@ -1550,8 +1583,9 @@ export default function App() {
     if (loadedCount > 0) {
       try {
         // Simpan setiap bank soal ke Cloudflare R2 & D1 (0 Egress) serta storage lokal
+        const targetAngkatan = getEffectiveUploadAngkatan();
         for (const [name, questions] of Object.entries(newDatabases)) {
-          saveLocalUserBank(name, questions);
+          saveLocalUserBank(name, questions, currentUser?.id);
 
           try {
             const r2Res = await uploadQuestionsToR2(name, questions);
@@ -1566,14 +1600,17 @@ export default function App() {
                   user_id: currentUser.id,
                   r2_key: r2Res.r2_key,
                   r2_url: r2Res.r2_url,
+                  angkatan: targetAngkatan,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
                   name,
                   user_id: currentUser.id,
                   questions_json: questions,
+                  angkatan: targetAngkatan,
                 });
               }
+              setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
             }
           } catch (itemErr) {
             console.warn('Gagal menyimpan file folder ke cloud:', name, itemErr);
@@ -1637,7 +1674,7 @@ export default function App() {
     const finalQuestions = parseRawFileToQuestions(pasteContent, ext);
     if (finalQuestions && finalQuestions.length > 0) {
       // 1. Selalu simpan di storage lokal browser terlebih dahulu
-      saveLocalUserBank(name, finalQuestions);
+      saveLocalUserBank(name, finalQuestions, currentUser?.id);
 
       if (currentUser) {
         try {
@@ -1648,20 +1685,24 @@ export default function App() {
           }
 
           // 3. Simpan ke Cloudflare D1
+          const targetAngkatan = getEffectiveUploadAngkatan();
           if (r2Res) {
             await cloudflareApi.saveQuestionBank({
               name,
               user_id: currentUser.id,
               r2_key: r2Res.r2_key,
               r2_url: r2Res.r2_url,
+              angkatan: targetAngkatan,
             });
           } else {
             await cloudflareApi.saveQuestionBank({
               name,
               user_id: currentUser.id,
               questions_json: finalQuestions,
+              angkatan: targetAngkatan,
             });
           }
+          setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
 
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
         } catch (err) {
@@ -2965,6 +3006,9 @@ export default function App() {
                       onFileUpload={handleFileUpload}
                       onFolderUpload={handleFolderUpload}
                       onPasteClick={() => setPasteModalOpen(true)}
+                      isSuperAdmin={isSuperAdmin}
+                      selectedAngkatan={uploadTargetAngkatan}
+                      onSelectedAngkatanChange={setUploadTargetAngkatan}
                     />
                   </div>
 
@@ -3400,11 +3444,22 @@ export default function App() {
                                     </div>
                                     
                                     <div className="flex items-end justify-between mt-auto relative z-10">
-                                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${
-                                        theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
-                                      }`}>
-                                        {questions.length} soal
-                                      </span>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${
+                                          theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
+                                        }`}>
+                                          {questions.length} soal
+                                        </span>
+                                        {bankAngkatanMap[key] && (
+                                          <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${
+                                            bankAngkatanMap[key] === 'all'
+                                              ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
+                                              : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                          }`}>
+                                            {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
+                                          </span>
+                                        )}
+                                      </div>
                                       <span className="text-[10px] font-semibold text-slate-500">
                                         Progres: {progressCount}/{questions.length}
                                       </span>
@@ -3458,6 +3513,23 @@ export default function App() {
                                         >
                                           <FolderPlus className="w-4 h-4" />
                                         </button>
+
+                                        {isSuperAdmin && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setChangeAngkatanModal({
+                                                isOpen: true,
+                                                bankName: key,
+                                                currentAngkatan: bankAngkatanMap[key] || 'all'
+                                              });
+                                            }}
+                                            className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors cursor-pointer"
+                                            title="Ubah Target Angkatan (Super Admin)"
+                                          >
+                                            <Users className="w-4 h-4" />
+                                          </button>
+                                        )}
 
                                         {!globalDatabases.includes(key) ? (
                                           <button
@@ -3615,11 +3687,22 @@ export default function App() {
                                   </div>
                                   
                                   <div className="flex items-end justify-between mt-auto relative z-10">
-                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${
-                                      theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
-                                    }`}>
-                                      {questions.length} soal
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${
+                                        theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
+                                      }`}>
+                                        {questions.length} soal
+                                      </span>
+                                      {bankAngkatanMap[key] && (
+                                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${
+                                          bankAngkatanMap[key] === 'all'
+                                            ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
+                                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                        }`}>
+                                          {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="text-[10px] font-semibold text-slate-500">
                                       Progres: {progressCount}/{questions.length}
                                     </span>
@@ -3671,6 +3754,23 @@ export default function App() {
                                       >
                                         <FolderPlus className="w-4 h-4" />
                                       </button>
+
+                                      {isSuperAdmin && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setChangeAngkatanModal({
+                                              isOpen: true,
+                                              bankName: key,
+                                              currentAngkatan: bankAngkatanMap[key] || 'all'
+                                            });
+                                          }}
+                                          className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors cursor-pointer"
+                                          title="Ubah Target Angkatan (Super Admin)"
+                                        >
+                                          <Users className="w-4 h-4" />
+                                        </button>
+                                      )}
                                       
                                       {!globalDatabases.includes(key) ? (
                                         <button
@@ -4288,6 +4388,9 @@ export default function App() {
         content={pasteContent}
         onContentChange={setPasteContent}
         error={pasteError}
+        isSuperAdmin={isSuperAdmin}
+        selectedAngkatan={uploadTargetAngkatan}
+        onSelectedAngkatanChange={setUploadTargetAngkatan}
         onClose={() => setPasteModalOpen(false)}
         onSubmit={handlePasteSubmit}
       />
@@ -4374,6 +4477,79 @@ export default function App() {
       onSave={saveAnswerNote}
       onDelete={deleteAnswerNote}
     />
+
+    {/* Modal Ubah Angkatan (Super Admin) */}
+    {changeAngkatanModal.isOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md rounded-2xl border shadow-2xl p-6 relative bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center font-bold">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Ubah Target Angkatan</h3>
+                <p className="text-xs text-slate-500 truncate max-w-[260px]">{changeAngkatanModal.bankName}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setChangeAngkatanModal({ isOpen: false, bankName: "", currentAngkatan: "" })}
+              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
+            Pilih angkatan mana yang diizinkan untuk melihat bank soal ini di dashboard dan latihan.
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 mb-6">
+            {[
+              { id: "all", label: "🌐 Semua Angkatan" },
+              { id: "24", label: "Angkatan 24" },
+              { id: "25", label: "Angkatan 25" },
+              { id: "26", label: "Angkatan 26" },
+              { id: "24,25", label: "Angkatan 24 & 25" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setChangeAngkatanModal(prev => ({ ...prev, currentAngkatan: opt.id }))}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
+                  changeAngkatanModal.currentAngkatan === opt.id
+                    ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                    : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600"
+                }`}
+              >
+                <span>{opt.label}</span>
+                {changeAngkatanModal.currentAngkatan === opt.id && <Check className="w-4 h-4 text-white" />}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => setChangeAngkatanModal({ isOpen: false, bankName: "", currentAngkatan: "" })}
+              className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleChangeBankAngkatan(changeAngkatanModal.bankName, changeAngkatanModal.currentAngkatan)}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Check className="w-4 h-4" /> Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     </div>
   );

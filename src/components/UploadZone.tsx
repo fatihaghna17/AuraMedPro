@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { UploadCloud, FolderPlus, ClipboardList } from 'lucide-react';
+import { UploadCloud, FolderPlus, ClipboardList, Users } from 'lucide-react';
 
 interface UploadZoneProps {
   theme: 'light' | 'dark';
@@ -8,10 +8,16 @@ interface UploadZoneProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFolderUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPasteClick: () => void;
+  isSuperAdmin?: boolean;
+  selectedAngkatan?: string;
+  onSelectedAngkatanChange?: (angkatan: string) => void;
 }
 
 export default function UploadZone({
   theme, fileInputRef, folderInputRef, onFileUpload, onFolderUpload, onPasteClick,
+  isSuperAdmin = false,
+  selectedAngkatan = 'all',
+  onSelectedAngkatanChange,
 }: UploadZoneProps) {
   const dashedCard = (onClick: () => void, hoverColor: string) =>
     `p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
@@ -20,16 +26,81 @@ export default function UploadZone({
         : `bg-slate-50 border-slate-200 hover:${hoverColor}`
     }`;
 
+  const angkatanOptions = [
+    { id: 'all', label: '🌐 Seluruh Angkatan', desc: 'Dapat diakses oleh semua angkatan' },
+    { id: '24', label: 'Angkatan 24', desc: 'Khusus untuk Angkatan 24' },
+    { id: '25', label: 'Angkatan 25', desc: 'Khusus untuk Angkatan 25' },
+    { id: '26', label: 'Angkatan 26', desc: 'Khusus untuk Angkatan 26' },
+    { id: '24,25', label: 'Angkatan 24 & 25', desc: 'Bisa diakses Angkatan 24 dan 25' },
+  ];
+
+  const currentOption = angkatanOptions.find(o => o.id === selectedAngkatan) || angkatanOptions[0];
+
   return (
     <div className={`p-6 rounded-3xl border transition-all duration-300 space-y-5 ${
       theme === 'dark'
         ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
         : 'bg-white border-slate-200 shadow-sm'
     }`}>
-      <div>
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Impor Soal Baru</h3>
-        <p className="text-[11px] text-slate-450 mt-1">Impor berkas soal Anda untuk diujikan di platform CBT AuraMed.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Impor Soal Baru</h3>
+          <p className="text-[11px] text-slate-450 mt-1">Impor berkas soal Anda untuk diujikan di platform CBT AuraMed.</p>
+        </div>
       </div>
+
+      {/* Target Angkatan Selector khusus Super Admin */}
+      {isSuperAdmin && (
+        <div className={`p-4 rounded-2xl border transition-all ${
+          theme === 'dark' 
+            ? 'bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900/50 border-indigo-500/30' 
+            : 'bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-slate-50 border-indigo-200'
+        }`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                    Target Distribusi Angkatan
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 uppercase tracking-wider">
+                    Super Admin
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {currentOption.desc}
+                </p>
+              </div>
+            </div>
+
+            {/* Tombol Pilihan Angkatan */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {angkatanOptions.map((opt) => {
+                const isSelected = selectedAngkatan === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onSelectedAngkatanChange?.(opt.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none active:scale-95 ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/50 scale-[1.02]'
+                        : theme === 'dark'
+                          ? 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-xs'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Upload Single File */}

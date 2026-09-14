@@ -73,12 +73,29 @@ export async function clearQuestionCache(): Promise<void> {
 const LOCAL_BANKS_KEY = 'cbt_local_user_banks';
 
 /**
+ * Membersihkan cache lokal bank soal un-scoped lama yang berpotensi mencemari akun lain
+ */
+export function cleanupLegacyLocalBanks(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(LOCAL_BANKS_KEY);
+  } catch (e) {
+    console.warn('[LocalBanks] Gagal membersihkan legacy local banks:', e);
+  }
+}
+
+function getStorageKey(userId?: string): string {
+  return userId ? `${LOCAL_BANKS_KEY}_${userId}` : LOCAL_BANKS_KEY;
+}
+
+/**
  * Membaca bank soal kustom pengguna yang tersimpan di storage browser lokal
  */
-export function getLocalUserBanks(): Record<string, Question[]> {
+export function getLocalUserBanks(userId?: string): Record<string, Question[]> {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem(LOCAL_BANKS_KEY);
+    const key = getStorageKey(userId);
+    const raw = localStorage.getItem(key);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     return typeof parsed === 'object' && parsed !== null ? parsed : {};
@@ -91,12 +108,13 @@ export function getLocalUserBanks(): Record<string, Question[]> {
 /**
  * Menyimpan bank soal kustom pengguna ke storage browser lokal sebagai cadangan offline
  */
-export function saveLocalUserBank(name: string, questions: Question[]): void {
+export function saveLocalUserBank(name: string, questions: Question[], userId?: string): void {
   if (typeof window === 'undefined' || !name || !questions || questions.length === 0) return;
   try {
-    const current = getLocalUserBanks();
+    const key = getStorageKey(userId);
+    const current = getLocalUserBanks(userId);
     current[name] = questions;
-    localStorage.setItem(LOCAL_BANKS_KEY, JSON.stringify(current));
+    localStorage.setItem(key, JSON.stringify(current));
   } catch (e) {
     console.warn('[LocalBanks] Gagal menyimpan bank soal lokal:', e);
   }
@@ -105,13 +123,14 @@ export function saveLocalUserBank(name: string, questions: Question[]): void {
 /**
  * Menghapus bank soal kustom pengguna dari storage browser lokal
  */
-export function deleteLocalUserBank(name: string): void {
+export function deleteLocalUserBank(name: string, userId?: string): void {
   if (typeof window === 'undefined' || !name) return;
   try {
-    const current = getLocalUserBanks();
+    const key = getStorageKey(userId);
+    const current = getLocalUserBanks(userId);
     if (name in current) {
       delete current[name];
-      localStorage.setItem(LOCAL_BANKS_KEY, JSON.stringify(current));
+      localStorage.setItem(key, JSON.stringify(current));
     }
   } catch (e) {
     console.warn('[LocalBanks] Gagal menghapus bank soal lokal:', e);

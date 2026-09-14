@@ -119,6 +119,14 @@ export const cloudflareApi = {
     return !res.error;
   },
 
+  async updateQuestionBankAngkatan(name: string, angkatan: string): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/question-banks`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name, angkatan }),
+    });
+    return !res.error;
+  },
+
   // Leaderboard
   async getGlobalLeaderboard(timeFilter: 'all' | '1' | '7' | '30', angkatan?: string): Promise<any[]> {
     const angkatanParam = angkatan && angkatan !== 'all' ? `&angkatan=${encodeURIComponent(angkatan)}` : '';

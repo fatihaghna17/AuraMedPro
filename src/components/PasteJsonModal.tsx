@@ -10,12 +10,26 @@ interface PasteJsonModalProps {
   error: string | null;
   onClose: () => void;
   onSubmit: () => void;
+  isSuperAdmin?: boolean;
+  selectedAngkatan?: string;
+  onSelectedAngkatanChange?: (angkatan: string) => void;
 }
 
 export default function PasteJsonModal({
   theme, isOpen, fileName, onFileNameChange, content, onContentChange, error, onClose, onSubmit,
+  isSuperAdmin = false,
+  selectedAngkatan = 'all',
+  onSelectedAngkatanChange,
 }: PasteJsonModalProps) {
   if (!isOpen) return null;
+
+  const angkatanOptions = [
+    { id: 'all', label: '🌐 Seluruh Angkatan' },
+    { id: '24', label: 'Angkatan 24' },
+    { id: '25', label: 'Angkatan 25' },
+    { id: '26', label: 'Angkatan 26' },
+    { id: '24,25', label: '24 & 25' },
+  ];
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
@@ -26,6 +40,34 @@ export default function PasteJsonModal({
         </h3>
         
         <div className="space-y-4">
+          {/* Target Angkatan Selector khusus Super Admin */}
+          {isSuperAdmin && (
+            <div className={`p-3 rounded-xl border ${theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <label className="block text-xs font-bold text-slate-500 mb-2">Target Distribusi Angkatan</label>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {angkatanOptions.map((opt) => {
+                  const isSelected = selectedAngkatan === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => onSelectedAngkatanChange?.(opt.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : theme === 'dark'
+                            ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-slate-500 mb-1">Nama File Kuis <span className="text-rose-500">*</span></label>
             <input 
