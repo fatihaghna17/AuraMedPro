@@ -328,6 +328,7 @@ export default function App() {
     bankName: '',
     currentAngkatan: 'all'
   });
+  const [emptyFoldersVisible, setEmptyFoldersVisible] = useState<string[]>([]);
 
   const getEffectiveUploadAngkatan = () => {
     if (isSuperAdmin) {
@@ -916,8 +917,8 @@ export default function App() {
       const filteredFiles = (files as { key: string; displayName: string; questions: Question[] }[]).filter(
         f => (f?.displayName || f?.key || '').toLowerCase().includes(q) && matchFilter(f?.key || '')
       );
-      // Include empty folders only if not searching
-      if (filteredFiles.length > 0 || (q === '' && bankFilter === 'all')) {
+      // Hanya sertakan folder jika memiliki soal (atau folder yang baru dibuat di sesi ini)
+      if (filteredFiles.length > 0 || emptyFoldersVisible.includes(folderPath)) {
         folders[folderPath] = filteredFiles;
       }
     });
@@ -929,7 +930,7 @@ export default function App() {
     });
 
     return { folders, rootItems };
-  }, [groupedDatabases, searchQuery, bankFilter]);
+  }, [groupedDatabases, searchQuery, bankFilter, emptyFoldersVisible]);
 
   // Apply theme class to document & body
   useEffect(() => {
@@ -1323,6 +1324,7 @@ export default function App() {
   };
 
   const handleCreateFolderSubmit = async (name: string, isGlobal: boolean) => {
+    setEmptyFoldersVisible(prev => (prev.includes(name) ? prev : [...prev, name]));
     if (isGlobal) {
       if (!globalCustomFolders.includes(name)) {
         const newGlobal = [...globalCustomFolders, name];
@@ -3099,7 +3101,7 @@ export default function App() {
                   </div>
 
                   {/* Bilah Navigasi & Filter Folder Besar */}
-                  {Object.keys(questionDatabase).length > 0 && (
+                  {Object.keys(questionDatabase).length > 0 && Object.keys(filteredDatabases.folders).length > 0 && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
                       <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
                         <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
@@ -3118,6 +3120,7 @@ export default function App() {
                         </button>
                         {parentFolders.map((pName) => {
                           const count = Object.entries(filteredDatabases.folders).filter(([fp]) => folderParentMap[fp] === pName).length;
+                          if (count === 0) return null;
                           return (
                             <button
                               key={pName}
@@ -3138,16 +3141,18 @@ export default function App() {
                             </button>
                           );
                         })}
-                        <button
-                          onClick={() => setActiveParentFilter('__unassigned__')}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
-                            activeParentFilter === '__unassigned__'
-                              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                              : theme === 'dark' ? 'bg-slate-800/60 text-slate-400 hover:text-slate-200' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Tanpa Folder Besar
-                        </button>
+                        {Object.entries(filteredDatabases.folders).some(([fp]) => !folderParentMap[fp]) && (
+                          <button
+                            onClick={() => setActiveParentFilter('__unassigned__')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
+                              activeParentFilter === '__unassigned__'
+                                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                                : theme === 'dark' ? 'bg-slate-800/60 text-slate-400 hover:text-slate-200' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            Tanpa Folder Besar
+                          </button>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
