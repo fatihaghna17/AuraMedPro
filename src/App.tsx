@@ -232,12 +232,12 @@ export default function App() {
   const {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
@@ -649,7 +649,51 @@ export default function App() {
     notifOpen, notifList, notifCount, pushEnabled,
     setNotifOpen, requestPushPermission, fetchNotifications, markAllNotifRead,
     showBrowserNotification
-  } = useNotifications(currentUser, srs, triggerToast);
+  } = useNotifications(currentUser, srs, triggerToast, userAngkatan || undefined);
+
+  // Klik notifikasi -> Masuk Bank Soal dan auto-select soal
+  const handleNotificationClick = (notif: { id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }) => {
+    setNotifOpen(false);
+    if (notif.type === 'new_quiz' && notif.bankName) {
+      const bankKey = notif.bankName;
+      // 1. Pindah tab ke Bank Soal
+      setDashboardTab('banks');
+      
+      // 2. Autoselect kuis
+      setSelectedDatabases((prev) => (prev.includes(bankKey) ? prev : [...prev, bankKey]));
+      
+      // 3. Pastikan parent folder filter tidak menyembunyikan kolom ini
+      setActiveParentFilter('all');
+      
+      // 4. Buka / unminimize folder jika sebelumnya diminimize
+      const folderOfBank = quizFolderMap[bankKey] || (bankKey.includes('/') ? bankKey.split('/')[0] : null);
+      setMinimizedFolders((prev) => {
+        const next = { ...prev };
+        if (folderOfBank && next[folderOfBank]) next[folderOfBank] = false;
+        // Buka juga folder Terbaru
+        Object.keys(next).forEach((k) => {
+          if (k.startsWith('Terbaru')) next[k] = false;
+        });
+        return next;
+      });
+
+      // 5. Berikan feedback dan scroll ke kartu kuis
+      const cleanName = bankKey.replace(/\.(json|yaml|yml)$/i, '');
+      triggerToast(`Soal "${cleanName}" otomatis dipilih!`, '🎯');
+      setTimeout(() => {
+        const el = document.getElementById(`quiz-card-${bankKey}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          el.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
+          }, 3000);
+        }
+      }, 350);
+    } else if (notif.type === 'srs') {
+      setDashboardTab('srs');
+    }
+  };
 // extracted notifList
 // extracted notifCount
 // extracted pushEnabled
@@ -894,8 +938,71 @@ export default function App() {
       }
     });
 
-    return { folders, rootItems };
-  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap]);
+    // Generate folder "Terbaru" per angkatan (10 paket terbaru unggahan admin)
+    const angkatansToProcess: { angkatan: string; folderTitle: string }[] = [];
+    if (isSuperAdmin) {
+      angkatansToProcess.push(
+        { angkatan: '24', folderTitle: 'Terbaru (Angkatan 24)' },
+        { angkatan: '25', folderTitle: 'Terbaru (Angkatan 25)' },
+        { angkatan: '26', folderTitle: 'Terbaru (Angkatan 26)' }
+      );
+    } else if (userAngkatan) {
+      angkatansToProcess.push({ angkatan: userAngkatan, folderTitle: 'Terbaru' });
+    } else {
+      angkatansToProcess.push({ angkatan: '25', folderTitle: 'Terbaru' });
+    }
+
+    const terbaruFolders: Record<string, { key: string; displayName: string; questions: Question[] }[]> = {};
+
+    angkatansToProcess.forEach(({ angkatan, folderTitle }) => {
+      // Kumpulkan soal yang diunggah oleh admin untuk angkatan ini
+      const adminBanks = Object.entries(questionDatabase).filter(([key]) => {
+        const uploader = uploaderMap[key];
+        const isByAdmin =
+          !uploader ||
+          uploader === 'admin' ||
+          uploader.toLowerCase().startsWith('admin') ||
+          globalDatabases.includes(key);
+        if (!isByAdmin) return false;
+
+        const bankAng = bankAngkatanMap[key] || 'all';
+        const angList = bankAng.split(',').map((s) => s.trim());
+        return angList.includes('all') || angList.includes(angkatan);
+      });
+
+      // Urutkan dari yang paling baru diupload (created_at descending)
+      adminBanks.sort(([keyA], [keyB]) => {
+        const timeA = bankCreatedAtMap[keyA] ? new Date(bankCreatedAtMap[keyA]).getTime() : 0;
+        const timeB = bankCreatedAtMap[keyB] ? new Date(bankCreatedAtMap[keyB]).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return keyA.localeCompare(keyB);
+      });
+
+      const top10 = adminBanks.slice(0, 10).map(([key, questionsData]) => {
+        let displayName = key;
+        if (key.includes('/')) {
+          displayName = key.split('/').pop() || key;
+        }
+        displayName = displayName.replace(/\.(json|yaml|yml)$/i, '');
+        return {
+          key,
+          displayName,
+          questions: questionsData as Question[],
+        };
+      });
+
+      if (top10.length > 0) {
+        terbaruFolders[folderTitle] = top10;
+      }
+    });
+
+    const mergedFolders: Record<string, { key: string; displayName: string; questions: Question[] }[]> = {
+      ...terbaruFolders,
+      ...folders,
+    };
+
+    return { folders: mergedFolders, rootItems };
+  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap, bankCreatedAtMap, bankAngkatanMap, globalDatabases, uploaderMap, userAngkatan, isSuperAdmin]);
 
   // Filtered databases memo based on search query and category filter
   const filteredDatabases = React.useMemo(() => {
@@ -1516,6 +1623,11 @@ export default function App() {
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [file.name]: targetAngkatan }));
+              setBankCreatedAtMap((prev) => ({ ...prev, [file.name]: new Date().toISOString() }));
+              if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
+                setGlobalDatabases((prev) => [...new Set([...prev, file.name])]);
+                setUploaderMap((prev) => ({ ...prev, [file.name]: profileUsername || 'admin' }));
+              }
             }
 
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
@@ -1617,6 +1729,11 @@ export default function App() {
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
+              setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
+              if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
+                setGlobalDatabases((prev) => [...new Set([...prev, name])]);
+                setUploaderMap((prev) => ({ ...prev, [name]: profileUsername || 'admin' }));
+              }
             }
           } catch (itemErr) {
             console.warn('Gagal menyimpan file folder ke cloud:', name, itemErr);
@@ -1709,6 +1826,11 @@ export default function App() {
             });
           }
           setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
+          setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
+          if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
+            setGlobalDatabases((prev) => [...new Set([...prev, name])]);
+            setUploaderMap((prev) => ({ ...prev, [name]: profileUsername || 'admin' }));
+          }
 
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
         } catch (err) {
@@ -2965,6 +3087,7 @@ export default function App() {
                       onMarkAllRead={markAllNotifRead}
                       pushPermission={typeof Notification !== 'undefined' ? Notification.permission : 'default'}
                       onRequestPush={requestPushPermission}
+                      onItemClick={handleNotificationClick}
                     />
 
                     <button
@@ -3286,18 +3409,26 @@ export default function App() {
                               onDragOver={(e) => e.preventDefault()}
                               onDrop={(e) => {
                                 e.preventDefault();
+                                if (folderPath.startsWith('Terbaru')) {
+                                  triggerToast('Folder "Terbaru" otomatis menampilkan 10 paket soal teranyar.', 'ℹ️');
+                                  return;
+                                }
                                 const quizKey = e.dataTransfer.getData('quizKey');
                                 if (quizKey) handleMoveQuiz(quizKey, folderPath);
                               }}
                               onClick={() => toggleMinimizeFolder(folderPath)}
-                              className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group ${
-                                theme === 'dark'
-                                  ? 'bg-slate-900/60 border-white/[0.08] hover:border-amber-500/40 hover:bg-slate-900/90'
-                                  : 'bg-slate-100/80 border-slate-200 hover:border-amber-500/40 hover:bg-slate-100'
+                              className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] ${
+                                folderPath.startsWith('Terbaru')
+                                  ? theme === 'dark'
+                                    ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-500/60'
+                                    : 'bg-amber-50/70 border-amber-300 hover:border-amber-400'
+                                  : theme === 'dark'
+                                    ? 'bg-slate-900/60 border-white/[0.08] hover:border-amber-500/40 hover:bg-slate-900/90'
+                                    : 'bg-slate-100/80 border-slate-200 hover:border-amber-500/40 hover:bg-slate-100'
                               }`}
                               title={`Buka kolom ${folderPath} (${totalQuestionsInFolder} soal)`}
                             >
-                              <div className="flex flex-col items-center gap-2 mb-3">
+                              <div className="flex flex-col items-center gap-2 mb-3 flex-shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -3309,7 +3440,8 @@ export default function App() {
                                   <Maximize2 className="w-4 h-4" />
                                 </button>
                                 <div className="text-xl">
-                                  {folderPath.toLowerCase().includes('digestif') ? '🫀' : 
+                                  {folderPath.startsWith('Terbaru') ? '✨' :
+                                   folderPath.toLowerCase().includes('digestif') ? '🫀' : 
                                    folderPath.toLowerCase().includes('kardiorespi') ? '🫁' :
                                    folderPath.toLowerCase().includes('muskulo') ? '🦴' :
                                    folderPath.toLowerCase().includes('neuro') ? '🧠' :
@@ -3326,7 +3458,7 @@ export default function App() {
                                 </span>
                               </div>
 
-                              <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
+                              <div className="mt-auto flex flex-col items-center gap-1.5 pt-2 flex-shrink-0">
                                 <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-[10px] font-black border border-amber-500/20">
                                   {totalQuestionsInFolder}
                                 </span>
@@ -3346,25 +3478,44 @@ export default function App() {
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={(e) => {
                               e.preventDefault();
+                              if (folderPath.startsWith('Terbaru')) {
+                                triggerToast('Folder "Terbaru" otomatis menampilkan 10 paket soal teranyar.', 'ℹ️');
+                                return;
+                              }
                               const quizKey = e.dataTransfer.getData('quizKey');
                               if (quizKey) handleMoveQuiz(quizKey, folderPath);
                             }}
-                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col gap-4 rounded-[24px] p-5 border snap-start ${
-                              theme === 'dark' ? 'bg-slate-900/40 border-white/[0.08]' : 'bg-slate-50/50 border-slate-200'
+                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col rounded-[24px] p-5 border snap-start h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] ${
+                              folderPath.startsWith('Terbaru')
+                                ? theme === 'dark'
+                                  ? 'bg-slate-900/60 border-amber-500/30 shadow-lg shadow-amber-500/5'
+                                  : 'bg-white border-amber-300 shadow-md shadow-amber-500/5'
+                                : theme === 'dark' ? 'bg-slate-900/40 border-white/[0.08]' : 'bg-slate-50/50 border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-1 px-1">
+                            <div className="flex items-center justify-between mb-3 px-1 flex-shrink-0">
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div className="w-8 h-8 rounded-lg bg-slate-800/50 dark:bg-slate-950/50 flex items-center justify-center flex-shrink-0 text-sm">
-                                  {folderPath.toLowerCase().includes('digestif') ? '🫀' : 
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm ${
+                                  folderPath.startsWith('Terbaru')
+                                    ? 'bg-amber-500/20 text-amber-500'
+                                    : 'bg-slate-800/50 dark:bg-slate-950/50'
+                                }`}>
+                                  {folderPath.startsWith('Terbaru') ? '✨' :
+                                   folderPath.toLowerCase().includes('digestif') ? '🫀' : 
                                    folderPath.toLowerCase().includes('kardiorespi') ? '🫁' :
                                    folderPath.toLowerCase().includes('muskulo') ? '🦴' :
                                    folderPath.toLowerCase().includes('neuro') ? '🧠' :
                                    folderPath.toLowerCase().includes('urogenital') ? '🩸' : '📁'}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <span className="font-extrabold text-xs uppercase tracking-wider truncate text-amber-500 block">{folderPath}</span>
-                                  {assignedParent ? (
+                                  <span className="font-extrabold text-xs uppercase tracking-wider truncate text-amber-500 block">
+                                    {folderPath}
+                                  </span>
+                                  {folderPath.startsWith('Terbaru') ? (
+                                    <span className="text-[10px] text-amber-500/90 font-bold block truncate">
+                                      10 Paket Terbaru • Otomatis
+                                    </span>
+                                  ) : assignedParent ? (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3404,7 +3555,7 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="flex flex-col gap-3">
+                            <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
                               {filesTyped.map(({ key, displayName, questions }) => {
                                 const isSelected = selectedDatabases.includes(key);
                                 const relatedHistory = quizHistory.filter((h) => h.files && h.files.includes(key));
@@ -3415,6 +3566,7 @@ export default function App() {
                                 return (
                                   <div
                                     key={key}
+                                    id={`quiz-card-${key}`}
                                     draggable
                                     onDragStart={(e) => e.dataTransfer.setData('quizKey', key)}
                                     onClick={() => {
@@ -3422,7 +3574,7 @@ export default function App() {
                                         prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]
                                       );
                                     }}
-                                    className={`relative group flex flex-col p-4 rounded-2xl border transition-all cursor-pointer overflow-hidden ${
+                                    className={`relative group flex flex-col p-4 rounded-2xl border transition-all cursor-pointer overflow-hidden flex-shrink-0 ${
                                       isSelected
                                         ? theme === 'dark' ? 'bg-indigo-500/5 border-indigo-500/30' : 'bg-indigo-50 border-indigo-500/30'
                                         : theme === 'dark' ? 'bg-slate-950/60 border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300'
@@ -3459,6 +3611,13 @@ export default function App() {
                                         }`}>
                                           {questions.length} soal
                                         </span>
+                                        {folderPath.startsWith('Terbaru') && (quizFolderMap[key] || (key.includes('/') ? key.split('/')[0] : null)) && (
+                                          <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-semibold border ${
+                                            theme === 'dark' ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
+                                          }`} title="Folder Asal">
+                                            📁 {quizFolderMap[key] || (key.includes('/') ? key.split('/')[0] : '')}
+                                          </span>
+                                        )}
                                         {bankAngkatanMap[key] && (
                                           <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${
                                             bankAngkatanMap[key] === 'all'
@@ -3579,14 +3738,14 @@ export default function App() {
                               if (quizKey) handleMoveQuiz(quizKey, 'root');
                             }}
                             onClick={() => toggleMinimizeFolder('root')}
-                            className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group ${
+                            className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-[24px] border snap-start transition-all duration-200 cursor-pointer select-none group h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] ${
                               theme === 'dark'
                                 ? 'bg-slate-900/60 border-white/[0.08] hover:border-slate-500/40 hover:bg-slate-900/90'
                                 : 'bg-slate-100/80 border-slate-200 hover:border-slate-500/40 hover:bg-slate-100'
                             }`}
                             title={`Buka kolom Tanpa Folder (${filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)} soal)`}
                           >
-                            <div className="flex flex-col items-center gap-2 mb-3">
+                            <div className="flex flex-col items-center gap-2 mb-3 flex-shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -3609,7 +3768,7 @@ export default function App() {
                               </span>
                             </div>
 
-                            <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
+                            <div className="mt-auto flex flex-col items-center gap-1.5 pt-2 flex-shrink-0">
                               <span className="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-400 flex items-center justify-center text-[10px] font-black border border-slate-500/20">
                                 {filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)}
                               </span>
@@ -3623,10 +3782,10 @@ export default function App() {
                               const quizKey = e.dataTransfer.getData('quizKey');
                               if (quizKey) handleMoveQuiz(quizKey, 'root');
                             }}
-                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col gap-4 rounded-[24px] p-5 border snap-start ${
+                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col rounded-[24px] p-5 border snap-start h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] ${
                             theme === 'dark' ? 'bg-slate-900/40 border-white/[0.08]' : 'bg-slate-50/50 border-slate-200'
                           }`}>
-                            <div className="flex items-center justify-between mb-1 px-1">
+                            <div className="flex items-center justify-between mb-3 px-1 flex-shrink-0">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="w-8 h-8 rounded-lg bg-slate-800/50 dark:bg-slate-950/50 flex items-center justify-center flex-shrink-0 text-sm">
                                   📁
@@ -3647,7 +3806,7 @@ export default function App() {
                               </div>
                             </div>
 
-                          <div className="flex flex-col gap-3">
+                          <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
                             {filteredDatabases.rootItems.map(({ key, displayName, questions }) => {
                               const isSelected = selectedDatabases.includes(key);
                               const relatedHistory = quizHistory.filter((h) => h.files && h.files.includes(key));
@@ -3658,6 +3817,7 @@ export default function App() {
                               return (
                                 <div
                                   key={key}
+                                  id={`quiz-card-${key}`}
                                   draggable
                                   onDragStart={(e) => e.dataTransfer.setData('quizKey', key)}
                                   onClick={() => {
@@ -3665,7 +3825,7 @@ export default function App() {
                                       prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]
                                     );
                                   }}
-                                  className={`relative group flex flex-col p-4 rounded-2xl border transition-all cursor-pointer overflow-hidden ${
+                                  className={`relative group flex flex-col p-4 rounded-2xl border transition-all cursor-pointer overflow-hidden flex-shrink-0 ${
                                     isSelected
                                       ? theme === 'dark' ? 'bg-indigo-500/5 border-indigo-500/30' : 'bg-indigo-50 border-indigo-500/30'
                                       : theme === 'dark' ? 'bg-slate-950/60 border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300'

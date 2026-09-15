@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { cloudflareApi } from '../services/cloudflareApi';
 import { formatNotifTime } from '../utils/appHelpers';
 
-export function useNotifications(currentUser: any, srs: any, triggerToast: (msg: string, icon?: string) => void) {
+export function useNotifications(currentUser: any, srs: any, triggerToast: (msg: string, icon?: string) => void, userAngkatan?: string) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<{ id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }[]>([]);
   const [notifCount, setNotifCount] = useState(0);
@@ -80,7 +80,7 @@ export function useNotifications(currentUser: any, srs: any, triggerToast: (msg:
       }
 
       // 2. Kuis baru sejak lastCheck dari Cloudflare D1
-      const allBanks = await cloudflareApi.getQuestionBanks();
+      const allBanks = await cloudflareApi.getQuestionBanks(userAngkatan);
       const newBanks = (allBanks || []).filter((b: any) => {
         if (!b.created_at) return false;
         return new Date(b.created_at) >= lastCheckDate;
@@ -120,7 +120,7 @@ export function useNotifications(currentUser: any, srs: any, triggerToast: (msg:
     } catch (err) {
       console.error('Error fetching notifications:', err);
     }
-  }, [currentUser, srs, showBrowserNotification]);
+  }, [currentUser, srs, showBrowserNotification, userAngkatan]);
 
   const markAllNotifRead = () => {
     localStorage.setItem('cbt_last_notif_check', new Date().toISOString());

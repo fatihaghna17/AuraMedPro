@@ -20,10 +20,11 @@ interface NotificationDropdownProps {
   onMarkAllRead: () => void;
   pushPermission: NotificationPermission | 'default';
   onRequestPush: () => void;
+  onItemClick?: (notif: NotificationItem) => void;
 }
 
 export default function NotificationDropdown({
-  theme, isOpen, onClose, onToggle, notifList, notifCount, onMarkAllRead, pushPermission, onRequestPush,
+  theme, isOpen, onClose, onToggle, notifList, notifCount, onMarkAllRead, pushPermission, onRequestPush, onItemClick,
 }: NotificationDropdownProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -95,24 +96,42 @@ export default function NotificationDropdown({
                 notifList.map((notif) => (
                   <div
                     key={notif.id}
-                    className={`flex items-start gap-3 px-4 py-3 border-b last:border-b-0 transition-colors cursor-default ${
+                    onClick={() => {
+                      onItemClick?.(notif);
+                      onClose();
+                    }}
+                    className={`group flex items-start gap-3 px-4 py-3 border-b last:border-b-0 transition-all cursor-pointer ${
                       theme === 'dark'
-                        ? 'border-slate-800/50 hover:bg-slate-800/30'
-                        : 'border-slate-50 hover:bg-slate-50'
+                        ? 'border-slate-800/50 hover:bg-slate-800/60 active:bg-slate-800/80'
+                        : 'border-slate-100 hover:bg-indigo-50/60 active:bg-indigo-100/60'
                     }`}
                   >
-                    <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${
                       notif.type === 'srs' ? 'bg-amber-500/10 text-amber-500' : 'bg-indigo-500/10 text-indigo-500'
                     }`}>
                       {notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold leading-snug ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
+                      <p className={`text-xs font-semibold leading-snug transition-colors ${
+                        theme === 'dark' ? 'text-slate-200 group-hover:text-indigo-400' : 'text-slate-700 group-hover:text-indigo-600'
+                      }`}>
                         {notif.text}
                       </p>
-                      <p className={`text-[10px] mt-0.5 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {notif.time}
-                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className={`text-[10px] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {notif.time}
+                        </span>
+                        {notif.type === 'new_quiz' && (
+                          <span className="text-[10px] font-bold text-indigo-500 group-hover:underline flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                            Pilih soal & buka →
+                          </span>
+                        )}
+                        {notif.type === 'srs' && (
+                          <span className="text-[10px] font-bold text-amber-500 group-hover:underline flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                            Review sekarang →
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))

@@ -38,6 +38,7 @@ export function useAuth({
   const [globalDatabases, setGlobalDatabases] = useState<string[]>([]);
   const [uploaderMap, setUploaderMap] = useState<Record<string, string>>({});
   const [bankAngkatanMap, setBankAngkatanMap] = useState<Record<string, string>>({});
+  const [bankCreatedAtMap, setBankCreatedAtMap] = useState<Record<string, string>>({});
   const [questionDatabase, setQuestionDatabase] = useState<Record<string, Question[]>>({});
   
   const isLoggingInRef = useRef(false);
@@ -293,6 +294,7 @@ export function useAuth({
               name: b.name,
               user_id: b.user_id,
               angkatan: b.angkatan,
+              created_at: b.created_at,
               questions_json: questionsPayload,
               profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
             };
@@ -305,10 +307,14 @@ export function useAuth({
       const globals: string[] = [];
       const uploaders: Record<string, string> = {};
       const angkatans: Record<string, string> = {};
+      const createdAts: Record<string, string> = {};
 
       if (data) {
         data.forEach((b: any) => {
           angkatans[b.name] = b.angkatan || 'all';
+          if (b.created_at) {
+            createdAts[b.name] = b.created_at;
+          }
         });
 
         const fetchPromises = data.map(async (row: any) => {
@@ -401,6 +407,7 @@ export function useAuth({
 
       setUploaderMap(uploaders);
       setBankAngkatanMap(angkatans);
+      setBankCreatedAtMap(createdAts);
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
       if (username === 'admin' && Object.keys(mappedData).length === 0) {
@@ -609,12 +616,12 @@ export function useAuth({
   return {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };
