@@ -61,11 +61,14 @@ interface SetupHomeTabProps {
   deleteHistoryItem: any;
   isSuperAdmin?: boolean;
   isAdminAngkatan?: boolean;
-  adminAngkatanFilter?: 'all' | '24' | '25' | '26';
-  setAdminAngkatanFilter?: (filter: 'all' | '24' | '25' | '26') => void;
+  adminAngkatanFilter?: 'all' | '23' | '24' | '25' | '26';
+  setAdminAngkatanFilter?: (filter: 'all' | '23' | '24' | '25' | '26') => void;
   userAngkatan?: string;
+  userProdi?: string | null;
   leaderboardScope?: 'my' | 'all';
   setLeaderboardScope?: (scope: 'my' | 'all') => void;
+  leaderboardProdiFilter?: string;
+  setLeaderboardProdiFilter?: (filter: string) => void;
 }
 
 export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
@@ -86,8 +89,11 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   adminAngkatanFilter = 'all',
   setAdminAngkatanFilter,
   userAngkatan,
+  userProdi,
   leaderboardScope = 'all',
-  setLeaderboardScope
+  setLeaderboardScope,
+  leaderboardProdiFilter = 'all',
+  setLeaderboardProdiFilter
 }) => {
   const savedFrameId = getSavedAvatarFrame();
   const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
@@ -460,6 +466,52 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       )}
                     </div>
 
+                    {/* Filters: Prodi Filter Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 border-b border-slate-200/40 dark:border-slate-800/40">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
+                          Program Studi:
+                        </span>
+                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 flex-wrap">
+                          {[
+                            { key: 'all', label: 'Semua Prodi', icon: '🌐' },
+                            { key: 'kedokteran', label: 'Kedokteran', icon: '🩺' },
+                            { key: 'farmasi', label: 'Farmasi', icon: '💊' },
+                            { key: 'kebidanan', label: 'Kebidanan', icon: '👶' },
+                          ].map((item) => {
+                            const isSelected = (leaderboardProdiFilter || 'all') === item.key;
+                            const isMyProdi = userProdi && userProdi.toLowerCase() === item.key;
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                onClick={() => setLeaderboardProdiFilter && setLeaderboardProdiFilter(item.key)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isSelected
+                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                              >
+                                <span>{item.icon}</span>
+                                <span>{item.label}</span>
+                                {isMyProdi && (
+                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase tracking-wider ${
+                                    isSelected ? 'bg-white/25 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
+                                  }`}>
+                                    Saya
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <span className="self-end sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                        {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
+                      </span>
+                    </div>
+
                     {/* Filters Row: Angkatan & Time Filter */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
                       {/* Left: Info Angkatan (User) / Dropdown Pilih Angkatan (Admin Super) / Badge Angkatan (Admin Angkatan) */}
@@ -478,21 +530,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                   : 'bg-white border-slate-200 text-slate-800'
                               }`}
                             >
-                              <option value="all">🌐 Semua Peringkat (Seluruh User Lintas Angkatan)</option>
+                              <option value="all">🌐 Semua Angkatan (Seluruh User)</option>
+                              <option value="23">Angkatan 2023 (Seluruh User)</option>
                               <option value="24">Angkatan 2024 (Seluruh User)</option>
                               <option value="25">Angkatan 2025 (Seluruh User)</option>
                               <option value="26">Angkatan 2026 (Seluruh User)</option>
                             </select>
                           </div>
-                          <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                            {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
-                          </span>
                         </div>
                       ) : isAdminAngkatan ? (
                         <div className="flex items-center gap-2">
                           <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5 shadow-sm">
                             <span>🛡️</span>
-                            <span>Admin Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'} — Peringkat Seluruh Mahasiswa ({leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} User)</span>
+                            <span>Admin Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'} — Seluruh Mahasiswa</span>
                           </span>
                         </div>
                       ) : (
@@ -540,9 +590,9 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                               key={filter.key}
                               onClick={() => {
                                 if (leaderboardType === 'global') {
-                                  setGlobalTimeFilter(filter.key as any);
+                                   setGlobalTimeFilter(filter.key as any);
                                 } else {
-                                  setFileTimeFilter(filter.key as any);
+                                   setFileTimeFilter(filter.key as any);
                                 }
                               }}
                               className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
@@ -725,6 +775,24 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                           {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
+                                        {/* Prodi Badge */}
+                                        {(() => {
+                                          const rowProdi = (row.prodi || 'kedokteran').toLowerCase();
+                                          const isFarmasi = rowProdi === 'farmasi';
+                                          const isKebidanan = rowProdi === 'kebidanan';
+                                          return (
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border flex items-center gap-1 ${
+                                              isFarmasi
+                                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                                : isKebidanan
+                                                ? 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30'
+                                                : 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30'
+                                            }`}>
+                                              <span>{isFarmasi ? '💊' : isKebidanan ? '👶' : '🩺'}</span>
+                                              <span>{isFarmasi ? 'Farmasi' : isKebidanan ? 'Kebidanan' : 'Kedokteran'}</span>
+                                            </span>
+                                          );
+                                        })()}
                                         {row.angkatan && (
                                           <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border ${
                                             hasSultanAura
@@ -871,6 +939,24 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                           {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
+                                        {/* Prodi Badge */}
+                                        {(() => {
+                                          const rowProdi = (row.prodi || 'kedokteran').toLowerCase();
+                                          const isFarmasi = rowProdi === 'farmasi';
+                                          const isKebidanan = rowProdi === 'kebidanan';
+                                          return (
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border flex items-center gap-1 ${
+                                              isFarmasi
+                                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                                : isKebidanan
+                                                ? 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30'
+                                                : 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30'
+                                            }`}>
+                                              <span>{isFarmasi ? '💊' : isKebidanan ? '👶' : '🩺'}</span>
+                                              <span>{isFarmasi ? 'Farmasi' : isKebidanan ? 'Kebidanan' : 'Kedokteran'}</span>
+                                            </span>
+                                          );
+                                        })()}
                                         {row.angkatan && (
                                           <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border ${
                                             hasSultanAura

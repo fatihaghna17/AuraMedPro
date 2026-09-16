@@ -44,8 +44,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         }
 
         if (prodi && prodi !== 'all') {
-          query += ` AND prodi = ?`;
-          binds.push(prodi);
+          if (prodi === 'kedokteran') {
+            query += ` AND (prodi = ? OR prodi IS NULL OR prodi = '')`;
+            binds.push(prodi);
+          } else {
+            query += ` AND prodi = ?`;
+            binds.push(prodi);
+          }
         }
         
         query += ` ORDER BY total_questions_answered DESC LIMIT 1000`;
@@ -95,8 +100,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         }
 
         if (prodi && prodi !== 'all') {
-          query += ` AND p.prodi = ?`;
-          binds.push(prodi);
+          if (prodi === 'kedokteran') {
+            query += ` AND (p.prodi = ? OR p.prodi IS NULL OR p.prodi = '')`;
+            binds.push(prodi);
+          } else {
+            query += ` AND p.prodi = ?`;
+            binds.push(prodi);
+          }
         }
 
         query += `
@@ -169,8 +179,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       }
 
       if (prodi && prodi !== 'all') {
-        query += ' AND p.prodi = ?';
-        binds.push(prodi);
+        if (prodi === 'kedokteran') {
+          query += ` AND (p.prodi = ? OR p.prodi IS NULL OR p.prodi = '')`;
+          binds.push(prodi);
+        } else {
+          query += ` AND p.prodi = ?`;
+          binds.push(prodi);
+        }
       }
 
       query += ' ORDER BY l.score DESC, l.questions_count DESC LIMIT 1000';

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useLeaderboard(
@@ -7,7 +7,8 @@ export function useLeaderboard(
   triggerToast: (msg: string, icon?: string) => void,
   angkatan?: string,
   isSuperAdmin?: boolean,
-  isAdminAngkatan?: boolean
+  isAdminAngkatan?: boolean,
+  userProdi?: string
 ) {
   const [globalLeaderboard, setGlobalLeaderboard] = useState<any[]>([]);
   const [fileLeaderboard, setFileLeaderboard] = useState<any[]>([]);
@@ -20,7 +21,18 @@ export function useLeaderboard(
   const [selectedLeaderboardFile, setSelectedLeaderboardFile] = useState<string>('');
   const [activeDashboardTab, setActiveDashboardTab] = useState<'riwayat' | 'leaderboard'>('riwayat');
   const [leaderboardScope, setLeaderboardScope] = useState<'my' | 'all'>('my');
-  const [adminAngkatanFilter, setAdminAngkatanFilter] = useState<'all' | '24' | '25' | '26'>('all');
+  const [adminAngkatanFilter, setAdminAngkatanFilter] = useState<'all' | '23' | '24' | '25' | '26'>('all');
+  const [leaderboardProdiFilter, setLeaderboardProdiFilter] = useState<string>(
+    isSuperAdmin ? 'all' : (userProdi || 'all')
+  );
+
+  const initialSyncDone = useRef(false);
+  useEffect(() => {
+    if (userProdi && !isSuperAdmin && !initialSyncDone.current) {
+      initialSyncDone.current = true;
+      setLeaderboardProdiFilter(userProdi);
+    }
+  }, [userProdi, isSuperAdmin]);
 
   const getTargetAngkatan = useCallback(() => {
     if (isSuperAdmin) {
@@ -38,11 +50,19 @@ export function useLeaderboard(
     return angkatan || undefined;
   }, [isSuperAdmin, isAdminAngkatan, adminAngkatanFilter, leaderboardScope, angkatan]);
 
-  async function fetchGlobalLeaderboard(angkatanOverride?: string) {
+  const getTargetProdi = useCallback(() => {
+    if (leaderboardProdiFilter && leaderboardProdiFilter !== 'all') {
+      return leaderboardProdiFilter;
+    }
+    return undefined;
+  }, [leaderboardProdiFilter]);
+
+  async function fetchGlobalLeaderboard(angkatanOverride?: string, prodiOverride?: string) {
     try {
       setIsLeaderboardLoading(true);
-      const target = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
-      const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter, target);
+      const targetAngkatan = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
+      const targetProdi = prodiOverride !== undefined ? prodiOverride : getTargetProdi();
+      const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter, targetAngkatan, targetProdi);
       const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
       if (isAnyAdmin) {
         // Admin (super admin maupun admin angkatan) melihat seluruh user
@@ -66,12 +86,13 @@ export function useLeaderboard(
     }
   }
 
-  const fetchFileLeaderboard = async (fileName: string, angkatanOverride?: string) => {
+  const fetchFileLeaderboard = async (fileName: string, angkatanOverride?: string, prodiOverride?: string) => {
     if (!fileName) return;
     try {
       setIsLeaderboardLoading(true);
-      const target = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
-      const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter, target);
+      const targetAngkatan = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
+      const targetProdi = prodiOverride !== undefined ? prodiOverride : getTargetProdi();
+      const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter, targetAngkatan, targetProdi);
       const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
       if (isAnyAdmin) {
         // Admin (super admin maupun admin angkatan) melihat seluruh user
@@ -126,6 +147,7 @@ export function useLeaderboard(
     lastQuizScore, globalTimeFilter, fileTimeFilter, leaderboardType, selectedLeaderboardFile, activeDashboardTab,
     adminAngkatanFilter, setAdminAngkatanFilter,
     leaderboardScope, setLeaderboardScope,
+    leaderboardProdiFilter, setLeaderboardProdiFilter,
     setGlobalLeaderboard, setFileLeaderboard, setIsLeaderboardLoading, setHasSubmittedLeaderboard,
     setLastQuizScore, setGlobalTimeFilter, setFileTimeFilter, setLeaderboardType, setSelectedLeaderboardFile, setActiveDashboardTab,
     fetchGlobalLeaderboard, fetchFileLeaderboard, recordQuizToLeaderboard

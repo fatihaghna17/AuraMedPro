@@ -510,10 +510,11 @@ export default function App() {
     lastQuizScore, globalTimeFilter, fileTimeFilter, leaderboardType, selectedLeaderboardFile, activeDashboardTab,
     adminAngkatanFilter, setAdminAngkatanFilter,
     leaderboardScope, setLeaderboardScope,
+    leaderboardProdiFilter, setLeaderboardProdiFilter,
     setIsLeaderboardLoading, setHasSubmittedLeaderboard, setLastQuizScore, setGlobalTimeFilter, setFileTimeFilter,
     setLeaderboardType, setSelectedLeaderboardFile, setActiveDashboardTab,
     fetchGlobalLeaderboard, fetchFileLeaderboard, recordQuizToLeaderboard
-  } = useLeaderboard(currentUser, profileUsername, triggerToast, userAngkatan || undefined, isSuperAdmin, isAdminAngkatan);
+  } = useLeaderboard(currentUser, profileUsername, triggerToast, userAngkatan || undefined, isSuperAdmin, isAdminAngkatan, userProdi || undefined);
 // extracted leaderboard state
 // extracted leaderboard state
 // extracted leaderboard state
@@ -1363,13 +1364,13 @@ export default function App() {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin]);
+  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
 
   useEffect(() => {
     if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
       fetchGlobalLeaderboard();
     }
-  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin]);
+  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
 
 
 
@@ -3180,7 +3181,7 @@ export default function App() {
               </div>
             }>
             {/* 🏠 TAB 1: BERANDA */}
-            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} />}
+            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} userProdi={userProdi} leaderboardProdiFilter={leaderboardProdiFilter} setLeaderboardProdiFilter={setLeaderboardProdiFilter} />}
 
             {/* 📚 TAB 2: BANK SOAL */}
             {dashboardTab === 'banks' && (
