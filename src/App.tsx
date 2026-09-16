@@ -353,12 +353,33 @@ export default function App() {
     return userProdi || 'all';
   };
 
+  const formatProdiBadgeText = (prodiRaw?: string) => {
+    if (!prodiRaw || prodiRaw === 'all') return '🌐 Semua Prodi';
+    const prodis = prodiRaw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (prodis.length === 0 || prodis.length >= 3 || prodis.includes('all')) return '🌐 Semua Prodi';
+    const labels = prodis.map((p) => {
+      if (p === 'kedokteran') return '🩺 Kedokteran';
+      if (p === 'farmasi') return '💊 Farmasi';
+      if (p === 'kebidanan') return '👶 Kebidanan';
+      return p;
+    });
+    return labels.join(' + ');
+  };
+
+  const formatAngkatanBadgeText = (angRaw?: string) => {
+    if (!angRaw || angRaw === 'all') return '🌐 Semua';
+    const angs = angRaw.split(',').map((s) => s.trim()).filter(Boolean);
+    if (angs.length === 0 || angs.includes('all')) return '🌐 Semua';
+    return `Angkatan ${angs.join(' & ')}`;
+  };
+
   const handleChangeBankDistribution = async (bankName: string, newAngkatan: string, newProdi: string) => {
     try {
       const success = await cloudflareApi.updateQuestionBankDistribution(bankName, newAngkatan, newProdi);
       if (success) {
-        const prodiLabel = newProdi === 'all' ? 'Semua Prodi' : newProdi === 'farmasi' ? 'Farmasi' : newProdi === 'kebidanan' ? 'Kebidanan' : 'Kedokteran';
-        triggerToast(`Target distribusi "${bankName}" diubah (${prodiLabel} - ${newAngkatan === 'all' ? 'Seluruh Angkatan' : `Angkatan ${newAngkatan}`})`, '✅');
+        const prodiLabel = formatProdiBadgeText(newProdi);
+        const angLabel = formatAngkatanBadgeText(newAngkatan);
+        triggerToast(`Target distribusi "${bankName}" diubah (${prodiLabel} - ${angLabel})`, '✅');
         setBankAngkatanMap((prev) => ({ ...prev, [bankName]: newAngkatan }));
         setBankProdiMap((prev) => ({ ...prev, [bankName]: newProdi }));
         setChangeDistributionModal({ isOpen: false, bankName: '', currentAngkatan: 'all', currentProdi: 'all' });
@@ -3673,7 +3694,7 @@ export default function App() {
                                               ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
                                               : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                                           }`}>
-                                            {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
+                                            {formatAngkatanBadgeText(bankAngkatanMap[key])}
                                           </span>
                                         )}
                                         {bankProdiMap[key] && (
@@ -3686,7 +3707,7 @@ export default function App() {
                                               ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
                                               : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
                                           }`}>
-                                            {bankProdiMap[key] === 'farmasi' ? '💊 Farmasi' : bankProdiMap[key] === 'kebidanan' ? '👶 Kebidanan' : bankProdiMap[key] === 'kedokteran' ? '🩺 Kedokteran' : '🌐 Semua Prodi'}
+                                            {formatProdiBadgeText(bankProdiMap[key])}
                                           </span>
                                         )}
                                       </div>
@@ -3931,7 +3952,7 @@ export default function App() {
                                             ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
                                             : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                                         }`}>
-                                          {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
+                                          {formatAngkatanBadgeText(bankAngkatanMap[key])}
                                         </span>
                                       )}
                                       {bankProdiMap[key] && (
@@ -3944,7 +3965,7 @@ export default function App() {
                                             ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
                                             : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
                                         }`}>
-                                          {bankProdiMap[key] === 'farmasi' ? '💊 Farmasi' : bankProdiMap[key] === 'kebidanan' ? '👶 Kebidanan' : bankProdiMap[key] === 'kedokteran' ? '🩺 Kedokteran' : '🌐 Semua Prodi'}
+                                          {formatProdiBadgeText(bankProdiMap[key])}
                                         </span>
                                       )}
                                     </div>
@@ -4755,80 +4776,185 @@ export default function App() {
             Atur prodi dan angkatan mana yang diizinkan untuk melihat bank soal ini di dashboard dan latihan.
           </p>
 
-          {/* Pilih Prodi */}
-          <div className="mb-4">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Target Program Studi
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'all', label: '🌐 Seluruh Prodi' },
-                { id: 'kedokteran', label: '🩺 Kedokteran' },
-                { id: 'farmasi', label: '💊 Farmasi' },
-                { id: 'kebidanan', label: '👶 Kebidanan' },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => {
-                    setChangeDistributionModal((prev) => {
-                      const nextProdi = opt.id;
-                      let nextAngkatan = prev.currentAngkatan;
-                      if (nextProdi === 'farmasi' && (nextAngkatan === '25' || nextAngkatan === '26' || nextAngkatan === '24,25')) {
-                        nextAngkatan = '24';
-                      } else if (nextProdi !== 'farmasi' && (nextAngkatan === '23' || nextAngkatan === '23,24')) {
-                        nextAngkatan = '24';
-                      }
-                      return { ...prev, currentProdi: nextProdi, currentAngkatan: nextAngkatan };
-                    });
-                  }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
-                    changeDistributionModal.currentProdi === opt.id
-                      ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
-                      : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  {changeDistributionModal.currentProdi === opt.id && <Check className="w-3.5 h-3.5 text-white" />}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Multi-select Prodi & Angkatan */}
+          {(() => {
+            const rawProdi = changeDistributionModal.currentProdi || 'all';
+            const prodiList = rawProdi === 'all' 
+              ? ['all'] 
+              : rawProdi.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+            
+            const handleToggleProdi = (id: string) => {
+              setChangeDistributionModal((prev) => {
+                let current = prev.currentProdi === 'all' 
+                  ? [] 
+                  : prev.currentProdi.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+                let next: string[];
+                if (id === 'all') {
+                  next = ['all'];
+                } else {
+                  current = current.filter((p) => p !== 'all');
+                  if (current.includes(id)) {
+                    next = current.filter((p) => p !== id);
+                  } else {
+                    next = [...current, id];
+                  }
+                  if (next.length === 0 || next.length >= 3) {
+                    next = ['all'];
+                  }
+                }
+                const nextProdiStr = next.join(',');
 
-          {/* Pilih Angkatan */}
-          <div className="mb-6">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Target Angkatan {changeDistributionModal.currentProdi === 'farmasi' ? '(Farmasi: 23 & 24)' : ''}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(changeDistributionModal.currentProdi === 'farmasi' ? [
-                { id: 'all', label: '🌐 Semua Angkatan' },
-                { id: '23', label: 'Angkatan 23' },
-                { id: '24', label: 'Angkatan 24' },
-                { id: '23,24', label: 'Angkatan 23 & 24' },
-              ] : [
-                { id: 'all', label: '🌐 Semua Angkatan' },
-                { id: '24', label: 'Angkatan 24' },
-                { id: '25', label: 'Angkatan 25' },
-                { id: '26', label: 'Angkatan 26' },
-                { id: '24,25', label: 'Angkatan 24 & 25' },
-              ]).map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setChangeDistributionModal((prev) => ({ ...prev, currentAngkatan: opt.id }))}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
-                    changeDistributionModal.currentAngkatan === opt.id
-                      ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
-                      : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  {changeDistributionModal.currentAngkatan === opt.id && <Check className="w-3.5 h-3.5 text-white" />}
-                </button>
-              ))}
-            </div>
-          </div>
+                // Validasi dan penyesuaian angkatan
+                const hasFarmasi = next.includes('all') || next.includes('farmasi');
+                const hasOthers = next.includes('all') || next.includes('kedokteran') || next.includes('kebidanan');
+                let angList = prev.currentAngkatan === 'all' 
+                  ? ['all'] 
+                  : prev.currentAngkatan.split(',').map((s) => s.trim()).filter(Boolean);
+                
+                if (!hasFarmasi) {
+                  angList = angList.filter((a) => a !== '23');
+                }
+                if (!hasOthers && hasFarmasi) {
+                  angList = angList.filter((a) => a !== '25' && a !== '26');
+                }
+                if (angList.length === 0) angList = ['all'];
+
+                return {
+                  ...prev,
+                  currentProdi: nextProdiStr,
+                  currentAngkatan: angList.join(','),
+                };
+              });
+            };
+
+            const rawAng = changeDistributionModal.currentAngkatan || 'all';
+            const angList = rawAng === 'all' 
+              ? ['all'] 
+              : rawAng.split(',').map((s) => s.trim()).filter(Boolean);
+
+            const handleToggleAngkatan = (id: string) => {
+              setChangeDistributionModal((prev) => {
+                let current = prev.currentAngkatan === 'all' 
+                  ? [] 
+                  : prev.currentAngkatan.split(',').map((s) => s.trim()).filter(Boolean);
+                let next: string[];
+                if (id === 'all') {
+                  next = ['all'];
+                } else {
+                  current = current.filter((a) => a !== 'all');
+                  if (current.includes(id)) {
+                    next = current.filter((a) => a !== id);
+                  } else {
+                    next = [...current, id].sort();
+                  }
+                  if (next.length === 0) {
+                    next = ['all'];
+                  }
+                }
+                return { ...prev, currentAngkatan: next.join(',') };
+              });
+            };
+
+            const show23 = prodiList.includes('all') || prodiList.includes('farmasi');
+            const show2526 = prodiList.includes('all') || prodiList.includes('kedokteran') || prodiList.includes('kebidanan');
+
+            return (
+              <>
+                {/* Live Preview Box */}
+                <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-0.5">
+                    Target Distribusi Terpilih:
+                  </div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {formatProdiBadgeText(changeDistributionModal.currentProdi)} • {formatAngkatanBadgeText(changeDistributionModal.currentAngkatan)}
+                  </div>
+                </div>
+
+                {/* Pilih Prodi (Bisa Multi-Select) */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      Target Program Studi (Bisa Pilih Banyak)
+                    </label>
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                      {prodiList.includes('all') ? 'Semua Prodi' : `${prodiList.length} Prodi Terpilih`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'all', label: '🌐 Seluruh Prodi' },
+                      { id: 'kedokteran', label: '🩺 Kedokteran' },
+                      { id: 'farmasi', label: '💊 Farmasi' },
+                      { id: 'kebidanan', label: '👶 Kebidanan' },
+                    ].map((opt) => {
+                      const isSelected = prodiList.includes(opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleToggleProdi(opt.id)}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between cursor-pointer ${
+                            isSelected
+                              ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
+                              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                            isSelected ? 'bg-white text-purple-600 border-white' : 'border-slate-400 dark:border-slate-600'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Pilih Angkatan (Bisa Multi-Select) */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      Target Angkatan (Bisa Pilih Banyak)
+                    </label>
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                      {angList.includes('all') ? 'Semua Angkatan' : `${angList.length} Angkatan Terpilih`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'all', label: '🌐 Semua Angkatan', visible: true },
+                      { id: '23', label: 'Angkatan 23 (Farmasi)', visible: show23 },
+                      { id: '24', label: 'Angkatan 24', visible: true },
+                      { id: '25', label: 'Angkatan 25', visible: show2526 },
+                      { id: '26', label: 'Angkatan 26', visible: show2526 },
+                    ].filter((opt) => opt.visible).map((opt) => {
+                      const isSelected = angList.includes(opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleToggleAngkatan(opt.id)}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between cursor-pointer ${
+                            isSelected
+                              ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
+                              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                            isSelected ? 'bg-white text-purple-600 border-white' : 'border-slate-400 dark:border-slate-600'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           <div className="flex gap-2 justify-end">
             <button
