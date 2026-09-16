@@ -19,6 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const filter = url.searchParams.get('filter') || 'all';
   const fileName = url.searchParams.get('file_name');
   const angkatan = url.searchParams.get('angkatan');
+  const prodi = url.searchParams.get('prodi');
 
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
@@ -31,7 +32,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     if (type === 'global') {
       if (filter === 'all') {
         let query = `
-          SELECT id, username, total_questions_answered, level, angkatan
+          SELECT id, username, total_questions_answered, level, angkatan, prodi
           FROM profiles
           WHERE total_questions_answered > 0
         `;
@@ -40,6 +41,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         if (angkatan && angkatan !== 'all') {
           query += ` AND angkatan = ?`;
           binds.push(angkatan);
+        }
+
+        if (prodi && prodi !== 'all') {
+          query += ` AND prodi = ?`;
+          binds.push(prodi);
         }
         
         query += ` ORDER BY total_questions_answered DESC LIMIT 1000`;
@@ -75,6 +81,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             p.username, 
             p.level, 
             p.angkatan,
+            p.prodi,
             SUM(qhl.correct_count) as total_questions_answered
           FROM quiz_history_logs qhl
           JOIN profiles p ON qhl.user_id = p.id
@@ -87,8 +94,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
           binds.push(angkatan);
         }
 
+        if (prodi && prodi !== 'all') {
+          query += ` AND p.prodi = ?`;
+          binds.push(prodi);
+        }
+
         query += `
-          GROUP BY p.id, p.username, p.level, p.angkatan
+          GROUP BY p.id, p.username, p.level, p.angkatan, p.prodi
           ORDER BY total_questions_answered DESC
           LIMIT 1000
         `;
@@ -104,21 +116,24 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     if (type === 'file') {
       if (!fileName) {
-        return new Response(JSON.stringify({ data: [] }), {
-          status: 200,
+        return new Response(JSON.stringify({ error: 'file_name wajib diisi untuk type file' }), {
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
       let query = `
         SELECT 
+          l.id,
           l.user_id,
+          p.username,
           l.score,
           l.questions_count,
+          l.time_spent,
           l.created_at,
-          p.username,
           p.level,
           p.angkatan,
+          p.prodi,
           p.total_questions_answered
         FROM leaderboard l
         JOIN profiles p ON l.user_id = p.id
@@ -151,6 +166,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       if (angkatan && angkatan !== 'all') {
         query += ' AND p.angkatan = ?';
         binds.push(angkatan);
+      }
+
+      if (prodi && prodi !== 'all') {
+        query += ' AND p.prodi = ?';
+        binds.push(prodi);
       }
 
       query += ' ORDER BY l.score DESC, l.questions_count DESC LIMIT 1000';

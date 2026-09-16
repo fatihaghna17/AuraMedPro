@@ -31,6 +31,7 @@ export function useAuth({
   const [profileUsername, setProfileUsername] = useState('user');
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userAngkatan, setUserAngkatan] = useState<string | null>(null);
+  const [userProdi, setUserProdi] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'expired'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>('2026-09-14T05:00:00Z');
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export function useAuth({
   const [globalDatabases, setGlobalDatabases] = useState<string[]>([]);
   const [uploaderMap, setUploaderMap] = useState<Record<string, string>>({});
   const [bankAngkatanMap, setBankAngkatanMap] = useState<Record<string, string>>({});
+  const [bankProdiMap, setBankProdiMap] = useState<Record<string, string>>({});
   const [bankCreatedAtMap, setBankCreatedAtMap] = useState<Record<string, string>>({});
   const [questionDatabase, setQuestionDatabase] = useState<Record<string, Question[]>>({});
   
@@ -129,12 +131,14 @@ export function useAuth({
         setXpHistory([profile.xp || 0]);
         setProfileUsername(profile.username || 'user');
         
-        // Simpan state profil, angkatan, dan subscription
+        // Simpan state profil, angkatan, prodi, dan subscription
         setUserProfile(profile);
         setUserAngkatan(profile.angkatan || null);
+        setUserProdi(profile.prodi || 'kedokteran');
         setSubscriptionStatus(profile.subscription_status || 'trial');
         
         const trialEndsMap: Record<string, string> = {
+          '23': '2026-09-14T05:00:00Z',
           '24': '2026-09-14T05:00:00Z',
           '25': '2026-09-17T05:00:00Z',
           '26': '2026-09-22T05:00:00Z',
@@ -162,7 +166,8 @@ export function useAuth({
           level: profile.level || 1,
           total_questions_answered: profile.total_questions_answered || 0,
           last_active: lastActive || new Date().toISOString(),
-          angkatan: profile.angkatan
+          angkatan: profile.angkatan,
+          prodi: profile.prodi || 'kedokteran'
         }).catch((cfErr) => console.warn('Sync profile to D1 failed (best-effort):', cfErr));
       }
 
@@ -173,7 +178,7 @@ export function useAuth({
       );
       await Promise.race([
         Promise.all([
-          fetchUserQuestions(userId, profile?.username || 'user', profile?.angkatan),
+          fetchUserQuestions(userId, profile?.username || 'user', profile?.angkatan, profile?.prodi || 'kedokteran'),
           checkActiveQuizSession(userId),
           fetchGlobalLeaderboard(),
         ]),
@@ -246,13 +251,14 @@ export function useAuth({
     }
   };
 
-  const fetchUserQuestions = async (userId: string, username: string, angkatan?: string) => {
+  const fetchUserQuestions = async (userId: string, username: string, angkatan?: string, prodi?: string) => {
     try {
       // 1. Ambil metadata bank soal dari Cloudflare D1 (0 Egress!)
-      // Hanya admin super yang mengambil seluruh soal lintas angkatan
+      // Hanya admin super yang mengambil seluruh soal lintas angkatan dan prodi
       const isSuper = username === 'admin' || userProfile?.role === 'super_admin';
       const queryAngkatan = isSuper ? undefined : angkatan;
-      const cfBanks = await cloudflareApi.getQuestionBanks(queryAngkatan);
+      const queryProdi = isSuper ? undefined : prodi;
+      const cfBanks = await cloudflareApi.getQuestionBanks(queryAngkatan, queryProdi);
       
       let data: any[] = [];
       if (cfBanks && cfBanks.length > 0) {
@@ -262,6 +268,10 @@ export function useAuth({
 
             const bankAngkatans = (b.angkatan || 'all').split(',').map(s => s.trim());
             const angkatanMatch = bankAngkatans.includes('all') || (angkatan && bankAngkatans.includes(angkatan));
+
+            const bankProdis = (b.prodi || 'all').split(',').map(s => s.trim().toLowerCase());
+            const currentProdi = (prodi || userProdi || 'kedokteran').toLowerCase();
+            const prodiMatch = bankProdis.includes('all') || bankProdis.includes(currentProdi);
 
             // Soal dari admin besar atau admin angkatan
             const isFromAdmin = 
@@ -282,7 +292,7 @@ export function useAuth({
               userProfile?.role === 'admin_angkatan' ||
               username.toLowerCase().startsWith('admin');
 
-            return (isFromAdmin || isMine || isCollector) && angkatanMatch;
+            return (isFromAdmin || isMine || isCollector) && angkatanMatch && prodiMatch;
           })
           .map(b => {
             // Utamakan r2_key untuk menarik berkas soal lengkap dari Cloudflare R2
@@ -294,6 +304,7 @@ export function useAuth({
               name: b.name,
               user_id: b.user_id,
               angkatan: b.angkatan,
+              prodi: b.prodi,
               created_at: b.created_at,
               questions_json: questionsPayload,
               profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
@@ -307,11 +318,13 @@ export function useAuth({
       const globals: string[] = [];
       const uploaders: Record<string, string> = {};
       const angkatans: Record<string, string> = {};
+      const prodis: Record<string, string> = {};
       const createdAts: Record<string, string> = {};
 
       if (data) {
         data.forEach((b: any) => {
           angkatans[b.name] = b.angkatan || 'all';
+          prodis[b.name] = b.prodi || 'all';
           if (b.created_at) {
             createdAts[b.name] = b.created_at;
           }
@@ -407,6 +420,7 @@ export function useAuth({
 
       setUploaderMap(uploaders);
       setBankAngkatanMap(angkatans);
+      setBankProdiMap(prodis);
       setBankCreatedAtMap(createdAts);
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
@@ -615,13 +629,13 @@ export function useAuth({
 
   return {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
-    isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankCreatedAtMap, questionDatabase,
+    isSessionKicked, profileUsername, userProfile, userAngkatan, userProdi, subscriptionStatus,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
-    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
+    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setBankCreatedAtMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };

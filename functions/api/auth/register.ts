@@ -29,6 +29,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const body = await request.json() as any;
     const username = (body.username || '').trim();
     const angkatan = body.angkatan;
+    const prodi = (body.prodi || 'kedokteran').toLowerCase().trim();
 
     if (!username || !angkatan) {
       return new Response(JSON.stringify({ error: 'Username dan angkatan wajib diisi' }), {
@@ -37,11 +38,27 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    if (!['24', '25', '26'].includes(String(angkatan))) {
-      return new Response(JSON.stringify({ error: 'Angkatan tidak valid (harus 24, 25, atau 26)' }), {
+    if (!['kedokteran', 'farmasi', 'kebidanan'].includes(prodi)) {
+      return new Response(JSON.stringify({ error: 'Program studi tidak valid (harus kedokteran, farmasi, atau kebidanan)' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (prodi === 'farmasi') {
+      if (!['23', '24'].includes(String(angkatan))) {
+        return new Response(JSON.stringify({ error: 'Angkatan untuk Farmasi harus 23 atau 24' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else {
+      if (!['24', '25', '26'].includes(String(angkatan))) {
+        return new Response(JSON.stringify({ error: 'Angkatan tidak valid (harus 24, 25, atau 26)' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Cek apakah username / nama panggilan sudah ada
@@ -75,10 +92,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const now = new Date().toISOString();
     
     // Batas masa trial berbeda per angkatan (pukul 12.00 WIB / 05.00 UTC):
-    // Angkatan 24: 14 September 2026
+    // Angkatan 23 & 24: 14 September 2026
     // Angkatan 25: 17 September 2026
     // Angkatan 26: 22 September 2026
     const trialEndsMap: Record<string, string> = {
+      '23': '2026-09-14T05:00:00Z',
       '24': '2026-09-14T05:00:00Z',
       '25': '2026-09-17T05:00:00Z',
       '26': '2026-09-22T05:00:00Z',
@@ -86,9 +104,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const trialEndsAt = trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z';
 
     await env.DB.prepare(`
-      INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, subscription_status, trial_ends_at)
-      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, 0, ?, ?, ?, 'trial', ?)
-    `).bind(userId, finalUsername, email, passwordHash, now, now, String(angkatan), trialEndsAt).run();
+      INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, prodi, subscription_status, trial_ends_at)
+      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, 0, ?, ?, ?, ?, 'trial', ?)
+    `).bind(userId, finalUsername, email, passwordHash, now, now, String(angkatan), prodi, trialEndsAt).run();
 
     const jwtSecret = env.AUTH_JWT_SECRET || 'auramedpro-jwt-secret-dev-2026-key-fixed-fallback';
     const jwt = await signJwt({ sub: userId, guest: false }, jwtSecret);
@@ -100,6 +118,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         username: finalUsername,
         is_guest: false,
         angkatan: String(angkatan),
+        prodi,
       },
       is_anonymous: false,
     };

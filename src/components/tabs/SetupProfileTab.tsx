@@ -33,6 +33,7 @@ interface SetupProfileTabProps {
   setAchievementFilter: any;
   achievements: any[];
   userAngkatan?: string | null;
+  userProdi?: string | null;
   quizHistory?: any[];
   trialEndsAt?: string | null;
 }
@@ -41,7 +42,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   theme, currentUser, profileUsername, userXP, currentStreak, longestStreak,
   totalQuestionsAnswered, streakFreezeLeft, lastActiveDate, exportData,
   importData, triggerToast, achievementFilter, setAchievementFilter, achievements,
-  userAngkatan, quizHistory = [], trialEndsAt
+  userAngkatan, userProdi, quizHistory = [], trialEndsAt
 }) => {
   const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
   const [currentFrameId, setCurrentFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
@@ -150,6 +151,11 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                       {userAngkatan && (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                           '{userAngkatan}
+                        </span>
+                      )}
+                      {userProdi && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/10 text-purple-500 border border-purple-500/20 capitalize">
+                          {userProdi === 'farmasi' ? '💊 Farmasi' : userProdi === 'kebidanan' ? '👶 Kebidanan' : '🩺 Kedokteran'}
                         </span>
                       )}
                     </div>

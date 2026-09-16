@@ -231,13 +231,13 @@ export default function App() {
   const [globalQuizFolderMap, setGlobalQuizFolderMap] = useState<Record<string, string>>({});
   const {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
-    isSessionKicked, profileUsername, userProfile, userAngkatan, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankCreatedAtMap, questionDatabase,
+    isSessionKicked, profileUsername, userProfile, userAngkatan, userProdi, subscriptionStatus,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
-    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan,
+    setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setBankCreatedAtMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
@@ -257,22 +257,24 @@ export default function App() {
   });
 
   const [isSettingAngkatan, setIsSettingAngkatan] = useState(false);
-  const handleSelectAngkatan = async (angkatan: '24' | '25' | '26') => {
+  const handleSelectAngkatan = async (angkatan: string, prodi: string) => {
     if (!currentUser) return;
     setIsSettingAngkatan(true);
     try {
-      const ok = await authClient.setAngkatan(currentUser.id, angkatan);
+      const ok = await authClient.setAngkatan(currentUser.id, angkatan, prodi);
       if (ok) {
         setUserAngkatan(angkatan);
-        triggerToast(`Angkatan 20${angkatan} berhasil dipilih!`, '🎓');
-        await fetchUserQuestions(currentUser.id, profileUsername, angkatan);
+        setUserProdi(prodi);
+        const prodiLabel = prodi === 'farmasi' ? 'Farmasi' : prodi === 'kebidanan' ? 'Kebidanan' : 'Kedokteran';
+        triggerToast(`Prodi ${prodiLabel} - Angkatan 20${angkatan} berhasil dipilih!`, '🎓');
+        await fetchUserQuestions(currentUser.id, profileUsername, angkatan, prodi);
         await fetchGlobalLeaderboard();
       } else {
-        triggerToast('Gagal menyimpan angkatan. Coba lagi.', '❌');
+        triggerToast('Gagal menyimpan prodi & angkatan. Coba lagi.', '❌');
       }
     } catch (e) {
       console.error(e);
-      triggerToast('Gagal menyimpan angkatan.', '❌');
+      triggerToast('Gagal menyimpan prodi & angkatan.', '❌');
     } finally {
       setIsSettingAngkatan(false);
     }
@@ -323,10 +325,17 @@ export default function App() {
   );
 
   const [uploadTargetAngkatan, setUploadTargetAngkatan] = useState<string>('all');
-  const [changeAngkatanModal, setChangeAngkatanModal] = useState<{ isOpen: boolean; bankName: string; currentAngkatan: string }>({
+  const [uploadTargetProdi, setUploadTargetProdi] = useState<string>('all');
+  const [changeDistributionModal, setChangeDistributionModal] = useState<{
+    isOpen: boolean;
+    bankName: string;
+    currentAngkatan: string;
+    currentProdi: string;
+  }>({
     isOpen: false,
     bankName: '',
-    currentAngkatan: 'all'
+    currentAngkatan: 'all',
+    currentProdi: 'all'
   });
   const [emptyFoldersVisible, setEmptyFoldersVisible] = useState<string[]>([]);
 
@@ -337,18 +346,27 @@ export default function App() {
     return userAngkatan || 'all';
   };
 
-  const handleChangeBankAngkatan = async (bankName: string, newAngkatan: string) => {
+  const getEffectiveUploadProdi = () => {
+    if (isSuperAdmin) {
+      return uploadTargetProdi || 'all';
+    }
+    return userProdi || 'all';
+  };
+
+  const handleChangeBankDistribution = async (bankName: string, newAngkatan: string, newProdi: string) => {
     try {
-      const success = await cloudflareApi.updateQuestionBankAngkatan(bankName, newAngkatan);
+      const success = await cloudflareApi.updateQuestionBankDistribution(bankName, newAngkatan, newProdi);
       if (success) {
-        triggerToast(`Target angkatan "${bankName}" diubah ke ${newAngkatan === 'all' ? 'Seluruh Angkatan' : `Angkatan ${newAngkatan}`}`, '✅');
+        const prodiLabel = newProdi === 'all' ? 'Semua Prodi' : newProdi === 'farmasi' ? 'Farmasi' : newProdi === 'kebidanan' ? 'Kebidanan' : 'Kedokteran';
+        triggerToast(`Target distribusi "${bankName}" diubah (${prodiLabel} - ${newAngkatan === 'all' ? 'Seluruh Angkatan' : `Angkatan ${newAngkatan}`})`, '✅');
         setBankAngkatanMap((prev) => ({ ...prev, [bankName]: newAngkatan }));
-        setChangeAngkatanModal(null);
+        setBankProdiMap((prev) => ({ ...prev, [bankName]: newProdi }));
+        setChangeDistributionModal({ isOpen: false, bankName: '', currentAngkatan: 'all', currentProdi: 'all' });
         if (currentUser) {
-          fetchUserQuestions(currentUser.id, profileUsername, userAngkatan || undefined);
+          fetchUserQuestions(currentUser.id, profileUsername, userAngkatan || undefined, userProdi || undefined);
         }
       } else {
-        triggerToast('Gagal mengubah target angkatan', '❌');
+        triggerToast('Gagal mengubah target distribusi', '❌');
       }
     } catch (err: any) {
       triggerToast(`Gagal: ${err.message || 'Terjadi kesalahan'}`, '❌');
@@ -649,7 +667,7 @@ export default function App() {
     notifOpen, notifList, notifCount, pushEnabled,
     setNotifOpen, requestPushPermission, fetchNotifications, markAllNotifRead,
     showBrowserNotification
-  } = useNotifications(currentUser, srs, triggerToast, userAngkatan || undefined);
+  } = useNotifications(currentUser, srs, triggerToast, userAngkatan || undefined, userProdi || undefined);
 
   // Klik notifikasi -> Masuk Bank Soal dan auto-select soal
   const handleNotificationClick = (notif: { id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }) => {
@@ -899,6 +917,14 @@ export default function App() {
     });
 
     Object.entries(questionDatabase).forEach(([key, questionsData]) => {
+      // If student (non-super-admin), check prodi compatibility
+      if (!isSuperAdmin) {
+        const bankProdi = (bankProdiMap[key] || 'all').toLowerCase();
+        const currentProdi = (userProdi || 'kedokteran').toLowerCase();
+        const prodiMatch = bankProdi === 'all' || bankProdi.split(',').map((s) => s.trim()).includes(currentProdi);
+        if (!prodiMatch) return;
+      }
+
       const questions = questionsData as Question[];
       
       // Prioritize: Local Map -> Global Map -> None
@@ -942,6 +968,7 @@ export default function App() {
     const angkatansToProcess: { angkatan: string; folderTitle: string }[] = [];
     if (isSuperAdmin) {
       angkatansToProcess.push(
+        { angkatan: '23', folderTitle: 'Terbaru (Angkatan 23)' },
         { angkatan: '24', folderTitle: 'Terbaru (Angkatan 24)' },
         { angkatan: '25', folderTitle: 'Terbaru (Angkatan 25)' },
         { angkatan: '26', folderTitle: 'Terbaru (Angkatan 26)' }
@@ -949,13 +976,13 @@ export default function App() {
     } else if (userAngkatan) {
       angkatansToProcess.push({ angkatan: userAngkatan, folderTitle: 'Terbaru' });
     } else {
-      angkatansToProcess.push({ angkatan: '25', folderTitle: 'Terbaru' });
+      angkatansToProcess.push({ angkatan: userProdi === 'farmasi' ? '24' : '25', folderTitle: 'Terbaru' });
     }
 
     const terbaruFolders: Record<string, { key: string; displayName: string; questions: Question[] }[]> = {};
 
     angkatansToProcess.forEach(({ angkatan, folderTitle }) => {
-      // Kumpulkan soal yang diunggah oleh admin untuk angkatan ini
+      // Kumpulkan soal yang diunggah oleh admin untuk angkatan dan prodi ini
       const adminBanks = Object.entries(questionDatabase).filter(([key]) => {
         const uploader = uploaderMap[key];
         const isByAdmin =
@@ -964,6 +991,13 @@ export default function App() {
           uploader.toLowerCase().startsWith('admin') ||
           globalDatabases.includes(key);
         if (!isByAdmin) return false;
+
+        if (!isSuperAdmin) {
+          const bankProdi = (bankProdiMap[key] || 'all').toLowerCase();
+          const currentProdi = (userProdi || 'kedokteran').toLowerCase();
+          const prodiMatch = bankProdi === 'all' || bankProdi.split(',').map((s) => s.trim()).includes(currentProdi);
+          if (!prodiMatch) return false;
+        }
 
         const bankAng = bankAngkatanMap[key] || 'all';
         const angList = bankAng.split(',').map((s) => s.trim());
@@ -1002,7 +1036,7 @@ export default function App() {
     };
 
     return { folders: mergedFolders, rootItems };
-  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap, bankCreatedAtMap, bankAngkatanMap, globalDatabases, uploaderMap, userAngkatan, isSuperAdmin]);
+  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap, bankCreatedAtMap, bankAngkatanMap, bankProdiMap, globalDatabases, uploaderMap, userAngkatan, userProdi, isSuperAdmin]);
 
   // Filtered databases memo based on search query and category filter
   const filteredDatabases = React.useMemo(() => {
@@ -1605,6 +1639,7 @@ export default function App() {
 
             // 3. Simpan metadata ke Cloudflare D1
             const targetAngkatan = getEffectiveUploadAngkatan();
+            const targetProdi = getEffectiveUploadProdi();
             if (currentUser) {
               if (r2Res) {
                 await cloudflareApi.saveQuestionBank({
@@ -1613,6 +1648,7 @@ export default function App() {
                   r2_key: r2Res.r2_key,
                   r2_url: r2Res.r2_url,
                   angkatan: targetAngkatan,
+                  prodi: targetProdi,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
@@ -1620,9 +1656,11 @@ export default function App() {
                   user_id: currentUser.id,
                   questions_json: finalQuestions,
                   angkatan: targetAngkatan,
+                  prodi: targetProdi,
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [file.name]: targetAngkatan }));
+              setBankProdiMap((prev) => ({ ...prev, [file.name]: targetProdi }));
               setBankCreatedAtMap((prev) => ({ ...prev, [file.name]: new Date().toISOString() }));
               if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
                 setGlobalDatabases((prev) => [...new Set([...prev, file.name])]);
@@ -1702,6 +1740,7 @@ export default function App() {
       try {
         // Simpan setiap bank soal ke Cloudflare R2 & D1 (0 Egress) serta storage lokal
         const targetAngkatan = getEffectiveUploadAngkatan();
+        const targetProdi = getEffectiveUploadProdi();
         for (const [name, questions] of Object.entries(newDatabases)) {
           saveLocalUserBank(name, questions, currentUser?.id);
 
@@ -1719,6 +1758,7 @@ export default function App() {
                   r2_key: r2Res.r2_key,
                   r2_url: r2Res.r2_url,
                   angkatan: targetAngkatan,
+                  prodi: targetProdi,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
@@ -1726,9 +1766,11 @@ export default function App() {
                   user_id: currentUser.id,
                   questions_json: questions,
                   angkatan: targetAngkatan,
+                  prodi: targetProdi,
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
+              setBankProdiMap((prev) => ({ ...prev, [name]: targetProdi }));
               setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
               if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
                 setGlobalDatabases((prev) => [...new Set([...prev, name])]);
@@ -1809,6 +1851,7 @@ export default function App() {
 
           // 3. Simpan ke Cloudflare D1
           const targetAngkatan = getEffectiveUploadAngkatan();
+          const targetProdi = getEffectiveUploadProdi();
           if (r2Res) {
             await cloudflareApi.saveQuestionBank({
               name,
@@ -1816,6 +1859,7 @@ export default function App() {
               r2_key: r2Res.r2_key,
               r2_url: r2Res.r2_url,
               angkatan: targetAngkatan,
+              prodi: targetProdi,
             });
           } else {
             await cloudflareApi.saveQuestionBank({
@@ -1823,9 +1867,11 @@ export default function App() {
               user_id: currentUser.id,
               questions_json: finalQuestions,
               angkatan: targetAngkatan,
+              prodi: targetProdi,
             });
           }
           setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
+          setBankProdiMap((prev) => ({ ...prev, [name]: targetProdi }));
           setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
           if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
             setGlobalDatabases((prev) => [...new Set([...prev, name])]);
@@ -3005,10 +3051,11 @@ export default function App() {
         />
       ) : (
         <>
-          {/* Modal Pemilihan Angkatan jika belum dipilih (Wajib bagi seluruh akun non-admin, termasuk collector) */}
-          {!userAngkatan && !isSuperAdmin && (
+          {/* Modal Pemilihan Prodi & Angkatan jika belum dipilih (Wajib bagi seluruh akun non-admin, termasuk collector) */}
+          {(!userAngkatan || !userProdi) && !isSuperAdmin && (
             <AngkatanSelectModal
               theme={theme}
+              initialProdi={userProdi}
               onSelect={handleSelectAngkatan}
               loading={isSettingAngkatan}
             />
@@ -3138,6 +3185,8 @@ export default function App() {
                       isSuperAdmin={isSuperAdmin}
                       selectedAngkatan={uploadTargetAngkatan}
                       onSelectedAngkatanChange={setUploadTargetAngkatan}
+                      selectedProdi={uploadTargetProdi}
+                      onSelectedProdiChange={setUploadTargetProdi}
                     />
                   </div>
 
@@ -3627,6 +3676,19 @@ export default function App() {
                                             {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
                                           </span>
                                         )}
+                                        {bankProdiMap[key] && (
+                                          <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${
+                                            bankProdiMap[key] === 'farmasi'
+                                              ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400'
+                                              : bankProdiMap[key] === 'kebidanan'
+                                              ? 'bg-pink-500/10 border-pink-500/20 text-pink-600 dark:text-pink-400'
+                                              : bankProdiMap[key] === 'kedokteran'
+                                              ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
+                                              : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
+                                          }`}>
+                                            {bankProdiMap[key] === 'farmasi' ? '💊 Farmasi' : bankProdiMap[key] === 'kebidanan' ? '👶 Kebidanan' : bankProdiMap[key] === 'kedokteran' ? '🩺 Kedokteran' : '🌐 Semua Prodi'}
+                                          </span>
+                                        )}
                                       </div>
                                       <span className="text-[10px] font-semibold text-slate-500">
                                         Progres: {progressCount}/{questions.length}
@@ -3686,14 +3748,15 @@ export default function App() {
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              setChangeAngkatanModal({
+                                              setChangeDistributionModal({
                                                 isOpen: true,
                                                 bankName: key,
-                                                currentAngkatan: bankAngkatanMap[key] || 'all'
+                                                currentAngkatan: bankAngkatanMap[key] || 'all',
+                                                currentProdi: bankProdiMap[key] || 'all',
                                               });
                                             }}
                                             className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors cursor-pointer"
-                                            title="Ubah Target Angkatan (Super Admin)"
+                                            title="Ubah Target Distribusi (Super Admin)"
                                           >
                                             <Users className="w-4 h-4" />
                                           </button>
@@ -3871,6 +3934,19 @@ export default function App() {
                                           {bankAngkatanMap[key] === 'all' ? '🌐 Semua' : `Angkatan ${bankAngkatanMap[key]}`}
                                         </span>
                                       )}
+                                      {bankProdiMap[key] && (
+                                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${
+                                          bankProdiMap[key] === 'farmasi'
+                                            ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400'
+                                            : bankProdiMap[key] === 'kebidanan'
+                                            ? 'bg-pink-500/10 border-pink-500/20 text-pink-600 dark:text-pink-400'
+                                            : bankProdiMap[key] === 'kedokteran'
+                                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
+                                            : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500'
+                                        }`}>
+                                          {bankProdiMap[key] === 'farmasi' ? '💊 Farmasi' : bankProdiMap[key] === 'kebidanan' ? '👶 Kebidanan' : bankProdiMap[key] === 'kedokteran' ? '🩺 Kedokteran' : '🌐 Semua Prodi'}
+                                        </span>
+                                      )}
                                     </div>
                                     <span className="text-[10px] font-semibold text-slate-500">
                                       Progres: {progressCount}/{questions.length}
@@ -3928,14 +4004,15 @@ export default function App() {
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setChangeAngkatanModal({
+                                            setChangeDistributionModal({
                                               isOpen: true,
                                               bankName: key,
-                                              currentAngkatan: bankAngkatanMap[key] || 'all'
+                                              currentAngkatan: bankAngkatanMap[key] || 'all',
+                                              currentProdi: bankProdiMap[key] || 'all',
                                             });
                                           }}
                                           className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors cursor-pointer"
-                                          title="Ubah Target Angkatan (Super Admin)"
+                                          title="Ubah Target Distribusi (Super Admin)"
                                         >
                                           <Users className="w-4 h-4" />
                                         </button>
@@ -3992,7 +4069,7 @@ export default function App() {
             {dashboardTab === 'new' && <SetupNewQuizTab theme={theme} selectedDatabases={selectedDatabases} setSelectedDatabases={setSelectedDatabases} setDashboardTab={setDashboardTab} quizMode={quizMode} setQuizMode={setQuizMode} shuffleQuestions={shuffleQuestions} setShuffleQuestions={setShuffleQuestions} shuffleOptions={shuffleOptions} setShuffleOptions={setShuffleOptions} startQuiz={startQuiz} globalDatabases={globalDatabases} removeDatabase={removeDatabase} keyboardNavEnabled={keyboardNavEnabled} setKeyboardNavEnabled={setKeyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} setIsAdaptiveMode={setIsAdaptiveMode} regularTimerEnabled={regularTimerEnabled} setRegularTimerEnabled={setRegularTimerEnabled} />}
 
             {/* 👤 TAB 5: PROFIL */}
-            {dashboardTab === 'profile' && <SetupProfileTab theme={theme} currentUser={currentUser} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} totalQuestionsAnswered={totalQuestionsAnswered} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} exportData={exportData} importData={importData} triggerToast={triggerToast} achievementFilter={achievementFilter} setAchievementFilter={setAchievementFilter} achievements={achievements} userAngkatan={userAngkatan} quizHistory={quizHistory} trialEndsAt={trialEndsAt} />}
+            {dashboardTab === 'profile' && <SetupProfileTab theme={theme} currentUser={currentUser} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} totalQuestionsAnswered={totalQuestionsAnswered} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} exportData={exportData} importData={importData} triggerToast={triggerToast} achievementFilter={achievementFilter} setAchievementFilter={setAchievementFilter} achievements={achievements} userAngkatan={userAngkatan} userProdi={userProdi} quizHistory={quizHistory} trialEndsAt={trialEndsAt} />}
 
             {/* Box 3: History & Leaderboard (Beranda) */}
 
@@ -4560,6 +4637,8 @@ export default function App() {
         isSuperAdmin={isSuperAdmin}
         selectedAngkatan={uploadTargetAngkatan}
         onSelectedAngkatanChange={setUploadTargetAngkatan}
+        selectedProdi={uploadTargetProdi}
+        onSelectedProdiChange={setUploadTargetProdi}
         onClose={() => setPasteModalOpen(false)}
         onSubmit={handlePasteSubmit}
       />
@@ -4647,8 +4726,8 @@ export default function App() {
       onDelete={deleteAnswerNote}
     />
 
-    {/* Modal Ubah Angkatan (Super Admin) */}
-    {Boolean(changeAngkatanModal?.isOpen) && (
+    {/* Modal Ubah Distribusi Soal (Super Admin) */}
+    {Boolean(changeDistributionModal?.isOpen) && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
         <div 
           onClick={(e) => e.stopPropagation()}
@@ -4660,12 +4739,12 @@ export default function App() {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Ubah Target Angkatan</h3>
-                <p className="text-xs text-slate-500 truncate max-w-[260px]">{changeAngkatanModal.bankName}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Ubah Target Distribusi</h3>
+                <p className="text-xs text-slate-500 truncate max-w-[260px]">{changeDistributionModal.bankName}</p>
               </div>
             </div>
             <button
-              onClick={() => setChangeAngkatanModal({ isOpen: false, bankName: "", currentAngkatan: "" })}
+              onClick={() => setChangeDistributionModal({ isOpen: false, bankName: '', currentAngkatan: 'all', currentProdi: 'all' })}
               className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -4673,44 +4752,95 @@ export default function App() {
           </div>
 
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
-            Pilih angkatan mana yang diizinkan untuk melihat bank soal ini di dashboard dan latihan.
+            Atur prodi dan angkatan mana yang diizinkan untuk melihat bank soal ini di dashboard dan latihan.
           </p>
 
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            {[
-              { id: "all", label: "🌐 Semua Angkatan" },
-              { id: "24", label: "Angkatan 24" },
-              { id: "25", label: "Angkatan 25" },
-              { id: "26", label: "Angkatan 26" },
-              { id: "24,25", label: "Angkatan 24 & 25" },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setChangeAngkatanModal(prev => ({ ...prev, currentAngkatan: opt.id }))}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
-                  changeAngkatanModal.currentAngkatan === opt.id
-                    ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
-                    : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600"
-                }`}
-              >
-                <span>{opt.label}</span>
-                {changeAngkatanModal.currentAngkatan === opt.id && <Check className="w-4 h-4 text-white" />}
-              </button>
-            ))}
+          {/* Pilih Prodi */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Target Program Studi
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'all', label: '🌐 Seluruh Prodi' },
+                { id: 'kedokteran', label: '🩺 Kedokteran' },
+                { id: 'farmasi', label: '💊 Farmasi' },
+                { id: 'kebidanan', label: '👶 Kebidanan' },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setChangeDistributionModal((prev) => {
+                      const nextProdi = opt.id;
+                      let nextAngkatan = prev.currentAngkatan;
+                      if (nextProdi === 'farmasi' && (nextAngkatan === '25' || nextAngkatan === '26' || nextAngkatan === '24,25')) {
+                        nextAngkatan = '24';
+                      } else if (nextProdi !== 'farmasi' && (nextAngkatan === '23' || nextAngkatan === '23,24')) {
+                        nextAngkatan = '24';
+                      }
+                      return { ...prev, currentProdi: nextProdi, currentAngkatan: nextAngkatan };
+                    });
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
+                    changeDistributionModal.currentProdi === opt.id
+                      ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
+                      : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {changeDistributionModal.currentProdi === opt.id && <Check className="w-3.5 h-3.5 text-white" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Pilih Angkatan */}
+          <div className="mb-6">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Target Angkatan {changeDistributionModal.currentProdi === 'farmasi' ? '(Farmasi: 23 & 24)' : ''}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(changeDistributionModal.currentProdi === 'farmasi' ? [
+                { id: 'all', label: '🌐 Semua Angkatan' },
+                { id: '23', label: 'Angkatan 23' },
+                { id: '24', label: 'Angkatan 24' },
+                { id: '23,24', label: 'Angkatan 23 & 24' },
+              ] : [
+                { id: 'all', label: '🌐 Semua Angkatan' },
+                { id: '24', label: 'Angkatan 24' },
+                { id: '25', label: 'Angkatan 25' },
+                { id: '26', label: 'Angkatan 26' },
+                { id: '24,25', label: 'Angkatan 24 & 25' },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setChangeDistributionModal((prev) => ({ ...prev, currentAngkatan: opt.id }))}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
+                    changeDistributionModal.currentAngkatan === opt.id
+                      ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20'
+                      : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-purple-600'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {changeDistributionModal.currentAngkatan === opt.id && <Check className="w-3.5 h-3.5 text-white" />}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex gap-2 justify-end">
             <button
               type="button"
-              onClick={() => setChangeAngkatanModal({ isOpen: false, bankName: "", currentAngkatan: "" })}
+              onClick={() => setChangeDistributionModal({ isOpen: false, bankName: '', currentAngkatan: 'all', currentProdi: 'all' })}
               className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               Batal
             </button>
             <button
               type="button"
-              onClick={() => handleChangeBankAngkatan(changeAngkatanModal.bankName, changeAngkatanModal.currentAngkatan)}
+              onClick={() => handleChangeBankDistribution(changeDistributionModal.bankName, changeDistributionModal.currentAngkatan, changeDistributionModal.currentProdi)}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Check className="w-4 h-4" /> Simpan Perubahan

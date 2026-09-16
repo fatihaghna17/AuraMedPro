@@ -11,6 +11,8 @@ interface UploadZoneProps {
   isSuperAdmin?: boolean;
   selectedAngkatan?: string;
   onSelectedAngkatanChange?: (angkatan: string) => void;
+  selectedProdi?: string;
+  onSelectedProdiChange?: (prodi: string) => void;
 }
 
 export default function UploadZone({
@@ -18,6 +20,8 @@ export default function UploadZone({
   isSuperAdmin = false,
   selectedAngkatan = 'all',
   onSelectedAngkatanChange,
+  selectedProdi = 'all',
+  onSelectedProdiChange,
 }: UploadZoneProps) {
   const dashedCard = (onClick: () => void, hoverColor: string) =>
     `p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
@@ -26,7 +30,19 @@ export default function UploadZone({
         : `bg-slate-50 border-slate-200 hover:${hoverColor}`
     }`;
 
-  const angkatanOptions = [
+  const prodiOptions = [
+    { id: 'all', label: '🌐 Seluruh Prodi' },
+    { id: 'kedokteran', label: '🩺 Kedokteran' },
+    { id: 'farmasi', label: '💊 Farmasi' },
+    { id: 'kebidanan', label: '👶 Kebidanan' },
+  ];
+
+  const angkatanOptions = selectedProdi === 'farmasi' ? [
+    { id: 'all', label: '🌐 Seluruh Angkatan', desc: 'Dapat diakses oleh semua angkatan Farmasi' },
+    { id: '23', label: 'Angkatan 23', desc: 'Khusus untuk Angkatan 23' },
+    { id: '24', label: 'Angkatan 24', desc: 'Khusus untuk Angkatan 24' },
+    { id: '23,24', label: 'Angkatan 23 & 24', desc: 'Bisa diakses Angkatan 23 dan 24' },
+  ] : [
     { id: 'all', label: '🌐 Seluruh Angkatan', desc: 'Dapat diakses oleh semua angkatan' },
     { id: '24', label: 'Angkatan 24', desc: 'Khusus untuk Angkatan 24' },
     { id: '25', label: 'Angkatan 25', desc: 'Khusus untuk Angkatan 25' },
@@ -49,17 +65,55 @@ export default function UploadZone({
         </div>
       </div>
 
-      {/* Target Angkatan Selector khusus Super Admin */}
+      {/* Target Distribusi Prodi & Angkatan Selector khusus Super Admin */}
       {isSuperAdmin && (
-        <div className={`p-4 rounded-2xl border transition-all ${
+        <div className={`p-4 rounded-2xl border transition-all space-y-4 ${
           theme === 'dark' 
             ? 'bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900/50 border-indigo-500/30' 
             : 'bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-slate-50 border-indigo-200'
         }`}>
+          {/* Target Prodi */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                Prodi
+              </div>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                Target Distribusi Prodi
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {prodiOptions.map((opt) => {
+                const isSelected = selectedProdi === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectedProdiChange?.(opt.id);
+                      if (opt.id === 'farmasi' && selectedAngkatan !== '23' && selectedAngkatan !== '24' && selectedAngkatan !== 'all') {
+                        onSelectedAngkatanChange?.('all');
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none active:scale-95 ${
+                      isSelected
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25 ring-2 ring-purple-500/50 scale-[1.02]'
+                        : theme === 'dark'
+                          ? 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-xs'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200/50 dark:border-slate-800/50 pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">

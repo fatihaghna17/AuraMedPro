@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     level INTEGER DEFAULT 1,
     total_questions_answered INTEGER DEFAULT 0,
     last_active TEXT,
-    angkatan TEXT, -- '24', '25', '26'
+    angkatan TEXT, -- '23', '24', '25', '26'
+    prodi TEXT DEFAULT 'kedokteran', -- 'kedokteran', 'farmasi', 'kebidanan'
     subscription_status TEXT DEFAULT 'trial', -- 'trial', 'active', 'expired'
     trial_ends_at TEXT DEFAULT '2026-09-14T05:00:00Z',
     subscription_expires_at TEXT,
@@ -23,6 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
 CREATE INDEX IF NOT EXISTS idx_profiles_xp ON profiles(xp DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_questions ON profiles(total_questions_answered DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_angkatan ON profiles(angkatan);
+CREATE INDEX IF NOT EXISTS idx_profiles_prodi ON profiles(prodi);
 
 -- 2. Tabel Bank Soal (Hanya menyimpan metadata & R2 link, 0 egress!)
 CREATE TABLE IF NOT EXISTS question_banks (
@@ -32,12 +34,14 @@ CREATE TABLE IF NOT EXISTS question_banks (
     r2_key TEXT,
     r2_url TEXT,
     questions_json TEXT, -- fallback jika masih ada data JSON lama
-    angkatan TEXT DEFAULT 'all', -- '24', '25', '26', atau 'all' (bersama)
+    angkatan TEXT DEFAULT 'all', -- '23', '24', '25', '26', atau 'all' (bersama)
+    prodi TEXT DEFAULT 'all', -- 'all', 'kedokteran', 'farmasi', 'kebidanan'
     created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_question_banks_user ON question_banks(user_id);
 CREATE INDEX IF NOT EXISTS idx_question_banks_name ON question_banks(name);
+CREATE INDEX IF NOT EXISTS idx_question_banks_prodi ON question_banks(prodi);
 
 -- 3. Tabel Sesi Kuis Berjalan (Auto-save progress kuis)
 CREATE TABLE IF NOT EXISTS quiz_sessions (

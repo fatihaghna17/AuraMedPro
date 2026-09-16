@@ -17,6 +17,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const angkatan = url.searchParams.get('angkatan');
+  const prodi = url.searchParams.get('prodi');
 
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
@@ -36,19 +37,35 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         CASE WHEN qb.questions_json = 'null' THEN NULL ELSE qb.questions_json END as questions_json,
         qb.created_at,
         qb.angkatan,
+        qb.prodi,
         p.username as uploader_username
       FROM question_banks qb
       LEFT JOIN profiles p ON qb.user_id = p.id
     `;
     const binds: any[] = [];
+    const whereClauses: string[] = [];
 
     if (angkatan && angkatan !== 'all') {
-      query += ` WHERE (
+      whereClauses.push(`(
         qb.angkatan = 'all' 
         OR qb.angkatan = ? 
         OR instr(',' || coalesce(qb.angkatan, '') || ',', ',' || ? || ',') > 0
-      )`;
+      )`);
       binds.push(angkatan, angkatan);
+    }
+
+    if (prodi && prodi !== 'all') {
+      whereClauses.push(`(
+        qb.prodi IS NULL
+        OR qb.prodi = 'all'
+        OR qb.prodi = ?
+        OR instr(',' || coalesce(qb.prodi, '') || ',', ',' || ? || ',') > 0
+      )`);
+      binds.push(prodi, prodi);
+    }
+
+    if (whereClauses.length > 0) {
+      query += ` WHERE ` + whereClauses.join(' AND ');
     }
 
     query += ` ORDER BY qb.name ASC`;
@@ -79,7 +96,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const body = await request.json() as any;
-    const { name, user_id, r2_key, r2_url, questions_json, angkatan = 'all' } = body;
+    const { name, user_id, r2_key, r2_url, questions_json, angkatan = 'all', prodi = 'all' } = body;
 
     if (!name || !user_id) {
       return new Response(JSON.stringify({ error: 'Name dan user_id wajib diisi' }), {
@@ -92,14 +109,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const now = new Date().toISOString();
 
     await env.DB.prepare(`
-      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at, angkatan)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at, angkatan, prodi)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
         user_id = excluded.user_id,
         r2_key = coalesce(excluded.r2_key, question_banks.r2_key),
         r2_url = coalesce(excluded.r2_url, question_banks.r2_url),
         questions_json = coalesce(excluded.questions_json, question_banks.questions_json),
-        angkatan = coalesce(excluded.angkatan, question_banks.angkatan)
+        angkatan = coalesce(excluded.angkatan, question_banks.angkatan),
+        prodi = coalesce(excluded.prodi, question_banks.prodi)
     `).bind(
       id,
       name,
@@ -108,7 +126,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       r2_url || null,
       questions_json && typeof questions_json === 'object' ? JSON.stringify(questions_json) : (questions_json || null),
       now,
-      angkatan
+      angkatan,
+      prodi
     ).run();
 
     return new Response(JSON.stringify({ success: true, name }), {
@@ -179,20 +198,30 @@ export const onRequestPatch: PagesFunction<Env> = async (context) => {
 
   try {
     const body = (await request.json()) as any;
-    const { name, angkatan } = body;
+    const { name, angkatan, prodi } = body;
 
-    if (!name || !angkatan) {
-      return new Response(JSON.stringify({ error: 'Name dan angkatan wajib diisi' }), {
+    if (!name || (angkatan === undefined && prodi === undefined)) {
+      return new Response(JSON.stringify({ error: 'Name dan angkatan/prodi wajib diisi' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    await env.DB.prepare('UPDATE question_banks SET angkatan = ? WHERE name = ?')
-      .bind(angkatan, name)
-      .run();
+    if (angkatan !== undefined && prodi !== undefined) {
+      await env.DB.prepare('UPDATE question_banks SET angkatan = ?, prodi = ? WHERE name = ?')
+        .bind(angkatan, prodi, name)
+        .run();
+    } else if (angkatan !== undefined) {
+      await env.DB.prepare('UPDATE question_banks SET angkatan = ? WHERE name = ?')
+        .bind(angkatan, name)
+        .run();
+    } else if (prodi !== undefined) {
+      await env.DB.prepare('UPDATE question_banks SET prodi = ? WHERE name = ?')
+        .bind(prodi, name)
+        .run();
+    }
 
-    return new Response(JSON.stringify({ success: true, name, angkatan }), {
+    return new Response(JSON.stringify({ success: true, name, angkatan, prodi }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

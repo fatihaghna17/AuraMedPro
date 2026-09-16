@@ -19,6 +19,7 @@ export interface ProfileData {
   created_at?: string;
   active_session_id?: string;
   angkatan?: string;
+  prodi?: string;
   subscription_status?: string;
   trial_ends_at?: string;
   subscription_expires_at?: string;
@@ -34,6 +35,7 @@ export interface QuestionBankMeta {
   created_at?: string;
   uploader_username?: string;
   angkatan?: string;
+  prodi?: string;
 }
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<{ data?: T; error?: string; success?: boolean }> {
@@ -79,9 +81,12 @@ export const cloudflareApi = {
   },
 
   // Question Banks
-  async getQuestionBanks(angkatan?: string): Promise<QuestionBankMeta[]> {
-    const query = angkatan ? `?angkatan=${encodeURIComponent(angkatan)}` : '';
-    const res = await fetchJson<QuestionBankMeta[]>(`${API_BASE}/question-banks${query}`);
+  async getQuestionBanks(angkatan?: string, prodi?: string): Promise<QuestionBankMeta[]> {
+    const params = new URLSearchParams();
+    if (angkatan) params.append('angkatan', angkatan);
+    if (prodi) params.append('prodi', prodi);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetchJson<QuestionBankMeta[]>(`${API_BASE}/question-banks${qs}`);
     return res.data || [];
   },
 
@@ -95,14 +100,16 @@ export const cloudflareApi = {
           r2_url?: string;
           questions_json?: any;
           angkatan?: string;
+          prodi?: string;
         },
     name?: string,
     questionsJson?: any,
-    angkatan?: string
+    angkatan?: string,
+    prodi?: string
   ): Promise<boolean> {
     const payload =
       typeof bankOrUserId === 'string'
-        ? { user_id: bankOrUserId, name: name!, questions_json: questionsJson, angkatan }
+        ? { user_id: bankOrUserId, name: name!, questions_json: questionsJson, angkatan, prodi }
         : bankOrUserId;
 
     const res = await fetchJson(`${API_BASE}/question-banks`, {
@@ -127,18 +134,28 @@ export const cloudflareApi = {
     return !res.error;
   },
 
+  async updateQuestionBankDistribution(name: string, angkatan?: string, prodi?: string): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/question-banks`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name, angkatan, prodi }),
+    });
+    return !res.error;
+  },
+
   // Leaderboard
-  async getGlobalLeaderboard(timeFilter: 'all' | '1' | '7' | '30', angkatan?: string): Promise<any[]> {
-    const angkatanParam = angkatan && angkatan !== 'all' ? `&angkatan=${encodeURIComponent(angkatan)}` : '';
-    const res = await fetchJson<any[]>(`${API_BASE}/leaderboard?type=global&filter=${timeFilter}${angkatanParam}`);
+  async getGlobalLeaderboard(timeFilter: 'all' | '1' | '7' | '30', angkatan?: string, prodi?: string): Promise<any[]> {
+    const params = new URLSearchParams({ type: 'global', filter: timeFilter });
+    if (angkatan && angkatan !== 'all') params.append('angkatan', angkatan);
+    if (prodi && prodi !== 'all') params.append('prodi', prodi);
+    const res = await fetchJson<any[]>(`${API_BASE}/leaderboard?${params.toString()}`);
     return res.data || [];
   },
 
-  async getFileLeaderboard(fileName: string, timeFilter: 'all' | '1' | '7' | '30', angkatan?: string): Promise<any[]> {
-    const angkatanParam = angkatan && angkatan !== 'all' ? `&angkatan=${encodeURIComponent(angkatan)}` : '';
-    const res = await fetchJson<any[]>(
-      `${API_BASE}/leaderboard?type=file&file_name=${encodeURIComponent(fileName)}&filter=${timeFilter}${angkatanParam}`
-    );
+  async getFileLeaderboard(fileName: string, timeFilter: 'all' | '1' | '7' | '30', angkatan?: string, prodi?: string): Promise<any[]> {
+    const params = new URLSearchParams({ type: 'file', file_name: fileName, filter: timeFilter });
+    if (angkatan && angkatan !== 'all') params.append('angkatan', angkatan);
+    if (prodi && prodi !== 'all') params.append('prodi', prodi);
+    const res = await fetchJson<any[]>(`${API_BASE}/leaderboard?${params.toString()}`);
     return res.data || [];
   },
 

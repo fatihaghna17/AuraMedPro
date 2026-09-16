@@ -13,6 +13,8 @@ interface PasteJsonModalProps {
   isSuperAdmin?: boolean;
   selectedAngkatan?: string;
   onSelectedAngkatanChange?: (angkatan: string) => void;
+  selectedProdi?: string;
+  onSelectedProdiChange?: (prodi: string) => void;
 }
 
 export default function PasteJsonModal({
@@ -20,10 +22,24 @@ export default function PasteJsonModal({
   isSuperAdmin = false,
   selectedAngkatan = 'all',
   onSelectedAngkatanChange,
+  selectedProdi = 'all',
+  onSelectedProdiChange,
 }: PasteJsonModalProps) {
   if (!isOpen) return null;
 
-  const angkatanOptions = [
+  const prodiOptions = [
+    { id: 'all', label: '🌐 Seluruh Prodi' },
+    { id: 'kedokteran', label: '🩺 Kedokteran' },
+    { id: 'farmasi', label: '💊 Farmasi' },
+    { id: 'kebidanan', label: '👶 Kebidanan' },
+  ];
+
+  const angkatanOptions = selectedProdi === 'farmasi' ? [
+    { id: 'all', label: '🌐 Seluruh Angkatan' },
+    { id: '23', label: 'Angkatan 23' },
+    { id: '24', label: 'Angkatan 24' },
+    { id: '23,24', label: '23 & 24' },
+  ] : [
     { id: 'all', label: '🌐 Seluruh Angkatan' },
     { id: '24', label: 'Angkatan 24' },
     { id: '25', label: 'Angkatan 25' },
@@ -40,30 +56,62 @@ export default function PasteJsonModal({
         </h3>
         
         <div className="space-y-4">
-          {/* Target Angkatan Selector khusus Super Admin */}
+          {/* Target Distribusi Prodi & Angkatan Selector khusus Super Admin */}
           {isSuperAdmin && (
-            <div className={`p-3 rounded-xl border ${theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <label className="block text-xs font-bold text-slate-500 mb-2">Target Distribusi Angkatan</label>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {angkatanOptions.map((opt) => {
-                  const isSelected = selectedAngkatan === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onSelectedAngkatanChange?.(opt.id)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-500 text-white shadow-sm'
-                          : theme === 'dark'
-                            ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+            <div className={`p-3 rounded-xl border space-y-3 ${theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Target Distribusi Prodi</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {prodiOptions.map((opt) => {
+                    const isSelected = selectedProdi === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          onSelectedProdiChange?.(opt.id);
+                          if (opt.id === 'farmasi' && selectedAngkatan !== '23' && selectedAngkatan !== '24' && selectedAngkatan !== 'all') {
+                            onSelectedAngkatanChange?.('all');
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-purple-600 text-white shadow-sm'
+                            : theme === 'dark'
+                              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Target Distribusi Angkatan</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {angkatanOptions.map((opt) => {
+                    const isSelected = selectedAngkatan === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => onSelectedAngkatanChange?.(opt.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-white shadow-sm'
+                            : theme === 'dark'
+                              ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

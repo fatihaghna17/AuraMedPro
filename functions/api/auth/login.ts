@@ -96,6 +96,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         username: profile.username,
         is_guest: false,
         angkatan: profile.angkatan,
+        prodi: profile.prodi || 'kedokteran',
         subscription_status: profile.subscription_status,
         trial_ends_at: profile.trial_ends_at,
         subscription_expires_at: profile.subscription_expires_at,

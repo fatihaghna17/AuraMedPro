@@ -212,7 +212,7 @@ class AuthClient {
    * Catatan: Listener SIGNED_IN sengaja tidak dipanggil langsung agar LoginForm
    * dapat menampilkan popup kata sandi dan username terlebih dahulu ke pengguna.
    */
-  async signUp(data: { username: string; angkatan: '24' | '25' | '26' }): Promise<AuthResponse & { generatedPassword?: string; createdUsername?: string }> {
+  async signUp(data: { username: string; angkatan: string; prodi?: 'kedokteran' | 'farmasi' | 'kebidanan' | string }): Promise<AuthResponse & { generatedPassword?: string; createdUsername?: string }> {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -274,15 +274,15 @@ class AuthClient {
   }
 
   /**
-   * Set angkatan untuk akun lama
+   * Set angkatan & prodi untuk akun
    */
-  async setAngkatan(userId: string, angkatan: '24' | '25' | '26'): Promise<boolean> {
+  async setAngkatan(userId: string, angkatan: string, prodi?: string): Promise<boolean> {
     try {
       const res = await fetch('/api/set-angkatan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ user_id: userId, angkatan }),
+        body: JSON.stringify({ user_id: userId, angkatan, prodi }),
       });
       return res.ok;
     } catch {

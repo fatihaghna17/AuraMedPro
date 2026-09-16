@@ -19,7 +19,8 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [regUsername, setRegUsername] = useState('');
-  const [regAngkatan, setRegAngkatan] = useState<'24' | '25' | '26'>('24');
+  const [regProdi, setRegProdi] = useState<'kedokteran' | 'farmasi' | 'kebidanan'>('kedokteran');
+  const [regAngkatan, setRegAngkatan] = useState<string>('24');
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
   
@@ -28,11 +29,25 @@ export default function LoginForm({
     username: string;
     password: string;
     angkatan: string;
+    prodi: string;
     session: any;
   } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
+
+  const handleProdiChange = (newProdi: 'kedokteran' | 'farmasi' | 'kebidanan') => {
+    setRegProdi(newProdi);
+    if (newProdi === 'farmasi') {
+      if (regAngkatan !== '23' && regAngkatan !== '24') {
+        setRegAngkatan('24');
+      }
+    } else {
+      if (regAngkatan === '23') {
+        setRegAngkatan('24');
+      }
+    }
+  };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +62,7 @@ export default function LoginForm({
       const res = await authClient.signUp({
         username: regUsername.trim(),
         angkatan: regAngkatan,
+        prodi: regProdi,
       });
 
       if (res.error) {
@@ -56,6 +72,7 @@ export default function LoginForm({
           username: res.createdUsername || res.data?.user?.user_metadata?.username || regUsername.trim(),
           password: res.generatedPassword,
           angkatan: regAngkatan,
+          prodi: regProdi,
           session: res.data?.session,
         });
       }
@@ -84,7 +101,8 @@ export default function LoginForm({
 
   const handleCopyAll = () => {
     if (newAccountData) {
-      const text = `Akun AuraMedPro:\nUsername: ${newAccountData.username}\nPassword: ${newAccountData.password}\nAngkatan: 20${newAccountData.angkatan}`;
+      const prodiLabel = newAccountData.prodi === 'farmasi' ? 'Farmasi' : newAccountData.prodi === 'kebidanan' ? 'Kebidanan' : 'Kedokteran';
+      const text = `Akun AuraMedPro:\nUsername: ${newAccountData.username}\nPassword: ${newAccountData.password}\nProdi: ${prodiLabel}\nAngkatan: 20${newAccountData.angkatan}`;
       navigator.clipboard.writeText(text);
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2000);
@@ -136,6 +154,13 @@ export default function LoginForm({
                   💡 Karena nama ini sudah digunakan sebelumnya, angkatan otomatis ditambahkan untuk membedakan akun Anda.
                 </div>
               )}
+
+              <div className="flex justify-between items-center text-xs">
+                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Program Studi</span>
+                <span className="font-bold text-sm">
+                  {newAccountData.prodi === 'farmasi' ? '💊 Farmasi' : newAccountData.prodi === 'kebidanan' ? '👶 Kebidanan' : '🩺 Kedokteran'}
+                </span>
+              </div>
 
               <div className="flex justify-between items-center text-xs">
                 <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Angkatan</span>
@@ -335,6 +360,26 @@ export default function LoginForm({
 
             <div>
               <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5 pl-1">
+                Program Studi (Prodi)
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <GraduationCap className="w-4 h-4" />
+                </span>
+                <select
+                  value={regProdi}
+                  onChange={(e) => handleProdiChange(e.target.value as any)}
+                  className="w-full pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all dark:text-white font-semibold cursor-pointer"
+                >
+                  <option value="kedokteran" className="dark:bg-slate-900">🩺 Kedokteran</option>
+                  <option value="farmasi" className="dark:bg-slate-900">💊 Farmasi</option>
+                  <option value="kebidanan" className="dark:bg-slate-900">👶 Kebidanan</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5 pl-1">
                 Angkatan
               </label>
               <div className="relative">
@@ -343,14 +388,28 @@ export default function LoginForm({
                 </span>
                 <select
                   value={regAngkatan}
-                  onChange={(e) => setRegAngkatan(e.target.value as '24' | '25' | '26')}
+                  onChange={(e) => setRegAngkatan(e.target.value)}
                   className="w-full pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all dark:text-white font-semibold cursor-pointer"
                 >
-                  <option value="24" className="dark:bg-slate-900">Angkatan 2024</option>
-                  <option value="25" className="dark:bg-slate-900">Angkatan 2025</option>
-                  <option value="26" className="dark:bg-slate-900">Angkatan 2026</option>
+                  {regProdi === 'farmasi' ? (
+                    <>
+                      <option value="23" className="dark:bg-slate-900">Angkatan 2023</option>
+                      <option value="24" className="dark:bg-slate-900">Angkatan 2024</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="24" className="dark:bg-slate-900">Angkatan 2024</option>
+                      <option value="25" className="dark:bg-slate-900">Angkatan 2025</option>
+                      <option value="26" className="dark:bg-slate-900">Angkatan 2026</option>
+                    </>
+                  )}
                 </select>
               </div>
+              {regProdi === 'farmasi' && (
+                <p className="text-[10px] text-amber-500 mt-1 pl-1 font-semibold">
+                  Khusus prodi Farmasi, angkatan yang tersedia adalah 2023 dan 2024.
+                </p>
+              )}
             </div>
 
             <div className={`p-3 rounded-2xl text-[11px] font-semibold ${
@@ -362,7 +421,7 @@ export default function LoginForm({
               </p>
               <p className="opacity-90">
                 Kata sandi Anda akan dibuat otomatis (4 huruf + 2 angka). Selama masa trial (Angkatan 20{regAngkatan}: sampai {
-                  regAngkatan === '24'
+                  regAngkatan === '23' || regAngkatan === '24'
                     ? '14 September 2026 jam 12.00 WIB'
                     : regAngkatan === '25'
                     ? '17 September 2026 jam 12.00 WIB'
