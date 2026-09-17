@@ -386,16 +386,16 @@ export function useAuth({
           }
           
           // Cek apakah pemiliknya adalah admin (global database)
-          const ownerProfile = row.profiles as any;
-          if (ownerProfile) {
-            uploaders[row.name] = ownerProfile.username;
-            if (
-              row.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || 
-              ownerProfile.username === 'admin' ||
-              (ownerProfile.username && ownerProfile.username.toLowerCase().startsWith('admin'))
-            ) {
-              globals.push(row.name);
-            }
+          const uploaderUser = row.uploader_username || (row.profiles as any)?.username;
+          if (uploaderUser) {
+            uploaders[row.name] = uploaderUser;
+          }
+          if (
+            row.user_id === '47c2368d-792a-4c69-9386-4b7d2139ddc3' || 
+            uploaderUser === 'admin' ||
+            (uploaderUser && uploaderUser.toLowerCase().startsWith('admin'))
+          ) {
+            globals.push(row.name);
           }
         });
       }
@@ -588,9 +588,19 @@ export function useAuth({
     (async () => {
       try {
         // 1. Hapus dari Cloudflare D1 & R2
-        cloudflareApi.deleteQuestionBank(name).catch((cfErr) => console.warn('Gagal hapus D1:', cfErr));
+        await cloudflareApi.deleteQuestionBank(name);
         // 2. Hapus dari storage browser lokal
-        deleteLocalUserBank(name);
+        deleteLocalUserBank(name, currentUser?.id);
+        deleteLocalUserBank(name); // fallback un-scoped
+
+        // 3. Bersihkan dari quizFolderMap
+        setGlobalQuizFolderMap((prev: any) => {
+          if (!prev || !prev[name]) return prev;
+          const next = { ...prev };
+          delete next[name];
+          cloudflareApi.saveAppSettings('quizFolderMap', next).catch(() => {});
+          return next;
+        });
 
         const updated = { ...questionDatabase };
         delete updated[name];
@@ -599,6 +609,7 @@ export function useAuth({
         triggerToast(`File "${name}" dihapus dari database`, '🗑');
       } catch (err) {
         console.error(err);
+        deleteLocalUserBank(name, currentUser?.id);
         deleteLocalUserBank(name);
         const updated = { ...questionDatabase };
         delete updated[name];
