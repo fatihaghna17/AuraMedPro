@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { cloudflareApi } from '../services/cloudflareApi';
 import { formatNotifTime } from '../utils/appHelpers';
 
@@ -80,7 +80,8 @@ export function useNotifications(currentUser: any, srs: any, triggerToast: (msg:
       }
 
       // 2. Kuis baru sejak lastCheck dari Cloudflare D1
-      const allBanks = await cloudflareApi.getQuestionBanks(userAngkatan, userProdi);
+      // meta=1: respons ringan tanpa questions_json (notifikasi hanya butuh name + created_at)
+      const allBanks = await cloudflareApi.getQuestionBanks(userAngkatan, userProdi, { meta: true });
       const newBanks = (allBanks || []).filter((b: any) => {
         if (!b.created_at) return false;
         return new Date(b.created_at) >= lastCheckDate;
@@ -129,13 +130,25 @@ export function useNotifications(currentUser: any, srs: any, triggerToast: (msg:
     setNotifOpen(false);
   };
 
+  // Ref pattern: selalu panggil callback terbaru TANPA mereset interval saat
+  // srs/props berubah. Sebelumnya useEffect ber-deps [fetchNotifications] memicu
+  // fetch ulang di SETIAP render (srs berubah tiap render saat timer kuis jalan)
+  // sehingga 1 request/detik/user -> 41M request/bulan (bom billing).
+  const fetchNotifRef = useRef(fetchNotifications);
   useEffect(() => {
-    if (currentUser) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 60000); // refresh tiap 1 menit
-      return () => clearInterval(interval);
-    }
-  }, [currentUser, fetchNotifications]);
+    fetchNotifRef.current = fetchNotifications;
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchNotifRef.current();
+    const interval = setInterval(() => {
+      // Hemat kuota: skip poll saat tab tidak terlihat (background)
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      fetchNotifRef.current();
+    }, 180000); // 3 menit — cukup untuk notifikasi "kuis baru"
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   return {
     notifOpen, notifList, notifCount, pushEnabled,

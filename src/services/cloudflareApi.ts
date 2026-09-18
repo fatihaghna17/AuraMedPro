@@ -81,10 +81,12 @@ export const cloudflareApi = {
   },
 
   // Question Banks
-  async getQuestionBanks(angkatan?: string, prodi?: string): Promise<QuestionBankMeta[]> {
+  async getQuestionBanks(angkatan?: string, prodi?: string, opts?: { meta?: boolean }): Promise<QuestionBankMeta[]> {
     const params = new URLSearchParams();
     if (angkatan) params.append('angkatan', angkatan);
     if (prodi) params.append('prodi', prodi);
+    // meta=1: respons ringan tanpa questions_json (polling notifikasi) + cache server 2 menit
+    if (opts?.meta) params.append('meta', '1');
     const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await fetchJson<QuestionBankMeta[]>(`${API_BASE}/question-banks${qs}`);
     return res.data || [];

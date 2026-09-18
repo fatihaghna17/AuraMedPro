@@ -18,6 +18,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const url = new URL(request.url);
   const angkatan = url.searchParams.get('angkatan');
   const prodi = url.searchParams.get('prodi');
+  // meta=1: mode ringan untuk polling notifikasi — tanpa kolom questions_json
+  // (payload jauh lebih kecil) + cache edge 2 menit agar storm polling terserap
+  const metaOnly = url.searchParams.get('meta') === '1';
 
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database D1 belum terhubung' }), {
@@ -26,19 +29,36 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     });
   }
 
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  if (metaOnly && cache) {
+    const hit = await cache.match(request);
+    if (hit) return hit;
+  }
+
   try {
-    let query = `
-      SELECT 
-        qb.id, 
-        qb.name, 
-        qb.user_id, 
-        qb.r2_key, 
+    const columns = metaOnly
+      ? `qb.id,
+        qb.name,
+        qb.user_id,
+        qb.r2_key,
+        qb.r2_url,
+        qb.created_at,
+        qb.angkatan,
+        qb.prodi,
+        p.username as uploader_username`
+      : `qb.id,
+        qb.name,
+        qb.user_id,
+        qb.r2_key,
         qb.r2_url,
         CASE WHEN qb.questions_json = 'null' THEN NULL ELSE qb.questions_json END as questions_json,
         qb.created_at,
         qb.angkatan,
         qb.prodi,
-        p.username as uploader_username
+        p.username as uploader_username`;
+    let query = `
+      SELECT
+        ${columns}
       FROM question_banks qb
       LEFT JOIN profiles p ON qb.user_id = p.id
     `;
@@ -72,10 +92,20 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     const { results } = await env.DB.prepare(query).bind(...binds).all();
 
-    return new Response(JSON.stringify({ data: results || [] }), {
+    const headers: Record<string, string> = { ...corsHeaders, 'Content-Type': 'application/json' };
+    if (metaOnly) {
+      // Respons meta aman di-cache: handler tidak membaca cookie/credentials
+      headers['Cache-Control'] = 'public, max-age=120';
+    }
+    const response = new Response(JSON.stringify({ data: results || [] }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers
     });
+
+    if (metaOnly && cache) {
+      context.waitUntil(cache.put(request, response.clone()));
+    }
+    return response;
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,

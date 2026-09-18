@@ -1,5 +1,5 @@
 // src/hooks/useSRS.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cloudflareApi } from '../services/cloudflareApi';
 import { SRSCard, QualityRating, calculateSM2, generateQuestionFingerprint, categorizeCards } from '../utils/srsAlgorithm';
 import { Question } from '../types';
@@ -96,13 +96,18 @@ export function useSRS(userId: string | null) {
     }
   }, [userId, fetchCards]);
 
-  const stats = categorizeCards(cards);
+  const stats = useMemo(() => categorizeCards(cards), [cards]);
 
-  return {
+  const startReview = useCallback(() => { setCurrentReviewIndex(0); setIsReviewing(true); }, []);
+  const stopReview = useCallback(() => { setIsReviewing(false); setCurrentReviewIndex(0); }, []);
+
+  // Memoisasi objek return: tanpa ini identitas hook berubah di SETIAP render
+  // dan memicu efek turunan (useNotifications) melakukan fetch ulang tiap render
+  // (penyebab 41M request ke /api/question-banks saat ujian).
+  return useMemo(() => ({
     cards, dueCards, isLoading,
     currentReviewIndex, isReviewing, stats,
     fetchCards, addWrongAnswers, submitRating, removeCard,
-    startReview: () => { setCurrentReviewIndex(0); setIsReviewing(true); },
-    stopReview: () => { setIsReviewing(false); setCurrentReviewIndex(0); },
-  };
+    startReview, stopReview,
+  }), [cards, dueCards, isLoading, currentReviewIndex, isReviewing, stats, fetchCards, addWrongAnswers, submitRating, removeCard, startReview, stopReview]);
 }
