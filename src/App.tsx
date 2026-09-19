@@ -1,4 +1,5 @@
 import AdminScreen from "./components/AdminScreen";
+import { WhatsNewModal } from "./components/WhatsNewModal";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
