@@ -19,7 +19,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // 2. Aktifkan langganan user (tambah 1 bulan)
     const oneMonthFromNow = new Date();
-    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+    oneMonthFromNow.setDate(oneMonthFromNow.getDate() + 30);
 
     await env.DB.prepare(
       "UPDATE profiles SET subscription_status = 'active', subscription_expires_at = ? WHERE id = ?"
