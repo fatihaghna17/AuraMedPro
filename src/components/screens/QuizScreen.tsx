@@ -619,6 +619,24 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           <div className={`w-2 h-2 rounded-full ${doubtStatus[currentIndex] ? 'bg-amber-500 shadow-sm shadow-amber-500' : 'bg-slate-400'}`} />
                           <span>Ragu-ragu</span>
                         </button>
+                        
+                        {quizMode === 'rmo' && (
+                          <button
+                            onClick={() => selectAnswer(null)}
+                            disabled={userAnswers[currentIndex] === null || isRevealed[currentIndex]}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
+                              theme === 'dark'
+                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-700 text-rose-400'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-rose-500'
+                            }`}
+                            title="Kosongkan jawaban (menghindari -1 jika salah)"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Hapus Jawaban</span>
+                          </button>
+                        )}
                       </div>
 
                       {(isAdaptiveMode && currentIndex === currentQuiz.length - 1 && currentQuiz.length < 30) ? (

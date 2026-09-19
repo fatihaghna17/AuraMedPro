@@ -2493,7 +2493,7 @@ export default function App() {
     }
   };
 
-  const selectAnswer = (ans: string) => {
+  const selectAnswer = (ans: string | null) => {
     if (isRevealed[currentIndex]) return;
     const updated = [...userAnswers];
     updated[currentIndex] = ans;
