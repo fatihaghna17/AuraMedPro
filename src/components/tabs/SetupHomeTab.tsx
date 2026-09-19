@@ -15,7 +15,7 @@ import { CirclePlay } from 'lucide-react';
 interface SetupHomeTabProps {
   theme: string;
   currentUser?: any;
-  trialEndsAt?: string | null;
+  trialEndsAt?: string | null; subscriptionStatus?: string | null; subscriptionExpiresAt?: string | null;
   userXP: number;
   currentStreak: number;
   longestStreak: number;
@@ -73,7 +73,7 @@ interface SetupHomeTabProps {
 }
 
 export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
-  theme, currentUser, trialEndsAt, userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate,
+  theme, currentUser, trialEndsAt, subscriptionStatus, subscriptionExpiresAt, userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate,
   totalQuestionsAnswered, quizHistory, achievements, profileUsername,
   expandedCompetencies, setExpandedCompetencies, pomodoroMode, pomodoroSecondsLeft,
   pomodoroActive, pomodoroCount, setPomodoroActive, setPomodoroSecondsLeft,
@@ -119,7 +119,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ⏱️ Top Trial Countdown Banner */}
       <TrialCountdownBanner
         theme={theme}
-        trialEndsAt={trialEndsAt}
+        trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt}
         userAngkatan={userAngkatan}
         isSuperAdmin={isSuperAdmin}
         isAdminAngkatan={isAdminAngkatan}

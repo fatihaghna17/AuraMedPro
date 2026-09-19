@@ -35,7 +35,7 @@ interface SetupProfileTabProps {
   userAngkatan?: string | null;
   userProdi?: string | null;
   quizHistory?: any[];
-  trialEndsAt?: string | null;
+  trialEndsAt?: string | null; subscriptionStatus?: string | null; subscriptionExpiresAt?: string | null;
   isSuperAdmin?: boolean;
 }
 
@@ -43,7 +43,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   theme, currentUser, profileUsername, userXP, currentStreak, longestStreak,
   totalQuestionsAnswered, streakFreezeLeft, lastActiveDate, exportData,
   importData, triggerToast, achievementFilter, setAchievementFilter, achievements,
-  userAngkatan, userProdi, quizHistory = [], trialEndsAt, isSuperAdmin
+  userAngkatan, userProdi, quizHistory = [], trialEndsAt, subscriptionStatus, subscriptionExpiresAt, isSuperAdmin
 }) => {
   const isUserAdmin = Boolean(
     isSuperAdmin ||
@@ -128,7 +128,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
       {/* ⏱️ Top Trial Countdown Banner */}
       <TrialCountdownBanner
         theme={theme}
-        trialEndsAt={trialEndsAt}
+        trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt}
         userAngkatan={userAngkatan}
         isSuperAdmin={isUserAdmin}
       />

@@ -3,7 +3,7 @@ import { Clock, Sparkles, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-
 
 interface TrialCountdownBannerProps {
   theme: string;
-  trialEndsAt?: string | null;
+  trialEndsAt?: string | null; subscriptionStatus?: string | null; subscriptionExpiresAt?: string | null;
   userAngkatan?: string | null;
   isSuperAdmin?: boolean;
   isAdminAngkatan?: boolean;
@@ -18,7 +18,7 @@ const TRIAL_ENDS_MAP: Record<string, string> = {
 
 export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   theme,
-  trialEndsAt,
+  trialEndsAt, subscriptionStatus, subscriptionExpiresAt,
   userAngkatan,
   isSuperAdmin = false,
   isAdminAngkatan = false,
@@ -26,9 +26,12 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 }) => {
   const isDark = theme === 'dark';
 
+  const isActiveSubscription = subscriptionStatus === 'active' && !!subscriptionExpiresAt;
+
   // Tentukan target batas trial
-  const effectiveTrialEnd =
-    trialEndsAt ||
+  const effectiveTrialEnd = isActiveSubscription
+    ? subscriptionExpiresAt
+    : trialEndsAt ||
     (userAngkatan && TRIAL_ENDS_MAP[userAngkatan] ? TRIAL_ENDS_MAP[userAngkatan] : '2026-09-14T05:00:00Z');
 
   const [timeLeft, setTimeLeft] = useState<{
@@ -69,7 +72,6 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   try {
     const endDateObj = new Date(effectiveTrialEnd);
     const datePart = endDateObj.toLocaleDateString('id-ID', {
-      weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -115,57 +117,11 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
     );
   }
 
-  // JIKA MASA TRIAL SUDAH HABIS:
-  // Tampilkan pesan bahwa sistem pembayaran belum siap dan trial diperpanjang otomatis
-  if (isExpired) {
-    return (
-      <div
-        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden ${
-          isDark
-            ? 'bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-emerald-950/40 border-amber-500/40 shadow-lg shadow-amber-500/10'
-            : 'bg-gradient-to-r from-amber-50 via-purple-50 to-emerald-50 border-amber-300 shadow-md'
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-lg border border-amber-500/30 shrink-0 shadow-sm">
-              🎁
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                  Perpanjangan Otomatis
-                </span>
-                {userAngkatan && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
-                    Angkatan '{userAngkatan}
-                  </span>
-                )}
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Akses Tetap Aktif
-                </span>
-              </div>
-              <h3 className={`text-sm font-black mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Sistem Pembayaran Belum Siap — Masa Trial Diperpanjang
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
-                Masa berlaku akun Anda <span className="font-bold text-amber-500 dark:text-amber-400">diperpanjang sampai waktu yang tidak ditentukan</span>. Anda tetap dapat mengakses seluruh soal dan fitur Pro secara gratis!
-              </p>
-            </div>
-          </div>
-
-          <div className="shrink-0 flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-black flex items-center gap-1.5 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Akses Pro Aktif</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+  if (isExpired && !isActiveSubscription) {
+    return null; // Ini tidak akan terjadi kecuali glitch (biasanya ke-block SubscriptionGate)
   }
 
-  // JIKA MASA TRIAL MASIH BERJALAN (COUNTDOWN AKTIF):
+  // JIKA MASA TRIAL ATAU SUBSCRIPTION MASIH BERJALAN (COUNTDOWN AKTIF):
   return (
     <div
       className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden ${
@@ -180,7 +136,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
               <Clock className="w-3 h-3" />
-              <span>Masa Berlaku Trial Pro</span>
+              <span>{isActiveSubscription ? 'Langganan Pro Aktif' : 'Masa Berlaku Trial Pro'}</span>
             </span>
             {userAngkatan && (
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
@@ -189,12 +145,12 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
             )}
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Free Access</span>
+              <span>{isActiveSubscription ? 'Akses Premium' : 'Free Access'}</span>
             </span>
           </div>
 
           <h3 className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Sisa Waktu Percobaan Akun Anda
+            {isActiveSubscription ? 'Sisa Masa Berlaku Langganan Anda' : 'Sisa Waktu Percobaan Akun Anda'}
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Berakhir: <span className="font-semibold text-indigo-600 dark:text-indigo-300">{formattedEndDate}</span>
