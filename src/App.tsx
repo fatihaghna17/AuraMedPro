@@ -4170,6 +4170,7 @@ export default function App() {
             {dashboardTab === 'groups' && (
               <SetupGroupsTab 
                 currentUser={currentUser} 
+                theme={theme}
                 onJoinGroup={(groupId, groupName) => {
                   setActiveStudyGroupId(groupId);
                   setActiveStudyGroupName(groupName);
