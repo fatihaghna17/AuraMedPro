@@ -144,8 +144,9 @@ export default function SubscriptionGate({
         )}
 
         {/* Info */}
-        <p className={`text-[10px] text-center mt-4 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-          Silakan kirimkan bukti pembayaran Anda ke WhatsApp Admin. Akun akan diaktifkan secara manual.
+        <p className={`text-[10px] text-center mt-4 leading-relaxed ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+          Kirimkan bukti pembayaran Anda ke WhatsApp Admin untuk diaktifkan. 
+          <br/><span className="font-bold text-amber-500">Jika sudah dikonfirmasi, silakan muat ulang (refresh) browser Anda.</span>
         </p>
       </div>
     </div>
