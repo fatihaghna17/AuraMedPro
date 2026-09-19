@@ -1,4 +1,5 @@
-import { hashPasswordPBKDF2, signJwt, createAuthCookie, generatePassword } from './_utils';
+import { hashPasswordPBKDF2, signJwt, createAuthCookie,
+  checkSubscriptionStatus, generatePassword } from './_utils';
 
 interface Env {
   DB: D1Database;
@@ -111,6 +112,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const jwtSecret = env.AUTH_JWT_SECRET || 'auramedpro-jwt-secret-dev-2026-key-fixed-fallback';
     const jwt = await signJwt({ sub: userId, guest: false }, jwtSecret);
 
+    const profileForCheck = {
+      role: 'user',
+      username: finalUsername,
+      prodi: prodi,
+      angkatan: String(angkatan),
+      subscription_status: 'trial',
+      trial_ends_at: trialEndsAt
+    };
+    const subStatus = checkSubscriptionStatus(profileForCheck);
+
     const userPayload = {
       id: userId,
       email,
@@ -119,6 +130,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         is_guest: false,
         angkatan: String(angkatan),
         prodi,
+        subscription_status: 'trial',
+        trial_ends_at: trialEndsAt,
+        canAccess: subStatus.canAccess,
       },
       is_anonymous: false,
     };
