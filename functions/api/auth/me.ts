@@ -4,6 +4,7 @@ import {
   signJwt,
   shouldRefreshJwt,
   createAuthCookie,
+  checkSubscriptionStatus,
 } from './_utils';
 
 interface Env {
@@ -62,12 +63,19 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     }
 
     const isGuest = Boolean(profile.is_guest || payload.guest);
+    const subStatus = checkSubscriptionStatus(profile);
     const userPayload = {
       id: profile.id,
       email: profile.email || `${profile.username}@ai.online`,
       user_metadata: {
         username: profile.username,
         is_guest: isGuest,
+        angkatan: profile.angkatan,
+        prodi: profile.prodi || 'kedokteran',
+        subscription_status: profile.subscription_status,
+        trial_ends_at: profile.trial_ends_at,
+        subscription_expires_at: profile.subscription_expires_at,
+        canAccess: subStatus.canAccess,
       },
       is_anonymous: isGuest,
       profile: {

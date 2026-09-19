@@ -148,10 +148,21 @@ export function useAuth({
         setSubscriptionExpiresAt(profile.subscription_expires_at || null);
 
         // Validasi akses langganan / trial:
-        // Catatan: Sistem pembayaran belum siap, jadi akses jangan langsung dinonaktifkan.
-        // Pengguna tetap dapat mengakses sistem dengan status trial diperpanjang.
-        const now = new Date();
-        let accessAllowed = true;
+        let accessAllowed = user.user_metadata?.canAccess ?? true;
+        
+        // Coba validasi jika backend gagal mengirimkan canAccess
+        if (user.user_metadata?.canAccess === undefined) {
+           try {
+              const subInfo = await authClient.getSubscriptionStatus(userId);
+              if (subInfo) {
+                accessAllowed = subInfo.canAccess;
+                setSubscriptionStatus(subInfo.status);
+                setTrialEndsAt(subInfo.trialEndsAt);
+                setSubscriptionExpiresAt(subInfo.subscriptionExpiresAt);
+              }
+           } catch (e) {}
+        }
+        
         setCanAccess(accessAllowed);
 
         isProfileSyncedRef.current = true;
