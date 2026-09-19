@@ -224,8 +224,8 @@ export function generatePassword(): string {
   return num.toString().padStart(3, '0');
 }
 
-export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired', expiresAt: string | null } {
-  if (profile.role === 'admin' || profile.role === 'super_admin') {
+export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired' | 'trial_extended', expiresAt: string | null } {
+  if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || profile.username === 'admin' || profile.username === 'fatih17') {
     return { canAccess: true, status: 'active', expiresAt: null };
   }
   
@@ -242,9 +242,18 @@ export function checkSubscriptionStatus(profile: any): { canAccess: boolean, sta
     if (profile.trial_ends_at && new Date(profile.trial_ends_at) > now) {
       return { canAccess: true, status: 'trial', expiresAt: profile.trial_ends_at };
     }
-    // Sistem pembayaran belum siap: akses diperpanjang sementara
-    return { canAccess: true, status: 'trial', expiresAt: profile.trial_ends_at || null };
+    
+    // Trial habis menurut tanggal
+    const isKedokteran2425 = profile.prodi?.toLowerCase() === 'kedokteran' && (profile.angkatan === '24' || profile.angkatan === '25');
+    
+    if (isKedokteran2425) {
+      // Wajib langganan
+      return { canAccess: false, status: 'expired', expiresAt: profile.trial_ends_at || null };
+    } else {
+      // Yang lain masih diberi kelonggaran (trial_extended)
+      return { canAccess: true, status: 'trial_extended', expiresAt: profile.trial_ends_at || null };
+    }
   }
   
-  return { canAccess: true, status: 'trial', expiresAt: null };
+  return { canAccess: false, status: 'expired', expiresAt: null };
 }

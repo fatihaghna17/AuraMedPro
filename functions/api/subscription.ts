@@ -47,7 +47,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     let trialEndsAt = profile.trial_ends_at || trialEndsMap[String(profile.angkatan)] || '2026-09-14T05:00:00Z';
     let subscriptionExpiresAt = profile.subscription_expires_at;
 
-    if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector') {
+    if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || profile.username === 'admin' || profile.username === 'fatih17') {
       status = 'active';
       canAccess = true;
     } else if (profile.subscription_status === 'active' && profile.subscription_expires_at) {
@@ -58,10 +58,18 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     } else if (profile.subscription_status === 'trial' || !profile.subscription_status) {
       if (profile.trial_ends_at && new Date(profile.trial_ends_at) > now) {
         status = 'trial';
+        canAccess = true;
       } else {
-        status = 'trial_extended';
+        const isKedokteran2425 = profile.prodi?.toLowerCase() === 'kedokteran' && (profile.angkatan === '24' || profile.angkatan === '25');
+        
+        if (isKedokteran2425) {
+          status = 'expired';
+          canAccess = false;
+        } else {
+          status = 'trial_extended';
+          canAccess = true;
+        }
       }
-      canAccess = true;
     }
 
     const payload = {
