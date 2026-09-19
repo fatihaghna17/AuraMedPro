@@ -221,7 +221,9 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
         }`}>
           <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>
-            Sistem pembayaran sedang disiapkan. Jika waktu habis, masa trial akan otomatis diperpanjang tanpa memutus akses.
+            {isActiveSubscription 
+              ? 'Terima kasih telah berlangganan AuraMedPro. Pastikan untuk memperpanjang sebelum waktu habis agar akses belajar Anda tidak terputus.'
+              : 'Waktu trial Anda terus berjalan. Silakan lakukan pembayaran jika waktu sudah habis untuk melanjutkan akses tanpa henti.'}
           </span>
         </div>
       )}
