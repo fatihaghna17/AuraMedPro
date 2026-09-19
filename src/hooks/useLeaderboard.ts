@@ -68,7 +68,16 @@ export function useLeaderboard(
         // Admin (super admin maupun admin angkatan) melihat seluruh user
         setGlobalLeaderboard(cfData || []);
       } else {
-        const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
+        const isUserMatch = (u: any) => {
+          if (!u) return false;
+          if (currentUser?.id && (u.id === currentUser.id || u.user_id === currentUser.id)) return true;
+          if (u.username && profileUsername && (
+            u.username === profileUsername ||
+            u.username.trim().toLowerCase() === profileUsername.trim().toLowerCase()
+          )) return true;
+          return false;
+        };
+        const userRankIndex = (cfData || []).findIndex(isUserMatch);
         let top10 = (cfData || []).slice(0, 10);
         if (userRankIndex > 9) {
           top10.push({
@@ -98,7 +107,16 @@ export function useLeaderboard(
         // Admin (super admin maupun admin angkatan) melihat seluruh user
         setFileLeaderboard(cfData || []);
       } else {
-        const userRankIndex = (cfData || []).findIndex((u: any) => u.username === profileUsername);
+        const isUserMatch = (u: any) => {
+          if (!u) return false;
+          if (currentUser?.id && (u.id === currentUser.id || u.user_id === currentUser.id)) return true;
+          if (u.username && profileUsername && (
+            u.username === profileUsername ||
+            u.username.trim().toLowerCase() === profileUsername.trim().toLowerCase()
+          )) return true;
+          return false;
+        };
+        const userRankIndex = (cfData || []).findIndex(isUserMatch);
         let top10 = (cfData || []).slice(0, 10);
         if (userRankIndex > 9) {
           top10.push({

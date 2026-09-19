@@ -1,3 +1,4 @@
+import AdminScreen from "./components/AdminScreen";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
@@ -128,7 +129,6 @@ const lazyWithRetry = <T extends React.ComponentType<any>>(
 
 // Lazy loaded heavy external components
 const DashboardCharts = lazyWithRetry(() => import('./components/DashboardCharts').then(m => ({ default: m.DashboardCharts })));
-const MabarMain = lazyWithRetry(() => import("./components/mabar/MabarMain"));
 import LightboxModal from './components/LightboxModal';
 import IosInstallModal from './components/IosInstallModal';
 import SkeletonLoader from './components/SkeletonLoader';
@@ -163,6 +163,8 @@ import PendingSessionsCard from './components/PendingSessionsCard';
 import HistoryAnalyticsPanel from './components/HistoryAnalyticsPanel';
 
 export default function App() {
+  const [showWhatsNew, setShowWhatsNew] = useState(() => !localStorage.getItem("whatsnew_v2"));
+  if (window.location.pathname === "/fatihganteng") return <AdminScreen />;
   // === STATE MANAGEMENT ===
   
   // AI Tutor States
@@ -224,8 +226,7 @@ export default function App() {
     // Set user immediately so the dashboard renders
     setCurrentUser(user);
     setGuestRoomCode(cleanCode);
-    setDashboardTab('mabar');
-    triggerToast(`Selamat datang ${cleanNick}! Masuk ke room...`, '✅');
+        triggerToast(`Selamat datang ${cleanNick}! Masuk ke room...`, '✅');
   };
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [pendingSessions, setPendingSessions] = useState<any[]>([]);
@@ -537,7 +538,7 @@ export default function App() {
 // extracted answerNotes state
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'mabar'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
   const [adminReports, setAdminReports] = useState<any[]>([]);
 
   useEffect(() => {
@@ -3044,6 +3045,7 @@ export default function App() {
   return (
     <div className={`min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-300 ${theme === 'dark' ? 'dark text-brand-text bg-brand-bg' : 'text-slate-900 bg-slate-50'}`}>
       
+      {showWhatsNew && <WhatsNewModal onClose={() => { setShowWhatsNew(false); localStorage.setItem("whatsnew_v2", "true"); }} />}
       {/* Dynamic Background Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <span className="absolute w-[450px] h-[450px] rounded-full bg-rose-400/20 dark:bg-rose-900/10 blur-[100px] -top-[120px] -left-[100px] animate-float-orb" />
@@ -3072,6 +3074,8 @@ export default function App() {
           userId={currentUser.id}
           trialEndsAt={trialEndsAt}
           onRefreshStatus={refreshSubscriptionStatus}
+          username={profileUsername}
+          angkatan={userAngkatan}
         />
       ) : (
         <>
@@ -4101,14 +4105,6 @@ export default function App() {
             {dashboardTab === 'srs' && <SetupSRSTab theme={theme} srs={srs} triggerToast={triggerToast} srsAnswerRevealed={srsAnswerRevealed} setSrsAnswerRevealed={setSrsAnswerRevealed} srsPendingRating={srsPendingRating} setSrsPendingRating={setSrsPendingRating} />}
 
             {/* Box: Study Room Dashboard */}
-            {dashboardTab === 'mabar' && (
-              <MabarMain 
-                currentUser={currentUser} 
-                availableTopics={Object.keys(questionDatabase)} 
-                questionDatabase={questionDatabase} 
-                initialRoomCode={guestRoomCode} 
-              />
-            )}
 
             {dashboardTab === 'notes' && <SetupNotesTab theme={theme} studyRoom={studyRoom} triggerToast={triggerToast} setEditingNote={setEditingNote} setNoteRefQuestion={setNoteRefQuestion} setIsNoteModalOpen={setIsNoteModalOpen} setBankFilter={setBankFilter} setCurrentQuiz={setCurrentQuiz} setUserAnswers={setUserAnswers} setDoubtStatus={setDoubtStatus} setIsRevealed={setIsRevealed} setCurrentIndex={setCurrentIndex} setQuizSecondsLeft={setQuizSecondsLeft} setXpHistory={setXpHistory} setOpenReviewIndices={setOpenReviewIndices} setUnlockedHints={setUnlockedHints} setHasSubmittedLeaderboard={setHasSubmittedLeaderboard} setLastQuizScore={setLastQuizScore} setIsDailyChallenge={setIsDailyChallenge} setQuizTimerActive={setQuizTimerActive} setScreen={setScreen} setShowSidebar={setShowSidebar} bankFilter={bankFilter} startBookmarkPractice={startBookmarkPractice} userXP={userXP} activeQuizSessionIdRef={activeQuizSessionIdRef} hasRecordedLeaderboard={hasRecordedLeaderboard} />}
 

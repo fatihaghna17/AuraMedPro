@@ -8,10 +8,12 @@ interface SubscriptionGateProps {
   trialEndsAt: string | null;
   onRefreshStatus: () => void;
   mayarPaymentUrl?: string;
+  username?: string;
+  angkatan?: string;
 }
 
 export default function SubscriptionGate({
-  theme, userId, trialEndsAt, onRefreshStatus, mayarPaymentUrl
+  theme, userId, trialEndsAt, onRefreshStatus, mayarPaymentUrl, username, angkatan
 }: SubscriptionGateProps) {
   const isDark = theme === 'dark';
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
@@ -122,10 +124,13 @@ export default function SubscriptionGate({
             </p>
             
             <div className="space-y-2">
+              <div className="flex justify-center mb-4">
+                <img src="/qris.jpg" alt="QRIS AuraMedPro" className="w-48 h-48 rounded-xl shadow-lg border-2 border-white object-cover" />
+              </div>
               <div className="flex justify-between items-center">
-                <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bank</span>
+                <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bank / QRIS</span>
                 <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                  {paymentInfo.bankInfo.bank}
+                  {paymentInfo.bankInfo.bank} (Bisa di-scan)
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -154,28 +159,28 @@ export default function SubscriptionGate({
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-slate-400" />}
                 </button>
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Rp {paymentInfo.amount.toLocaleString('id-ID')} + kode unik {paymentInfo.uniqueCode}
+                  Rp {paymentInfo.amount.toLocaleString('id-ID')} + password unik {paymentInfo.uniqueCode}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Refresh Status */}
-        <button
-          onClick={handleRefresh}
-          disabled={checking}
-          className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 ${
-            isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
-          } ${checking ? 'opacity-50' : ''}`}
-        >
-          <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
-          {checking ? 'Mengecek...' : 'Saya Sudah Bayar — Cek Status'}
-        </button>
+        {/* Konfirmasi WhatsApp */}
+        {paymentInfo && (
+          <a
+            href={`https://wa.me/628978902467?text=${encodeURIComponent(`Halo Admin, saya sudah melakukan pembayaran langganan AuraMedPro.\n\nUsername: ${username || 'Belum diset'}\nAngkatan: ${angkatan || 'Belum diset'}\nNominal: Rp ${paymentInfo.totalAmount.toLocaleString('id-ID')}\n\n*Lampirkan bukti transfer di sini*`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full mt-4 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-white bg-green-500 hover:bg-green-600 shadow-lg hover:scale-[1.01] active:scale-[0.99]`}
+          >
+            📱 Konfirmasi Bukti ke WhatsApp
+          </a>
+        )}
 
         {/* Info */}
         <p className={`text-[10px] text-center mt-4 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-          Pembayaran akan diverifikasi otomatis. Jika dalam 1×24 jam belum aktif, hubungi admin.
+          Silakan kirimkan bukti pembayaran Anda ke WhatsApp Admin. Akun akan diaktifkan secara manual.
         </p>
       </div>
     </div>

@@ -12,6 +12,7 @@ interface AvatarFrameModalProps {
     totalQuestions: number;
     suddenDeathBest: number;
     todayQuestions?: number;
+    isAdmin?: boolean;
   };
   username: string;
   theme: string;
@@ -126,7 +127,7 @@ export const AvatarFrameModal: React.FC<AvatarFrameModalProps> = ({
                     {unlocked ? (
                       <span className="text-emerald-500 dark:text-emerald-400 font-bold flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
-                        Terbuka
+                        Terbuka {userStats.isAdmin && <span className="text-[8px] px-1 py-0.2 rounded bg-indigo-500/20 text-indigo-400 uppercase font-black">Admin</span>}
                       </span>
                     ) : (
                       <span className="text-rose-500 dark:text-rose-400 font-bold flex items-center gap-1">

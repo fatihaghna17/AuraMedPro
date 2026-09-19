@@ -219,16 +219,9 @@ export function shouldRefreshJwt(payload: JwtPayload): boolean {
 }
 
 export function generatePassword(): string {
-  const letters = 'abcdefghijklmnopqrstuvwxyz';
-  const digits = '0123456789';
-  let pass = '';
-  for (let i = 0; i < 4; i++) {
-    pass += letters.charAt(Math.floor(Math.random() * letters.length));
-  }
-  for (let i = 0; i < 2; i++) {
-    pass += digits.charAt(Math.floor(Math.random() * digits.length));
-  }
-  return pass;
+  // Hanya menghasilkan 3 digit angka acak (000 - 999)
+  const num = Math.floor(Math.random() * 1000);
+  return num.toString().padStart(3, '0');
 }
 
 export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired', expiresAt: string | null } {

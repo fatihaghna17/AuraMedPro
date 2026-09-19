@@ -226,3 +226,55 @@
   position: relative;
   z-index: 4;
 }
+
+/* 4. Sudden Death Aura (Streak 20+ Mode Sudden Death) */
+@keyframes suddenDeathAuraPulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(225, 29, 72, 0.45), 0 0 24px rgba(239, 68, 68, 0.25), inset 0 0 10px rgba(225, 29, 72, 0.15);
+    border-color: rgba(244, 63, 94, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(225, 29, 72, 0.75), 0 0 42px rgba(249, 115, 22, 0.5), inset 0 0 16px rgba(225, 29, 72, 0.3);
+    border-color: rgba(251, 113, 133, 1);
+  }
+}
+
+.aura-suddendeath-row {
+  animation: suddenDeathAuraPulse 2.8s ease-in-out infinite;
+  position: relative;
+  z-index: 4;
+}
+
+.aura-suddendeath-row td {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0.14) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(245, 158, 11, 0.14) 100%) !important;
+  border-top: 1.5px solid rgba(244, 63, 94, 0.75) !important;
+  border-bottom: 1.5px solid rgba(244, 63, 94, 0.75) !important;
+}
+
+.aura-suddendeath-row td:first-child {
+  border-left: 1.5px solid rgba(244, 63, 94, 0.75) !important;
+  border-top-left-radius: 0.75rem;
+  border-bottom-left-radius: 0.75rem;
+}
+
+.aura-suddendeath-row td:last-child {
+  border-right: 1.5px solid rgba(244, 63, 94, 0.75) !important;
+  border-top-right-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+}
+
+.dark .aura-suddendeath-row td {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0.26) 0%, rgba(239, 68, 68, 0.18) 50%, rgba(245, 158, 11, 0.24) 100%) !important;
+  border-top: 1.5px solid rgba(251, 113, 133, 0.85) !important;
+  border-bottom: 1.5px solid rgba(251, 113, 133, 0.85) !important;
+}
+
+.dark .aura-suddendeath-row td:first-child {
+  border-left: 1.5px solid rgba(251, 113, 133, 0.85) !important;
+}
+
+.dark .aura-suddendeath-row td:last-child {
+  border-right: 1.5px solid rgba(251, 113, 133, 0.85) !important;
+}
+
+

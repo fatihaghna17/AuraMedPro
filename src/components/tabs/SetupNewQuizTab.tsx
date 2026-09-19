@@ -239,7 +239,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                             <div>
                               <strong className="font-extrabold block">Aturan Sudden Death (1 Nyawa) Aktif:</strong>
-                              Tantangan presisi tanpa ampun: Salah satu soal saja langsung Game Over! Capai rekor streak benar beruntun setinggi mungkin. Capai streak ≥ 10 untuk membuka Bingkai Avatar Tengkorak Emas!
+                              Tantangan presisi tanpa ampun: Salah satu soal saja langsung Game Over! Capai rekor streak benar beruntun setinggi mungkin. Capai streak ≥ 20 untuk membuka Bingkai Avatar Tengkorak Emas!
                             </div>
                           </div>
                         )}

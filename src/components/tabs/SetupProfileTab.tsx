@@ -36,17 +36,57 @@ interface SetupProfileTabProps {
   userProdi?: string | null;
   quizHistory?: any[];
   trialEndsAt?: string | null;
+  isSuperAdmin?: boolean;
 }
 
 export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   theme, currentUser, profileUsername, userXP, currentStreak, longestStreak,
   totalQuestionsAnswered, streakFreezeLeft, lastActiveDate, exportData,
   importData, triggerToast, achievementFilter, setAchievementFilter, achievements,
-  userAngkatan, userProdi, quizHistory = [], trialEndsAt
+  userAngkatan, userProdi, quizHistory = [], trialEndsAt, isSuperAdmin
 }) => {
+  const isUserAdmin = Boolean(
+    isSuperAdmin ||
+    profileUsername === 'admin' ||
+    profileUsername?.toLowerCase().startsWith('admin') ||
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'super_admin' ||
+    currentUser?.user_metadata?.role === 'admin' ||
+    currentUser?.user_metadata?.role === 'super_admin' ||
+    currentUser?.user_metadata?.username === 'admin'
+  );
+
   const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
   const [currentFrameId, setCurrentFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
   const [currentSoundPack, setCurrentSoundPack] = useState<SoundPackId>(getSavedSoundPack());
+  
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (newPassword.length !== 3 || !/^\d{3}$/.test(newPassword)) {
+      triggerToast('Password harus 3 digit angka!', '⚠️');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerToast('Password berhasil diubah!', '✅');
+        setNewPassword('');
+      } else {
+        triggerToast('Gagal mengubah password', '❌');
+      }
+    } catch (err) {
+      triggerToast('Terjadi kesalahan jaringan', '❌');
+    }
+    setIsChangingPassword(false);
+  };
 
   const suddenDeathBest = getSuddenDeathBestStreak();
   const todayQuestions = getTodayQuestionsAnswered(quizHistory);
@@ -77,7 +117,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
       case 'quest_500_today':
         return 'aura-quest-row border-purple-400/80 shadow-[0_0_24px_rgba(168,85,247,0.35)]';
       case 'sudden_death_master':
-        return 'border-rose-500/80 shadow-[0_0_22px_rgba(244,63,94,0.35)]';
+        return 'aura-suddendeath-row border-rose-500/80 shadow-[0_0_24px_rgba(244,63,94,0.4)]';
       default:
         return '';
     }
@@ -90,7 +130,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
         theme={theme}
         trialEndsAt={trialEndsAt}
         userAngkatan={userAngkatan}
-        isSuperAdmin={currentUser?.role === 'super_admin' || currentUser?.role === 'admin'}
+        isSuperAdmin={isUserAdmin}
       />
               
       <div className={`p-4 sm:p-6 rounded-3xl border transition-all duration-300 space-y-6 relative overflow-hidden ${getAuraCardClass(activeFrame.id)} ${
@@ -442,6 +482,39 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
                   <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
 
+                  {/* Ganti Password Section */}
+                  <div>
+                    <h3 className={`text-sm font-black mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      Ganti Password 🔐
+                    </h3>
+                    <div className="flex gap-2">
+                      <input 
+                        type="password"
+                        maxLength={3}
+                        placeholder="3 Digit Angka (Misal: 123)"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value.replace(/[^0-9]/g, ''))}
+                        className={`flex-1 px-4 py-3.5 rounded-xl border-2 text-center text-lg font-bold tracking-[0.5em] transition-all focus:outline-none ${
+                          theme === 'dark'
+                            ? 'bg-slate-900/50 border-slate-700 text-white placeholder-slate-600 focus:border-indigo-500'
+                            : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-indigo-500'
+                        }`}
+                      />
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={isChangingPassword || newPassword.length !== 3}
+                        className="px-6 py-3.5 rounded-xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isChangingPassword ? '...' : 'Simpan'}
+                      </button>
+                    </div>
+                    <p className={`text-[10px] mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Password harus berupa 3 digit angka.
+                    </p>
+                  </div>
+
+                  <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
+
                   <button
                     onClick={async () => {
                       await authClient.signOut();
@@ -464,7 +537,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
             level: levelInfo.level,
             totalQuestions: currentUser?.total_questions_answered || totalQuestionsAnswered || 0,
             suddenDeathBest,
-            todayQuestions
+            todayQuestions,
+            isAdmin: isUserAdmin
           }}
           username={profileUsername}
           theme={theme}
