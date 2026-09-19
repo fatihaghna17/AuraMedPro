@@ -594,6 +594,48 @@ export function useAuth({
     }
   };
 
+  const fetchGroupBanks = async (groupId: string) => {
+    try {
+      const cfBanks = await cloudflareApi.getQuestionBanks(undefined, undefined, { study_group_id: groupId });
+      if (cfBanks && cfBanks.length > 0) {
+        const uploaderMapUpdate: Record<string, string> = {};
+        const angkatanMapUpdate: Record<string, string> = {};
+        const prodiMapUpdate: Record<string, string> = {};
+        const createdAtMapUpdate: Record<string, string> = {};
+        const dbUpdate: Record<string, any[]> = {};
+        const newDbs: string[] = [];
+
+        for (const b of cfBanks) {
+          const name = b.name;
+          uploaderMapUpdate[name] = b.uploader_username || 'admin';
+          angkatanMapUpdate[name] = b.angkatan || 'all';
+          prodiMapUpdate[name] = b.prodi || 'all';
+          if (b.created_at) {
+            createdAtMapUpdate[name] = b.created_at;
+          }
+          if (b.questions_json && b.questions_json !== 'null') {
+             try {
+               const parsed = JSON.parse(b.questions_json);
+               dbUpdate[name] = Array.isArray(parsed) ? parsed : [];
+               newDbs.push(name);
+             } catch(e) {
+               console.error("Gagal parse questions_json dari grup:", name);
+             }
+          }
+        }
+
+        setUploaderMap((prev) => ({ ...prev, ...uploaderMapUpdate }));
+        setBankAngkatanMap((prev) => ({ ...prev, ...angkatanMapUpdate }));
+        setBankProdiMap((prev) => ({ ...prev, ...prodiMapUpdate }));
+        setBankCreatedAtMap((prev) => ({ ...prev, ...createdAtMapUpdate }));
+        setQuestionDatabase((prev) => ({ ...prev, ...dbUpdate }));
+        setGlobalDatabases((prev) => [...new Set([...prev, ...newDbs])]);
+      }
+    } catch (e) {
+      console.error('Error fetching group banks:', e);
+    }
+  };
+
   const removeDatabase = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     (async () => {
@@ -658,7 +700,7 @@ export function useAuth({
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
     setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
-    syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
+    syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions, fetchGroupBanks,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };
 }

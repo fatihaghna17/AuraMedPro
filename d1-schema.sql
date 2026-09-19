@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS question_banks (
     questions_json TEXT, -- fallback jika masih ada data JSON lama
     angkatan TEXT DEFAULT 'all', -- '23', '24', '25', '26', atau 'all' (bersama)
     prodi TEXT DEFAULT 'all', -- 'all', 'kedokteran', 'farmasi', 'kebidanan'
+    study_group_id TEXT, -- referensi ke study_groups
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -180,3 +181,20 @@ CREATE TABLE IF NOT EXISTS mabar_match_history (
     score INTEGER,
     played_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS study_groups (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    invite_code TEXT UNIQUE NOT NULL,
+    creator_id TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS study_group_members (
+    group_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    joined_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (group_id, user_id)
+);
+
+ALTER TABLE question_banks ADD COLUMN study_group_id TEXT;

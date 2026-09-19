@@ -18,6 +18,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const url = new URL(request.url);
   const angkatan = url.searchParams.get('angkatan');
   const prodi = url.searchParams.get('prodi');
+  const study_group_id = url.searchParams.get('study_group_id');
   // meta=1: mode ringan untuk polling notifikasi — tanpa kolom questions_json
   // (payload jauh lebih kecil) + cache edge 2 menit agar storm polling terserap
   const metaOnly = url.searchParams.get('meta') === '1';
@@ -45,6 +46,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         qb.created_at,
         qb.angkatan,
         qb.prodi,
+        qb.study_group_id,
         p.username as uploader_username`
       : `qb.id,
         qb.name,
@@ -55,6 +57,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         qb.created_at,
         qb.angkatan,
         qb.prodi,
+        qb.study_group_id,
         p.username as uploader_username`;
     let query = `
       SELECT
@@ -64,6 +67,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     `;
     const binds: any[] = [];
     const whereClauses: string[] = [];
+
+    if (study_group_id) {
+      whereClauses.push(`qb.study_group_id = ?`);
+      binds.push(study_group_id);
+    } else {
+      whereClauses.push(`qb.study_group_id IS NULL`);
+    }
 
     if (angkatan && angkatan !== 'all') {
       whereClauses.push(`(
@@ -93,7 +103,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const { results } = await env.DB.prepare(query).bind(...binds).all();
 
     const headers: Record<string, string> = { ...corsHeaders, 'Content-Type': 'application/json' };
-    if (metaOnly) {
+    if (metaOnly && !study_group_id) {
       // Respons meta aman di-cache: handler tidak membaca cookie/credentials
       headers['Cache-Control'] = 'public, max-age=120';
     }
@@ -102,7 +112,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       headers
     });
 
-    if (metaOnly && cache) {
+    if (metaOnly && cache && !study_group_id) {
       context.waitUntil(cache.put(request, response.clone()));
     }
     return response;
@@ -126,7 +136,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const body = await request.json() as any;
-    const { name, user_id, r2_key, r2_url, questions_json, angkatan = 'all', prodi = 'all' } = body;
+    const { name, user_id, r2_key, r2_url, questions_json, angkatan = 'all', prodi = 'all', study_group_id } = body;
 
     if (!name || !user_id) {
       return new Response(JSON.stringify({ error: 'Name dan user_id wajib diisi' }), {
@@ -139,15 +149,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const now = new Date().toISOString();
 
     await env.DB.prepare(`
-      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at, angkatan, prodi)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO question_banks (id, name, user_id, r2_key, r2_url, questions_json, created_at, angkatan, prodi, study_group_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(name) DO UPDATE SET
         user_id = excluded.user_id,
         r2_key = coalesce(excluded.r2_key, question_banks.r2_key),
         r2_url = coalesce(excluded.r2_url, question_banks.r2_url),
         questions_json = coalesce(excluded.questions_json, question_banks.questions_json),
         angkatan = coalesce(excluded.angkatan, question_banks.angkatan),
-        prodi = coalesce(excluded.prodi, question_banks.prodi)
+        prodi = coalesce(excluded.prodi, question_banks.prodi),
+        study_group_id = coalesce(excluded.study_group_id, question_banks.study_group_id)
     `).bind(
       id,
       name,
@@ -157,7 +168,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       questions_json && typeof questions_json === 'object' ? JSON.stringify(questions_json) : (questions_json || null),
       now,
       angkatan,
-      prodi
+      prodi,
+      study_group_id || null
     ).run();
 
     return new Response(JSON.stringify({ success: true, name }), {

@@ -113,6 +113,7 @@ import { SetupNewQuizTab } from './components/tabs/SetupNewQuizTab';
 import { SetupProfileTab } from './components/tabs/SetupProfileTab';
 import { SetupSRSTab } from './components/tabs/SetupSRSTab';
 import { SetupNotesTab } from './components/tabs/SetupNotesTab';
+import { SetupGroupsTab } from './components/tabs/SetupGroupsTab';
 
 // Helper for dynamic imports with auto-reload on stale deployment chunk
 const lazyWithRetry = <T extends React.ComponentType<any>>(
@@ -242,7 +243,7 @@ export default function App() {
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
     setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
-    syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions,
+    syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions, fetchGroupBanks,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
     triggerToast,
@@ -539,7 +540,9 @@ export default function App() {
 // extracted answerNotes state
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'groups'>('home');
+  const [activeStudyGroupId, setActiveStudyGroupId] = useState<string | null>(null);
+  const [activeStudyGroupName, setActiveStudyGroupName] = useState<string | null>(null);
   const [adminReports, setAdminReports] = useState<any[]>([]);
 
   useEffect(() => {
@@ -564,6 +567,43 @@ export default function App() {
       setShowSwipeHint(true);
     }
   }, [dashboardTab]);
+  
+  // Handle invite_code from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('invite_code');
+    if (inviteCode && currentUser?.id) {
+      const joinGroup = async () => {
+        try {
+          const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+          const res = await fetch(`${API_BASE}/study-groups`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'join', invite_code: inviteCode, user_id: currentUser.id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            triggerToast(`Berhasil masuk grup ${data.name}!`, '🎉');
+            setDashboardTab('groups');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            triggerToast(`Gagal join grup: ${data.error}`, '❌');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      joinGroup();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (activeStudyGroupId && dashboardTab === 'banks') {
+      fetchGroupBanks(activeStudyGroupId);
+    }
+  }, [activeStudyGroupId, dashboardTab]);
+
   const [mobileQuizNavOpen, setMobileQuizNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bankFilter, setBankFilter] = useState<'all' | 'ukmppd' | 'flashcard' | 'custom'>('all');
@@ -1675,6 +1715,7 @@ export default function App() {
                   r2_url: r2Res.r2_url,
                   angkatan: targetAngkatan,
                   prodi: targetProdi,
+                  study_group_id: activeStudyGroupId || null,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
@@ -1683,6 +1724,7 @@ export default function App() {
                   questions_json: finalQuestions,
                   angkatan: targetAngkatan,
                   prodi: targetProdi,
+                  study_group_id: activeStudyGroupId || null,
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [file.name]: targetAngkatan }));
@@ -1785,6 +1827,7 @@ export default function App() {
                   r2_url: r2Res.r2_url,
                   angkatan: targetAngkatan,
                   prodi: targetProdi,
+                  study_group_id: activeStudyGroupId || null,
                 });
               } else {
                 await cloudflareApi.saveQuestionBank({
@@ -1793,6 +1836,7 @@ export default function App() {
                   questions_json: questions,
                   angkatan: targetAngkatan,
                   prodi: targetProdi,
+                  study_group_id: activeStudyGroupId || null,
                 });
               }
               setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
@@ -1886,6 +1930,7 @@ export default function App() {
               r2_url: r2Res.r2_url,
               angkatan: targetAngkatan,
               prodi: targetProdi,
+              study_group_id: activeStudyGroupId || null,
             });
           } else {
             await cloudflareApi.saveQuestionBank({
@@ -1894,6 +1939,7 @@ export default function App() {
               questions_json: finalQuestions,
               angkatan: targetAngkatan,
               prodi: targetProdi,
+              study_group_id: activeStudyGroupId || null,
             });
           }
           setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
@@ -3103,7 +3149,15 @@ export default function App() {
                 username={profileUsername || ''}
                 userLevel={getLevelInfo(userXP).level}
                 isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
-                onTabChange={(tab) => setDashboardTab(tab as any)}
+                onTabChange={(tab) => {
+                  if (tab === 'banks' || tab === 'groups' || tab === 'home') {
+                    // Only clear context if they are explicitly navigating away from group context 
+                    // via sidebar to these main tabs.
+                    setActiveStudyGroupId(null);
+                    setActiveStudyGroupName(null);
+                  }
+                  setDashboardTab(tab as any);
+                }}
                 onLogout={async () => {
                   await authClient.signOut();
                   triggerToast('Sampai jumpa lagi!', '👋');
@@ -3116,7 +3170,15 @@ export default function App() {
                 activeTab={dashboardTab}
                 srsDueCount={srs.stats.dueCount}
                 isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
-                onTabChange={(tab) => setDashboardTab(tab as any)}
+                onTabChange={(tab) => {
+                  if (tab === 'banks' || tab === 'groups' || tab === 'home') {
+                    // Only clear context if they are explicitly navigating away from group context 
+                    // via sidebar to these main tabs.
+                    setActiveStudyGroupId(null);
+                    setActiveStudyGroupName(null);
+                  }
+                  setDashboardTab(tab as any);
+                }}
               />
             </>
           )}
@@ -3194,6 +3256,16 @@ export default function App() {
             {dashboardTab === 'banks' && (
               <div className="space-y-6 animate-fade-in">
                 
+                {activeStudyGroupId && (
+                  <div className="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded text-indigo-900 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                       <h3 className="font-bold text-lg">Folder Soal Khusus: {activeStudyGroupName}</h3>
+                       <p className="text-sm">Soal yang diupload di sini hanya akan terlihat oleh anggota grup ini.</p>
+                    </div>
+                    <button onClick={() => { setActiveStudyGroupId(null); setActiveStudyGroupName(null); }} className="px-4 py-2 bg-white rounded shadow-sm hover:bg-gray-50 text-sm font-semibold whitespace-nowrap">Tutup Mode Grup</button>
+                  </div>
+                )}
+
                 <SearchFilterHeader
                   theme={theme}
                   searchQuery={searchQuery}
@@ -4092,6 +4164,18 @@ export default function App() {
                 </div>
 
               </div>
+            )}
+
+            {/* 👥 TAB: GRUP BELAJAR */}
+            {dashboardTab === 'groups' && (
+              <SetupGroupsTab 
+                currentUser={currentUser} 
+                onJoinGroup={(groupId, groupName) => {
+                  setActiveStudyGroupId(groupId);
+                  setActiveStudyGroupName(groupName);
+                  setDashboardTab('banks');
+                }} 
+              />
             )}
 
             {/* 🎯 TAB 3: BARU (QUIZ CONFIGURATION) */}

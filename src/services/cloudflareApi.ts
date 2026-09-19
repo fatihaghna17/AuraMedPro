@@ -81,12 +81,13 @@ export const cloudflareApi = {
   },
 
   // Question Banks
-  async getQuestionBanks(angkatan?: string, prodi?: string, opts?: { meta?: boolean }): Promise<QuestionBankMeta[]> {
+  async getQuestionBanks(angkatan?: string, prodi?: string, opts?: { meta?: boolean, study_group_id?: string | null }): Promise<QuestionBankMeta[]> {
     const params = new URLSearchParams();
     if (angkatan) params.append('angkatan', angkatan);
     if (prodi) params.append('prodi', prodi);
     // meta=1: respons ringan tanpa questions_json (polling notifikasi) + cache server 2 menit
     if (opts?.meta) params.append('meta', '1');
+    if (opts?.study_group_id) params.append('study_group_id', opts.study_group_id);
     const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await fetchJson<QuestionBankMeta[]>(`${API_BASE}/question-banks${qs}`);
     return res.data || [];
@@ -103,18 +104,27 @@ export const cloudflareApi = {
           questions_json?: any;
           angkatan?: string;
           prodi?: string;
+          study_group_id?: string | null;
         },
     name?: string,
     questionsJson?: any,
     angkatan?: string,
-    prodi?: string
+    prodi?: string,
+    study_group_id?: string | null
   ): Promise<boolean> {
     const payload =
-      typeof bankOrUserId === 'string'
-        ? { user_id: bankOrUserId, name: name!, questions_json: questionsJson, angkatan, prodi }
-        : bankOrUserId;
+      typeof bankOrUserId === 'object'
+        ? bankOrUserId
+        : {
+            user_id: bankOrUserId,
+            name,
+            questions_json: questionsJson,
+            angkatan: angkatan || 'all',
+            prodi: prodi || 'all',
+            study_group_id: study_group_id || null,
+          };
 
-    const res = await fetchJson(`${API_BASE}/question-banks`, {
+    const res = await fetchJson<any>(`${API_BASE}/question-banks`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });

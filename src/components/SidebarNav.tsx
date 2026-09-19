@@ -1,6 +1,6 @@
 import {
   Activity, Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Flame, LogOut
-, Gamepad2 } from 'lucide-react';
+, Gamepad2, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +28,7 @@ export default function SidebarNav({
   const items: NavItem[] = [
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
+    { id: 'groups', label: 'Grup Belajar', icon: Users },
     { id: 'new', label: 'Baru', icon: PlusCircle },
     { id: 'srs', label: 'Spaced Repetition', icon: Brain },
     { id: 'notes', label: 'Study Room', icon: StickyNote },
