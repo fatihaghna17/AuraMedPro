@@ -53,6 +53,27 @@ export default function AdminScreen() {
     }
   };
 
+  const handleReject = async (paymentId: string) => {
+    if (!confirm('Yakin ingin menghapus request ini? Tindakan ini tidak bisa dibatalkan.')) return;
+    
+    try {
+      const res = await fetch('/api/admin/reject-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setPayments(payments.filter(p => p.id !== paymentId));
+      } else {
+        alert('Gagal menghapus: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan jaringan.');
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen font-sans">
       <h1 className="text-2xl font-bold mb-2 text-gray-800">🔒 Admin: Konfirmasi Pembayaran</h1>
@@ -78,12 +99,21 @@ export default function AdminScreen() {
               <p className="text-blue-600 font-bold text-xl mb-1">Rp {p.amount.toLocaleString('id-ID')}</p>
               <p className="text-xs text-gray-400 mb-5">Waktu Order: {new Date(p.created_at).toLocaleString('id-ID')}</p>
 
-              <button 
-                onClick={() => handleApprove(p.id, p.user_id)}
-                className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-bold py-3 rounded-lg shadow cursor-pointer"
-              >
-                ✅ Setujui & Aktifkan
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleApprove(p.id, p.user_id)}
+                  className="flex-1 bg-green-500 hover:bg-green-600 transition-colors text-white font-bold py-3 rounded-lg shadow cursor-pointer text-sm"
+                >
+                  ✅ Setujui & Aktifkan
+                </button>
+                <button 
+                  onClick={() => handleReject(p.id)}
+                  className="bg-red-500 hover:bg-red-600 transition-colors text-white font-bold py-3 px-4 rounded-lg shadow cursor-pointer text-sm"
+                  title="Hapus Request"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           ))}
 
