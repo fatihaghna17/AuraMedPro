@@ -113,54 +113,34 @@ export default function SubscriptionGate({
             } ${loading ? 'opacity-50' : 'hover:scale-[1.01] active:scale-[0.99]'}`}
           >
             <CreditCard className="w-4 h-4" />
-            {loading ? 'Memproses...' : 'Bayar via Transfer Bank'}
+            {loading ? 'Memproses...' : 'Bayar via QRIS'}
           </button>
         ) : (
           <div className={`rounded-2xl p-4 space-y-3 ${
             isDark ? 'bg-slate-800 border border-slate-700' : 'bg-amber-50 border border-amber-200'
           }`}>
             <p className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
-              Instruksi Transfer
+              Instruksi Pembayaran
             </p>
             
-            <div className="space-y-2">
-              <div className="flex justify-center mb-4">
+            <div className="space-y-4">
+              <div className="flex justify-center mb-2">
                 <img src="/qris.jpg" alt="QRIS AuraMedPro" className="w-48 h-48 rounded-xl shadow-lg border-2 border-white object-cover" />
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bank / QRIS</span>
-                <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                  {paymentInfo.bankInfo.bank} (Bisa di-scan)
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>No. Rekening</span>
-                <button onClick={() => handleCopy(paymentInfo.bankInfo.accountNumber)} className="flex items-center gap-1">
-                  <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {paymentInfo.bankInfo.accountNumber}
-                  </span>
-                  {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-400" />}
-                </button>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>A.n.</span>
-                <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                  {paymentInfo.bankInfo.accountName}
-                </span>
-              </div>
-              <div className={`rounded-xl p-3 text-center ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-100'}`}>
-                <p className={`text-[10px] font-bold uppercase ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                  Nominal Transfer (harus tepat!)
+              <p className={`text-center text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Silakan scan QRIS di atas menggunakan aplikasi m-banking atau e-wallet kamu.
+              </p>
+              
+              <div className={`rounded-xl p-4 text-center ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-100'}`}>
+                <p className={`text-[10px] font-bold uppercase mb-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                  Nominal Pembayaran
                 </p>
-                <button onClick={() => handleCopy(paymentInfo.totalAmount.toString())} className="flex items-center gap-2 mx-auto">
-                  <p className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    Rp {paymentInfo.totalAmount.toLocaleString('id-ID')}
+                <button onClick={() => handleCopy(paymentInfo.totalAmount.toString())} className="flex items-center gap-2 mx-auto cursor-pointer">
+                  <p className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                    Rp 10.000
                   </p>
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                  {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5 text-slate-400" />}
                 </button>
-                <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Rp {paymentInfo.amount.toLocaleString('id-ID')} + password unik {paymentInfo.uniqueCode}
-                </p>
               </div>
             </div>
           </div>

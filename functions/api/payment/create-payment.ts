@@ -33,33 +33,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    // Generate unique code (100 - 999)
-    let uniqueCode = 0;
-    let isUnique = false;
-    let attempts = 0;
-
-    while (!isUnique && attempts < 10) {
-      uniqueCode = Math.floor(Math.random() * 900) + 100;
-      
-      const existing = await env.DB.prepare(
-        'SELECT id FROM payments WHERE unique_code = ? AND status = ?'
-      )
-      .bind(uniqueCode, 'pending')
-      .first();
-
-      if (!existing) {
-        isUnique = true;
-      }
-      attempts++;
-    }
-
-    if (!isUnique) {
-      return new Response(JSON.stringify({ error: 'Gagal membuat kode unik' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const paymentId = generateUniqueId();
     const amount = 10000;
     
@@ -67,18 +40,18 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       INSERT INTO payments (id, user_id, source, amount, unique_code, status, plan)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
-    .bind(paymentId, user_id, 'moota', amount, uniqueCode, 'pending', '1_month')
+    .bind(paymentId, user_id, 'manual', amount, 0, 'pending', '1_month')
     .run();
 
     const resultPayload = {
       paymentId,
       amount,
-      uniqueCode,
-      totalAmount: amount + uniqueCode,
+      uniqueCode: 0,
+      totalAmount: amount,
       bankInfo: {
-        bank: env.PAYMENT_BANK_NAME || 'BCA',
-        accountNumber: env.PAYMENT_ACCOUNT_NUMBER || 'Hubungi Admin',
-        accountName: env.PAYMENT_ACCOUNT_NAME || 'AuraMedPro'
+        bank: 'QRIS',
+        accountNumber: '-',
+        accountName: 'AuraMedPro'
       }
     };
 
