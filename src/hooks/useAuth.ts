@@ -351,8 +351,8 @@ export function useAuth({
             ? JSON.parse(row.questions_json)
             : row.questions_json;
             
-          if (questions && !Array.isArray(questions) && questions.r2_key) {
-            const r2Key = questions.r2_key;
+          if ((!questions || !Array.isArray(questions)) && row.r2_key) {
+            const r2Key = row.r2_key;
             // 1. Cek cache lokal browser terlebih dahulu (0ms network)
             const cached = await getCachedQuestions(r2Key);
             if (cached && Array.isArray(cached) && cached.length > 0) {
@@ -434,11 +434,11 @@ export function useAuth({
         console.warn('Gagal memuat bank soal lokal:', e);
       }
 
-      setUploaderMap(uploaders);
-      setBankAngkatanMap(angkatans);
-      setBankProdiMap(prodis);
-      setBankGroupMap(groups);
-      setBankCreatedAtMap(createdAts);
+      setUploaderMap(prev => ({ ...prev, ...uploaders }));
+      setBankAngkatanMap(prev => ({ ...prev, ...angkatans }));
+      setBankProdiMap(prev => ({ ...prev, ...prodis }));
+      setBankGroupMap(prev => ({ ...prev, ...groups }));
+      setBankCreatedAtMap(prev => ({ ...prev, ...createdAts }));
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
       if (username === 'admin' && Object.keys(mappedData).length === 0) {
@@ -450,8 +450,8 @@ export function useAuth({
         }
       }
       
-      setGlobalDatabases(globals);
-      setQuestionDatabase(mappedData);
+      setGlobalDatabases(prev => [...new Set([...prev, ...globals])]);
+      setQuestionDatabase(prev => ({ ...prev, ...mappedData }));
       setSelectedDatabases([]);
     } catch (err) {
       console.error('Error fetching questions:', err);
@@ -612,7 +612,7 @@ export function useAuth({
         const dbUpdate: Record<string, any[]> = {};
         const newDbs: string[] = [];
 
-        for (const b of cfBanks) {
+        const fetchPromises = cfBanks.map(async (b: any) => {
           const name = b.name;
           uploaderMapUpdate[name] = b.uploader_username || 'admin';
           angkatanMapUpdate[name] = b.angkatan || 'all';
@@ -623,16 +623,51 @@ export function useAuth({
           if (b.created_at) {
             createdAtMapUpdate[name] = b.created_at;
           }
-          if (b.questions_json && b.questions_json !== 'null') {
-             try {
-               const parsed = JSON.parse(b.questions_json);
-               dbUpdate[name] = Array.isArray(parsed) ? parsed : [];
-               newDbs.push(name);
-             } catch(e) {
-               console.error("Gagal parse questions_json dari grup:", name);
-             }
+
+          let questions = typeof b.questions_json === 'string'
+            ? JSON.parse(b.questions_json)
+            : b.questions_json;
+
+          if ((!questions || !Array.isArray(questions)) && b.r2_key) {
+            const r2Key = b.r2_key;
+            const cached = await getCachedQuestions(r2Key);
+            if (cached && Array.isArray(cached) && cached.length > 0) {
+              questions = cached;
+            } else {
+              const correctUrl = `/api/r2-questions?key=${encodeURIComponent(r2Key)}`;
+              try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const res = await fetch(correctUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                  const fetched = await res.json();
+                  if (Array.isArray(fetched) && fetched.length > 0) {
+                    questions = fetched;
+                    setCachedQuestions(r2Key, fetched);
+                  } else {
+                    questions = [];
+                  }
+                } else {
+                  questions = [];
+                }
+              } catch (err: any) {
+                questions = [];
+              }
+            }
           }
-        }
+
+          return { name, questions };
+        });
+
+        const results = await Promise.all(fetchPromises);
+
+        results.forEach(({ name, questions }) => {
+          if (questions && Array.isArray(questions)) {
+            dbUpdate[name] = questions;
+            newDbs.push(name);
+          }
+        });
 
         setUploaderMap((prev) => ({ ...prev, ...uploaderMapUpdate }));
         setBankAngkatanMap((prev) => ({ ...prev, ...angkatanMapUpdate }));
