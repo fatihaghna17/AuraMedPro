@@ -55,26 +55,11 @@ export default function SubscriptionGate({
             <Clock className="w-7 h-7" />
           </div>
           <h2 className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
-            {isTrialExpired ? 'Masa Trial Diperpanjang! ✨' : 'Masa Trial AuraMedPro'}
+            Masa Trial Habis
           </h2>
           <p className={`text-xs mt-2 font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-            {isTrialExpired
-              ? 'Sistem pembayaran sedang disiapkan. Akses Pro Anda diperpanjang sementara sampai batas waktu yang belum ditentukan.'
-              : `Trial aktif sampai: ${trialEnd?.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
-            }
+            Akses langganan Anda telah berakhir. Silakan lakukan pembayaran untuk melanjutkan akses ke seluruh fitur AuraMedPro.
           </p>
-
-          {isTrialExpired && (
-            <div className="mt-4 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center">
-              🎉 Anda tetap memiliki akses penuh tanpa biaya.
-              <button
-                onClick={onRefreshStatus}
-                className="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer"
-              >
-                Lanjutkan Belajar Sekarang
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Harga */}
