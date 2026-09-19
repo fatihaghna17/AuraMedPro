@@ -1,0 +1,40 @@
+
+ ⛅️ wrangler 4.130.0 (update available 4.135.0)
+───────────────────────────────────────────────
+Resource location: remote 
+
+🌀 Executing on remote database auramedpro-db (be74e469-34a0-45bb-8117-098f801a9c9c):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 1 command in 0.11ms
+[
+  {
+    "results": [
+      {
+        "key": "customFolders",
+        "value": "[\"Infeksi Tropis\",\"AMYGDALA\",\"PA 5.1\",\"MIBI 5.1\",\"UB 5.1\",\"Soal 5.1 Admin kkskr\",\"UB 3.1\",\"C5\",\"Farmakologi\",\"1.1 UB\"]"
+      },
+      {
+        "key": "quizFolderMap",
+        "value": "{\"HIV.json\":\"Infeksi Tropis\",\"MIbi #2.json\":\"MIBI 5.1\",\"MEDIKO #2.json\":\"Infeksi Tropis\",\"Radiologi.json\":\"AMYGDALA\",\"Lippincott.json\":\"Infeksi Tropis\",\"Responsi PA.json\":\"PA 5.1\",\"Soal TO PCV.json\":\"Infeksi Tropis\",\"Bakteriologi.json\":\"Infeksi Tropis\",\"Flashcard PA.json\":\"PA 5.1\",\"Mediko ori 2.json\":\"Infeksi Tropis\",\"MEDIKO INTROP.json\":\"Infeksi Tropis\",\"Mediko Introp.json\":\"Infeksi Tropis\",\"Lat Pretest PA.json\":\"PA 5.1\",\"Pretest Costra.json\":\"PA 5.1\",\"Latsol MiBi??? .json\":\"MIBI 5.1\",\"SOAL MMO Introp.json\":\"Infeksi Tropis\",\"Responsi 5.1 (2).json\":\"PA 5.1\",\"Flashcard Parasit.json\":\"Infeksi Tropis\",\"Kuis Infeksi Kulit.json\":\"Infeksi Tropis\",\"Soal topik SPILLAN.json\":\"PA 5.1\",\"Klinis Urogenital-3.json\":\"Infeksi Tropis\",\"Media_Kultur_Bakteri.json\":\"Infeksi Tropis\",\"Responsi PA Campuran.json\":\"PA 5.1\",\"Persiapan Pretes PA #2.json\":\"PA 5.1\",\"Persiapan  Pretes PA #!.json\":\"PA 5.1\",\"BATCH 1 soal urogenital klinis.json\":\"AMYGDALA\",\"soal dewa mibi josjis acikiwir.json\":\"MIBI 5.1\",\"Flashcard_Bakteriologi_AuraMed_PRO.json\":\"Infeksi Tropis\",\"netters_366-437_complete_flashcards.json\":\"AMYGDALA\",\"netters_pelvis_perineum_flashcards_latin.json\":\"AMYGDALA\",\"Mibi Azyt.json\":\"MIBI 5.1\",\"Responsi Mibi Gambar.json\":\"MIBI 5.1\",\"Morfologi Bakteri Lippincott.json\":\"MIBI 5.1\",\"mbimbi.json\":\"MIBI 5.1\",\"Soal AURAMED/K 21.json\":\"UB 5.1\",\"Soal AURAMED/K4 PPAK.json\":\"UB 5.1\",\"Soal AURAMED/K 9.json\":\"UB 5.1\",\"Soal AURAMED/K4.json\":\"UB 5.1\",\"Soal AURAMED/K 10.json\":\"UB 5.1\",\"Soal AURAMED/K 20.json\":\"UB 5.1\",\"Soal AURAMED/K 2.json\":\"UB 5.1\",\"Soal AURAMED/K 19.json\":\"UB 5.1\",\"Soal AURAMED/K 8.json\":\"UB 5.1\",\"Soal AURAMED/K 5.json\":\"UB 5.1\",\"Soal AURAMED/K 16.json\":\"UB 5.1\",\"Soal AURAMED/K18 OAT dan Antibiotik.json\":\"UB 5.1\",\"Soal AURAMED/K5 TB.json\":\"Soal 5.1 Admin kkskr\",\"Soal AURAMED/K 14.json\":\"UB 5.1\",\"Soal AURAMED/K 11.json\":\"UB 5.1\",\"Soal AURAMED/K1.json\":\"UB 5.1\",\"Soal AURAMED/K11 Obat Sesak dan Batuk.json\":\"UB 5.1\",\"Soal AURAMED/K8.json\":\"UB 5.1\",\"Soal AURAMED/K 1.json\":\"UB 5.1\",\"Soal AURAMED/K 18.json\":\"UB 5.1\",\"Silabus 1 #1.json\":\"Infeksi Tropis\",\"Silabus 1 #2.json\":\"Infeksi Tropis\",\"Soal Claude Mba Tavia.json\":\"Infeksi Tropis\",\"Soal Mediko Lagi.json\":\"Infeksi Tropis\",\"Soal Asma PPOK.json\":\"Soal 5.1 Admin kkskr\",\"OAT .json\":\"Soal 5.1 Admin kkskr\",\"Latsol 5.1 Mas Bima.json\":\"Soal 5.1 Admin kkskr\",\"ARDS.json\":\"Soal 5.1 Admin kkskr\",\"Patologi Paru.json\":\"Soal 5.1 Admin kkskr\",\"Azyt Modifan.json\":\"Soal 5.1 Admin kkskr\",\"Onkologi Paru.json\":\"Soal 5.1 Admin kkskr\",\"Bakteri dan Virus.json\":\"Soal 5.1 Admin kkskr\",\"Pneumonia.json\":\"Soal 5.1 Admin kkskr\",\"Soal Faza sesi 2.json\":\"Soal 5.1 Admin kkskr\",\"Soal Faza sesi 1.json\":\"Soal 5.1 Admin kkskr\",\"Soal Costra Modifan.json\":\"Soal 5.1 Admin kkskr\",\"Soal Anconeus Modifan.json\":\"Soal 5.1 Admin kkskr\",\"Soal Astrox Modifan.json\":\"Soal 5.1 Admin kkskr\",\"PEMBAHASAN_UB_5.1_ARVENIA_Modifan.json\":\"Soal 5.1 Admin kkskr\",\"PEMBAHASAN_UB_5.1_COSTRAVER_Modifan.json\":\"Soal 5.1 Admin kkskr\",\"UB 3.1 Acromio (modifan).json\":\"UB 3.1\",\"Acro 3.1 modified + clarify all ppt.json\":\"UB 3.1\",\"Soal_UC5_Azytralis.json\":\"C5\",\"Soal_UC5_Costraver.json\":\"C5\",\"Soal_C5_2_Perancangan_Poster_Digital.json\":\"C5\",\"Soal_C5_1_Kesehatan_Remaja.json\":\"C5\",\"Soal_C5_3_MTBS_Tumbuh_Kembang.json\":\"C5\",\"Soal_C5_4_Kesehatan_Reproduksi_Wanita.json\":\"C5\",\"Soal_C5_5_FOME_Patient_Centered_Care.json\":\"C5\",\"Soal_C5_6_Manajemen_Mutu_Layanan_Kesehatan_MTM.json\":\"C5\",\"Soal_C5_7_Penggunaan_Obat_Populasi_Khusus.json\":\"C5\",\"Soal_C5_8_PHBS_Kesehatan_Lingkungan.json\":\"C5\",\"template_mcq.json\":\"C5\",\"Soal_C5_9_Drug_Interactions_Patient_Safety.json\":\"C5\",\"Overview.json\":\"Farmakologi\",\"PPT Obat.json\":\"Farmakologi\",\"Soal Exclusive #1.json\":\"Farmakologi\",\"Soal Exclusive #2.json\":\"Farmakologi\",\"Praktikum Farmako.json\":\"Farmakologi\",\"Auramed_Asterion.json\":\"1.1 UB\",\"Auramed_Acromion.json\":\"1.1 UB\",\"Seleksi Introp.json\":\"Infeksi Tropis\",\"Soal Bakteri dan Virus.json\":\"Infeksi Tropis\"}"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "SIN",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1075
+      },
+      "duration": 0.1075,
+      "changes": 0,
+      "last_row_id": 2,
+      "changed_db": false,
+      "size_after": 73625600,
+      "rows_read": 2,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

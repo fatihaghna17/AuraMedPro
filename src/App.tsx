@@ -237,7 +237,7 @@ export default function App() {
   const {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, userProdi, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankCreatedAtMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankGroupMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
@@ -983,12 +983,18 @@ export default function App() {
     });
 
     Object.entries(questionDatabase).forEach(([key, questionsData]) => {
-      // If student (non-super-admin), check prodi compatibility
       if (!isSuperAdmin) {
         const bankProdi = (bankProdiMap[key] || 'all').toLowerCase();
         const currentProdi = (userProdi || 'kedokteran').toLowerCase();
         const prodiMatch = bankProdi === 'all' || bankProdi.split(',').map((s) => s.trim()).includes(currentProdi);
         if (!prodiMatch) return;
+      }
+
+      const itemGroup = bankGroupMap[key] || null;
+      if (activeStudyGroupId) {
+        if (itemGroup !== activeStudyGroupId) return;
+      } else {
+        if (itemGroup !== null) return;
       }
 
       const questions = questionsData as Question[];
@@ -1102,7 +1108,7 @@ export default function App() {
     };
 
     return { folders: mergedFolders, rootItems };
-  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap, bankCreatedAtMap, bankAngkatanMap, bankProdiMap, globalDatabases, uploaderMap, userAngkatan, userProdi, isSuperAdmin]);
+  }, [questionDatabase, customFolders, quizFolderMap, globalCustomFolders, globalQuizFolderMap, bankCreatedAtMap, bankAngkatanMap, bankProdiMap, bankGroupMap, activeStudyGroupId, globalDatabases, uploaderMap, userAngkatan, userProdi, isSuperAdmin]);
 
   // Filtered databases memo based on search query and category filter
   const filteredDatabases = React.useMemo(() => {

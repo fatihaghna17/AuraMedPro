@@ -40,6 +40,7 @@ export function useAuth({
   const [uploaderMap, setUploaderMap] = useState<Record<string, string>>({});
   const [bankAngkatanMap, setBankAngkatanMap] = useState<Record<string, string>>({});
   const [bankProdiMap, setBankProdiMap] = useState<Record<string, string>>({});
+  const [bankGroupMap, setBankGroupMap] = useState<Record<string, string>>({});
   const [bankCreatedAtMap, setBankCreatedAtMap] = useState<Record<string, string>>({});
   const [questionDatabase, setQuestionDatabase] = useState<Record<string, Question[]>>({});
   
@@ -331,11 +332,15 @@ export function useAuth({
       const angkatans: Record<string, string> = {};
       const prodis: Record<string, string> = {};
       const createdAts: Record<string, string> = {};
+      const groups: Record<string, string> = {};
 
       if (data) {
         data.forEach((b: any) => {
           angkatans[b.name] = b.angkatan || 'all';
           prodis[b.name] = b.prodi || 'all';
+          if (b.study_group_id) {
+            groups[b.name] = b.study_group_id;
+          }
           if (b.created_at) {
             createdAts[b.name] = b.created_at;
           }
@@ -432,6 +437,7 @@ export function useAuth({
       setUploaderMap(uploaders);
       setBankAngkatanMap(angkatans);
       setBankProdiMap(prodis);
+      setBankGroupMap(groups);
       setBankCreatedAtMap(createdAts);
       
       // Seed bank soal sampel jika login sebagai admin dan database kosong
@@ -601,6 +607,7 @@ export function useAuth({
         const uploaderMapUpdate: Record<string, string> = {};
         const angkatanMapUpdate: Record<string, string> = {};
         const prodiMapUpdate: Record<string, string> = {};
+        const groupsUpdate: Record<string, string> = {};
         const createdAtMapUpdate: Record<string, string> = {};
         const dbUpdate: Record<string, any[]> = {};
         const newDbs: string[] = [];
@@ -610,6 +617,9 @@ export function useAuth({
           uploaderMapUpdate[name] = b.uploader_username || 'admin';
           angkatanMapUpdate[name] = b.angkatan || 'all';
           prodiMapUpdate[name] = b.prodi || 'all';
+          if (b.study_group_id) {
+            groupsUpdate[name] = b.study_group_id;
+          }
           if (b.created_at) {
             createdAtMapUpdate[name] = b.created_at;
           }
@@ -627,6 +637,7 @@ export function useAuth({
         setUploaderMap((prev) => ({ ...prev, ...uploaderMapUpdate }));
         setBankAngkatanMap((prev) => ({ ...prev, ...angkatanMapUpdate }));
         setBankProdiMap((prev) => ({ ...prev, ...prodiMapUpdate }));
+        setBankGroupMap((prev) => ({ ...prev, ...groupsUpdate }));
         setBankCreatedAtMap((prev) => ({ ...prev, ...createdAtMapUpdate }));
         setQuestionDatabase((prev) => ({ ...prev, ...dbUpdate }));
         setGlobalDatabases((prev) => [...new Set([...prev, ...newDbs])]);
@@ -694,12 +705,12 @@ export function useAuth({
   return {
     currentUser, authLoading, authMode, emailInput, passwordInput, localSessionId,
     isSessionKicked, profileUsername, userProfile, userAngkatan, userProdi, subscriptionStatus,
-    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankCreatedAtMap, questionDatabase,
+    trialEndsAt, subscriptionExpiresAt, canAccess, globalDatabases, uploaderMap, bankAngkatanMap, bankProdiMap, bankGroupMap, bankCreatedAtMap, questionDatabase,
     isLoggingInRef, isProfileSyncedRef,
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankGroupMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions, fetchGroupBanks,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   };
