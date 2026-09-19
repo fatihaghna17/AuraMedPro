@@ -8,6 +8,8 @@ interface Payment {
   created_at: string;
   name: string;
   email: string;
+  angkatan?: string;
+  prodi?: string;
 }
 
 export default function AdminScreen() {
@@ -63,6 +65,14 @@ export default function AdminScreen() {
           {payments.map(p => (
             <div key={p.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
               <h2 className="font-bold text-lg text-gray-800">{p.name || 'User Tanpa Nama'}</h2>
+              <div className="flex items-center gap-2 mb-2">
+                 <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 capitalize">
+                   {p.prodi || 'Kedokteran'}
+                 </span>
+                 <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
+                   Angkatan {p.angkatan || '?'}
+                 </span>
+              </div>
               <p className="text-sm font-normal text-gray-500 mb-2">{p.email}</p>
               
               <p className="text-blue-600 font-bold text-xl mb-1">Rp {p.amount.toLocaleString('id-ID')}</p>

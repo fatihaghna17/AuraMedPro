@@ -7,7 +7,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     // Ambil semua transaksi yang belum dibayar
     const { results } = await env.DB.prepare(`
-      SELECT p.id, p.user_id, p.amount, p.status, p.created_at, pr.name, pr.email 
+      SELECT p.id, p.user_id, p.amount, p.status, p.created_at, pr.username as name, pr.email, pr.angkatan, pr.prodi 
       FROM payments p
       JOIN profiles pr ON p.user_id = pr.id
       WHERE p.status = 'pending'
