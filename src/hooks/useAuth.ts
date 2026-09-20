@@ -318,6 +318,9 @@ export function useAuth({
               angkatan: b.angkatan,
               prodi: b.prodi,
               created_at: b.created_at,
+              study_group_id: b.study_group_id,
+              r2_key: b.r2_key,
+              r2_url: b.r2_url,
               questions_json: questionsPayload,
               profiles: { username: b.uploader_username || (b.user_id === userId ? username : 'admin') }
             };
@@ -351,8 +354,8 @@ export function useAuth({
             ? JSON.parse(row.questions_json)
             : row.questions_json;
             
-          if ((!questions || !Array.isArray(questions)) && row.r2_key) {
-            const r2Key = row.r2_key;
+          const r2Key = row.r2_key || (questions && typeof questions === 'object' && !Array.isArray(questions) ? questions.r2_key : null);
+          if ((!questions || !Array.isArray(questions)) && r2Key) {
             // 1. Cek cache lokal browser terlebih dahulu (0ms network)
             const cached = await getCachedQuestions(r2Key);
             if (cached && Array.isArray(cached) && cached.length > 0) {
@@ -628,8 +631,9 @@ export function useAuth({
             ? JSON.parse(b.questions_json)
             : b.questions_json;
 
-          if ((!questions || !Array.isArray(questions)) && b.r2_key) {
-            const r2Key = b.r2_key;
+          const r2Key = b.r2_key || (questions && typeof questions === 'object' && !Array.isArray(questions) ? questions.r2_key : null);
+
+          if ((!questions || !Array.isArray(questions)) && r2Key) {
             const cached = await getCachedQuestions(r2Key);
             if (cached && Array.isArray(cached) && cached.length > 0) {
               questions = cached;

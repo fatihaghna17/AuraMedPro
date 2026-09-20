@@ -2156,27 +2156,35 @@ export default function App() {
   // === QUIZ LOGIC ===
   
 
-  const startQuiz = () => {
-    if (selectedDatabases.length === 0) {
-      triggerToast('Pilih minimal satu bank soal di bawah!', '⚠️');
-      return;
-    }
-
+  const startQuiz = (directKey?: string | any, directQuestions?: Question[]) => {
     let pool: Question[] = [];
 
-    if (quizMode === 'blok') {
-      const bankPools: Record<string, Question[]> = {};
-      let totalAvailable = 0;
-      selectedDatabases.forEach((dbName) => {
-        let qList = [...(questionDatabase[dbName] || [])];
-        if (qList.length === 0) return;
-        if (shuffleOptions) {
-          qList = qList.map(shuffleQuestionOptions);
-        }
-        qList = shuffleArray(qList);
-        bankPools[dbName] = qList;
-        totalAvailable += qList.length;
-      });
+    if (typeof directKey === 'string' && directQuestions) {
+      pool = [...directQuestions];
+      if (shuffleOptions) {
+        pool = pool.map(shuffleQuestionOptions);
+      }
+      pool = shuffleArray(pool);
+      setSelectedDatabases([directKey]);
+    } else {
+      if (selectedDatabases.length === 0) {
+        triggerToast('Pilih minimal satu bank soal di bawah!', '⚠️');
+        return;
+      }
+
+      if (quizMode === 'blok') {
+        const bankPools: Record<string, Question[]> = {};
+        let totalAvailable = 0;
+        selectedDatabases.forEach((dbName) => {
+          let qList = [...(questionDatabase[dbName] || [])];
+          if (qList.length === 0) return;
+          if (shuffleOptions) {
+            qList = qList.map(shuffleQuestionOptions);
+          }
+          qList = shuffleArray(qList);
+          bankPools[dbName] = qList;
+          totalAvailable += qList.length;
+        });
 
       const targetCount = Math.min(100, totalAvailable);
       let remainingTarget = targetCount;
@@ -2238,6 +2246,7 @@ export default function App() {
         pool = shuffleArray(pool);
       }
     }
+    } // End of else block for directKey
 
     if (pool.length === 0) {
       triggerToast('Tidak ada soal yang tersedia dengan pengaturan ini!', '⚠️');
