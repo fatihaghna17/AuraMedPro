@@ -29,7 +29,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
 
   return (
     <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden flex items-center h-16 border-t overflow-x-auto snap-x px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-655'
+      theme === 'dark' ? 'bg-[#070b14]/85 backdrop-blur-xl border-slate-800/80 text-slate-400' : 'bg-white/85 backdrop-blur-xl border-slate-200/80 text-slate-655'
     }`}>
       {items.map((item) => {
         const Icon = item.icon;

@@ -73,7 +73,7 @@ export default function SidebarNav({
 
   return (
     <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r transition-colors ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-slate-900'
+      theme === 'dark' ? 'bg-[#070b14]/75 backdrop-blur-xl border-slate-800/60 text-white' : 'bg-white/80 backdrop-blur-xl border-slate-200/80 text-slate-900'
     }`}>
       {/* Logo & Header */}
       <div className="p-6">

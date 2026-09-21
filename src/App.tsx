@@ -139,6 +139,7 @@ import BottomNav from './components/BottomNav';
 import PomodoroWidget from './components/PomodoroWidget';
 import NotificationDropdown from './components/NotificationDropdown';
 import SidebarNav from './components/SidebarNav';
+import { ScenicBackground } from './components/ScenicBackground';
 import LoginForm from './components/LoginForm';
 import AngkatanSelectModal from './components/AngkatanSelectModal';
 import SubscriptionGate from './components/SubscriptionGate';
@@ -3069,16 +3070,11 @@ export default function App() {
   });
 
   return (
-    <div className={`min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-300 ${theme === 'dark' ? 'dark text-brand-text bg-brand-bg' : 'text-slate-900 bg-slate-50'}`}>
+    <div className={`min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-300 ${theme === 'dark' ? 'dark text-brand-text' : 'text-slate-900'} relative`}>
       
       {showWhatsNew && <WhatsNewModal onClose={() => { setShowWhatsNew(false); localStorage.setItem("whatsnew_v2", "true"); }} />}
-      {/* Dynamic Background Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <span className="absolute w-[450px] h-[450px] rounded-full bg-rose-400/20 dark:bg-rose-900/10 blur-[100px] -top-[120px] -left-[100px] animate-float-orb" />
-        <span className="absolute w-[400px] h-[400px] rounded-full bg-indigo-400/20 dark:bg-indigo-900/10 blur-[100px] top-[25%] -right-[140px] animate-float-orb [animation-delay:-6s]" />
-        <span className="absolute w-[480px] h-[480px] rounded-full bg-purple-400/20 dark:bg-purple-900/10 blur-[100px] -bottom-[160px] left-[15%] animate-float-orb [animation-delay:-12s]" />
-        <span className="absolute w-[320px] h-[320px] rounded-full bg-amber-200/20 dark:bg-amber-900/10 blur-[90px] bottom-[10%] right-[8%] animate-float-orb [animation-delay:-3s]" />
-      </div>
+      {/* Atmospheric Scenic Background (Mountains & Twilight Glow) */}
+      <ScenicBackground theme={theme} fixed={true} />
 
       {authLoading ? (
         <SkeletonLoader theme={theme} />
@@ -3114,7 +3110,7 @@ export default function App() {
             />
           )}
 
-          <div className={`min-h-screen w-full max-w-full flex flex-col min-w-0 overflow-x-hidden ${theme === 'dark' ? 'bg-brand-bg text-brand-text' : 'bg-slate-50 text-slate-900'}`}>
+          <div className={`min-h-screen w-full max-w-full flex flex-col min-w-0 overflow-x-hidden ${theme === 'dark' ? 'text-brand-text' : 'text-slate-900'} relative z-10`}>
           {screen === 'setup' && (
             <>
               {/* SIDEBAR DESKTOP */}
