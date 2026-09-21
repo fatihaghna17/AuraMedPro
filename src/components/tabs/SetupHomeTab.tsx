@@ -2,6 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Award, Trash2, Calendar, Trash, Flame, Snowflake, Clock, Check, Target, Trophy, History, Crown, Play, Share2, UploadCloud, TrendingUp, Sparkles, Activity, ShieldAlert, CalendarHeart } from 'lucide-react';
 import { getLevelInfo, formatNotifTime } from '../../utils/appHelpers';
 import { AVATAR_FRAMES, getSavedAvatarFrame, getSuddenDeathBestStreak, AvatarFrameId } from '../../utils/avatarFrames';
+import {
+  CultivatorAvatar,
+  CULTIVATOR_TIERS,
+  CultivatorGender,
+  getSavedCultivatorGender,
+  getEffectiveCultivatorTier
+} from '../../utils/cultivatorAvatars';
 import { OnboardingTour } from '../OnboardingTour';
 import PomodoroWidget from '../PomodoroWidget';
 import DailyChallengeCard from '../DailyChallengeCard';
@@ -100,19 +107,27 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   setLeaderboardProdiFilter
 }) => {
   const [savedFrameId, setSavedFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
+  const [cultivatorGender, setCultivatorGender] = useState<CultivatorGender>(getSavedCultivatorGender());
+  const [cultivatorTier, setCultivatorTier] = useState<number>(getEffectiveCultivatorTier(getLevelInfo(userXP).level));
 
   useEffect(() => {
-    const handleUpdateFrame = () => {
+    const handleUpdate = () => {
       setSavedFrameId(getSavedAvatarFrame());
+      setCultivatorGender(getSavedCultivatorGender());
+      setCultivatorTier(getEffectiveCultivatorTier(getLevelInfo(userXP).level));
     };
-    handleUpdateFrame();
-    window.addEventListener('storage', handleUpdateFrame);
-    window.addEventListener('auramedpro_frame_changed', handleUpdateFrame);
+    handleUpdate();
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('auramedpro_frame_changed', handleUpdate);
+    window.addEventListener('auramedpro_avatar_gender_changed', handleUpdate);
+    window.addEventListener('auramedpro_avatar_tier_changed', handleUpdate);
     return () => {
-      window.removeEventListener('storage', handleUpdateFrame);
-      window.removeEventListener('auramedpro_frame_changed', handleUpdateFrame);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('auramedpro_frame_changed', handleUpdate);
+      window.removeEventListener('auramedpro_avatar_gender_changed', handleUpdate);
+      window.removeEventListener('auramedpro_avatar_tier_changed', handleUpdate);
     };
-  }, []);
+  }, [userXP]);
 
   const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
   const userBestSuddenDeath = getSuddenDeathBestStreak();
@@ -172,10 +187,17 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
         
         <div className="flex items-center gap-3.5">
-          <div className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${currentFrame.ringClass} ${currentFrame.glowClass}`}>
-            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-sm text-white">
-              {profileUsername.slice(0, 2).toUpperCase()}
-            </div>
+          <div 
+            onClick={() => setDashboardTab('profile')}
+            className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-all ${currentFrame.ringClass} ${currentFrame.glowClass}`}
+            title="Klik untuk melihat profil & kustomisasi avatar"
+          >
+            <CultivatorAvatar 
+              tier={cultivatorTier}
+              gender={cultivatorGender}
+              className="w-full h-full"
+              uid="home_hero"
+            />
             <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
               {currentFrame.badge}
             </span>
@@ -184,7 +206,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             <h1 className={`text-xl sm:text-2xl font-black tracking-tight truncate ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
               Selamat datang, {profileUsername}!
             </h1>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1 text-indigo-400 font-extrabold">
+                <span>{CULTIVATOR_TIERS[cultivatorTier - 1]?.badge}</span>
+                <span>Tingkat {cultivatorTier}</span>
+              </span>
+              <span>•</span>
               <span className="flex items-center gap-1">
                 <Award className="w-3.5 h-3.5 text-indigo-500" />
                 <span>Lv {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>

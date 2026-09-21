@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, Upload, LogOut, Volume2, Sparkles, Check, Play } from 'lucide-react';
 import { getRarityColor, getRarityBg } from '../../utils/achievements';
 import { getLevelInfo } from '../../utils/appHelpers';
@@ -13,6 +13,17 @@ import {
   getTodayQuestionsAnswered,
   isQuest500Completed
 } from '../../utils/avatarFrames';
+import {
+  CultivatorAvatar,
+  CULTIVATOR_TIERS,
+  CultivatorGender,
+  getSavedCultivatorGender,
+  setSavedCultivatorGender,
+  getEffectiveCultivatorTier,
+  getSavedCultivatorTier,
+  setSavedCultivatorTier,
+  getCultivatorTier
+} from '../../utils/cultivatorAvatars';
 import { AvatarFrameModal } from '../AvatarFrameModal';
 import { TrialCountdownBanner } from '../TrialCountdownBanner';
 
@@ -58,7 +69,29 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
   const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
   const [currentFrameId, setCurrentFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
+  const [cultivatorGender, setCultivatorGender] = useState<CultivatorGender>(getSavedCultivatorGender());
+  const [cultivatorTier, setCultivatorTier] = useState<number | 'auto'>(getSavedCultivatorTier());
   const [currentSoundPack, setCurrentSoundPack] = useState<SoundPackId>(getSavedSoundPack());
+  
+  useEffect(() => {
+    const handleGender = () => setCultivatorGender(getSavedCultivatorGender());
+    const handleTier = () => setCultivatorTier(getSavedCultivatorTier());
+    const handleFrame = () => setCurrentFrameId(getSavedAvatarFrame());
+    window.addEventListener('auramedpro_avatar_gender_changed', handleGender);
+    window.addEventListener('auramedpro_avatar_tier_changed', handleTier);
+    window.addEventListener('auramedpro_frame_changed', handleFrame);
+    window.addEventListener('storage', handleGender);
+    window.addEventListener('storage', handleTier);
+    window.addEventListener('storage', handleFrame);
+    return () => {
+      window.removeEventListener('auramedpro_avatar_gender_changed', handleGender);
+      window.removeEventListener('auramedpro_avatar_tier_changed', handleTier);
+      window.removeEventListener('auramedpro_frame_changed', handleFrame);
+      window.removeEventListener('storage', handleGender);
+      window.removeEventListener('storage', handleTier);
+      window.removeEventListener('storage', handleFrame);
+    };
+  }, []);
   
   const [newPassword, setNewPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -157,28 +190,66 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                   )}
 
                   <div className="flex flex-col items-center text-center">
-                    {/* Interactive Framed Avatar */}
+                    {/* Interactive Framed Cultivator Avatar */}
                     <div 
                       className="relative group cursor-pointer"
                       onClick={() => setIsFrameModalOpen(true)}
-                      title="Klik untuk mengganti bingkai avatar"
+                      title="Klik untuk kustomisasi avatar & bingkai"
                     >
-                      <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-2 transition-all ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
-                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-xl text-white">
-                          {profileUsername.slice(0, 2).toUpperCase()}
-                        </div>
+                      <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-2 transition-all ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
+                        <CultivatorAvatar 
+                          tier={effectiveTier}
+                          gender={cultivatorGender}
+                          className="w-full h-full"
+                          uid="profile_main"
+                        />
                       </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 text-base drop-shadow bg-slate-900 rounded-full p-0.5 border border-slate-700">
+                      <span className="absolute -bottom-0.5 -right-0.5 text-base drop-shadow bg-slate-900 rounded-full p-1 border border-slate-700 shadow-md">
                         {activeFrame.badge}
                       </span>
                     </div>
 
+                    {/* Quick Gender Selector */}
+                    <div className="flex items-center gap-1.5 mb-2.5">
+                      <button
+                        onClick={() => {
+                          setCultivatorGender('pria');
+                          setSavedCultivatorGender('pria');
+                          triggerToast('Wujud avatar diubah ke Kultivator Pria', '👨');
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                          cultivatorGender === 'pria'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'bg-slate-200/60 dark:bg-slate-800 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <span>👨</span>
+                        <span>Pria</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCultivatorGender('wanita');
+                          setSavedCultivatorGender('wanita');
+                          triggerToast('Wujud avatar diubah ke Kultivator Wanita', '👩');
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                          cultivatorGender === 'wanita'
+                            ? 'bg-pink-600 text-white shadow-sm'
+                            : 'bg-slate-200/60 dark:bg-slate-800 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <span>👩</span>
+                        <span>Wanita</span>
+                      </button>
+                    </div>
+
+                    {/* Customize Avatar & Frame Button */}
                     <button
                       onClick={() => setIsFrameModalOpen(true)}
-                      className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 hover:bg-indigo-500/20 transition flex items-center gap-1 cursor-pointer mb-2"
+                      className="px-3.5 py-1.5 rounded-full text-[11px] font-black bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 hover:bg-indigo-500/20 transition flex items-center gap-1.5 cursor-pointer mb-2.5"
                     >
-                      <Sparkles className="w-3 h-3" />
-                      <span>Ganti Bingkai Avatar</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Kustomisasi Avatar & Bingkai</span>
                     </button>
 
                     <h2 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
@@ -186,6 +257,9 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                     </h2>
                     <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
                       <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        {currentTierInfo.badge} Tingkat {currentTierInfo.tier}: {currentTierInfo.name}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20">
                         Gelar: {levelInfo.rank}
                       </span>
                       {userAngkatan && (
@@ -533,6 +607,13 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           onClose={() => setIsFrameModalOpen(false)}
           currentFrameId={currentFrameId}
           onSelectFrame={handleSelectFrame}
+          onSelectAvatarTier={(tier) => {
+            setCultivatorTier(tier);
+            triggerToast(tier === 'auto' ? 'Avatar disetel ke mode otomatis sesuai level!' : `Avatar Tingkat ${tier} berhasil dipasang!`, '🧘');
+          }}
+          onSelectGender={(g) => {
+            setCultivatorGender(g);
+          }}
           userStats={{
             level: levelInfo.level,
             totalQuestions: currentUser?.total_questions_answered || totalQuestionsAnswered || 0,
