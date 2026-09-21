@@ -591,14 +591,40 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
                   <hr className={`border-t ${theme === 'dark' ? 'border-slate-850' : 'border-slate-150'}`} />
 
+                  {/* Profile Summary Card above logout */}
+                  <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-100/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50">
+                    <div className="relative shrink-0">
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
+                        <CultivatorAvatar 
+                          tier={effectiveTier}
+                          gender={cultivatorGender}
+                          className="w-full h-full"
+                          uid="profile_bottom_logout"
+                        />
+                      </div>
+                      <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
+                        {activeFrame.badge}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-black truncate text-slate-800 dark:text-slate-200">
+                        {profileUsername}
+                      </div>
+                      <div className="text-[10px] font-extrabold text-indigo-400">
+                        {currentTierInfo.badge} Tingkat {currentTierInfo.tier} • LV {levelInfo.level}
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     onClick={async () => {
                       await authClient.signOut();
                       triggerToast('Sampai jumpa lagi!', '👋');
                     }}
-                    className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/15 transition-all cursor-pointer"
+                    className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/15 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Logout Akun
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout Akun</span>
                   </button>
                 </div>
 

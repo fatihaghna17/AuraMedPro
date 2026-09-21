@@ -7,7 +7,8 @@ import {
   CULTIVATOR_TIERS,
   CultivatorGender,
   getSavedCultivatorGender,
-  getEffectiveCultivatorTier
+  getEffectiveCultivatorTier,
+  getCultivatorTier
 } from '../../utils/cultivatorAvatars';
 import { OnboardingTour } from '../OnboardingTour';
 import PomodoroWidget from '../PomodoroWidget';
@@ -947,8 +948,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                         </span>
                                       </td>
                                       <td className="py-3.5 px-4 font-extrabold flex items-center gap-2.5 flex-wrap">
-                                        {/* Mini Avatar / Ring Preview */}
-                                        <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                                        {/* Mini Cultivator Avatar with Frame Ring */}
+                                        <div className={`relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                                           hasSuddenDeathAura 
                                             ? 'p-[1.5px] bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 border border-rose-300 shadow-md shadow-rose-500/60 animate-pulse'
                                             : hasSultanAura
@@ -959,11 +960,17 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? 'p-[1.5px] bg-gradient-to-tr from-purple-500 to-indigo-500 border border-purple-200 shadow-sm shadow-purple-500/40'
                                             : isCurrent
                                             ? currentFrame.ringClass
-                                            : 'bg-slate-200 dark:bg-slate-700'
+                                            : 'p-[1px] bg-slate-200 dark:bg-slate-700'
                                         }`}>
-                                          <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-[10px] text-white font-black">
-                                            {hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? (currentFrame.badge || (row.username ? row.username.slice(0, 1).toUpperCase() : '👤')) : (row.username ? row.username.slice(0, 1).toUpperCase() : '👤')}
-                                          </div>
+                                          <CultivatorAvatar 
+                                            tier={isCurrent ? cultivatorTier : getCultivatorTier(row.level || 1)}
+                                            gender={isCurrent ? cultivatorGender : 'pria'}
+                                            className="w-full h-full"
+                                            uid={`lb1_${index}_${row.username}`}
+                                          />
+                                          <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow">
+                                            {hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? currentFrame.badge : '🩺'}
+                                          </span>
                                         </div>
                                         <span className={
                                           hasSuddenDeathAura
@@ -1174,8 +1181,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                         </span>
                                       </td>
                                       <td className="py-3.5 px-4 font-extrabold flex items-center gap-2.5 flex-wrap">
-                                        {/* Mini Avatar / Ring Preview */}
-                                        <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                                        {/* Mini Cultivator Avatar with Frame Ring */}
+                                        <div className={`relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                                           hasSuddenDeathAura 
                                             ? 'p-[1.5px] bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 border border-rose-300 shadow-md shadow-rose-500/60 animate-pulse'
                                             : hasSultanAura
@@ -1186,11 +1193,17 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? 'p-[1.5px] bg-gradient-to-tr from-purple-500 to-indigo-500 border border-purple-200 shadow-sm shadow-purple-500/40'
                                             : isCurrent
                                             ? currentFrame.ringClass
-                                            : 'bg-slate-200 dark:bg-slate-700'
+                                            : 'p-[1px] bg-slate-200 dark:bg-slate-700'
                                         }`}>
-                                          <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-[10px] text-white font-black">
-                                            {hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? (currentFrame.badge || (row.username ? row.username.slice(0, 1).toUpperCase() : '👤')) : (row.username ? row.username.slice(0, 1).toUpperCase() : '👤')}
-                                          </div>
+                                          <CultivatorAvatar 
+                                            tier={isCurrent ? cultivatorTier : getCultivatorTier(row.level || 1)}
+                                            gender={isCurrent ? cultivatorGender : 'pria'}
+                                            className="w-full h-full"
+                                            uid={`lb2_${index}_${row.username}`}
+                                          />
+                                          <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow">
+                                            {hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? currentFrame.badge : '🩺'}
+                                          </span>
                                         </div>
                                         <span className={
                                           hasSuddenDeathAura

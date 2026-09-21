@@ -1,7 +1,16 @@
+import React, { useState, useEffect } from 'react';
 import {
   Activity, Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Flame, LogOut
 , Gamepad2, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import {
+  CultivatorAvatar,
+  CULTIVATOR_TIERS,
+  getEffectiveCultivatorTier,
+  getSavedCultivatorGender,
+  CultivatorGender
+} from '../utils/cultivatorAvatars';
+import { AVATAR_FRAMES, getSavedAvatarFrame, AvatarFrameId } from '../utils/avatarFrames';
 
 interface NavItem {
   id: string;
@@ -12,19 +21,44 @@ interface NavItem {
 interface SidebarNavProps {
   theme: 'light' | 'dark';
   activeTab: string;
- srsDueCount: number;
+  srsDueCount: number;
   currentStreak: number;
   streakFreezeLeft: number;
   username: string;
   userLevel: number;
   isAdmin: boolean;
- onTabChange: (tab: string) => void;
+  onTabChange: (tab: string) => void;
   onLogout: () => void;
 }
 
 export default function SidebarNav({
   theme, activeTab, srsDueCount, currentStreak, streakFreezeLeft, username, userLevel, isAdmin, onTabChange, onLogout,
 }: SidebarNavProps) {
+  const [savedFrameId, setSavedFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
+  const [cultivatorGender, setCultivatorGender] = useState<CultivatorGender>(getSavedCultivatorGender());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSavedFrameId(getSavedAvatarFrame());
+      setCultivatorGender(getSavedCultivatorGender());
+    };
+    handleUpdate();
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('auramedpro_frame_changed', handleUpdate);
+    window.addEventListener('auramedpro_avatar_gender_changed', handleUpdate);
+    window.addEventListener('auramedpro_avatar_tier_changed', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('auramedpro_frame_changed', handleUpdate);
+      window.removeEventListener('auramedpro_avatar_gender_changed', handleUpdate);
+      window.removeEventListener('auramedpro_avatar_tier_changed', handleUpdate);
+    };
+  }, []);
+
+  const activeFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
+  const tier = getEffectiveCultivatorTier(userLevel);
+  const tierInfo = CULTIVATOR_TIERS[tier - 1] || CULTIVATOR_TIERS[0];
+
   const items: NavItem[] = [
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
@@ -107,16 +141,38 @@ export default function SidebarNav({
       </div>
 
       {/* Profile & Logout */}
-      <div className="p-6 border-t border-slate-200/50 dark:border-slate-800/50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-black text-xs border border-white/20">
-            {(username?.[0] || 'U').toUpperCase()}
+      <div className="p-4 sm:p-5 border-t border-slate-200/50 dark:border-slate-800/50">
+        {/* Cultivator Avatar Card above Logout Logo */}
+        <div 
+          onClick={() => onTabChange('profile')}
+          className="flex items-center gap-3 mb-3.5 p-2 rounded-2xl hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition cursor-pointer group"
+          title="Buka Halaman Profil & Kustomisasi Avatar"
+        >
+          <div className="relative shrink-0">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
+              <CultivatorAvatar 
+                tier={tier}
+                gender={cultivatorGender}
+                className="w-full h-full"
+                uid="sidebar_avatar"
+              />
+            </div>
+            <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
+              {activeFrame.badge}
+            </span>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-black truncate text-slate-800 dark:text-slate-200">{username}</p>
-            <p className="text-[9px] font-extrabold uppercase text-slate-450">LV {userLevel}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black truncate text-slate-800 dark:text-slate-200 group-hover:text-indigo-400 transition">
+              {username}
+            </p>
+            <div className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase text-slate-400 mt-0.5">
+              <span className="text-indigo-400 font-black">{tierInfo.badge} T{tier}</span>
+              <span>•</span>
+              <span>LV {userLevel}</span>
+            </div>
           </div>
         </div>
+
         <button
           onClick={onLogout}
           className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
