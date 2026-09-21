@@ -420,6 +420,101 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     )}
 
+                    {/* Navigation Buttons inside card (Positioned directly under options, stays on top after check answer) */}
+                    <div className="hidden lg:flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+                      <button
+                        onClick={() => navigateQuestion(-1)}
+                        disabled={currentIndex === 0}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
+                          theme === 'dark'
+                            ? 'bg-slate-850 hover:bg-slate-800 border-slate-700 text-white'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        ← Sebelumnya
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        {quizMode !== 'rmo' && quizMode !== 'blok' && (
+                          !isRevealed[currentIndex] ? (
+                            <button
+                              onClick={checkAnswerNow}
+                              disabled={userAnswers[currentIndex] === null}
+                              className={`inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md transition-all duration-200 active:scale-105 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer ${
+                                quizMode === 'suddendeath'
+                                  ? 'bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 shadow-rose-600/30 ring-1 ring-rose-400/40'
+                                  : 'bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/10'
+                              }`}
+                            >
+                              <Check className="w-4 h-4 stroke-[3]" />
+                              {quizMode === 'suddendeath' ? '💀 Kunci Jawaban' : 'Cek Jawaban'}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-extrabold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/10">
+                              <Lock className="w-3 h-3" />
+                              Terkunci
+                            </span>
+                          )
+                        )}
+
+                        <button
+                          onClick={toggleDoubt}
+                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 cursor-pointer ${
+                            doubtStatus[currentIndex]
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold shadow-sm'
+                              : theme === 'dark'
+                              ? 'bg-slate-850 hover:bg-slate-850 border-slate-700 text-slate-400'
+                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-500'
+                          }`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${doubtStatus[currentIndex] ? 'bg-amber-500 shadow-sm shadow-amber-500' : 'bg-slate-400'}`} />
+                          <span>Ragu-ragu</span>
+                        </button>
+                        
+                        {quizMode === 'rmo' && (
+                          <button
+                            onClick={() => selectAnswer(null)}
+                            disabled={userAnswers[currentIndex] === null || isRevealed[currentIndex]}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
+                              theme === 'dark'
+                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-700 text-rose-400'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-rose-500'
+                            }`}
+                            title="Kosongkan jawaban (menghindari -1 jika salah)"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Hapus Jawaban</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {(isAdaptiveMode && currentIndex === currentQuiz.length - 1 && currentQuiz.length < 30) ? (
+                        <button
+                          onClick={handleNextQuestion}
+                          disabled={userAnswers[currentIndex] === null}
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 cursor-pointer hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Selanjutnya →
+                        </button>
+                      ) : currentIndex < currentQuiz.length - 1 ? (
+                        <button
+                          onClick={handleNextQuestion}
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 cursor-pointer hover:bg-indigo-600"
+                        >
+                          Selanjutnya →
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleNextQuestion}
+                          className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/10 transition-all duration-200 active:scale-105 cursor-pointer"
+                        >
+                          🏁 Selesai & Kirim
+                        </button>
+                      )}
+                    </div>
+
                     {/* Question explanation/Pembahasan */}
                     {isRevealed[currentIndex] && (() => {
                       const isAnswerCorrect = isUserAnswerCorrect(userAnswers[currentIndex], currentQuiz[currentIndex]);
@@ -563,106 +658,21 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 </div>
                               )}
 
+                              {/* Bottom Continue Button if user scrolled all the way through explanation */}
+                              <div className="pt-4 border-t border-slate-200/40 dark:border-slate-800/40 flex justify-end">
+                                <button
+                                  onClick={handleNextQuestion}
+                                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-105 cursor-pointer"
+                                >
+                                  {currentIndex < currentQuiz.length - 1 ? 'Lanjut ke Soal Berikutnya →' : '🏁 Selesai & Kirim'}
+                                </button>
+                              </div>
+
                             </div>
                           </div>
                         </div>
                       );
                     })()}
-
-                    {/* Navigation Buttons inside card */}
-                    <div className="hidden lg:flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
-                      <button
-                        onClick={() => navigateQuestion(-1)}
-                        disabled={currentIndex === 0}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-                          theme === 'dark'
-                            ? 'bg-slate-850 hover:bg-slate-800 border-slate-700 text-white'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        ← Sebelumnya
-                      </button>
-
-                      <div className="flex items-center gap-2">
-                        {quizMode !== 'rmo' && quizMode !== 'blok' && (
-                          !isRevealed[currentIndex] ? (
-                            <button
-                              onClick={checkAnswerNow}
-                              disabled={userAnswers[currentIndex] === null}
-                              className={`inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md transition-all duration-200 active:scale-105 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer ${
-                                quizMode === 'suddendeath'
-                                  ? 'bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 shadow-rose-600/30 ring-1 ring-rose-400/40'
-                                  : 'bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/10'
-                              }`}
-                            >
-                              <Check className="w-4 h-4 stroke-[3]" />
-                              {quizMode === 'suddendeath' ? '💀 Kunci Jawaban' : 'Cek Jawaban'}
-                            </button>
-                          ) : (
-                            <span className="text-[11px] font-extrabold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/10">
-                              <Lock className="w-3 h-3" />
-                              Terkunci
-                            </span>
-                          )
-                        )}
-
-                        <button
-                          onClick={toggleDoubt}
-                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 cursor-pointer ${
-                            doubtStatus[currentIndex]
-                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold shadow-sm'
-                              : theme === 'dark'
-                              ? 'bg-slate-850 hover:bg-slate-850 border-slate-700 text-slate-400'
-                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-500'
-                          }`}
-                        >
-                          <div className={`w-2 h-2 rounded-full ${doubtStatus[currentIndex] ? 'bg-amber-500 shadow-sm shadow-amber-500' : 'bg-slate-400'}`} />
-                          <span>Ragu-ragu</span>
-                        </button>
-                        
-                        {quizMode === 'rmo' && (
-                          <button
-                            onClick={() => selectAnswer(null)}
-                            disabled={userAnswers[currentIndex] === null || isRevealed[currentIndex]}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-                              theme === 'dark'
-                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-700 text-rose-400'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-rose-500'
-                            }`}
-                            title="Kosongkan jawaban (menghindari -1 jika salah)"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            <span>Hapus Jawaban</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {(isAdaptiveMode && currentIndex === currentQuiz.length - 1 && currentQuiz.length < 30) ? (
-                        <button
-                          onClick={handleNextQuestion}
-                          disabled={userAnswers[currentIndex] === null}
-                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 cursor-pointer hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Selanjutnya →
-                        </button>
-                      ) : currentIndex < currentQuiz.length - 1 ? (
-                        <button
-                          onClick={handleNextQuestion}
-                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 cursor-pointer hover:bg-indigo-600"
-                        >
-                          Selanjutnya →
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleNextQuestion}
-                          className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/10 transition-all duration-200 active:scale-105 cursor-pointer"
-                        >
-                          🏁 Selesai & Kirim
-                        </button>
-                      )}
-                    </div>
 
                   </div>
                 </div>
