@@ -3248,26 +3248,22 @@ export default function App() {
                   onFilterChange={setBankFilter}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                  <div className="md:col-span-8">
-                    <UploadZone
-                      theme={theme}
-                      fileInputRef={fileInputRef}
-                      folderInputRef={folderInputRef}
-                      onFileUpload={handleFileUpload}
-                      onFolderUpload={handleFolderUpload}
-                      onPasteClick={() => setPasteModalOpen(true)}
-                      isSuperAdmin={isSuperAdmin}
-                      selectedAngkatan={uploadTargetAngkatan}
-                      onSelectedAngkatanChange={setUploadTargetAngkatan}
-                      selectedProdi={uploadTargetProdi}
-                      onSelectedProdiChange={setUploadTargetProdi}
-                    />
-                  </div>
+                <div className="space-y-6">
+                  <UploadZone
+                    theme={theme}
+                    fileInputRef={fileInputRef}
+                    folderInputRef={folderInputRef}
+                    onFileUpload={handleFileUpload}
+                    onFolderUpload={handleFolderUpload}
+                    onPasteClick={() => setPasteModalOpen(true)}
+                    isSuperAdmin={isSuperAdmin}
+                    selectedAngkatan={uploadTargetAngkatan}
+                    onSelectedAngkatanChange={setUploadTargetAngkatan}
+                    selectedProdi={uploadTargetProdi}
+                    onSelectedProdiChange={setUploadTargetProdi}
+                  />
 
-                  <div className="md:col-span-4">
-                    <FormatGuide theme={theme} />
-                  </div>
+                  <FormatGuide theme={theme} />
                 </div>
 
                 {/* Databases Lists (Folders & Root Items) */}
