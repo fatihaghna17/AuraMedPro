@@ -31,7 +31,7 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
             <div
               key={session.id}
               className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-colors ${
-                theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200'
+                theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
               }`}
             >
               <div className="min-w-0">

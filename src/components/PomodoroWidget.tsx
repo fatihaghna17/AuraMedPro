@@ -22,7 +22,7 @@ export default function PomodoroWidget({
     <div>
       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Pomodoro Timer</h3>
       <div className={`p-5 rounded-2xl border flex flex-col items-center justify-center transition-colors ${
-        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200 shadow-sm'
+        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
       }`}>
         <div className="relative w-32 h-32 mb-4">
           <svg className="w-full h-full transform -rotate-90">

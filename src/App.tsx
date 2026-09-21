@@ -3270,7 +3270,7 @@ export default function App() {
                 <div className={`p-6 rounded-3xl border transition-all duration-300 ${
                   theme === 'dark'
                     ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-                    : 'bg-white border-slate-200 shadow-sm'
+                    : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
                 }`}>
                   {isCollector && (
                     <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">

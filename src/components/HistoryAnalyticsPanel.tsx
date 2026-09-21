@@ -14,7 +14,7 @@ export default function HistoryAnalyticsPanel({
     <div>
       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Analisis Sub-Kompetensi</h3>
       <div className={`border rounded-2xl divide-y overflow-hidden transition-colors ${
-        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80 divide-slate-850' : 'bg-white border-slate-200 divide-slate-100'
+        theme === 'dark' ? 'bg-slate-900/40 border-slate-800/80 divide-slate-850' : 'bg-white/80 backdrop-blur-xl border-white/80 divide-slate-100 shadow-sm'
       }`}>
         {Object.entries(analytics).map(([name, data]: [string, any]) => {
           const pct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;

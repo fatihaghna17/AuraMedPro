@@ -22,7 +22,7 @@ export default function SearchFilterHeader({
     <div className={`p-6 rounded-3xl border transition-all duration-300 ${
       theme === 'dark'
         ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-        : 'bg-white border-slate-200 shadow-sm'
+        : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
     }`}>
       <h2 className={`text-lg font-black mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
         Daftar Bank Soal
@@ -38,7 +38,7 @@ export default function SearchFilterHeader({
             className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
               theme === 'dark'
                 ? 'bg-slate-950 border-slate-800 text-slate-200 placeholder-slate-500'
-                : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                : 'bg-white/70 border-slate-200/80 text-slate-800 placeholder-slate-400'
             }`}
           />
         </div>

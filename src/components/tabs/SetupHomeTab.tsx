@@ -183,7 +183,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       <div className={`w-full p-5 sm:p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 ${
         theme === 'dark'
           ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
-          : 'bg-white border-slate-200 shadow-sm'
+          : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
       }`}>
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
         
@@ -272,7 +272,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         <div className={`lg:col-span-5 p-6 rounded-3xl transition-all duration-300 border flex flex-col justify-between ${
           theme === 'dark'
             ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
-            : 'bg-white border-slate-200 shadow-sm'
+            : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
         }`}>
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
@@ -347,7 +347,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         <div className={`lg:col-span-7 p-6 rounded-3xl transition-all duration-300 border flex flex-col ${
           theme === 'dark'
             ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
-            : 'bg-white border-slate-200 shadow-sm'
+            : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
         }`}>
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
             <div className="flex items-center gap-4">
@@ -1347,7 +1347,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           <div className={`p-5 rounded-3xl border transition-all duration-300 ${
             theme === 'dark'
               ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
-              : 'bg-white border-slate-200 shadow-sm'
+              : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
           }`}>
             <HistoryAnalyticsPanel
               theme={theme}
@@ -1360,7 +1360,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           <div className={`p-5 rounded-3xl border transition-all duration-300 ${
             theme === 'dark'
               ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
-              : 'bg-white border-slate-200 shadow-sm'
+              : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
           }`}>
             <PomodoroWidget
               theme={theme}

@@ -17,7 +17,7 @@ export default function QuickActionsRow({
   const cardClass = `group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
     isDark 
       ? 'bg-slate-900/60 hover:bg-slate-900/90 border-white/[0.08] hover:border-indigo-500/40 shadow-lg shadow-black/10' 
-      : 'bg-white hover:bg-slate-50 border-slate-200/80 hover:border-indigo-300 shadow-sm'
+      : 'bg-white/80 hover:bg-white/95 backdrop-blur-xl border-white/80 hover:border-indigo-300 shadow-sm'
   }`;
 
   return (

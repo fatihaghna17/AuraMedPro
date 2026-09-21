@@ -27,7 +27,7 @@ export default function UploadZone({
     `p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.01] ${
       theme === 'dark'
         ? `bg-slate-950/40 border-slate-800 hover:${hoverColor}`
-        : `bg-slate-50 border-slate-200 hover:${hoverColor}`
+        : `bg-white/60 hover:bg-white/90 border-slate-200/80 hover:${hoverColor}`
     }`;
 
   const prodiOptions = [
@@ -56,7 +56,7 @@ export default function UploadZone({
     <div className={`p-6 rounded-3xl border transition-all duration-300 space-y-5 ${
       theme === 'dark'
         ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-        : 'bg-white border-slate-200 shadow-sm'
+        : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
