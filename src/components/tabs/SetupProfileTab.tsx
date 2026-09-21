@@ -126,6 +126,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   const isQuestDone = isQuest500Completed() || todayQuestions >= 500;
   const activeFrame = AVATAR_FRAMES.find(f => f.id === currentFrameId) || AVATAR_FRAMES[0];
   const levelInfo = getLevelInfo(userXP);
+  const effectiveTier = getEffectiveCultivatorTier(levelInfo.level);
+  const currentTierInfo = CULTIVATOR_TIERS[effectiveTier - 1] || CULTIVATOR_TIERS[0];
 
   const handleSelectFrame = (id: AvatarFrameId) => {
     setCurrentFrameId(id);
