@@ -162,82 +162,77 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       <IosInstallBanner theme={theme} onInstallClick={() => setShowIosInstallModal(true)} />
 
       {/* ========================================================================= */}
-      {/* TOP ROW: GREETING (LEFT) & QUICK ACTIONS (RIGHT)                         */}
+      {/* TOP ROW: GREETING HERO BAR                                               */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left: Compact Greeting Card */}
-        <div className={`lg:col-span-7 p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
-            : 'bg-white border-slate-200 shadow-sm'
-        }`}>
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
-          
-          <div className="flex items-center gap-3.5 mt-1">
-            <div className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${currentFrame.ringClass} ${currentFrame.glowClass}`}>
-              <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-sm text-white">
-                {profileUsername.slice(0, 2).toUpperCase()}
-              </div>
-              <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
-                {currentFrame.badge}
+      <div className={`w-full p-5 sm:p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+        theme === 'dark'
+          ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
+          : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+        
+        <div className="flex items-center gap-3.5">
+          <div className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${currentFrame.ringClass} ${currentFrame.glowClass}`}>
+            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-sm text-white">
+              {profileUsername.slice(0, 2).toUpperCase()}
+            </div>
+            <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
+              {currentFrame.badge}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className={`text-xl sm:text-2xl font-black tracking-tight truncate ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
+              Selamat datang, {profileUsername}!
+            </h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1">
+                <Award className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Lv {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-teal-500" />
+                <span>{userXP} XP</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                <Flame className="w-3 h-3 text-amber-500" />
+                <span>{currentStreak} Hari Streak</span>
               </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <h1 className={`text-xl sm:text-2xl font-black tracking-tight truncate ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
-                Selamat datang, {profileUsername}!
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Award className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Lv {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-                  <span>{userXP} XP</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                  <Flame className="w-3 h-3 text-amber-500" />
-                  <span>{currentStreak} Hari Streak</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Level progress bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
-              <span>Progres Level</span>
-              <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
-            </div>
-            <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
-                style={{ width: `${getLevelInfo(userXP).progress}%` }}
-              />
-            </div>
           </div>
         </div>
 
-        {/* Right: Quick Actions */}
-        <div className="lg:col-span-5 flex flex-col justify-center">
-          <QuickActionsRow
-            theme={theme}
-            pendingCount={pendingSessions.length}
-            pendingProgress={pendingSessions.length > 0 ? Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100) : null}
-            onNewQuiz={() => setDashboardTab('new')}
-            onResumeOrBanks={() => {
-              if (pendingSessions.length > 0) {
-                resumeQuizSession(pendingSessions[0]);
-              } else {
-                setDashboardTab('banks');
-              }
-            }}
-            onBanks={() => setDashboardTab('banks')}
-          />
+        {/* Level progress bar on right */}
+        <div className="w-full md:w-72 shrink-0">
+          <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+            <span>Progres Level</span>
+            <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
+          </div>
+          <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
+              style={{ width: `${getLevelInfo(userXP).progress}%` }}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Quick Actions Full Width Row (3 balanced horizontal cards) */}
+      <QuickActionsRow
+        theme={theme}
+        pendingCount={pendingSessions.length}
+        pendingProgress={pendingSessions.length > 0 ? Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100) : null}
+        onNewQuiz={() => setDashboardTab('new')}
+        onResumeOrBanks={() => {
+          if (pendingSessions.length > 0) {
+            resumeQuizSession(pendingSessions[0]);
+          } else {
+            setDashboardTab('banks');
+          }
+        }}
+        onBanks={() => setDashboardTab('banks')}
+      />
 
       {/* ========================================================================= */}
       {/* BENTO GRID (4 PANELS): COMPACT 2x2 LAYOUT                                  */}

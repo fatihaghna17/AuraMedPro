@@ -1,7 +1,8 @@
-import { Play, Flame, UploadCloud } from 'lucide-react';
+import React from 'react';
+import { Play, Flame, UploadCloud, ChevronRight, Plus } from 'lucide-react';
 
 interface QuickActionsRowProps {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | string;
   pendingCount: number;
   pendingProgress: number | null;
   onNewQuiz: () => void;
@@ -12,43 +13,71 @@ interface QuickActionsRowProps {
 export default function QuickActionsRow({
   theme, pendingCount, pendingProgress, onNewQuiz, onResumeOrBanks, onBanks,
 }: QuickActionsRowProps) {
-  const cardClass = `min-w-[220px] snap-center flex-1 p-5 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] hover:-translate-y-0.5 ${
-    theme === 'dark' ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-slate-200 hover:border-indigo-200'
+  const isDark = theme === 'dark';
+  const cardClass = `group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
+    isDark 
+      ? 'bg-slate-900/60 hover:bg-slate-900/90 border-white/[0.08] hover:border-indigo-500/40 shadow-lg shadow-black/10' 
+      : 'bg-white hover:bg-slate-50 border-slate-200/80 hover:border-indigo-300 shadow-sm'
   }`;
 
   return (
-    <div>
-      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Aksi Cepat</h3>
-      <div className="flex overflow-x-auto snap-x snap-mandatory lg:grid lg:grid-cols-3 gap-4 pb-2 lg:pb-0 scrollbar-none">
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         
+        {/* Card 1: Try-Out Baru */}
         <div onClick={onNewQuiz} className={cardClass}>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-505 flex items-center justify-center mb-3">
-            <Play className="w-5 h-5 text-indigo-500" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+              <Plus className="w-5 h-5" strokeWidth={3} />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate">
+                Try-Out Baru
+              </h4>
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 truncate">
+                Simulasi kuis adaptif & blok
+              </p>
+            </div>
           </div>
-          <h4 className="text-sm font-black">Try-Out Baru</h4>
-          <p className="text-[11px] text-slate-400 mt-1">Konfigurasi materi & mulai simulasi kuis baru.</p>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
         </div>
 
+        {/* Card 2: Lanjutkan Kuis / Topik */}
         <div onClick={onResumeOrBanks} className={cardClass}>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3">
-            <Flame className="w-5 h-5 text-amber-500" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <Flame className="w-5 h-5 fill-current" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate">
+                {pendingCount > 0 ? 'Lanjutkan Kuis' : 'Pilih Topik Soal'}
+              </h4>
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 truncate">
+                {pendingCount > 0
+                  ? `Sesi tertunda (${pendingProgress}%)`
+                  : 'Jelajahi bank soal'}
+              </p>
+            </div>
           </div>
-          <h4 className="text-sm font-black">
-            {pendingCount > 0 ? 'Lanjutkan Kuis' : 'Pilih Topik Soal'}
-          </h4>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {pendingCount > 0
-              ? `Lanjutkan kuis tertunda (${pendingProgress}%)`
-              : 'Jelajahi dan pilih bank soal yang tersedia.'}
-          </p>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
         </div>
 
+        {/* Card 3: Bank & Upload Soal */}
         <div onClick={onBanks} className={cardClass}>
-          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mb-3">
-            <UploadCloud className="w-5 h-5 text-teal-500" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-400 to-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
+              <UploadCloud className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate">
+                Bank & Upload Soal
+              </h4>
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 truncate">
+                Impor file kuis JSON/YAML
+              </p>
+            </div>
           </div>
-          <h4 className="text-sm font-black">Upload Soal</h4>
-          <p className="text-[11px] text-slate-400 mt-1">Impor file kuis JSON/YAML atau folder soal baru.</p>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
         </div>
 
       </div>
