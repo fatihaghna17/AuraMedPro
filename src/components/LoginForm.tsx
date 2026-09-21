@@ -15,12 +15,11 @@ interface LoginFormProps {
   onEmailChange: (val: string) => void;
   passwordValue: string;
   onPasswordChange: (val: string) => void;
-  onGuestJoin?: (nickname: string, roomCode: string) => void;
 }
 
 export default function LoginForm({
   theme, isSessionKicked, onSubmit, onToggleTheme, 
-  emailValue, onEmailChange, passwordValue, onPasswordChange, onGuestJoin
+  emailValue, onEmailChange, passwordValue, onPasswordChange
 }: LoginFormProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,11 +34,6 @@ export default function LoginForm({
 
   // Info Modal (for top nav links)
   const [infoModal, setInfoModal] = useState<{ title: string; desc: string; icon: any } | null>(null);
-
-  // Guest Mode Modal
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const [guestNickname, setGuestNickname] = useState('');
-  const [guestRoomCode, setGuestRoomCode] = useState('');
   
   // State modal password yang di-generate setelah registrasi sukses
   const [newAccountData, setNewAccountData] = useState<{
@@ -473,62 +467,6 @@ export default function LoginForm({
           </div>
         )}
 
-        {/* Guest Mode Modal */}
-        {showGuestModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md px-4 animate-fade-in">
-            <div className={`w-full max-w-sm rounded-[28px] p-6 border shadow-2xl relative ${
-              isDark ? 'bg-slate-900/90 border-white/15 text-white' : 'bg-white/90 border-slate-200 text-slate-900'
-            }`}>
-              <button
-                type="button"
-                onClick={() => setShowGuestModal(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mb-4">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black tracking-tight mb-1">Masuk sebagai Tamu</h3>
-              <p className={`text-xs mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Bergabung ke ruang belajar bersama (Study Room) tanpa perlu mendaftar akun.
-              </p>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Nama Panggilan Anda"
-                  value={guestNickname}
-                  onChange={(e) => setGuestNickname(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-full text-xs font-semibold border ${
-                    isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-100 border-slate-200 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-                <input
-                  type="text"
-                  placeholder="Kode Room (Opsional)"
-                  value={guestRoomCode}
-                  onChange={(e) => setGuestRoomCode(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-full text-xs font-semibold border uppercase tracking-wider ${
-                    isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-100 border-slate-200 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (guestNickname.trim() && onGuestJoin) {
-                      onGuestJoin(guestNickname.trim(), guestRoomCode.trim());
-                      setShowGuestModal(false);
-                    }
-                  }}
-                  disabled={!guestNickname.trim()}
-                  className="w-full py-3 rounded-full bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-950 font-black text-xs uppercase tracking-wider disabled:opacity-50 transition-all cursor-pointer mt-2"
-                >
-                  Mulai Sesi Tamu
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Central Auth Container */}
         <div className="w-full max-w-md mx-auto animate-fade-in flex flex-col items-center">
@@ -642,7 +580,7 @@ export default function LoginForm({
                 Masuk Dashboard
               </button>
 
-              {/* Bottom Controls (Remember me & Links) */}
+              {/* Bottom Controls (Remember me) */}
               <div className="flex items-center justify-between pt-2 px-2 text-xs">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
@@ -655,18 +593,6 @@ export default function LoginForm({
                     Ingat Saya
                   </span>
                 </label>
-
-                {onGuestJoin && (
-                  <button
-                    type="button"
-                    onClick={() => setShowGuestModal(true)}
-                    className={`font-semibold underline transition-colors cursor-pointer ${
-                      isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Masuk Tamu
-                  </button>
-                )}
               </div>
             </form>
           )}

@@ -194,42 +194,6 @@ export default function App() {
 
   // Sync XP and Streak back to Supabase profiles when changed
   const { toastMessage, triggerToast } = useToast();
-  const [guestRoomCode, setGuestRoomCode] = useState('');
-  
-  const handleGuestJoin = async (nickname: string, roomCode: string) => {
-    const cleanNick = (nickname || '').trim();
-    const cleanCode = (roomCode || '').trim().toUpperCase();
-
-    if (!cleanNick || !cleanCode) {
-      triggerToast('Nama dan Kode Room wajib diisi!', '⚠️');
-      return;
-    }
-    
-    triggerToast('Masuk sebagai tamu...', '⏳');
-
-    // Gunakan authClient untuk sesi guest di Cloudflare D1
-    const { data, error } = await authClient.signInAnonymously({
-      options: {
-        data: { username: cleanNick, is_guest: true }
-      }
-    });
-    
-    if (error) {
-      triggerToast('Gagal masuk guest: ' + error.message, '❌');
-      return;
-    }
-
-    const user = data?.user;
-    if (!user) {
-      triggerToast('Gagal membuat sesi tamu.', '❌');
-      return;
-    }
-
-    // Set user immediately so the dashboard renders
-    setCurrentUser(user);
-    setGuestRoomCode(cleanCode);
-        triggerToast(`Selamat datang ${cleanNick}! Masuk ke room...`, '✅');
-  };
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [pendingSessions, setPendingSessions] = useState<any[]>([]);
   const [globalCustomFolders, setGlobalCustomFolders] = useState<string[]>([]);
@@ -3128,7 +3092,6 @@ export default function App() {
           onEmailChange={setEmailInput}
           passwordValue={passwordInput}
           onPasswordChange={setPasswordInput}
-          onGuestJoin={handleGuestJoin}
         />
       ) : !canAccess ? (
         <SubscriptionGate
