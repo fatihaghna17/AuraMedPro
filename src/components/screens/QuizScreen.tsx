@@ -11,6 +11,7 @@ import { getCorrectLetterForQuestion, renderHtmlText, getQuestionImage, renderQu
 import { formatQuestionForGemini, openGeminiTutor } from '../../utils/geminiTutor';
 import StableImage from '../StableImage';
 import { motion, AnimatePresence } from 'motion/react';
+import { SOUND_PACKS, SoundPackId, getSavedSoundPack, setSavedSoundPack, playCorrectSound } from '../../utils/audioEffects';
 
 interface QuizScreenProps {
   theme: string;
@@ -79,6 +80,21 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
   toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, currentCombo = 0, finishQuiz,
   quizMode = 'utuh'
 }) => {
+  const [soundPack, setSoundPack] = React.useState<SoundPackId>(getSavedSoundPack());
+
+  const handleCycleSoundPack = () => {
+    const order: SoundPackId[] = ['medical', 'arcade', 'zen', 'mute'];
+    const nextIdx = (order.indexOf(soundPack) + 1) % order.length;
+    const nextPack = order[nextIdx];
+    setSavedSoundPack(nextPack);
+    setSoundPack(nextPack);
+    if (nextPack !== 'mute') {
+      playCorrectSound(nextPack);
+    }
+    const packInfo = SOUND_PACKS.find(p => p.id === nextPack);
+    triggerToast(`Efek Suara: ${packInfo?.name}`, packInfo?.icon || '🔊');
+  };
+
   return (
     <>
           <div className="relative min-h-screen pb-24">
@@ -213,6 +229,20 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             <span className="hidden sm:inline">Bookmark</span>
                           </button>
                         )}
+                        <button
+                          onClick={handleCycleSoundPack}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                            soundPack === 'mute'
+                              ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                              : theme === 'dark'
+                                ? 'bg-slate-800/80 hover:bg-slate-850 text-slate-300 border-slate-700/50'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-655 border-slate-200'
+                          }`}
+                          title={`Efek Suara: ${SOUND_PACKS.find(p => p.id === soundPack)?.name} (Klik untuk ganti)`}
+                        >
+                          <span>{SOUND_PACKS.find(p => p.id === soundPack)?.icon || '🔊'}</span>
+                          <span className="hidden sm:inline">{SOUND_PACKS.find(p => p.id === soundPack)?.name.split(' ')[0] || 'Suara'}</span>
+                        </button>
                       </div>
                     </div>
 
