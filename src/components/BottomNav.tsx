@@ -1,4 +1,4 @@
-import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle , Gamepad2 } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Gamepad2, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -19,6 +19,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
   const items: NavItem[] = [
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
+    { id: 'groups', label: 'Grup', icon: Users },
     { id: 'new', label: 'Baru', icon: PlusCircle },
     { id: 'srs', label: 'SRS', icon: Brain },
     { id: 'notes', label: 'Notes', icon: StickyNote },
@@ -38,6 +39,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
+            title={item.id === 'groups' ? 'Grup Belajar' : item.label}
             className={`relative shrink-0 flex flex-col items-center justify-center w-[16%] min-w-[60px] snap-center h-full gap-1 transition-all ${
               isActive
                 ? 'text-indigo-500 dark:text-indigo-400 scale-105'
