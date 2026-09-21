@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Award, Trash2, Calendar, Trash, Flame, Snowflake, Clock, Check, Target, Trophy, History, Crown, Play, Share2, UploadCloud, TrendingUp, Sparkles, Activity, ShieldAlert, CalendarHeart } from 'lucide-react';
 import { getLevelInfo, formatNotifTime } from '../../utils/appHelpers';
 import { AVATAR_FRAMES, getSavedAvatarFrame, getSuddenDeathBestStreak, AvatarFrameId } from '../../utils/avatarFrames';
@@ -11,6 +11,9 @@ import PendingSessionsCard from '../PendingSessionsCard';
 import HistoryAnalyticsPanel from '../HistoryAnalyticsPanel';
 import { TrialCountdownBanner } from '../TrialCountdownBanner';
 import { CirclePlay } from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
+} from 'recharts';
 
 interface SetupHomeTabProps {
   theme: string;
@@ -114,6 +117,36 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
   const userBestSuddenDeath = getSuddenDeathBestStreak();
 
+  // 7-day activity data calculation for Bento Panel 1
+  const activityData = useMemo(() => {
+    const daily: Record<string, number> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      daily[dateStr] = 0;
+    }
+
+    quizHistory.forEach(entry => {
+      const d = new Date(entry.date);
+      const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      if (daily[dateStr] !== undefined) {
+        daily[dateStr] += (entry.correct || 0);
+      } else {
+        daily[dateStr] = (entry.correct || 0);
+      }
+    });
+
+    return Object.keys(daily).slice(-7).map(key => ({
+      name: key,
+      JawabanBenar: daily[key],
+    }));
+  }, [quizHistory]);
+
+  const textColor = theme === 'dark' ? '#94a3b8' : '#64748b';
+  const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const chartFill = theme === 'dark' ? '#818cf8' : '#6366f1';
+
   return (
     <div className="space-y-6">
       {/* ⏱️ Top Trial Countdown Banner */}
@@ -125,18 +158,22 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         isAdminAngkatan={isAdminAngkatan}
       />
 
-      <div className="space-y-6">
-        <OnboardingTour theme={theme} onComplete={() => console.log('Tour done')} />
-      {/* Greeting & Level progress card */}
-      <div className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
-        theme === 'dark'
-          ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900/60 border-indigo-500/10 shadow-2xl'
-          : 'bg-white border-slate-200 shadow-sm'
-      }`}>
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
-          <div className="flex items-center gap-3.5">
+      <OnboardingTour theme={theme} onComplete={() => console.log('Tour done')} />
+      <IosInstallBanner theme={theme} onInstallClick={() => setShowIosInstallModal(true)} />
+
+      {/* ========================================================================= */}
+      {/* TOP ROW: GREETING (LEFT) & QUICK ACTIONS (RIGHT)                         */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Left: Compact Greeting Card */}
+        <div className={`lg:col-span-7 p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+          theme === 'dark'
+            ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
+            : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+          
+          <div className="flex items-center gap-3.5 mt-1">
             <div className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${currentFrame.ringClass} ${currentFrame.glowClass}`}>
               <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-sm text-white">
                 {profileUsername.slice(0, 2).toUpperCase()}
@@ -145,158 +182,202 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 {currentFrame.badge}
               </span>
             </div>
-            <div>
-              <h1 className={`text-2xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
+            <div className="min-w-0 flex-1">
+              <h1 className={`text-xl sm:text-2xl font-black tracking-tight truncate ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
                 Selamat datang, {profileUsername}!
               </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1">
-                  <Award className="w-4 h-4 text-indigo-500" />
-                  <span>Level {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
+                  <Award className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Lv {getLevelInfo(userXP).level} • {getLevelInfo(userXP).rank}</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-4 h-4 text-teal-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-teal-500" />
                   <span>{userXP} XP</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  <Flame className="w-3 h-3 text-amber-500" />
                   <span>{currentStreak} Hari Streak</span>
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Level progress bar */}
+          <div className="mt-4">
+            <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+              <span>Progres Level</span>
+              <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
+            </div>
+            <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
+                style={{ width: `${getLevelInfo(userXP).progress}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Level progress bar */}
-        <div className="mt-6">
-          <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
-            <span>Progres Level</span>
-            <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
-          </div>
-          <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
-              style={{ width: `${getLevelInfo(userXP).progress}%` }}
-            />
-          </div>
+        {/* Right: Quick Actions */}
+        <div className="lg:col-span-5 flex flex-col justify-center">
+          <QuickActionsRow
+            theme={theme}
+            pendingCount={pendingSessions.length}
+            pendingProgress={pendingSessions.length > 0 ? Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100) : null}
+            onNewQuiz={() => setDashboardTab('new')}
+            onResumeOrBanks={() => {
+              if (pendingSessions.length > 0) {
+                resumeQuizSession(pendingSessions[0]);
+              } else {
+                setDashboardTab('banks');
+              }
+            }}
+            onBanks={() => setDashboardTab('banks')}
+          />
         </div>
       </div>
 
-                <DailyChallengeCard theme={theme} onStart={startDailyChallenge} />
-
-                <IosInstallBanner theme={theme} onInstallClick={() => setShowIosInstallModal(true)} />
-
-                {/* Main section contents */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  
-                  {/* Left panel: Quick Actions & Sesi Tertunda */}
-                  <div className="lg:col-span-8 space-y-6">
-                    
-                    <QuickActionsRow
-                      theme={theme}
-                      pendingCount={pendingSessions.length}
-                      pendingProgress={pendingSessions.length > 0 ? Math.round((pendingSessions[0].user_answers_json?.filter((a: any) => a !== null).length / pendingSessions[0].current_quiz_json?.length) * 100) : null}
-                      onNewQuiz={() => setDashboardTab('new')}
-                      onResumeOrBanks={() => {
-                        if (pendingSessions.length > 0) {
-                          resumeQuizSession(pendingSessions[0]);
-                        } else {
-                          setDashboardTab('banks');
-                        }
-                      }}
-                      onBanks={() => setDashboardTab('banks')}
-                    />
-
-                    <PendingSessionsCard
-                      theme={theme}
-                      sessions={pendingSessions}
-                      onResume={resumeQuizSession}
-                      onDiscard={discardQuizSession}
-                    />
-
-                  </div>
-
-                  <div className="lg:col-span-4 space-y-6">
-                    <HistoryAnalyticsPanel
-                      theme={theme}
-                      analytics={historyAnalytics}
-                      expandedCompetencies={expandedCompetencies}
-                      onToggleExpand={(name) => setExpandedCompetencies(prev => ({ ...prev, [name]: !prev[name] }))}
-                    />
-
-                    <PomodoroWidget
-                      theme={theme}
-                      mode={pomodoroMode}
-                      secondsLeft={pomodoroSecondsLeft}
-                      isActive={pomodoroActive}
-                      completedSessions={pomodoroCount}
-                      onToggle={() => setPomodoroActive(!pomodoroActive)}
-                      onReset={() => {
-                        setPomodoroActive(false);
-                        setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
-                      }}
-                    />
-
-                  </div>
-                </div>
+      {/* ========================================================================= */}
+      {/* BENTO GRID (4 PANELS): COMPACT 2x2 LAYOUT                                  */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* ----------------------------------------------------------------------- */}
+        {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR (Task Time / Study Activity)     */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className={`lg:col-span-5 p-6 rounded-3xl transition-all duration-300 border flex flex-col justify-between ${
+          theme === 'dark'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
+            : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 className="text-sm font-black tracking-tight text-slate-800 dark:text-white uppercase">
+                  Aktivitas Belajar
+                </h3>
+                <p className="text-[11px] font-bold text-slate-400">7 hari terakhir</p>
               </div>
-              <div className={`lg:col-span-12 p-6 rounded-2xl transition-all duration-300 border ${
-                theme === 'dark'
-                  ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
-                  : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                {totalQuestionsAnswered} Total Soal
+              </span>
+            </div>
+
+            {/* Mini stats row */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className={`p-3 rounded-2xl border text-center ${
+                theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-200/60'
               }`}>
-                <div className="flex items-center justify-between gap-4 mb-6 flex-wrap border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setActiveDashboardTab('riwayat')}
-                      className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
-                        activeDashboardTab === 'riwayat'
-                          ? 'text-indigo-500 border-indigo-500'
-                          : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
-                      }`}
-                    >
-                      Riwayat Percobaan
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setActiveDashboardTab('leaderboard');
-                        await fetchGlobalLeaderboard();
-                        if (selectedLeaderboardFile) {
-                          await fetchFileLeaderboard(selectedLeaderboardFile);
-                        } else if (Object.keys(questionDatabase).length > 0) {
-                          const firstFile = Object.keys(questionDatabase)[0];
-                          setSelectedLeaderboardFile(firstFile);
-                          await fetchFileLeaderboard(firstFile);
-                        }
-                      }}
-                      className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
-                        activeDashboardTab === 'leaderboard'
-                          ? 'text-indigo-500 border-indigo-500'
-                          : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
-                      }`}
-                    >
-                      🏆 Leaderboard CBT
-                    </button>
-                  </div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                  Benar Minggu Ini
+                </span>
+                <span className="text-xl font-black text-emerald-500">
+                  {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
+                </span>
+              </div>
+              <div className={`p-3 rounded-2xl border text-center ${
+                theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-200/60'
+              }`}>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                  Sesi Pomodoro
+                </span>
+                <span className="text-xl font-black text-amber-500">
+                  {pomodoroCount}
+                </span>
+              </div>
+            </div>
 
-                  {activeDashboardTab === 'riwayat' && quizHistory.length > 0 && (
-                    <button
-                      onClick={clearAllHistory}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 ${
-                        theme === 'dark'
-                          ? 'bg-slate-800/50 hover:bg-slate-800 border-slate-700/80 text-rose-400'
-                          : 'bg-rose-50 hover:bg-rose-100 border-rose-200/60 text-rose-600'
-                      }`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Kosongkan Riwayat
-                    </button>
-                  )}
-                </div>
+            {/* 7-Day Activity Chart */}
+            <div className="h-44 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorHomeActivity" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartFill} stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor={chartFill} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: textColor }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: textColor }} />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
+                      borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2.5} fillOpacity={1} fill="url(#colorHomeActivity)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
 
-                {activeDashboardTab === 'riwayat' ? (
+        {/* ----------------------------------------------------------------------- */}
+        {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD (SCROLLABLE IN 1 SPOT) */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className={`lg:col-span-7 p-6 rounded-3xl transition-all duration-300 border flex flex-col ${
+          theme === 'dark'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
+            : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setActiveDashboardTab('riwayat')}
+                className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
+                  activeDashboardTab === 'riwayat'
+                    ? 'text-indigo-500 border-indigo-500'
+                    : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
+                }`}
+              >
+                Riwayat Percobaan
+              </button>
+              <button
+                onClick={async () => {
+                  setActiveDashboardTab('leaderboard');
+                  await fetchGlobalLeaderboard();
+                  if (selectedLeaderboardFile) {
+                    await fetchFileLeaderboard(selectedLeaderboardFile);
+                  } else if (Object.keys(questionDatabase).length > 0) {
+                    const firstFile = Object.keys(questionDatabase)[0];
+                    setSelectedLeaderboardFile(firstFile);
+                    await fetchFileLeaderboard(firstFile);
+                  }
+                }}
+                className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
+                  activeDashboardTab === 'leaderboard'
+                    ? 'text-indigo-500 border-indigo-500'
+                    : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
+                }`}
+              >
+                🏆 Leaderboard CBT
+              </button>
+            </div>
+
+            {activeDashboardTab === 'riwayat' && quizHistory.length > 0 && (
+              <button
+                onClick={clearAllHistory}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 ${
+                  theme === 'dark'
+                    ? 'bg-slate-800/50 hover:bg-slate-800 border-slate-700/80 text-rose-400'
+                    : 'bg-rose-50 hover:bg-rose-100 border-rose-200/60 text-rose-600'
+                }`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Kosongkan Riwayat
+              </button>
+            )}
+          </div>
+
+          {/* Scrollable Container (Fixed height, internal scroll) */}
+          <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
+            {activeDashboardTab === 'riwayat' ? (
                   quizHistory.length === 0 ? (
                     <div className="text-center p-12">
                       <Award className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
@@ -1203,10 +1284,64 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                             </tbody>
                           </table>
                         </div>
-                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+
+        {/* ----------------------------------------------------------------------- */}
+        {/* PANEL 3: KIRI BAWAH - TANTANGAN HARIAN & SESI TERTUNDA                 */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className="lg:col-span-5 space-y-4">
+          {pendingSessions.length > 0 && (
+            <PendingSessionsCard
+              theme={theme}
+              sessions={pendingSessions}
+              onResume={resumeQuizSession}
+              onDiscard={discardQuizSession}
+            />
+          )}
+          <DailyChallengeCard theme={theme} onStart={startDailyChallenge} />
+        </div>
+
+        {/* ----------------------------------------------------------------------- */}
+        {/* PANEL 4: KANAN BAWAH - ANALISIS SUB-KOMPETENSI & POMODORO TIMER        */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`p-5 rounded-3xl border transition-all duration-300 ${
+            theme === 'dark'
+              ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
+              : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <HistoryAnalyticsPanel
+              theme={theme}
+              analytics={historyAnalytics}
+              expandedCompetencies={expandedCompetencies}
+              onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
+            />
+          </div>
+
+          <div className={`p-5 rounded-3xl border transition-all duration-300 ${
+            theme === 'dark'
+              ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
+              : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <PomodoroWidget
+              theme={theme}
+              mode={pomodoroMode}
+              secondsLeft={pomodoroSecondsLeft}
+              isActive={pomodoroActive}
+              completedSessions={pomodoroCount}
+              onToggle={() => setPomodoroActive(!pomodoroActive)}
+              onReset={() => {
+                setPomodoroActive(false);
+                setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
