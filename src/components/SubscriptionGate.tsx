@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Activity, Clock, CreditCard, Copy, Check, RefreshCw, 
   ExternalLink, Sun, Moon, LogOut, Sparkles, CheckCircle2, 
@@ -40,6 +40,13 @@ export default function SubscriptionGate({
   const [copied, setCopied] = useState(false);
   const [checking, setChecking] = useState(false);
   const [refreshSuccess, setRefreshSuccess] = useState(false);
+
+  // Otomatis daftarkan transaksi pending ke DB agar langsung muncul di dashboard admin
+  useEffect(() => {
+    if (userId && !paymentInfo) {
+      handleCreatePayment();
+    }
+  }, [userId]);
 
   const handleCreatePayment = async () => {
     setLoading(true);
