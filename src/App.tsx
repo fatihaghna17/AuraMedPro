@@ -3093,10 +3093,17 @@ export default function App() {
         <SubscriptionGate
           theme={theme}
           userId={currentUser.id}
-          trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt}
+          trialEndsAt={trialEndsAt} 
+          subscriptionStatus={subscriptionStatus} 
+          subscriptionExpiresAt={subscriptionExpiresAt}
           onRefreshStatus={refreshSubscriptionStatus}
           username={profileUsername}
           angkatan={userAngkatan}
+          onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+          onLogout={async () => {
+            await authClient.signOut();
+            triggerToast('Sampai jumpa lagi!', '👋');
+          }}
         />
       ) : (
         <>
