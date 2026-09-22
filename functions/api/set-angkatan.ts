@@ -50,13 +50,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }
     }
 
-    const trialEndsMap: Record<string, string> = {
+    const trialEndsMap: Record<string, string | null> = {
       '23': '2026-09-14T05:00:00Z',
       '24': '2026-09-14T05:00:00Z',
       '25': '2026-09-17T05:00:00Z',
-      '26': '2026-09-22T05:00:00Z',
+      '26': null,
     };
-    const trialEndsAt = trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z';
+    const trialEndsAt = String(angkatan) === '26' ? null : (trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z');
 
     await env.DB.prepare(`
       UPDATE profiles 

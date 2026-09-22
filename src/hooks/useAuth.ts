@@ -138,18 +138,20 @@ export function useAuth({
         setUserProdi(profile.prodi || 'kedokteran');
         setSubscriptionStatus(profile.subscription_status || 'trial');
         
-        const trialEndsMap: Record<string, string> = {
+        const trialEndsMap: Record<string, string | null> = {
           '23': '2026-09-14T05:00:00Z',
           '24': '2026-09-14T05:00:00Z',
           '25': '2026-09-17T05:00:00Z',
-          '26': '2026-09-22T05:00:00Z',
+          '26': null,
         };
-        const effectiveTrialEnd = profile.trial_ends_at || (profile.angkatan ? trialEndsMap[profile.angkatan] : '2026-09-14T05:00:00Z');
+        const effectiveTrialEnd = profile.angkatan === '26' 
+          ? null 
+          : (profile.trial_ends_at || (profile.angkatan ? trialEndsMap[profile.angkatan] : '2026-09-14T05:00:00Z'));
         setTrialEndsAt(effectiveTrialEnd);
         setSubscriptionExpiresAt(profile.subscription_expires_at || null);
 
         // Validasi akses langganan / trial:
-        let accessAllowed = user.user_metadata?.canAccess ?? true;
+        let accessAllowed = profile.angkatan === '26' ? true : (user.user_metadata?.canAccess ?? true);
         
         // Coba validasi jika backend gagal mengirimkan canAccess
         if (user.user_metadata?.canAccess === undefined) {

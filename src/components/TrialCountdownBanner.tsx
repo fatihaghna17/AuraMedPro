@@ -13,7 +13,6 @@ interface TrialCountdownBannerProps {
 const TRIAL_ENDS_MAP: Record<string, string> = {
   '24': '2026-09-14T05:00:00Z',
   '25': '2026-09-17T05:00:00Z',
-  '26': '2026-09-22T05:00:00Z',
 };
 
 export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
@@ -27,12 +26,13 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   const isDark = theme === 'dark';
 
   const isActiveSubscription = subscriptionStatus === 'active' && !!subscriptionExpiresAt;
+  const isAngkatan26 = userAngkatan === '26';
+  const isTrialExtended = isAngkatan26 || subscriptionStatus === 'trial_extended';
 
   // Tentukan target batas trial
   const effectiveTrialEnd = isActiveSubscription
     ? subscriptionExpiresAt
-    : trialEndsAt ||
-    (userAngkatan && TRIAL_ENDS_MAP[userAngkatan] ? TRIAL_ENDS_MAP[userAngkatan] : '2026-09-14T05:00:00Z');
+    : (isTrialExtended ? null : (trialEndsAt || (userAngkatan && TRIAL_ENDS_MAP[userAngkatan] ? TRIAL_ENDS_MAP[userAngkatan] : '2026-09-14T05:00:00Z')));
 
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -44,6 +44,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   const [isExpired, setIsExpired] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!effectiveTrialEnd) return;
+
     const calculateTime = () => {
       const targetTime = new Date(effectiveTrialEnd).getTime();
       const now = Date.now();
@@ -69,22 +71,24 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 
   // Format tanggal berakhir ke WIB (Waktu Indonesia Barat)
   let formattedEndDate = '';
-  try {
-    const endDateObj = new Date(effectiveTrialEnd);
-    const datePart = endDateObj.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'Asia/Jakarta'
-    });
-    const timePart = endDateObj.toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Jakarta'
-    });
-    formattedEndDate = `${datePart} pukul ${timePart} WIB`;
-  } catch (e) {
-    formattedEndDate = effectiveTrialEnd;
+  if (effectiveTrialEnd) {
+    try {
+      const endDateObj = new Date(effectiveTrialEnd);
+      const datePart = endDateObj.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta'
+      });
+      const timePart = endDateObj.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Jakarta'
+      });
+      formattedEndDate = `${datePart} pukul ${timePart} WIB`;
+    } catch (e) {
+      formattedEndDate = effectiveTrialEnd;
+    }
   }
 
   // Jika akun adalah Super Admin atau Admin Angkatan
@@ -113,6 +117,69 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
             Akses Aktif
           </span>
         </div>
+      </div>
+    );
+  }
+
+  // JIKA TRIAL DIPERPANJANG (KHUSUS ANGKATAN 26 / TRIAL EXTENDED):
+  if (isTrialExtended && !isActiveSubscription) {
+    return (
+      <div
+        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden ${
+          isDark
+            ? 'bg-gradient-to-r from-teal-950/60 via-emerald-950/40 to-slate-900/80 border-teal-500/30 shadow-lg shadow-teal-500/10'
+            : 'bg-gradient-to-r from-teal-50/95 via-emerald-50/80 to-sky-50/90 border-teal-200/90 shadow-md shadow-teal-500/5'
+        }`}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30">
+                <Sparkles className="w-3 h-3 text-teal-500" />
+                <span>Masa Trial Diperpanjang</span>
+              </span>
+              {userAngkatan && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                  Angkatan '{userAngkatan}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Free Access Aktif</span>
+              </span>
+            </div>
+
+            <h3 className={`text-sm sm:text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Trial Diperpanjang Bebas Batas Waktu 🎁
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Masa percobaan gratis untuk Angkatan 2026 diperpanjang sampai batas waktu yang belum ditentukan.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-sm ${
+              isDark ? 'bg-slate-900/90 border-teal-500/30' : 'bg-white/95 border-teal-200'
+            }`}>
+              <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" />
+              <div>
+                <div className="text-[9px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400">Status Akses</div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100">Bebas Akses Fitur CBT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!compact && (
+          <div className={`mt-3 pt-2.5 border-t flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 ${
+            isDark ? 'border-slate-800' : 'border-slate-200/80'
+          }`}>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>
+              Manfaatkan masa trial diperpanjang ini untuk latihan ribuan bank soal, SRS flashcard, dan simulasi ujian tanpa batas!
+            </span>
+          </div>
+        )}
       </div>
     );
   }

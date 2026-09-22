@@ -239,6 +239,11 @@ export function checkSubscriptionStatus(profile: any): { canAccess: boolean, sta
   }
   
   if (profile.subscription_status === 'trial' || !profile.subscription_status) {
+    // Khusus Angkatan 26: Masa trial diperpanjang sampai waktu yang belum ditentukan
+    if (String(profile.angkatan) === '26') {
+      return { canAccess: true, status: 'trial_extended', expiresAt: null };
+    }
+
     if (profile.trial_ends_at && new Date(profile.trial_ends_at) > now) {
       return { canAccess: true, status: 'trial', expiresAt: profile.trial_ends_at };
     }

@@ -341,7 +341,15 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                 <span className="font-semibold text-slate-400">Masa Berlaku</span>
                 <span className="font-extrabold text-indigo-500 dark:text-indigo-400 text-[10px] flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-amber-400" />
-                  Trial Diperpanjang (Gratis)
+                  {isSuperAdmin
+                    ? 'Akses Permanen'
+                    : subscriptionStatus === 'active' && subscriptionExpiresAt
+                    ? `Aktif s.d. ${new Date(subscriptionExpiresAt).toLocaleDateString('id-ID')}`
+                    : userAngkatan === '26'
+                    ? 'Trial Diperpanjang (Waktu belum ditentukan)'
+                    : trialEndsAt
+                    ? `Trial s.d. ${new Date(trialEndsAt).toLocaleDateString('id-ID')}`
+                    : 'Trial Diperpanjang (Gratis)'}
                 </span>
               </div>
             </div>

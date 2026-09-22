@@ -39,12 +39,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const now = new Date();
     let status = 'expired';
     let canAccess = false;
-    const trialEndsMap: Record<string, string> = {
+    const trialEndsMap: Record<string, string | null> = {
       '24': '2026-09-14T05:00:00Z',
       '25': '2026-09-17T05:00:00Z',
-      '26': '2026-09-22T05:00:00Z',
+      '26': null,
     };
-    let trialEndsAt = profile.trial_ends_at || trialEndsMap[String(profile.angkatan)] || '2026-09-14T05:00:00Z';
+    let trialEndsAt = String(profile.angkatan) === '26' ? null : (profile.trial_ends_at || trialEndsMap[String(profile.angkatan)] || '2026-09-14T05:00:00Z');
     let subscriptionExpiresAt = profile.subscription_expires_at;
 
     if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || profile.username === 'admin' || profile.username === 'fatih17') {
@@ -55,6 +55,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         status = 'active';
         canAccess = true;
       }
+    } else if (String(profile.angkatan) === '26') {
+      // Khusus Angkatan 26: Masa trial diperpanjang sampai waktu yang belum ditentukan
+      status = 'trial_extended';
+      canAccess = true;
+      trialEndsAt = null;
     } else if (profile.subscription_status === 'trial' || !profile.subscription_status) {
       if (profile.trial_ends_at && new Date(profile.trial_ends_at) > now) {
         status = 'trial';

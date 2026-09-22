@@ -95,14 +95,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Batas masa trial berbeda per angkatan (pukul 12.00 WIB / 05.00 UTC):
     // Angkatan 23 & 24: 14 September 2026
     // Angkatan 25: 17 September 2026
-    // Angkatan 26: 22 September 2026
-    const trialEndsMap: Record<string, string> = {
+    // Angkatan 26: Diperpanjang sampai waktu belum ditentukan (null)
+    const trialEndsMap: Record<string, string | null> = {
       '23': '2026-09-14T05:00:00Z',
       '24': '2026-09-14T05:00:00Z',
       '25': '2026-09-17T05:00:00Z',
-      '26': '2026-09-22T05:00:00Z',
+      '26': null,
     };
-    const trialEndsAt = trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z';
+    const trialEndsAt = String(angkatan) === '26' ? null : (trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z');
 
     await env.DB.prepare(`
       INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, prodi, subscription_status, trial_ends_at)

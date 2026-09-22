@@ -570,9 +570,19 @@ export default function AdminScreen() {
                           <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
                             isActive && !isExpired
                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : user.angkatan === '26'
+                              ? 'bg-teal-500/20 text-teal-400 border-teal-500/30'
+                              : user.subscription_status === 'trial'
+                              ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                               : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                           }`}>
-                            {isActive && !isExpired ? 'Active' : user.subscription_status === 'trial' ? 'Trial' : 'Expired'}
+                            {isActive && !isExpired
+                              ? 'Active'
+                              : user.angkatan === '26'
+                              ? 'Trial Diperpanjang'
+                              : user.subscription_status === 'trial'
+                              ? 'Trial'
+                              : 'Expired'}
                           </span>
                         </div>
 
@@ -595,15 +605,20 @@ export default function AdminScreen() {
                           <div className="flex justify-between text-xs">
                             <span className="text-slate-400">Masa Aktif:</span>
                             <span className="font-bold">
-                              {expiresDate ? expiresDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Belum aktif'}
+                              {expiresDate ? expiresDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (user.angkatan === '26' ? 'Trial Aktif' : 'Belum aktif')}
                             </span>
                           </div>
-                          {user.trial_ends_at && (
+                          {user.angkatan === '26' && !isActive ? (
+                            <div className="flex justify-between text-[10px] text-teal-400 font-medium">
+                              <span>Masa Trial:</span>
+                              <span>Diperpanjang (Waktu belum ditentukan)</span>
+                            </div>
+                          ) : user.trial_ends_at ? (
                             <div className="flex justify-between text-[10px] text-slate-400">
                               <span>Trial berakhir:</span>
                               <span>{new Date(user.trial_ends_at).toLocaleDateString('id-ID')}</span>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
 
