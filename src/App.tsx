@@ -1,5 +1,6 @@
 import AdminScreen from "./components/AdminScreen";
 import { WhatsNewModal } from "./components/WhatsNewModal";
+import LevelUpCelebration from "./components/LevelUpCelebration";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
@@ -192,6 +193,24 @@ export default function App() {
   const [lastActiveDate, setLastActiveDate] = useState<string | null>(null);
   const [totalQuestionsAnswered, setTotalQuestionsAnswered] = useState(0);
   const [xpHistory, setXpHistory] = useState<number[]>([0]);
+  const [levelUpCelebration, setLevelUpCelebration] = useState<{ show: boolean; level: number }>({ show: false, level: 0 });
+
+  // Check if crossing a 10-level milestone and trigger celebration
+  const checkLevelUpMilestone = useCallback((prevXP: number, nextXP: number) => {
+    const prevLevel = getLevelInfo(prevXP).level;
+    const newLevel = getLevelInfo(nextXP).level;
+    if (newLevel > prevLevel) {
+      // Find the highest 10-level milestone crossed
+      const prevMilestone = Math.floor(prevLevel / 10);
+      const newMilestone = Math.floor(newLevel / 10);
+      if (newMilestone > prevMilestone) {
+        const milestoneLevel = newMilestone * 10;
+        setTimeout(() => {
+          setLevelUpCelebration({ show: true, level: milestoneLevel });
+        }, 1200); // Slight delay so it doesn't clash with other toasts/confetti
+      }
+    }
+  }, []);
 
   // Sync XP and Streak back to Supabase profiles when changed
   const { toastMessage, triggerToast } = useToast();
@@ -621,7 +640,11 @@ export default function App() {
   }, [srs.currentReviewIndex, srs.isReviewing]);
   const studyRoom = useStudyRoom(currentUser?.id || null);
   const achievements = useAchievements(currentUser?.id || null, (xpReward) => {
-    setUserXP(prev => prev + xpReward);
+    setUserXP(prev => {
+      const nextXP = prev + xpReward;
+      checkLevelUpMilestone(prev, nextXP);
+      return nextXP;
+    });
     triggerToast(`Selamat! +${xpReward} XP dari Achievement!`, '🏆');
   });
   // PWA iOS Install Prompt effect
@@ -2528,6 +2551,7 @@ export default function App() {
       }
       
       const nextXP = userXP + xpGained;
+      checkLevelUpMilestone(userXP, nextXP);
       setUserXP(nextXP);
       setCurrentCombo(nextCombo);
       setXpHistory((prev) => [...prev, nextXP]);
@@ -2729,6 +2753,7 @@ export default function App() {
     if (batchXPGained > 0) {
       setUserXP((prev) => {
         const nextXP = prev + batchXPGained;
+        checkLevelUpMilestone(prev, nextXP);
         setXpHistory((history) => [...history, nextXP]);
         return nextXP;
       });
@@ -5180,6 +5205,14 @@ export default function App() {
         </div>
       </div>
     )}
+
+    {/* Level-Up Milestone Celebration Overlay */}
+    <LevelUpCelebration
+      show={levelUpCelebration.show}
+      newLevel={levelUpCelebration.level}
+      theme={theme}
+      onDismiss={() => setLevelUpCelebration({ show: false, level: 0 })}
+    />
 
     </div>
   );
