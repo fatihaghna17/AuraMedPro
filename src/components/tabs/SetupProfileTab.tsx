@@ -183,7 +183,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
         <div className="lg:col-span-5 space-y-6">
           
           {/* Card 1: Identitas Kultivator & Statistik */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 space-y-5 relative overflow-hidden ${getAuraCardClass(activeFrame.id)} ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 space-y-5 relative overflow-hidden animate-fade-in-up animation-delay-75 ${getAuraCardClass(activeFrame.id)} ${
             theme === 'dark'
               ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
               : 'bg-white border-slate-200 shadow-sm'
@@ -215,7 +215,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                 onClick={() => setIsFrameModalOpen(true)}
                 title="Klik untuk kustomisasi avatar & bingkai"
               >
-                <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-2 transition-all group-hover:scale-105 animate-pop-in ${activeFrame.ringClass} ${activeFrame.glowClass}`}>
                   <CultivatorAvatar 
                     tier={effectiveTier}
                     gender={cultivatorGender}
@@ -367,7 +367,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 2: Keamanan Akun & Logout */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 space-y-5 ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 space-y-5 animate-fade-in-up animation-delay-150 ${
             theme === 'dark'
               ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
               : 'bg-white border-slate-200 shadow-sm'
@@ -449,7 +449,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
         <div className="lg:col-span-7 space-y-6">
 
           {/* Card 3: Quest Harian Section */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all animate-fade-in-up animation-delay-200 ${
             isQuestDone
               ? 'bg-gradient-to-br from-purple-950/30 via-indigo-950/20 to-purple-950/30 border-purple-500/40 shadow-lg shadow-purple-500/10'
               : theme === 'dark'
@@ -514,7 +514,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 4: Sound Pack Selector */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all space-y-3.5 ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all space-y-3.5 animate-fade-in-up animation-delay-250 ${
             theme === 'dark'
               ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
               : 'bg-white border-slate-200 shadow-sm'
@@ -580,7 +580,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 5: Achievements Section */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all animate-fade-in-up animation-delay-300 ${
             theme === 'dark'
               ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
               : 'bg-white border-slate-200 shadow-sm'
@@ -613,11 +613,12 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
               {achievements.getAllAchievements()
                 .filter(a => achievementFilter === 'all' || a.category === achievementFilter)
-                .map(ach => (
+                .map((ach, achIdx) => (
                 <div 
                   key={ach.id}
                   title={ach.description}
-                  className={`relative p-3 rounded-2xl border flex flex-col items-center justify-center text-center transition-all ${
+                  style={{ animationDelay: `${Math.min(achIdx * 20, 200)}ms` }}
+                  className={`relative p-3 rounded-2xl border flex flex-col items-center justify-center text-center transition-all animate-fade-in-up ${
                     ach.isUnlocked 
                       ? `${getRarityBg(ach.rarity, theme === 'dark')} opacity-100 transform hover:scale-102` 
                       : 'bg-slate-50/50 dark:bg-slate-900/30 border-slate-200/50 dark:border-slate-800/50 opacity-40 grayscale'
@@ -643,7 +644,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 6: Data Management Section */}
-          <div className={`p-5 sm:p-6 rounded-3xl border transition-all ${
+          <div className={`p-5 sm:p-6 rounded-3xl border transition-all animate-fade-in-up animation-delay-350 ${
             theme === 'dark'
               ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
               : 'bg-white border-slate-200 shadow-sm'

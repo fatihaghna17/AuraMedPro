@@ -98,7 +98,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
         }`}>
               
               {/* Radial Animated Circular meter */}
-              <div className="relative w-44 h-44 mx-auto mb-6 flex items-center justify-between flex-col">
+              <div className="relative w-44 h-44 mx-auto mb-6 flex items-center justify-between flex-col animate-pop-in">
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 160 160">
                   <circle 
                     cx="80" 
@@ -152,7 +152,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 }
 
                 return (
-                  <div className="space-y-4">
+                  <div className="space-y-4 animate-fade-in-up animation-delay-100">
                     <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase border ${badgeColor}`}>
                       {titleText}
                     </span>
@@ -175,7 +175,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
               })()}
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-6 sm:mt-8 w-full max-w-lg mx-auto min-w-0">
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center ${
+                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-150 ${
                   theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
                 }`}>
                   <div className="text-lg sm:text-xl font-extrabold text-emerald-500">
@@ -186,7 +186,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center ${
+                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-200 ${
                   theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
                 }`}>
                   <div className="text-lg sm:text-xl font-extrabold text-rose-500">
@@ -197,7 +197,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center ${
+                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-250 ${
                   theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
                 }`}>
                   <div className="text-lg sm:text-xl font-extrabold text-slate-400 dark:text-slate-500">
@@ -208,7 +208,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center ${
+                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-300 ${
                   theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200/80'
                 }`}>
                   <div className="text-lg sm:text-xl font-extrabold text-amber-500">
@@ -220,7 +220,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 justify-center mt-6 sm:mt-8 w-full max-w-xl mx-auto min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 justify-center mt-6 sm:mt-8 w-full max-w-xl mx-auto min-w-0 animate-fade-in-up animation-delay-350">
                 <button
                   onClick={() => setIsStoryModalOpen(true)}
                   className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 rounded-2xl text-xs font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-teal-500 text-white shadow-xl shadow-purple-500/25 transition-all duration-200 active:scale-98 cursor-pointer hover:opacity-95 min-w-0"
@@ -268,7 +268,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Leaderboard Submission Box */}
             {currentUser && selectedDatabases.length === 1 && (
-              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border w-full max-w-full min-w-0 overflow-hidden ${
+              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
                 theme === 'dark'
                   ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
                   : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
@@ -310,7 +310,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Battle Report / Analytics dashboard */}
             {analytics.hasMetadata && (
-              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border space-y-6 w-full max-w-full min-w-0 overflow-hidden ${
+              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
                 theme === 'dark'
                   ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
                   : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
@@ -453,7 +453,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
             )}
 
             {/* Accordion Review Section per question */}
-            <div className="space-y-4 w-full max-w-full min-w-0">
+            <div className="space-y-4 w-full max-w-full min-w-0 animate-fade-in-up animation-delay-500">
               <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-indigo-500" />
                 Daftar Pembahasan & Kunci Jawaban Soal
@@ -486,7 +486,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   return (
                     <div
                       key={idx}
-                      className={`rounded-xl border overflow-hidden transition-all w-full max-w-full min-w-0 ${
+                      style={{ animationDelay: `${Math.min(idx * 35, 350)}ms` }}
+                      className={`rounded-xl border overflow-hidden transition-all w-full max-w-full min-w-0 animate-fade-in-up ${
                         theme === 'dark' ? 'bg-slate-900/30 border-slate-850' : 'bg-white border-slate-200/60 shadow-sm'
                       }`}
                     >

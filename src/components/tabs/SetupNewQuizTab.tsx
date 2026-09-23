@@ -112,7 +112,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                           <button
                             type="button"
                             onClick={() => setQuizMode('utuh')}
-                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer animate-fade-in-up animation-delay-75 ${
                               quizMode === 'utuh'
                                 ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-500 dark:text-indigo-400 font-bold shadow-sm'
                                 : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
@@ -131,7 +131,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                             <button
                               type="button"
                               onClick={() => setQuizMode('simulasi')}
-                              className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                              className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer animate-fade-in-up animation-delay-100 ${
                                 quizMode === 'simulasi'
                                   ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-500 dark:text-indigo-400 font-bold shadow-sm'
                                   : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
@@ -153,7 +153,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                               setQuizMode('rmo');
                               setIsAdaptiveMode(false);
                             }}
-                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer animate-fade-in-up animation-delay-150 ${
                               quizMode === 'rmo'
                                 ? 'bg-amber-500/10 border-amber-500/50 text-amber-600 dark:text-amber-400 font-bold shadow-sm'
                                 : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
@@ -178,7 +178,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                               setQuizMode('blok');
                               setIsAdaptiveMode(false);
                             }}
-                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer animate-fade-in-up animation-delay-200 ${
                               quizMode === 'blok'
                                 ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 font-bold shadow-sm'
                                 : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
@@ -203,7 +203,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                               setQuizMode('suddendeath');
                               setIsAdaptiveMode(false);
                             }}
-                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                            className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all cursor-pointer animate-fade-in-up animation-delay-250 ${
                               quizMode === 'suddendeath'
                                 ? 'bg-rose-500/10 border-rose-500/50 text-rose-600 dark:text-rose-400 font-bold shadow-sm ring-1 ring-rose-500/30'
                                 : 'bg-slate-950/20 dark:bg-slate-900/10 border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:border-slate-300'
@@ -348,7 +348,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                         <button
                           onClick={startQuiz}
                           disabled={selectedDatabases.length === 0}
-                          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/10 hover:scale-[1.01] transition-all disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer"
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/10 hover:scale-[1.01] transition-all disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer animate-scale-in animation-delay-300"
                         >
                           <Play className="w-4 h-4 fill-current" />
                           Mulai Simulasi Kuis

@@ -25,7 +25,7 @@ export default function QuickActionsRow({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         
         {/* Card 1: Try-Out Baru */}
-        <div onClick={onNewQuiz} className={cardClass}>
+        <div onClick={onNewQuiz} className={`${cardClass} animate-fade-in-up animation-delay-75`}>
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
               <Plus className="w-5 h-5" strokeWidth={3} />
@@ -43,7 +43,7 @@ export default function QuickActionsRow({
         </div>
 
         {/* Card 2: Lanjutkan Kuis / Topik */}
-        <div onClick={onResumeOrBanks} className={cardClass}>
+        <div onClick={onResumeOrBanks} className={`${cardClass} animate-fade-in-up animation-delay-150`}>
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
               <Flame className="w-5 h-5 fill-current" />
@@ -63,7 +63,7 @@ export default function QuickActionsRow({
         </div>
 
         {/* Card 3: Bank & Upload Soal */}
-        <div onClick={onBanks} className={cardClass}>
+        <div onClick={onBanks} className={`${cardClass} animate-fade-in-up animation-delay-200`}>
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-400 to-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
               <UploadCloud className="w-5 h-5" />

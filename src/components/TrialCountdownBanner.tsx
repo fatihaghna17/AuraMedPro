@@ -95,7 +95,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   if (isSuperAdmin || isAdminAngkatan) {
     return (
       <div
-        className={`w-full rounded-2xl p-3.5 border transition-all ${
+        className={`w-full rounded-2xl p-3.5 border transition-all animate-fade-in-down ${
           isDark
             ? 'bg-slate-900/60 border-indigo-500/30 shadow-md'
             : 'bg-indigo-50/80 border-indigo-200 shadow-sm'
@@ -125,7 +125,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   if (isTrialExtended && !isActiveSubscription) {
     return (
       <div
-        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden ${
+        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden animate-fade-in-down ${
           isDark
             ? 'bg-gradient-to-r from-teal-950/60 via-emerald-950/40 to-slate-900/80 border-teal-500/30 shadow-lg shadow-teal-500/10'
             : 'bg-gradient-to-r from-teal-50/95 via-emerald-50/80 to-sky-50/90 border-teal-200/90 shadow-md shadow-teal-500/5'
@@ -191,7 +191,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   // JIKA MASA TRIAL ATAU SUBSCRIPTION MASIH BERJALAN (COUNTDOWN AKTIF):
   return (
     <div
-      className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden ${
+      className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden animate-fade-in-down ${
         isDark
           ? 'bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900/80 border-indigo-500/30 shadow-lg shadow-indigo-500/10'
           : 'bg-gradient-to-r from-indigo-50/95 via-purple-50/80 to-sky-50/90 border-indigo-200/90 shadow-md shadow-indigo-500/5'

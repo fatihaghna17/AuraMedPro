@@ -265,17 +265,17 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     {/* Question text block — memoized to avoid Safari repainting on timer tick */}
                     {useMemo(() => (
-                      <div className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6">
+                      <div key={`qtext-${currentIndex}`} className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6 animate-fade-in">
                         {renderHtmlText(currentQuiz[currentIndex].pertanyaan)}
                       </div>
-                    ), [currentQuiz[currentIndex].pertanyaan])}
+                    ), [currentQuiz[currentIndex].pertanyaan, currentIndex])}
 
                     {/* Clinical Image — memoized; StableImage reserves space via aspect-ratio so iOS WebKit never collapses the layout (anti-flicker) */}
                     {useMemo(() => {
                       const imageUrl = getQuestionImage(currentQuiz[currentIndex]);
                       if (!imageUrl) return null;
                       return (
-                        <div className="my-5 relative group max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-250 dark:border-slate-800">
+                        <div key={`img-${currentIndex}`} className="my-5 relative group max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-250 dark:border-slate-800 animate-scale-in">
                           <StableImage
                             src={imageUrl}
                             alt="Visual Klinis"
@@ -292,11 +292,11 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           </div>
                         </div>
                       );
-                    }, [currentQuiz[currentIndex]])}
+                    }, [currentQuiz[currentIndex], currentIndex])}
 
                     {/* Answer Options List (pilihan) OR Short Answer Input (isian) */}
                     {currentQuiz[currentIndex].pilihan && currentQuiz[currentIndex].pilihan.length > 0 ? (
-                      <div className="space-y-3">
+                      <div key={`options-${currentIndex}`} className="space-y-3">
                         {currentQuiz[currentIndex].pilihan.map((opt, i) => {
                           const letters = ['A', 'B', 'C', 'D', 'E'];
                           const isSelected = userAnswers[currentIndex] === opt;
@@ -331,7 +331,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               key={i}
                               disabled={revealed}
                               onClick={() => selectAnswer(opt)}
-                              className={`w-full flex items-start gap-3.5 p-4 rounded-xl border text-left text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-150 min-h-[48px] active:scale-[0.98] hover:translate-x-1 ${tileClass}`}
+                              style={{ animationDelay: `${i * 45}ms` }}
+                              className={`w-full flex items-start gap-3.5 p-4 rounded-xl border text-left text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-150 min-h-[48px] active:scale-[0.98] hover:translate-x-1 animate-fade-in-up ${tileClass}`}
                             >
                               <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
                                 {letters[i]}
@@ -344,7 +345,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         })}
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div key={`input-${currentIndex}`} className="space-y-4 animate-fade-in">
                         <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-905/20 border-slate-800' : 'bg-white border-slate-200'}`}>
                           <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                             Jawaban Isian Singkat:

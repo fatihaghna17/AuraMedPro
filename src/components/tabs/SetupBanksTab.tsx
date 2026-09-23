@@ -108,7 +108,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Bank Soal */}
         <div
-          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
+          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden animate-fade-in-up animation-delay-75 ${
             theme === 'dark'
               ? 'bg-slate-900/50 border-white/[0.08] shadow-xl backdrop-blur-xl'
               : 'bg-white/85 border-slate-200/80 shadow-sm backdrop-blur-xl'
@@ -132,7 +132,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
 
         {/* Card 2: Total Butir Soal */}
         <div
-          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
+          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden animate-fade-in-up animation-delay-150 ${
             theme === 'dark'
               ? 'bg-slate-900/50 border-white/[0.08] shadow-xl backdrop-blur-xl'
               : 'bg-white/85 border-slate-200/80 shadow-sm backdrop-blur-xl'
@@ -156,7 +156,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
 
         {/* Card 3: Bank Terpilih */}
         <div
-          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
+          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden animate-fade-in-up animation-delay-200 ${
             theme === 'dark'
               ? 'bg-slate-900/50 border-white/[0.08] shadow-xl backdrop-blur-xl'
               : 'bg-white/85 border-slate-200/80 shadow-sm backdrop-blur-xl'
@@ -185,7 +185,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
 
         {/* Card 4: Folder Kategori */}
         <div
-          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
+          className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden animate-fade-in-up animation-delay-250 ${
             theme === 'dark'
               ? 'bg-slate-900/50 border-white/[0.08] shadow-xl backdrop-blur-xl'
               : 'bg-white/85 border-slate-200/80 shadow-sm backdrop-blur-xl'
@@ -215,7 +215,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
         {/* ======================================================================= */}
         {/* LEFT COLUMN: Quick Imports + ENLARGED PROMPT CARD + Bank Soal List */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-6 animate-fade-in-up animation-delay-300">
           {/* Sub-Grid: 2 Quick Action Cards + ENLARGED Prompt Column */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
             {/* 2 Stacked Quick Action Cards (Left 4 cols) */}
@@ -783,7 +783,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
         {/* ======================================================================= */}
         {/* RIGHT COLUMN: Formation Status + To-Do List / Actions + Tips/Meeting */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-6 animate-fade-in-up animation-delay-350">
           {/* Card 1: Status Kuis Terpilih (Inspired by "Formation status" in reference) */}
           <div
             className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${

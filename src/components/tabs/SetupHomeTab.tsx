@@ -180,7 +180,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* TOP ROW: GREETING HERO BAR                                               */}
       {/* ========================================================================= */}
-      <div className={`w-full p-5 sm:p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`w-full p-5 sm:p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-up ${
         theme === 'dark'
           ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
           : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
@@ -269,7 +269,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR (Task Time / Study Activity)     */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-5 p-6 rounded-3xl transition-all duration-300 border flex flex-col justify-between ${
+        <div className={`lg:col-span-5 p-6 rounded-3xl transition-all duration-300 border flex flex-col justify-between animate-fade-in-up animation-delay-100 ${
           theme === 'dark'
             ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
             : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
@@ -344,7 +344,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD (SCROLLABLE IN 1 SPOT) */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-7 p-6 rounded-3xl transition-all duration-300 border flex flex-col ${
+        <div className={`lg:col-span-7 p-6 rounded-3xl transition-all duration-300 border flex flex-col animate-fade-in-up animation-delay-150 ${
           theme === 'dark'
             ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
             : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
@@ -412,7 +412,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-6 animate-fade-in">
                       {/* Top Stats Overview */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className={`p-4 rounded-xl border text-center ${
@@ -463,11 +463,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                           return (
                             <div
                               key={item.id}
+                              style={{ animationDelay: `${Math.min(index * 40, 300)}ms` }}
                               onClick={() => {
                                 setSelectedHistoryDetail(item);
                                 setOpenHistoryReviewIndices({});
                               }}
-                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4 transition-all hover:translate-x-1 cursor-pointer group/history ${
+                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4 transition-all hover:translate-x-1 cursor-pointer group/history animate-fade-in-up ${
                                 theme === 'dark'
                                   ? 'bg-slate-800/20 hover:bg-slate-800/40 border-slate-800'
                                   : 'bg-white hover:bg-slate-100 border-slate-200/60 shadow-sm'
@@ -532,7 +533,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     </div>
                   )
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-fade-in">
                     {/* Leaderboard Type Toggles */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200/40 dark:border-slate-700/30">
@@ -1399,7 +1400,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 3: KIRI BAWAH - TANTANGAN HARIAN & SESI TERTUNDA                 */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-4 animate-fade-in-up animation-delay-200">
           {pendingSessions.length > 0 && (
             <PendingSessionsCard
               theme={theme}
@@ -1414,7 +1415,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 4: KANAN BAWAH - ANALISIS SUB-KOMPETENSI & POMODORO TIMER        */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up animation-delay-250">
           <div className={`p-5 rounded-3xl border transition-all duration-300 ${
             theme === 'dark'
               ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
