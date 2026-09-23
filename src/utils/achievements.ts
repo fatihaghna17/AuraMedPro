@@ -10,6 +10,7 @@ export interface AchievementStats {
   perfectScores: number;
   dailyChallengesCompleted: number;
   uniqueBanksAttempted: number;
+  suddenDeathBest?: number;
 }
 
 export interface Achievement {
@@ -36,6 +37,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'streak_7', title: 'Semangat Mingguan', description: 'Streak 7 hari berturut', icon: '🌟', condition: s => s.currentStreak >= 7, category: 'streak', rarity: 'rare', xpReward: 200 },
   { id: 'streak_30', title: 'Master Bulanan', description: 'Streak 30 hari berturut', icon: '⚡', condition: s => s.currentStreak >= 30, category: 'streak', rarity: 'epic', xpReward: 1000 },
   { id: 'streak_100', title: 'Kultivator Sejati', description: 'Streak 100 hari berturut', icon: '🐉', condition: s => s.currentStreak >= 100, category: 'streak', rarity: 'legendary', xpReward: 5000 },
+  { id: 'raja_iblis', title: 'Raja Iblis', description: 'Capai 100 Streak di Mode Sudden Death', icon: '👹', condition: s => (s.suddenDeathBest !== undefined && s.suddenDeathBest >= 100), category: 'mastery', rarity: 'legendary', xpReward: 10000 },
   { id: 'level_10', title: 'Calon Asisten', description: 'Capai Level 10', icon: '📖', condition: s => s.level >= 10, category: 'mastery', rarity: 'common', xpReward: 100 },
   { id: 'level_50', title: 'Dokter Muda', description: 'Capai Level 50', icon: '🩺', condition: s => s.level >= 50, category: 'mastery', rarity: 'epic', xpReward: 2000 },
   { id: 'level_100', title: 'Spesialis Ultimate', description: 'Capai Level 100', icon: '🏆', condition: s => s.level >= 100, category: 'mastery', rarity: 'legendary', xpReward: 10000 },

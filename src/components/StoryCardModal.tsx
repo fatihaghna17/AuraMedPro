@@ -37,7 +37,9 @@ export const getBraggingCaption = (params: {
   // 1. Mode Sudden Death (1 Nyawa)
   if (quizMode === 'suddendeath') {
     const streak = suddenDeathStreak || correct;
-    if (streak >= 15) {
+    if (streak >= 100) {
+      return `👹 BERSUJUDLAH DI HADAPAN SANG RAJA IBLIS! 100 STREAK BERUNTUN DI SUDDEN DEATH CBT! 🔥💀 Tanpa satu pun kesalahan, memancarkan Aura Hitam Kehampaan beraksen Kemerahan Kejam yang tak tertandingi!\n\nSiapa berani menantang Sang Raja Iblis di AuraMedPro?\n🔗 https://auramedpro.pages.dev`;
+    } else if (streak >= 15) {
       return `Babat habis ${streak} soal berturut-turut di mode Sudden Death cuma modal 1 nyawa 💀🔥 Yang lain baru salah 1 udah panik, aku santai melaju tanpa henti. Aura calon dokter spesialis emang beda kelas! 🩺✨\n\nBerani adu mental dan ketahanan CBT lawan gue? Coba taklukkan Sudden Death di AuraMedPro:\n🔗 https://auramedpro.pages.dev`;
     } else if (streak >= 7) {
       return `Tembus ${streak} combo streak tanpa ampun di Sudden Death CBT! ⚡ Jantung boleh berdegup kencang, tapi Aura dokter dingin tetap dominan 😎💉 Yang berani nantang, jangan cuma wacana!\n\nYuk adu nyali drilling soal di AuraMedPro:\n🔗 https://auramedpro.pages.dev`;
@@ -174,7 +176,13 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
     ctx.save();
     ctx.beginPath();
     ctx.arc(avatarCenterX, avatarCenterY, avatarRadius + 8, 0, Math.PI * 2);
-    if (activeFrame.id === 'caduceus_mythic') {
+    if (activeFrame.id === 'demon_king_100') {
+      const ringGrad = ctx.createLinearGradient(avatarCenterX - 90, avatarCenterY - 90, avatarCenterX + 90, avatarCenterY + 90);
+      ringGrad.addColorStop(0, '#000000');
+      ringGrad.addColorStop(0.5, '#450a0a');
+      ringGrad.addColorStop(1, '#dc2626');
+      ctx.fillStyle = ringGrad;
+    } else if (activeFrame.id === 'caduceus_mythic') {
       const ringGrad = ctx.createLinearGradient(avatarCenterX - 90, avatarCenterY - 90, avatarCenterX + 90, avatarCenterY + 90);
       ringGrad.addColorStop(0, '#facc15');
       ringGrad.addColorStop(0.5, '#a855f7');
@@ -228,8 +236,10 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
     ctx.fillText(username, W / 2, 490);
 
     // Title badge
-    const badgeText = `${activeFrame.badge} ${userRankTitle || 'Kultivator Medis'}${angkatan ? ` • Angkatan '${angkatan}` : ''}`;
-    ctx.fillStyle = '#38bdf8';
+    const isDemonLord = activeFrame.id === 'demon_king_100' || (quizResult?.quizMode === 'suddendeath' && (quizResult?.suddenDeathStreak ?? quizResult?.correct ?? 0) >= 100);
+    const displayRankTitle = isDemonLord ? 'Raja Iblis' : (userRankTitle || 'Kultivator Medis');
+    const badgeText = `${activeFrame.badge} ${displayRankTitle}${angkatan ? ` • Angkatan '${angkatan}` : ''}`;
+    ctx.fillStyle = isDemonLord ? '#ef4444' : '#38bdf8';
     ctx.font = '800 24px sans-serif';
     ctx.fillText(badgeText, W / 2, 535);
 

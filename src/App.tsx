@@ -10,7 +10,7 @@ import { cloudflareApi } from './services/cloudflareApi';
 import { authClient } from './lib/authClient';
 import { setCachedQuestions, saveLocalUserBank } from './utils/questionCache';
 import { playCorrectSound, playWrongSound, playGameOverSound } from './utils/audioEffects';
-import { saveSuddenDeathStreak, incrementTodayQuestionsAnswered } from './utils/avatarFrames';
+import { saveSuddenDeathStreak, incrementTodayQuestionsAnswered, getSuddenDeathBestStreak } from './utils/avatarFrames';
 import {
   CheckCircle2,
   XCircle,
@@ -207,7 +207,7 @@ export default function App() {
     setCurrentUser, setAuthLoading, setAuthMode, setEmailInput, setPasswordInput,
     setLocalSessionId, setIsSessionKicked, setProfileUsername, setUserProfile, setUserAngkatan, setUserProdi,
     setSubscriptionStatus, setCanAccess, setGlobalDatabases,
-    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankCreatedAtMap, setQuestionDatabase,
+    setUploaderMap, setBankAngkatanMap, setBankProdiMap, setBankGroupMap, setBankCreatedAtMap, setQuestionDatabase,
     syncUserProfile, handleAuthSubmit, fetchGlobalSettings, fetchUserQuestions, fetchGroupBanks,
     checkActiveQuizSession, removeDatabase, refreshSubscriptionStatus
   } = useAuth({
@@ -566,6 +566,12 @@ export default function App() {
   useEffect(() => {
     if (activeStudyGroupId && dashboardTab === 'banks') {
       fetchGroupBanks(activeStudyGroupId);
+      cloudflareApi.getAppSettings().then(settings => {
+        const groupFolderKey = `quizFolderMap_group_${activeStudyGroupId}`;
+        if (settings && settings[groupFolderKey]) {
+          setQuizFolderMap(prev => ({ ...prev, ...settings[groupFolderKey] }));
+        }
+      }).catch(console.error);
     }
   }, [activeStudyGroupId, dashboardTab]);
 
@@ -1001,9 +1007,11 @@ export default function App() {
       }
     });
 
-    // Generate folder "Terbaru" per angkatan (10 paket terbaru unggahan admin)
+    // Generate folder "Terbaru" per angkatan (10 paket terbaru unggahan admin, atau terbaru di grup jika dalam study group)
     const angkatansToProcess: { angkatan: string; folderTitle: string }[] = [];
-    if (isSuperAdmin) {
+    if (activeStudyGroupId) {
+      angkatansToProcess.push({ angkatan: userAngkatan || 'all', folderTitle: 'Terbaru' });
+    } else if (isSuperAdmin) {
       angkatansToProcess.push(
         { angkatan: '23', folderTitle: 'Terbaru (Angkatan 23)' },
         { angkatan: '24', folderTitle: 'Terbaru (Angkatan 24)' },
@@ -1019,7 +1027,7 @@ export default function App() {
     const terbaruFolders: Record<string, { key: string; displayName: string; questions: Question[] }[]> = {};
 
     angkatansToProcess.forEach(({ angkatan, folderTitle }) => {
-      // Kumpulkan soal yang diunggah oleh admin untuk angkatan dan prodi ini
+      // Kumpulkan soal yang diunggah oleh admin untuk angkatan dan prodi ini (atau soal study group jika di grup)
       const adminBanks = Object.entries(questionDatabase).filter(([key]) => {
         const uploader = uploaderMap[key];
         const isByAdmin =
@@ -1027,18 +1035,26 @@ export default function App() {
           uploader === 'admin' ||
           uploader.toLowerCase().startsWith('admin') ||
           globalDatabases.includes(key);
-        if (!isByAdmin) return false;
 
-        if (!isSuperAdmin) {
+        const groupMatch = activeStudyGroupId
+          ? bankGroupMap[key] === activeStudyGroupId
+          : (!bankGroupMap[key] && isByAdmin);
+        if (!groupMatch) return false;
+
+        if (!activeStudyGroupId && !isSuperAdmin) {
           const bankProdi = (bankProdiMap[key] || 'all').toLowerCase();
           const currentProdi = (userProdi || 'kedokteran').toLowerCase();
           const prodiMatch = bankProdi === 'all' || bankProdi.split(',').map((s) => s.trim()).includes(currentProdi);
           if (!prodiMatch) return false;
         }
 
-        const bankAng = bankAngkatanMap[key] || 'all';
-        const angList = bankAng.split(',').map((s) => s.trim());
-        return angList.includes('all') || angList.includes(angkatan);
+        if (!activeStudyGroupId) {
+          const bankAng = bankAngkatanMap[key] || 'all';
+          const angList = bankAng.split(',').map((s) => s.trim());
+          if (!angList.includes('all') && !angList.includes(angkatan)) return false;
+        }
+
+        return true;
       });
 
       // Urutkan dari yang paling baru diupload (created_at descending)
@@ -1527,6 +1543,35 @@ export default function App() {
   };
 
   const handleMoveQuiz = async (quizKey: string, targetFolder: string) => {
+    if (activeStudyGroupId) {
+      setQuizFolderMap(prev => {
+        const newMap = { ...prev };
+        if (targetFolder === 'root') {
+          newMap[quizKey] = 'root';
+        } else {
+          newMap[quizKey] = targetFolder;
+        }
+        return newMap;
+      });
+      if (targetFolder !== 'root') {
+        setCustomFolders(prev => prev.includes(targetFolder) ? prev : [...prev, targetFolder]);
+      }
+      try {
+        const groupFolderKey = `quizFolderMap_group_${activeStudyGroupId}`;
+        const currentGroupMap = { ...quizFolderMap };
+        if (targetFolder === 'root') {
+          delete currentGroupMap[quizKey];
+        } else {
+          currentGroupMap[quizKey] = targetFolder;
+        }
+        await cloudflareApi.saveAppSettings(groupFolderKey, currentGroupMap);
+      } catch (e) {
+        console.error('Failed to sync study group folder map:', e);
+      }
+      triggerToast(targetFolder === 'root' ? 'Kuis dikembalikan ke file lepas di grup' : `Kuis dipindahkan ke folder "${targetFolder}"`, '📂');
+      return;
+    }
+
     const isAdmin = isCollector || profileUsername === 'admin';
     if (isAdmin) {
       const newMap = { ...globalQuizFolderMap };
@@ -1701,6 +1746,9 @@ export default function App() {
               setBankAngkatanMap((prev) => ({ ...prev, [file.name]: targetAngkatan }));
               setBankProdiMap((prev) => ({ ...prev, [file.name]: targetProdi }));
               setBankCreatedAtMap((prev) => ({ ...prev, [file.name]: new Date().toISOString() }));
+              if (activeStudyGroupId) {
+                setBankGroupMap((prev) => ({ ...prev, [file.name]: activeStudyGroupId }));
+              }
               if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
                 setGlobalDatabases((prev) => [...new Set([...prev, file.name])]);
                 setUploaderMap((prev) => ({ ...prev, [file.name]: profileUsername || 'admin' }));
@@ -1714,6 +1762,9 @@ export default function App() {
           } catch (err) {
             console.error(err);
             saveLocalUserBank(file.name, finalQuestions);
+            if (activeStudyGroupId) {
+              setBankGroupMap((prev) => ({ ...prev, [file.name]: activeStudyGroupId }));
+            }
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
@@ -1813,6 +1864,9 @@ export default function App() {
               setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
               setBankProdiMap((prev) => ({ ...prev, [name]: targetProdi }));
               setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
+              if (activeStudyGroupId) {
+                setBankGroupMap((prev) => ({ ...prev, [name]: activeStudyGroupId }));
+              }
               if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
                 setGlobalDatabases((prev) => [...new Set([...prev, name])]);
                 setUploaderMap((prev) => ({ ...prev, [name]: profileUsername || 'admin' }));
@@ -1916,6 +1970,9 @@ export default function App() {
           setBankAngkatanMap((prev) => ({ ...prev, [name]: targetAngkatan }));
           setBankProdiMap((prev) => ({ ...prev, [name]: targetProdi }));
           setBankCreatedAtMap((prev) => ({ ...prev, [name]: new Date().toISOString() }));
+          if (activeStudyGroupId) {
+            setBankGroupMap((prev) => ({ ...prev, [name]: activeStudyGroupId }));
+          }
           if (isSuperAdmin || profileUsername === 'admin' || (profileUsername && profileUsername.toLowerCase().startsWith('admin'))) {
             setGlobalDatabases((prev) => [...new Set([...prev, name])]);
             setUploaderMap((prev) => ({ ...prev, [name]: profileUsername || 'admin' }));
@@ -1924,6 +1981,9 @@ export default function App() {
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
         } catch (err) {
           console.warn('Gagal upload ke cloud, tersimpan di browser lokal:', err);
+          if (activeStudyGroupId) {
+            setBankGroupMap((prev) => ({ ...prev, [name]: activeStudyGroupId }));
+          }
           triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}" (tersimpan lokal)`, '✅');
         }
       } else {
@@ -2442,7 +2502,10 @@ export default function App() {
       if (quizMode === 'suddendeath') {
         xpGained = 25 * nextCombo;
         saveSuddenDeathStreak(nextCombo);
-        if (nextCombo % 5 === 0) {
+        if (nextCombo === 100) {
+          confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+          triggerToast('👹 LUAR BIASA! 100 STREAK SUDDEN DEATH! Anda membuka Gelar & Aura RAJA IBLIS!', '👹');
+        } else if (nextCombo % 5 === 0) {
           confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
         }
       } else {
@@ -2657,6 +2720,9 @@ export default function App() {
       batchXPGained = correct * 25;
       totalQuizXP = batchXPGained;
       saveSuddenDeathStreak(correct);
+      if (correct >= 100) {
+        triggerToast('👹 Gelar Raja Iblis & Aura Hitam Kemerahan Kejam Terbuka!', '👹');
+      }
     }
 
     // Tambahkan XP hasil submit batch ke profil user
@@ -2794,6 +2860,7 @@ export default function App() {
         perfectScores: finalScore === 100 ? (quizHistory.filter(h => h.score === 100).length + 1) : quizHistory.filter(h => h.score === 100).length,
         dailyChallengesCompleted: quizHistory.filter(h => h.files.includes('daily')).length,
         uniqueBanksAttempted: new Set(quizHistory.flatMap(h => h.files)).size,
+        suddenDeathBest: getSuddenDeathBestStreak(),
       };
       achievements.checkAchievements(achStats);
     }
@@ -4833,7 +4900,11 @@ export default function App() {
     <MoveQuizModal
       theme={theme}
       quizModal={moveQuizModal}
-      folders={[...globalCustomFolders, ...customFolders]}
+      folders={[...new Set([
+        ...Object.keys(filteredDatabases.folders).filter(f => !f.startsWith('Terbaru')),
+        ...globalCustomFolders,
+        ...customFolders
+      ])]}
       onMove={handleMoveQuiz}
       onClose={() => setMoveQuizModal(null)}
     />

@@ -145,6 +145,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
   const getAuraCardClass = (frameId: AvatarFrameId) => {
     switch (frameId) {
+      case 'demon_king_100':
+        return 'aura-demon-king-row border-red-600/90 shadow-[0_0_36px_rgba(220,38,38,0.6)]';
       case 'caduceus_mythic':
         return 'aura-mythic-row border-amber-400/90 shadow-[0_0_32px_rgba(245,158,11,0.45)]';
       case 'veteran_3000':
@@ -190,7 +192,9 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
             {activeFrame.auraClass && (
               <div className="flex justify-center -mt-1 mb-1">
                 <div className={`px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg border animate-pulse ${
-                  activeFrame.id === 'caduceus_mythic'
+                  activeFrame.id === 'demon_king_100'
+                    ? 'bg-gradient-to-r from-black via-red-950 to-red-800 text-red-100 border-red-500 shadow-red-900/50'
+                    : activeFrame.id === 'caduceus_mythic'
                     ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-slate-950 border-yellow-200 shadow-amber-500/30'
                     : activeFrame.id === 'veteran_3000'
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white border-teal-300 shadow-teal-500/30'
@@ -274,9 +278,16 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   {currentTierInfo.badge} Tingkat {currentTierInfo.tier}: {currentTierInfo.name}
                 </span>
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                  Gelar: {levelInfo.rank}
-                </span>
+                {(suddenDeathBest >= 100 || currentFrameId === 'demon_king_100') ? (
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-black via-red-950 to-red-900 text-red-200 border border-red-600/80 shadow-[0_0_12px_rgba(220,38,38,0.5)] flex items-center gap-1 animate-pulse">
+                    <span>👹</span>
+                    <span>Gelar: Raja Iblis</span>
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                    Gelar: {levelInfo.rank}
+                  </span>
+                )}
                 {userAngkatan && (
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                     '{userAngkatan}

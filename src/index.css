@@ -277,4 +277,57 @@
   border-right: 1.5px solid rgba(251, 113, 133, 0.85) !important;
 }
 
+/* 5. Aura Raja Iblis (100 Streak Sudden Death - Aura Hitam dengan Aksen Kemerahan Kejam) */
+@keyframes demonKingAuraPulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.95), 0 0 28px rgba(220, 38, 38, 0.65), inset 0 0 14px rgba(185, 28, 28, 0.45);
+    border-color: rgba(220, 38, 38, 0.85);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(0, 0, 0, 1), 0 0 52px rgba(239, 68, 68, 0.9), inset 0 0 24px rgba(220, 38, 38, 0.7);
+    border-color: rgba(255, 29, 72, 1);
+  }
+}
+
+.aura-demon-king-row {
+  animation: demonKingAuraPulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  position: relative;
+  z-index: 5;
+}
+
+.aura-demon-king-row td {
+  background: linear-gradient(90deg, rgba(12, 10, 14, 0.96) 0%, rgba(45, 8, 8, 0.92) 30%, rgba(16, 12, 18, 0.96) 70%, rgba(55, 10, 10, 0.94) 100%) !important;
+  color: #fee2e2 !important;
+  border-top: 1.5px solid rgba(220, 38, 38, 0.85) !important;
+  border-bottom: 1.5px solid rgba(220, 38, 38, 0.85) !important;
+}
+
+.aura-demon-king-row td:first-child {
+  border-left: 1.5px solid rgba(220, 38, 38, 0.85) !important;
+  border-top-left-radius: 0.75rem;
+  border-bottom-left-radius: 0.75rem;
+}
+
+.aura-demon-king-row td:last-child {
+  border-right: 1.5px solid rgba(220, 38, 38, 0.85) !important;
+  border-top-right-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+}
+
+.dark .aura-demon-king-row td {
+  background: linear-gradient(90deg, rgba(5, 5, 8, 0.98) 0%, rgba(38, 5, 5, 0.92) 30%, rgba(8, 8, 12, 0.98) 70%, rgba(48, 8, 8, 0.95) 100%) !important;
+  color: #fecaca !important;
+  border-top: 1.5px solid rgba(239, 68, 68, 0.95) !important;
+  border-bottom: 1.5px solid rgba(239, 68, 68, 0.95) !important;
+}
+
+.dark .aura-demon-king-row td:first-child {
+  border-left: 1.5px solid rgba(239, 68, 68, 0.95) !important;
+}
+
+.dark .aura-demon-king-row td:last-child {
+  border-right: 1.5px solid rgba(239, 68, 68, 0.95) !important;
+}
+
+
 

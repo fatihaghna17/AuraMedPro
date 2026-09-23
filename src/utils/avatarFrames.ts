@@ -10,7 +10,8 @@ export type AvatarFrameId =
   | 'ekg_neon'
   | 'sudden_death_master'
   | 'veteran_3000'
-  | 'caduceus_mythic';
+  | 'caduceus_mythic'
+  | 'demon_king_100';
 
 export interface AvatarFrame {
   id: AvatarFrameId;
@@ -123,6 +124,18 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
     glowClass: 'shadow-2xl shadow-yellow-500/60 ring-4 ring-yellow-400/40 animate-pulse',
     auraClass: 'aura-mythic-row',
     isUnlocked: ({ level, isAdmin }) => Boolean(isAdmin || level >= 95)
+  },
+  {
+    id: 'demon_king_100',
+    name: 'Raja Iblis (Demon Lord)',
+    badge: '👹',
+    description: 'Aura hitam pekat kehampaan dengan kobaran darah kemerahan kejam. Bukti dominasi mutlak 100 streak tanpa ampun di Mode Sudden Death.',
+    requirementText: 'Capai Streak ≥ 100 di Mode Sudden Death',
+    rarity: 'mythic',
+    ringClass: 'p-[4px] bg-gradient-to-tr from-black via-zinc-950 to-red-600 border-2 border-red-500 shadow-2xl shadow-red-950',
+    glowClass: 'shadow-[0_0_28px_rgba(220,38,38,0.9)] ring-2 ring-black ring-offset-2 ring-offset-red-600 animate-pulse',
+    auraClass: 'aura-demon-king-row',
+    isUnlocked: ({ suddenDeathBest, isAdmin }) => Boolean(isAdmin || suddenDeathBest >= 100)
   }
 ];
 
