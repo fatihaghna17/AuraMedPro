@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { X, Download, Share2, Sparkles, Check, Image as ImageIcon, Copy, CheckCheck, MessageCircle } from 'lucide-react';
 import { AVATAR_FRAMES, AvatarFrameId } from '../utils/avatarFrames';
+import { getStreakFlameStyle } from '../utils/appHelpers';
 
 interface StoryCardModalProps {
   isOpen: boolean;
@@ -325,9 +326,11 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
     const gap = 35;
     const startX = (W - (boxW * 3 + gap * 2)) / 2;
 
+    const streakFlame = getStreakFlameStyle(currentStreak);
+
     const stats = [
       { label: 'TOTAL SOAL', value: `${totalQuestionsAnswered.toLocaleString()}+`, sub: 'Ditaklukkan', color: '#14b8a6', icon: '⚡' },
-      { label: 'DAILY STREAK', value: `${currentStreak} HARI`, sub: 'Konsistensi Aktif', color: '#f59e0b', icon: '🔥' },
+      { label: 'DAILY STREAK', value: `${currentStreak} HARI`, sub: streakFlame.tierName, color: streakFlame.colorHex, icon: '🔥' },
       { label: 'KULTIVATOR', value: `LV. ${userLevel}`, sub: `${userXP.toLocaleString()} XP`, color: '#a855f7', icon: '👑' }
     ];
 

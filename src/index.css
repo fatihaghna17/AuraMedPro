@@ -435,5 +435,30 @@
   border-right: 1.5px solid rgba(239, 68, 68, 0.95) !important;
 }
 
+/* ============================================================
+   Streak Flame Glow Effects by Tier
+   ============================================================ */
+.flame-glow-amber {
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.65));
+}
+.flame-glow-orange {
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.75));
+}
+.flame-glow-crimson {
+  filter: drop-shadow(0 0 9px rgba(239, 68, 68, 0.85));
+}
+.flame-glow-purple {
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.9));
+}
+.flame-glow-cyan {
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.95));
+}
+.flame-glow-gold {
+  filter: drop-shadow(0 0 14px rgba(234, 179, 8, 1));
+}
+.flame-glow-demon {
+  filter: drop-shadow(0 0 16px rgba(220, 38, 38, 1));
+}
+
 
 

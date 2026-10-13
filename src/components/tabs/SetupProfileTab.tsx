@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Upload, LogOut, Volume2, Sparkles, Check, Play } from 'lucide-react';
+import { Download, Upload, LogOut, Volume2, Sparkles, Check, Play, Flame } from 'lucide-react';
 import { getRarityColor, getRarityBg } from '../../utils/achievements';
-import { getLevelInfo } from '../../utils/appHelpers';
+import { getLevelInfo, getStreakFlameStyle } from '../../utils/appHelpers';
 import { authClient } from '../../lib/authClient';
 import { SOUND_PACKS, SoundPackId, getSavedSoundPack, setSavedSoundPack, playCorrectSound } from '../../utils/audioEffects';
 import { 
@@ -72,6 +72,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   const [cultivatorGender, setCultivatorGender] = useState<CultivatorGender>(getSavedCultivatorGender());
   const [cultivatorTier, setCultivatorTier] = useState<number | 'auto'>(getSavedCultivatorTier());
   const [currentSoundPack, setCurrentSoundPack] = useState<SoundPackId>(getSavedSoundPack());
+  const streakFlame = getStreakFlameStyle(currentStreak);
+  const longestFlame = getStreakFlameStyle(longestStreak);
   
   useEffect(() => {
     const handleGender = () => setCultivatorGender(getSavedCultivatorGender());
@@ -332,13 +334,21 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                 <span className="font-semibold text-slate-400">Total Soal Benar</span>
                 <span className="font-extrabold text-slate-700 dark:text-slate-200">{currentUser?.total_questions_answered || 0} Soal</span>
               </div>
-              <div className="py-2.5 flex justify-between">
+              <div className="py-2.5 flex justify-between items-center">
                 <span className="font-semibold text-slate-400">Streak Saat Ini</span>
-                <span className="font-extrabold text-amber-500">{currentStreak} Hari</span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-extrabold transition-all duration-300 ${streakFlame.badgeClass}`} title={`${currentStreak} Hari • ${streakFlame.tierName}`}>
+                  <Flame className={`w-3.5 h-3.5 fill-current ${streakFlame.flameColor} ${streakFlame.glowClass} ${streakFlame.iconAnimClass}`} />
+                  <span>{currentStreak} Hari</span>
+                  <span className="opacity-70 font-semibold text-[10px]">({streakFlame.tierName})</span>
+                </span>
               </div>
-              <div className="py-2.5 flex justify-between">
+              <div className="py-2.5 flex justify-between items-center">
                 <span className="font-semibold text-slate-400">Streak Tertinggi</span>
-                <span className="font-extrabold text-slate-700 dark:text-slate-200">{longestStreak} Hari</span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-extrabold transition-all duration-300 ${longestFlame.badgeClass}`} title={`Rekor: ${longestStreak} Hari • ${longestFlame.tierName}`}>
+                  <Flame className={`w-3.5 h-3.5 fill-current ${longestFlame.flameColor} ${longestFlame.glowClass}`} />
+                  <span>{longestStreak} Hari</span>
+                  <span className="opacity-70 font-semibold text-[10px]">({longestFlame.tierName})</span>
+                </span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="font-semibold text-slate-400">Streak Freeze (❄️)</span>

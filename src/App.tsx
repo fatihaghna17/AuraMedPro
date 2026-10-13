@@ -76,7 +76,7 @@ import { formatQuestionForGemini, openGeminiTutor } from './utils/geminiTutor';
 
 import { Question, HistoryEntry, FeatureFlags, QuestionMetadata, QuizMode } from './types';
 import { requestAIExplanation, EXPLAIN_MODES, type ExplainMode } from './utils/aiExplain';
-import { getLevelInfo, shuffleArray, shuffleQuestionOptions, formatNotifTime } from './utils/appHelpers';
+import { getLevelInfo, shuffleArray, shuffleQuestionOptions, formatNotifTime, getStreakFlameStyle } from './utils/appHelpers';
 import { saveHistoryToLocalStorage, loadHistoryFromLocalStorage, safeLocalStorageParse } from './utils/quizStorage';
 import { SAMPLE_BANKS } from './data/sampleBanks';
 // Kalimat roasting yang lucu, sarkas, dan menghibur ala mahasiswa kedokteran & umum
@@ -304,7 +304,8 @@ export default function App() {
   const [downloadCollectorModalOpen, setDownloadCollectorModalOpen] = useState(false);
   const [questionLimits, setQuestionLimits] = useState<Record<string, number>>({});
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
-  const [shuffleOptions, setShuffleOptions] = useState(false);
+  // Opsi jawaban selalu diacak otomatis (tanpa perlu dicentang)
+  const [shuffleOptions, setShuffleOptions] = useState(true);
   const [quizMode, setQuizMode] = useState<QuizMode>('utuh');
   const [customFolders, setCustomFolders] = useState<string[]>(() =>
     safeLocalStorageParse<string[]>('cbt_custom_folders', [], Array.isArray)

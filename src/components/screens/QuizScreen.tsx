@@ -6,7 +6,7 @@ import KeyboardHintPanel from '../KeyboardHintPanel';
 import MobileBottomActionBar from '../MobileBottomActionBar';
 import { EXPLAIN_MODES } from '../../utils/aiExplain';
 import { generateQuestionFingerprint } from '../../utils/srsAlgorithm';
-import { getLevelInfo } from '../../utils/appHelpers';
+import { getLevelInfo, getComboFlameStyle } from '../../utils/appHelpers';
 import { getCorrectLetterForQuestion, renderHtmlText, getQuestionImage, renderQuestionImage, isUserAnswerCorrect, renderMarkdown } from '../../utils/quizUtils';
 import { formatQuestionForGemini, openGeminiTutor } from '../../utils/geminiTutor';
 import StableImage from '../StableImage';
@@ -81,6 +81,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
   quizMode = 'utuh'
 }) => {
   const [soundPack, setSoundPack] = React.useState<SoundPackId>(getSavedSoundPack());
+  const comboFlame = getComboFlameStyle(currentCombo);
 
   const handleCycleSoundPack = () => {
     const order: SoundPackId[] = ['medical', 'arcade', 'zen', 'mute'];
@@ -256,9 +257,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             <span className="text-[10px] text-slate-400">1 kali salah = Langsung Gugur! Presisi klinis tanpa kompromi.</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm">
+                        <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border shadow-sm transition-all duration-300 ${comboFlame.badgeClass}`} title={`Streak: ${currentCombo} Soal • ${comboFlame.tierName}`}>
                           <span className="text-xs font-black">Streak:</span>
-                          <span className="text-base font-black text-white">{currentCombo} 🔥</span>
+                          <span className={`text-base font-black flex items-center gap-1.5 ${comboFlame.textColor}`}>
+                            {currentCombo}
+                            <Flame className={`w-4 h-4 fill-current ${comboFlame.flameColor} ${comboFlame.glowClass} ${comboFlame.iconAnimClass}`} />
+                          </span>
                         </div>
                       </div>
                     )}
@@ -729,9 +733,9 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-500/10 border border-amber-500/10 px-2 py-0.5 rounded-full">
-                        <Flame className={`w-3.5 h-3.5 text-amber-500 ${currentCombo > 0 ? 'animate-bounce' : ''}`} />
-                        <span>Streak: <strong className="text-amber-500">{currentCombo}</strong></span>
+                      <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border transition-all duration-300 ${comboFlame.badgeClass}`} title={`Streak Jawaban: ${currentCombo} Soal • ${comboFlame.tierName}`}>
+                        <Flame className={`w-3.5 h-3.5 fill-current ${comboFlame.flameColor} ${comboFlame.glowClass} ${comboFlame.iconAnimClass}`} />
+                        <span>Streak: <strong className={comboFlame.textColor}>{currentCombo}</strong></span>
                       </div>
                     </div>
 

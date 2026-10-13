@@ -270,16 +270,6 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                         <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
-                            checked={shuffleOptions}
-                            onChange={(e) => setShuffleOptions(e.target.checked)}
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
-                          />
-                          <span>Acak opsi jawaban (Pilihan Ganda)</span>
-                        </label>
-
-                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
-                          <input
-                            type="checkbox"
                             checked={keyboardNavEnabled}
                             onChange={(e) => setKeyboardNavEnabled(e.target.checked)}
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Award, Trash2, Calendar, Trash, Flame, Snowflake, Clock, Check, Target, Trophy, History, Crown, Play, Share2, UploadCloud, TrendingUp, Sparkles, Activity, ShieldAlert, CalendarHeart } from 'lucide-react';
-import { getLevelInfo, formatNotifTime } from '../../utils/appHelpers';
+import { getLevelInfo, formatNotifTime, getStreakFlameStyle } from '../../utils/appHelpers';
 import { AVATAR_FRAMES, getSavedAvatarFrame, getSuddenDeathBestStreak, AvatarFrameId } from '../../utils/avatarFrames';
 import {
   CultivatorAvatar,
@@ -132,6 +132,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
   const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
   const userBestSuddenDeath = getSuddenDeathBestStreak();
+  const streakFlame = getStreakFlameStyle(currentStreak);
 
   // 7-day activity data calculation for Bento Panel 1
   const activityData = useMemo(() => {
@@ -223,8 +224,11 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 <span>{userXP} XP</span>
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                <Flame className="w-3 h-3 text-amber-500" />
+              <span 
+                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-bold transition-all duration-300 ${streakFlame.badgeClass}`}
+                title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}
+              >
+                <Flame className={`w-3.5 h-3.5 fill-current ${streakFlame.flameColor} ${streakFlame.glowClass} ${streakFlame.iconAnimClass}`} />
                 <span>{currentStreak} Hari Streak</span>
               </span>
             </div>

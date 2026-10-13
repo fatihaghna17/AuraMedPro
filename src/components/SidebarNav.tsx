@@ -11,6 +11,7 @@ import {
   CultivatorGender
 } from '../utils/cultivatorAvatars';
 import { AVATAR_FRAMES, getSavedAvatarFrame, AvatarFrameId } from '../utils/avatarFrames';
+import { getStreakFlameStyle } from '../utils/appHelpers';
 
 interface NavItem {
   id: string;
@@ -36,6 +37,7 @@ export default function SidebarNav({
 }: SidebarNavProps) {
   const [savedFrameId, setSavedFrameId] = useState<AvatarFrameId>(getSavedAvatarFrame());
   const [cultivatorGender, setCultivatorGender] = useState<CultivatorGender>(getSavedCultivatorGender());
+  const streakFlame = getStreakFlameStyle(currentStreak);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -129,9 +131,12 @@ export default function SidebarNav({
       {/* Streak Overview */}
       <div className="px-6 py-4 border-t border-slate-200/50 dark:border-slate-800/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-amber-500" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{currentStreak} Hari</span>
+          <div className="flex items-center gap-2.5" title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}>
+            <Flame className={`w-4 h-4 fill-current ${streakFlame.flameColor} ${streakFlame.glowClass} ${streakFlame.iconAnimClass}`} />
+            <div className="flex flex-col min-w-0">
+              <span className={`text-xs font-bold leading-tight ${streakFlame.textColor}`}>{currentStreak} Hari</span>
+              <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 leading-tight truncate">{streakFlame.tierName}</span>
+            </div>
           </div>
           <div className="flex items-center gap-1.5" title={`${streakFreezeLeft} Freeze Tersedia`}>
             <span className="text-xs font-black text-sky-500">{streakFreezeLeft}</span>
