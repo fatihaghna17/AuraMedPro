@@ -38,6 +38,7 @@ import {
   Calendar,
   Sparkles,
   RefreshCw,
+  Loader2,
   Eye,
   EyeOff,
   ChevronRight,
@@ -78,6 +79,7 @@ import { Question, HistoryEntry, FeatureFlags, QuestionMetadata, QuizMode } from
 import { requestAIExplanation, EXPLAIN_MODES, type ExplainMode } from './utils/aiExplain';
 import { getLevelInfo, shuffleArray, shuffleQuestionOptions, formatNotifTime, getStreakFlameStyle } from './utils/appHelpers';
 import { saveHistoryToLocalStorage, loadHistoryFromLocalStorage, safeLocalStorageParse } from './utils/quizStorage';
+import { getAllHistoryFromIndexedDB, getHistoryEntryFromIndexedDB, deleteHistoryItemFromIndexedDB, clearHistoryFromIndexedDB } from './utils/indexedDbStorage';
 import { SAMPLE_BANKS } from './data/sampleBanks';
 // Kalimat roasting yang lucu, sarkas, dan menghibur ala mahasiswa kedokteran & umum
 import {
@@ -437,6 +439,113 @@ export default function App() {
   const [quizHistory, setQuizHistory] = useState<HistoryEntry[]>(() => loadHistoryFromLocalStorage());
   const [selectedHistoryDetail, setSelectedHistoryDetail] = useState<HistoryEntry | null>(null);
   const [openHistoryReviewIndices, setOpenHistoryReviewIndices] = useState<Record<number, boolean>>({});
+  const [isRecoveringHistoryQuestions, setIsRecoveringHistoryQuestions] = useState(false);
+
+  // 1. Sinkronisasi & pemulihan riwayat kuis lengkap dari IndexedDB saat aplikasi dimuat
+  useEffect(() => {
+    let active = true;
+    getAllHistoryFromIndexedDB().then((idbList) => {
+      if (!active || !idbList || idbList.length === 0) return;
+      setQuizHistory((prev) => {
+        const idbMap = new Map<number, HistoryEntry>();
+        idbList.forEach((e) => {
+          if (e && e.id) idbMap.set(e.id, e);
+        });
+
+        let hasChanges = false;
+        const merged = prev.map((entry) => {
+          const fromIdb = idbMap.get(entry.id);
+          if (fromIdb && fromIdb.questions && fromIdb.questions.length > 0 && (!entry.questions || entry.questions.length === 0)) {
+            hasChanges = true;
+            return {
+              ...entry,
+              questions: fromIdb.questions,
+              userAnswers: entry.userAnswers || fromIdb.userAnswers
+            };
+          }
+          return entry;
+        });
+
+        idbList.forEach((entry) => {
+          if (!merged.some((m) => m.id === entry.id)) {
+            hasChanges = true;
+            merged.push(entry);
+          }
+        });
+
+        if (!hasChanges) return prev;
+        merged.sort((a, b) => (b.id || 0) - (a.id || 0));
+        return merged;
+      });
+    }).catch((err) => {
+      console.warn('[IndexedDB] Gagal sinkronisasi riwayat kuis:', err);
+    });
+
+    return () => { active = false; };
+  }, []);
+
+  // 2. Otomatis pulihkan detail soal & pembahasan jika entri yang dibuka kehilangan payload questions
+  useEffect(() => {
+    if (!selectedHistoryDetail) {
+      setIsRecoveringHistoryQuestions(false);
+      return;
+    }
+
+    if (selectedHistoryDetail.questions && selectedHistoryDetail.questions.length > 0) {
+      setIsRecoveringHistoryQuestions(false);
+      return;
+    }
+
+    let active = true;
+    setIsRecoveringHistoryQuestions(true);
+
+    const tryRecover = async () => {
+      try {
+        // A. Cek langsung ke IndexedDB
+        const fromIdb = await getHistoryEntryFromIndexedDB(selectedHistoryDetail.id);
+        if (!active) return;
+        if (fromIdb && fromIdb.questions && fromIdb.questions.length > 0) {
+          setSelectedHistoryDetail((prev) => prev && prev.id === selectedHistoryDetail.id ? {
+            ...prev,
+            questions: fromIdb.questions,
+            userAnswers: prev.userAnswers || fromIdb.userAnswers
+          } : prev);
+          setIsRecoveringHistoryQuestions(false);
+          return;
+        }
+
+        // B. Rekonstruksi dari questionDatabase berdasarkan files bank soal
+        if (selectedHistoryDetail.files && selectedHistoryDetail.files.length > 0) {
+          const matchingQuestions: Question[] = [];
+          for (const f of selectedHistoryDetail.files) {
+            const bank = questionDatabase[f];
+            if (bank && Array.isArray(bank)) {
+              matchingQuestions.push(...bank);
+            }
+          }
+
+          if (!active) return;
+          if (matchingQuestions.length > 0) {
+            setSelectedHistoryDetail((prev) => prev && prev.id === selectedHistoryDetail.id ? {
+              ...prev,
+              questions: matchingQuestions.slice(0, prev.total || matchingQuestions.length),
+              userAnswers: prev.userAnswers || []
+            } : prev);
+            setIsRecoveringHistoryQuestions(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('[HistoryRecovery] Gagal memulihkan soal:', err);
+      } finally {
+        if (active) setIsRecoveringHistoryQuestions(false);
+      }
+    };
+
+    tryRecover();
+
+    return () => { active = false; };
+  }, [selectedHistoryDetail?.id, questionDatabase]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
@@ -2189,6 +2298,7 @@ export default function App() {
   const deleteHistoryItem = (id: number) => {
     const updated = quizHistory.filter((item) => item.id !== id);
     saveHistoryToLocalStorage(updated, setQuizHistory);
+    deleteHistoryItemFromIndexedDB(id).catch(() => {});
     triggerToast('Satu riwayat kuis dihapus', '🗑');
   };
 
@@ -2197,6 +2307,7 @@ export default function App() {
     setModalDesc('Seluruh catatan hasil skor kuis terdahulu akan dihapus secara permanen.');
     setModalAction(() => () => {
       saveHistoryToLocalStorage([], setQuizHistory);
+      clearHistoryFromIndexedDB().catch(() => {});
       triggerToast('Riwayat percobaan berhasil dikosongkan', '🗑');
     });
     setModalOpen(true);
@@ -4519,7 +4630,17 @@ export default function App() {
                   )}
                 </div>
 
-                {!selectedHistoryDetail.questions || selectedHistoryDetail.questions.length === 0 ? (
+                {isRecoveringHistoryQuestions ? (
+                  <div className="text-center p-8 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-2" />
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Memuat Pembahasan Soal...
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Menghubungkan ke basis data untuk memulihkan rincian soal & kunci jawaban.
+                    </p>
+                  </div>
+                ) : !selectedHistoryDetail.questions || selectedHistoryDetail.questions.length === 0 ? (
                   <div className="text-center p-8 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/20">
                     <HelpCircle className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
@@ -4531,14 +4652,23 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    {(!selectedHistoryDetail.userAnswers || selectedHistoryDetail.userAnswers.length === 0) && (
+                      <div className="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-indigo-700 dark:text-indigo-300 flex items-start gap-2.5">
+                        <Sparkles className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold">Pembahasan Berhasil Dipulihkan!</span> Seluruh butir soal, kunci jawaban, dan pembahasan lengkap dari bank soal terkait telah dimuat agar Anda dapat mempelajarinya kembali.
+                        </div>
+                      </div>
+                    )}
                     {selectedHistoryDetail.questions.map((q, idx) => {
                       const userAns = selectedHistoryDetail.userAnswers ? selectedHistoryDetail.userAnswers[idx] : null;
+                      const hasRecordedAnswers = !!(selectedHistoryDetail.userAnswers && selectedHistoryDetail.userAnswers.length > 0);
                       const isCorrect = isUserAnswerCorrect(userAns, q);
                       const isOpen = !!openHistoryReviewIndices[idx];
 
                       let statusBadge = (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                          Tidak Dijawab
+                          {hasRecordedAnswers ? 'Tidak Dijawab' : 'Kunci & Pembahasan'}
                         </span>
                       );
 

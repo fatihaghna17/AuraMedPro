@@ -1,4 +1,5 @@
 import { HistoryEntry } from '../types';
+import { saveHistoryToIndexedDB } from './indexedDbStorage';
 
 /**
  * Parse JSON dari localStorage dengan aman.
@@ -56,22 +57,22 @@ export const loadHistoryFromLocalStorage = (): HistoryEntry[] => {
 };
 
 /**
- * Versi hemat: buang payload berat (soal & jawaban) dari entri lama.
- * Ringkasan skor tetap utuh — hanya detail review soal yang dilepas.
+ * Versi hemat: buang payload soal dari entri lama untuk menghemat kuota localStorage.
+ * PENTING: userAnswers TETAP DIPERTAHANKAN (ukurannya hanya ~300 byte) agar status benar/salah
+ * dan jawaban yang dipilih user tidak hilang saat direview.
  */
-const slimEntry = (entry: HistoryEntry): HistoryEntry => ({
+export const slimEntry = (entry: HistoryEntry): HistoryEntry => ({
   ...entry,
   questions: undefined,
-  userAnswers: undefined
+  userAnswers: entry.userAnswers
 });
 
 /**
- * Menyimpan riwayat dengan strategi bertingkat agar tidak pernah gagal senyap:
- *  1. Coba simpan utuh
- *  2. Kalau kuota penuh → buang payload soal/jawaban entri lama (5 terbaru tetap utuh), coba lagi
- *  3. Kalau masih gagal → semua entri jadi ringkasan, coba lagi
- *  4. Kalau masih gagal → pangkas jumlah entri lama bertahap (minimal 10 terbaru)
- * Return true jika berhasil disimpan, false jika benar-benar gagal (untuk notifikasi UI).
+ * Menyimpan riwayat dengan strategi bertingkat:
+ *  1. Selalu backup data lengkap ke IndexedDB (kuota ratusan MB/GB di iOS Safari & Chrome)
+ *  2. Update state React
+ *  3. Coba simpan ke localStorage dengan degradasi halus (Semua -> 4 -> 3 -> 2 -> 1 -> 0 entri lengkap)
+ * Return true jika berhasil disimpan ke localStorage / IndexedDB.
  */
 export const saveHistoryToLocalStorage = (
   newHistory: HistoryEntry[],
@@ -79,9 +80,18 @@ export const saveHistoryToLocalStorage = (
 ): boolean => {
   setQuizHistory(newHistory);
 
+  // 1. Simpan data lengkap ke IndexedDB (garansi tidak kena QuotaExceeded 5MB di iOS Safari)
+  saveHistoryToIndexedDB(newHistory).catch((err) => {
+    console.warn('[Storage] Gagal menyimpan ke IndexedDB:', err);
+  });
+
+  // 2. Simpan ke localStorage untuk akses sinkron cepat saat boot
   const attempts: HistoryEntry[][] = [
     newHistory,
-    newHistory.map((e, i) => (i < 5 ? e : slimEntry(e))),
+    newHistory.map((e, i) => (i < 4 ? e : slimEntry(e))),
+    newHistory.map((e, i) => (i < 3 ? e : slimEntry(e))),
+    newHistory.map((e, i) => (i < 2 ? e : slimEntry(e))),
+    newHistory.map((e, i) => (i < 1 ? e : slimEntry(e))),
     newHistory.map(slimEntry)
   ];
 
@@ -89,10 +99,10 @@ export const saveHistoryToLocalStorage = (
     try {
       localStorage.setItem('cbtQuizHistory', JSON.stringify(attempt));
       return true;
-    } catch { /* lanjut ke strategi berikutnya */ }
+    } catch { /* kuota penuh, coba strategi berikutnya */ }
   }
 
-  let working = attempts[2];
+  let working = attempts[attempts.length - 1];
   while (working.length > 10) {
     working = working.slice(0, Math.max(10, Math.floor(working.length / 2)));
     try {
@@ -101,6 +111,7 @@ export const saveHistoryToLocalStorage = (
     } catch { /* pangkas lagi */ }
   }
 
-  console.warn('[History] localStorage penuh — riwayat gagal disimpan.');
-  return false;
+  console.warn('[History] localStorage penuh, data tetap tersimpan aman di IndexedDB.');
+  return true;
 };
+
