@@ -931,35 +931,136 @@ export default function App() {
   };
 
   // === Pomodoro Timer State ===
-  const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60);
+  const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('auramedpro_pomodoro_seconds');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 25 * 60;
+  });
   const [pomodoroActive, setPomodoroActive] = useState(false);
-  const [pomodoroMode, setPomodoroMode] = useState<'focus' | 'break'>('focus');
-  const [pomodoroCount, setPomodoroCount] = useState(0);
+  const [pomodoroMode, setPomodoroMode] = useState<'focus' | 'break' | 'long_break'>(() => {
+    try {
+      const saved = localStorage.getItem('auramedpro_pomodoro_mode');
+      if (saved && ['focus', 'break', 'long_break'].includes(saved)) return saved as any;
+    } catch (e) {}
+    return 'focus';
+  });
+  const [pomodoroCount, setPomodoroCount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('auramedpro_pomodoro_count');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
+
+  const pomodoroTargetEndRef = useRef<number | null>(null);
+
+  const switchPomodoroMode = (newMode: 'focus' | 'break' | 'long_break') => {
+    setPomodoroActive(false);
+    pomodoroTargetEndRef.current = null;
+    setPomodoroMode(newMode);
+    const duration = newMode === 'focus' ? 25 * 60 : newMode === 'long_break' ? 15 * 60 : 5 * 60;
+    setPomodoroSecondsLeft(duration);
+    try {
+      localStorage.setItem('auramedpro_pomodoro_seconds', String(duration));
+      localStorage.setItem('auramedpro_pomodoro_mode', newMode);
+    } catch (e) {}
+  };
+
+  const togglePomodoro = () => {
+    if (pomodoroActive) {
+      setPomodoroActive(false);
+      pomodoroTargetEndRef.current = null;
+      try {
+        localStorage.setItem('auramedpro_pomodoro_seconds', String(pomodoroSecondsLeft));
+      } catch (e) {}
+    } else {
+      pomodoroTargetEndRef.current = Date.now() + pomodoroSecondsLeft * 1000;
+      setPomodoroActive(true);
+    }
+  };
+
+  const resetPomodoro = () => {
+    setPomodoroActive(false);
+    pomodoroTargetEndRef.current = null;
+    const duration = pomodoroMode === 'focus' ? 25 * 60 : pomodoroMode === 'long_break' ? 15 * 60 : 5 * 60;
+    setPomodoroSecondsLeft(duration);
+    try {
+      localStorage.setItem('auramedpro_pomodoro_seconds', String(duration));
+    } catch (e) {}
+  };
+
+  const addPomodoroMinutes = (mins: number) => {
+    setPomodoroSecondsLeft(prev => {
+      const next = prev + mins * 60;
+      if (pomodoroActive && pomodoroTargetEndRef.current) {
+        pomodoroTargetEndRef.current += mins * 60 * 1000;
+      }
+      try {
+        localStorage.setItem('auramedpro_pomodoro_seconds', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
 
   useEffect(() => {
-    let interval: any = null;
-    if (pomodoroActive && pomodoroSecondsLeft > 0) {
-      interval = setInterval(() => {
-        setPomodoroSecondsLeft(prev => prev - 1);
-      }, 1000);
-    } else if (pomodoroActive && pomodoroSecondsLeft === 0) {
-      setPomodoroActive(false);
-      const isFocus = pomodoroMode === 'focus';
-      if (isFocus) setPomodoroCount(c => c + 1);
-      
-      triggerToast(isFocus ? 'Sesi fokus selesai! Waktunya istirahat.' : 'Waktu istirahat selesai! Mari fokus lagi.', isFocus ? '☕' : '🧠');
-      
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(isFocus ? 'AuraMedPro: Fokus Selesai' : 'AuraMedPro: Istirahat Selesai', {
-          body: isFocus ? 'Bagus! Waktunya istirahat sejenak 5 menit.' : 'Waktu istirahat selesai. Ayo lanjut belajar!'
-        });
-      }
-      
-      setPomodoroMode(isFocus ? 'break' : 'focus');
-      setPomodoroSecondsLeft(isFocus ? 5 * 60 : 25 * 60);
+    if (!pomodoroActive) {
+      pomodoroTargetEndRef.current = null;
+      return;
     }
+
+    if (!pomodoroTargetEndRef.current) {
+      pomodoroTargetEndRef.current = Date.now() + pomodoroSecondsLeft * 1000;
+    }
+
+    const interval = setInterval(() => {
+      if (!pomodoroTargetEndRef.current) return;
+      const diff = Math.max(0, Math.ceil((pomodoroTargetEndRef.current - Date.now()) / 1000));
+      setPomodoroSecondsLeft(diff);
+
+      if (diff <= 0) {
+        clearInterval(interval);
+        pomodoroTargetEndRef.current = null;
+        setPomodoroActive(false);
+
+        const isFocus = pomodoroMode === 'focus';
+        if (isFocus) {
+          setPomodoroCount(c => {
+            const next = c + 1;
+            try { localStorage.setItem('auramedpro_pomodoro_count', String(next)); } catch (e) {}
+            return next;
+          });
+        }
+
+        try {
+          playCorrectSound();
+        } catch (e) {}
+
+        triggerToast(
+          isFocus ? 'Sesi fokus selesai! Waktunya istirahat.' : 'Waktu istirahat selesai! Mari fokus lagi.',
+          isFocus ? '☕' : '🧠'
+        );
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(isFocus ? 'AuraMedPro: Fokus Selesai' : 'AuraMedPro: Istirahat Selesai', {
+            body: isFocus ? 'Bagus! Waktunya istirahat sejenak 5 menit.' : 'Waktu istirahat selesai. Ayo lanjut belajar!'
+          });
+        }
+
+        const nextMode = isFocus ? 'break' : 'focus';
+        const nextSeconds = nextMode === 'focus' ? 25 * 60 : 5 * 60;
+        setPomodoroMode(nextMode);
+        setPomodoroSecondsLeft(nextSeconds);
+        try {
+          localStorage.setItem('auramedpro_pomodoro_seconds', String(nextSeconds));
+          localStorage.setItem('auramedpro_pomodoro_mode', nextMode);
+        } catch (e) {}
+      }
+    }, 250);
+
     return () => clearInterval(interval);
-  }, [pomodoroActive, pomodoroSecondsLeft, pomodoroMode]);
+  }, [pomodoroActive, pomodoroMode]);
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -3458,7 +3559,7 @@ export default function App() {
               </div>
             }>
             {/* 🏠 TAB 1: BERANDA */}
-            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} userProdi={userProdi} leaderboardProdiFilter={leaderboardProdiFilter} setLeaderboardProdiFilter={setLeaderboardProdiFilter} />}
+            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} onTogglePomodoro={togglePomodoro} onResetPomodoro={resetPomodoro} onSelectPomodoroMode={switchPomodoroMode} onAddPomodoroMinutes={addPomodoroMinutes} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} userProdi={userProdi} leaderboardProdiFilter={leaderboardProdiFilter} setLeaderboardProdiFilter={setLeaderboardProdiFilter} />}
 
             {/* 📚 TAB 2: BANK SOAL */}
             {dashboardTab === 'banks' && (

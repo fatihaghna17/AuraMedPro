@@ -42,10 +42,14 @@ interface SetupHomeTabProps {
   pomodoroSecondsLeft: number;
   pomodoroActive: boolean;
   pomodoroCount: number;
-  setPomodoroActive: any;
-  setPomodoroSecondsLeft: any;
-  activeDashboardTab: any;
-  setActiveDashboardTab: any;
+  onTogglePomodoro?: () => void;
+  onResetPomodoro?: () => void;
+  onSelectPomodoroMode?: (mode: 'focus' | 'break' | 'long_break') => void;
+  onAddPomodoroMinutes?: (mins: number) => void;
+  setPomodoroActive?: any;
+  setPomodoroSecondsLeft?: any;
+  activeDashboardTab?: any;
+  setActiveDashboardTab?: any;
   fileLeaderboard: any[];
   isLeaderboardLoading: boolean;
   globalTimeFilter: any;
@@ -87,7 +91,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   theme, currentUser, trialEndsAt, subscriptionStatus, subscriptionExpiresAt, userXP, currentStreak, longestStreak, streakFreezeLeft, lastActiveDate,
   totalQuestionsAnswered, quizHistory, achievements, profileUsername,
   expandedCompetencies, setExpandedCompetencies, pomodoroMode, pomodoroSecondsLeft,
-  pomodoroActive, pomodoroCount, setPomodoroActive, setPomodoroSecondsLeft,
+  pomodoroActive, pomodoroCount, onTogglePomodoro, onResetPomodoro, onSelectPomodoroMode, onAddPomodoroMinutes, setPomodoroActive, setPomodoroSecondsLeft,
   activeDashboardTab, setActiveDashboardTab, fileLeaderboard, isLeaderboardLoading,
   globalTimeFilter, setGlobalTimeFilter, fileTimeFilter, setFileTimeFilter,
   leaderboardType, setLeaderboardType, fetchFileLeaderboard, selectedLeaderboardFile,
@@ -127,8 +131,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       window.removeEventListener('auramedpro_frame_changed', handleUpdate);
       window.removeEventListener('auramedpro_avatar_gender_changed', handleUpdate);
       window.removeEventListener('auramedpro_avatar_tier_changed', handleUpdate);
-    };
   }, [userXP]);
+
+  // Initial fetch for Leaderboard
+  useEffect(() => {
+    fetchGlobalLeaderboard?.();
+    if (selectedLeaderboardFile) {
+      fetchFileLeaderboard?.(selectedLeaderboardFile);
+    } else if (Object.keys(questionDatabase).length > 0) {
+      const firstFile = Object.keys(questionDatabase)[0];
+      setSelectedLeaderboardFile?.(firstFile);
+      fetchFileLeaderboard?.(firstFile);
+    }
+  }, []);
 
   const currentFrame = AVATAR_FRAMES.find(f => f.id === savedFrameId) || AVATAR_FRAMES[0];
   const userBestSuddenDeath = getSuddenDeathBestStreak();
@@ -352,40 +367,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             : 'bg-white/80 border-white/80 shadow-sm'
         }`}>
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setActiveDashboardTab('riwayat')}
-                className={`text-xs sm:text-sm font-bold pb-1 transition-colors duration-150 border-b-2 cursor-pointer ${
-                  activeDashboardTab === 'riwayat'
-                    ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
-                    : 'text-slate-500 border-transparent hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                Riwayat Percobaan
-              </button>
-              <button
-                onClick={async () => {
-                  setActiveDashboardTab('leaderboard');
-                  await fetchGlobalLeaderboard();
-                  if (selectedLeaderboardFile) {
-                    await fetchFileLeaderboard(selectedLeaderboardFile);
-                  } else if (Object.keys(questionDatabase).length > 0) {
-                    const firstFile = Object.keys(questionDatabase)[0];
-                    setSelectedLeaderboardFile(firstFile);
-                    await fetchFileLeaderboard(firstFile);
-                  }
-                }}
-                className={`text-xs sm:text-sm font-bold pb-1 transition-colors duration-150 border-b-2 cursor-pointer ${
-                  activeDashboardTab === 'leaderboard'
-                    ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
-                    : 'text-slate-500 border-transparent hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                Leaderboard CBT
-              </button>
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Riwayat Percobaan Kuis
+              </h3>
+              {quizHistory.length > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  {quizHistory.length} Sesi
+                </span>
+              )}
             </div>
 
-            {activeDashboardTab === 'riwayat' && quizHistory.length > 0 && (
+            {quizHistory.length > 0 && (
               <button
                 onClick={clearAllHistory}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer ${
@@ -402,7 +396,6 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
           {/* Scrollable Container (Fixed height, internal scroll) */}
           <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
-            {activeDashboardTab === 'riwayat' ? (
                   quizHistory.length === 0 ? (
                     <div className="text-center p-10">
                       <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
@@ -532,9 +525,79 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                         })}
                       </div>
                     </div>
-                  )
-                ) : (
-                  <div className="space-y-4">
+                  )}
+          </div>
+        </div>
+
+        {/* ======================================================================= */}
+        {/* ROW 2 - LEFT: POMODORO TIMER, TANTANGAN, SESI TERTUNDA & ANALISIS       */}
+        {/* ======================================================================= */}
+        <div className="lg:col-span-5 space-y-4">
+          <PomodoroWidget
+            theme={theme}
+            mode={pomodoroMode}
+            secondsLeft={pomodoroSecondsLeft}
+            isActive={pomodoroActive}
+            completedSessions={pomodoroCount}
+            onToggle={onTogglePomodoro || (() => setPomodoroActive?.(!pomodoroActive))}
+            onReset={onResetPomodoro || (() => {
+              setPomodoroActive?.(false);
+              setPomodoroSecondsLeft?.(pomodoroMode === 'focus' ? 25 * 60 : pomodoroMode === 'long_break' ? 15 * 60 : 5 * 60);
+            })}
+            onSelectMode={onSelectPomodoroMode}
+            onAddMinutes={onAddPomodoroMinutes}
+          />
+
+          <DailyChallengeCard
+            theme={theme}
+            userXP={userXP}
+            startDailyChallenge={startDailyChallenge}
+            setShowIosInstallModal={setShowIosInstallModal}
+          />
+
+          {pendingSessions.length > 0 && (
+            <PendingSessionsCard
+              theme={theme}
+              sessions={pendingSessions}
+              onResume={resumeQuizSession}
+              onDiscard={discardQuizSession}
+              onOpenAll={() => setDashboardTab('banks')}
+            />
+          )}
+
+          <HistoryAnalyticsPanel
+            theme={theme}
+            analytics={historyAnalytics}
+            expandedCompetencies={expandedCompetencies}
+            onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
+          />
+        </div>
+
+        {/* ======================================================================= */}
+        {/* ROW 2 - RIGHT: LEADERBOARD CBT (STANDALONE DEDICATED CARD)              */}
+        {/* ======================================================================= */}
+        <div className={`lg:col-span-7 p-5 rounded-xl border backdrop-blur-md flex flex-col ${
+          theme === 'dark'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+            : 'bg-white/80 border-white/80 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Leaderboard CBT
+              </h3>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {leaderboardType === 'global' ? `${globalLeaderboard.length} Peserta` : `${fileLeaderboard.length} Peserta`}
+              </span>
+            </div>
+          </div>
+
+          <div className="max-h-[500px] overflow-y-auto pr-1 space-y-4">
+            <div className="space-y-4">
                     {/* Leaderboard Type Toggles */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
@@ -1397,46 +1460,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 )}
               </div>
             </div>
-
-        {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 3: KIRI BAWAH - TANTANGAN HARIAN & SESI TERTUNDA                 */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 space-y-4">
-          {pendingSessions.length > 0 && (
-            <PendingSessionsCard
-              theme={theme}
-              sessions={pendingSessions}
-              onResume={resumeQuizSession}
-              onDiscard={discardQuizSession}
-            />
-          )}
-          <DailyChallengeCard theme={theme} onStart={startDailyChallenge} />
-        </div>
-
-        {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 4: KANAN BAWAH - ANALISIS SUB-KOMPETENSI & POMODORO TIMER        */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <HistoryAnalyticsPanel
-            theme={theme}
-            analytics={historyAnalytics}
-            expandedCompetencies={expandedCompetencies}
-            onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
-          />
-
-          <PomodoroWidget
-            theme={theme}
-            mode={pomodoroMode}
-            secondsLeft={pomodoroSecondsLeft}
-            isActive={pomodoroActive}
-            completedSessions={pomodoroCount}
-            onToggle={() => setPomodoroActive(!pomodoroActive)}
-            onReset={() => {
-              setPomodoroActive(false);
-              setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
-            }}
-          />
-        </div>
+          </div>
       </div>
     </div>
   );
