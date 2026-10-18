@@ -45,10 +45,10 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`fixed bottom-16 left-3 right-3 rounded-xl border p-2 shadow-lg ${
+            className={`fixed bottom-16 left-3 right-3 rounded-xl border p-2 shadow-xl backdrop-blur-xl ${
               theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-slate-100'
-                : 'bg-white border-slate-200 text-slate-900'
+                ? 'bg-slate-900/85 border-white/[0.08] text-slate-100'
+                : 'bg-white/90 border-slate-200/80 text-slate-900'
             }`}
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-800 mb-1">
@@ -91,8 +91,8 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
         </div>
       )}
 
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden grid grid-cols-5 items-center h-16 border-t px-1 transition-colors duration-150 ${
-        theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-600'
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden grid grid-cols-5 items-center h-16 border-t px-1 backdrop-blur-xl transition-colors duration-150 ${
+        theme === 'dark' ? 'bg-slate-900/80 border-slate-800/80 text-slate-400' : 'bg-white/80 border-slate-200/80 text-slate-600'
       }`}>
         {primaryItems.map((item) => {
           const Icon = item.icon;

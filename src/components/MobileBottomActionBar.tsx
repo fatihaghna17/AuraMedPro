@@ -21,8 +21,8 @@ export default function MobileBottomActionBar({
   onDoubtToggle, onPrev, onNext, onCheck, onFinish, onOpenMap,
 }: MobileBottomActionBarProps) {
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden px-3 py-2.5 border-t transition-colors ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+    <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden px-3 py-2.5 border-t backdrop-blur-md transition-colors ${
+      theme === 'dark' ? 'bg-slate-900/80 border-slate-800/80' : 'bg-white/85 border-slate-200/80'
     }`}>
       <div className="flex items-center gap-2 max-w-md mx-auto">
         {onOpenMap && (

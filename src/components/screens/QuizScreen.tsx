@@ -278,10 +278,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 <div className="lg:col-span-8 space-y-6 w-full max-w-[800px] mx-auto">
                   
                   {/* Main Question Card with Rounded-xl */}
-                  <div className={`p-5 sm:p-6 rounded-xl border transition-colors duration-200 ${
+                  <div className={`p-5 sm:p-6 rounded-xl border backdrop-blur-md transition-colors duration-200 ${
                     theme === 'dark'
-                      ? 'bg-slate-900 border-slate-800 shadow-xs'
-                      : 'bg-white border-slate-200 shadow-xs'
+                      ? 'bg-slate-900/70 border-white/[0.08] shadow-lg'
+                      : 'bg-white/85 border-white/80 shadow-sm'
                   }`}>
                     
                     {/* Sub-kompetensi & Kesulitan tag */}
@@ -1000,10 +1000,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 <aside className="hidden lg:block lg:col-span-4 sticky top-20 w-full max-w-[320px] space-y-5">
                   
                   {/* Gamification Level stats */}
-                  <div className={`p-5 rounded-xl border transition-colors duration-200 relative overflow-hidden ${
+                  <div className={`p-5 rounded-xl border backdrop-blur-md transition-colors duration-200 relative overflow-hidden ${
                     theme === 'dark'
-                      ? 'bg-slate-900 border-slate-800 shadow-xs'
-                      : 'bg-white border-slate-200 shadow-xs'
+                      ? 'bg-slate-900/70 border-white/[0.08] shadow-lg'
+                      : 'bg-white/85 border-white/80 shadow-sm'
                   }`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex flex-col">
@@ -1035,8 +1035,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                   </div>
 
                   {/* Question navigation grid sidebar */}
-                  <div className={`p-5 rounded-xl border transition-colors duration-200 ${
-                    theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-xs' : 'bg-white border-slate-200 shadow-xs'
+                  <div className={`p-5 rounded-xl border backdrop-blur-md transition-colors duration-200 ${
+                    theme === 'dark' ? 'bg-slate-900/70 border-white/[0.08] shadow-lg' : 'bg-white/85 border-white/80 shadow-sm'
                   }`}>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 flex items-center justify-between">
                       <span>Peta Soal</span>

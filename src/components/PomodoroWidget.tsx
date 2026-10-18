@@ -19,8 +19,8 @@ export default function PomodoroWidget({
   const progress = 364.4 - (364.4 * (secondsLeft / totalTime));
 
   return (
-    <div className={`p-5 rounded-xl border flex flex-col justify-between ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
+    <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col justify-between ${
+      theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] shadow-lg' : 'bg-white/80 border-white/80 shadow-sm'
     }`}>
       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-3">Pomodoro Timer</h3>
       <div className="flex flex-col items-center justify-center">

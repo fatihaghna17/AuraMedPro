@@ -74,8 +74,8 @@ export default function SidebarNav({
   ];
 
   return (
-    <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r transition-colors duration-150 ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+    <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r backdrop-blur-xl transition-colors duration-150 ${
+      theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] text-slate-100' : 'bg-white/70 border-slate-200/60 text-slate-900'
     }`}>
       {/* Logo & Header */}
       <div className="p-5">
@@ -90,8 +90,8 @@ export default function SidebarNav({
                 PRO
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate leading-tight mt-0.5">
-              Latihan Soal CBT & UKMPPD
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tight leading-tight mt-0.5">
+              Aura-Infused Question Drilling Platform
             </p>
           </div>
         </div>

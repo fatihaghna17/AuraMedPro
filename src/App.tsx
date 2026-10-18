@@ -3396,8 +3396,8 @@ export default function App() {
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
-              <header className={`sticky top-0 z-20 transition-colors border-b ${
-                theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-50' : 'bg-white border-slate-200 text-slate-900'
+              <header className={`sticky top-0 z-20 backdrop-blur-md transition-colors border-b ${
+                theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] text-slate-50' : 'bg-white/70 border-slate-200/60 text-slate-900'
               }`}>
                 <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
                   <div className="lg:hidden flex items-center gap-2">
@@ -3407,16 +3407,8 @@ export default function App() {
                     <span className="font-bold text-base tracking-tight">AuraMed</span>
                   </div>
 
-                  <div className="hidden lg:block text-sm font-semibold text-slate-700 dark:text-slate-200 tracking-tight">
-                    {dashboardTab === 'home' && 'Beranda'}
-                    {dashboardTab === 'banks' && 'Bank Soal'}
-                    {dashboardTab === 'start' && 'Konfigurasi & Mulai Kuis'}
-                    {dashboardTab === 'srs' && 'Spaced Repetition (SRS)'}
-                    {dashboardTab === 'studyroom' && 'Study Room'}
-                    {dashboardTab === 'groups' && 'Grup Belajar'}
-                    {dashboardTab === 'analytics' && 'Analisis Performa'}
-                    {dashboardTab === 'profile' && 'Profil & Langganan'}
-                    {dashboardTab === 'reports' && 'Laporan Admin'}
+                  <div className="hidden lg:block text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wide">
+                    Aura-Infused Question Drilling Platform
                   </div>
 
                   {/* Header actions (XP, Theme, Bell) */}
@@ -3509,10 +3501,10 @@ export default function App() {
                 </div>
 
                 {/* Databases Lists (Folders & Root Items) */}
-                <div className={`p-5 sm:p-6 rounded-xl border transition-colors ${
+                <div className={`p-5 sm:p-6 rounded-xl border backdrop-blur-md transition-colors ${
                   theme === 'dark'
-                    ? 'bg-slate-900 border-slate-800 shadow-xs'
-                    : 'bg-white border-slate-200 shadow-xs'
+                    ? 'bg-slate-900/50 border-white/[0.08] shadow-lg'
+                    : 'bg-white/80 border-white/80 shadow-sm'
                 }`}>
                   {isCollector && (
                     <div className="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

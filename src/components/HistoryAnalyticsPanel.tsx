@@ -11,8 +11,8 @@ export default function HistoryAnalyticsPanel({
   theme, analytics, expandedCompetencies, onToggleExpand,
 }: HistoryAnalyticsPanelProps) {
   return (
-    <div className={`p-5 rounded-xl border ${
-      theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
+    <div className={`p-5 rounded-xl border backdrop-blur-md ${
+      theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] shadow-lg' : 'bg-white/80 border-white/80 shadow-sm'
     }`}>
       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-3">Analisis Sub-Kompetensi</h3>
       <div className={`divide-y ${

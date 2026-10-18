@@ -95,10 +95,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
       <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-in px-3.5 sm:px-6 pb-28 pt-2 min-w-0 overflow-x-hidden">
         
         {/* Main Score Ring card */}
-        <div className={`w-full max-w-full min-w-0 overflow-hidden p-5 sm:p-8 rounded-xl transition-colors border text-center relative ${
+        <div className={`w-full max-w-full min-w-0 overflow-hidden p-5 sm:p-8 rounded-xl backdrop-blur-md transition-colors border text-center relative ${
           theme === 'dark'
-            ? 'bg-slate-900 border-slate-800 shadow-xs'
-            : 'bg-white border-slate-200 shadow-xs'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+            : 'bg-white/80 border-white/80 shadow-sm'
         }`}>
               
               {/* Radial Animated Circular meter */}
@@ -276,10 +276,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Leaderboard Submission Box */}
             {currentUser && selectedDatabases.length === 1 && (
-              <div className={`p-4 sm:p-6 rounded-xl transition-colors border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
+              <div className={`p-4 sm:p-6 rounded-xl backdrop-blur-md transition-colors border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
                 theme === 'dark'
-                  ? 'bg-slate-900 border-slate-800 shadow-xs'
-                  : 'bg-white border-slate-200 shadow-xs'
+                  ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+                  : 'bg-white/80 border-white/80 shadow-sm'
               }`}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -318,10 +318,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Battle Report / Analytics dashboard */}
             {analytics.hasMetadata && (
-              <div className={`p-4 sm:p-6 rounded-xl transition-colors border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
+              <div className={`p-4 sm:p-6 rounded-xl backdrop-blur-md transition-colors border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
                 theme === 'dark'
-                  ? 'bg-slate-900 border-slate-800 shadow-xs'
-                  : 'bg-white border-slate-200 shadow-xs'
+                  ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+                  : 'bg-white/80 border-white/80 shadow-sm'
               }`}>
                 <div className="flex items-center gap-2 pb-4 border-b border-slate-200 dark:border-slate-800">
                   <Activity className="w-4 h-4 text-indigo-500" />
@@ -495,8 +495,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                     <div
                       key={idx}
                       style={{ animationDelay: `${Math.min(idx * 35, 350)}ms` }}
-                      className={`rounded-xl border overflow-hidden transition-all w-full max-w-full min-w-0 animate-fade-in-up ${
-                        theme === 'dark' ? 'bg-slate-900/30 border-slate-850' : 'bg-white border-slate-200/60 shadow-sm'
+                      className={`rounded-xl border backdrop-blur-md overflow-hidden transition-all w-full max-w-full min-w-0 animate-fade-in-up ${
+                        theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] shadow-sm' : 'bg-white/80 border-white/80 shadow-sm'
                       }`}
                     >
                       {/* Accordion Header */}

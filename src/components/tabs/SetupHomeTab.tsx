@@ -181,10 +181,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* TOP ROW: PAGE HEADER                                                     */}
       {/* ========================================================================= */}
-      <div className={`w-full p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`w-full p-5 rounded-xl border backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 ${
         theme === 'dark'
-          ? 'bg-slate-900 border-slate-800'
-          : 'bg-white border-slate-200 shadow-xs'
+          ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+          : 'bg-white/80 border-white/80 shadow-sm'
       }`}>
         <div className="flex items-center gap-3.5">
           <div 
@@ -271,10 +271,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR                                  */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-5 p-5 rounded-xl border flex flex-col justify-between ${
+        <div className={`lg:col-span-5 p-5 rounded-xl border backdrop-blur-md flex flex-col justify-between ${
           theme === 'dark'
-            ? 'bg-slate-900 border-slate-800'
-            : 'bg-white border-slate-200 shadow-xs'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+            : 'bg-white/80 border-white/80 shadow-sm'
         }`}>
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
@@ -346,10 +346,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD                        */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-7 p-5 rounded-xl border flex flex-col ${
+        <div className={`lg:col-span-7 p-5 rounded-xl border backdrop-blur-md flex flex-col ${
           theme === 'dark'
-            ? 'bg-slate-900 border-slate-800'
-            : 'bg-white border-slate-200 shadow-xs'
+            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+            : 'bg-white/80 border-white/80 shadow-sm'
         }`}>
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-4">
