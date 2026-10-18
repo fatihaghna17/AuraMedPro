@@ -280,92 +280,140 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       />
 
       {/* ========================================================================= */}
-      {/* DASHBOARD GRID (4 PANELS): COMPACT 2x2 LAYOUT                             */}
+      {/* DASHBOARD 2-COLUMN GRID: LEFT (POMODORO & ACTIVITY), RIGHT (HISTORY & RANKS) */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR                                  */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-5 p-5 rounded-xl border backdrop-blur-md flex flex-col justify-between ${
-          theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-            : 'bg-white/80 border-white/80 shadow-sm'
-        }`}>
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Aktivitas Belajar
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">7 hari terakhir</p>
-              </div>
-              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                {totalQuestionsAnswered} Total Soal
-              </span>
-            </div>
+        {/* ======================================================================= */}
+        {/* COLUMN 1 (KIRI - lg:col-span-5): POMODORO TIMER AT TOP, ACTIVITY, ETC.   */}
+        {/* ======================================================================= */}
+        <div className="lg:col-span-5 space-y-5">
+          {/* 1. POMODORO TIMER (DI PALING ATAS, LANGSUNG KELIHATAN) */}
+          <PomodoroWidget
+            theme={theme}
+            mode={pomodoroMode}
+            secondsLeft={pomodoroSecondsLeft}
+            isActive={pomodoroActive}
+            completedSessions={pomodoroCount}
+            onToggle={onTogglePomodoro || (() => setPomodoroActive?.(!pomodoroActive))}
+            onReset={onResetPomodoro || (() => {
+              setPomodoroActive?.(false);
+              setPomodoroSecondsLeft?.(pomodoroMode === 'focus' ? 25 * 60 : pomodoroMode === 'long_break' ? 15 * 60 : 5 * 60);
+            })}
+            onSelectMode={onSelectPomodoroMode}
+            onAddMinutes={onAddPomodoroMinutes}
+          />
 
-            {/* Mini stats row */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`p-3 rounded-lg border text-center ${
-                theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
-              }`}>
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                  Benar Minggu Ini
-                </span>
-                <span className="text-xl font-bold text-emerald-500">
-                  {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
-                </span>
-              </div>
-              <div className={`p-3 rounded-lg border text-center ${
-                theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
-              }`}>
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                  Sesi Pomodoro
-                </span>
-                <span className="text-xl font-bold text-amber-500">
-                  {pomodoroCount}
+          {/* 2. AKTIVITAS BELAJAR */}
+          <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col justify-between ${
+            theme === 'dark'
+              ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+              : 'bg-white/80 border-white/80 shadow-sm'
+          }`}>
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Aktivitas Belajar
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">7 hari terakhir</p>
+                </div>
+                <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  {totalQuestionsAnswered} Total Soal
                 </span>
               </div>
-            </div>
 
-            {/* 7-Day Activity Chart */}
-            <div className="h-44 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorHomeActivity" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartFill} stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor={chartFill} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
-                  <RechartsTooltip 
-                    contentStyle={{ 
-                      backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-                    }}
-                  />
-                  <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2} fillOpacity={1} fill="url(#colorHomeActivity)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              {/* Mini stats row */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className={`p-3 rounded-lg border text-center ${
+                  theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+                    Benar Minggu Ini
+                  </span>
+                  <span className="text-xl font-bold text-emerald-500">
+                    {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
+                  </span>
+                </div>
+                <div className={`p-3 rounded-lg border text-center ${
+                  theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+                    Sesi Pomodoro
+                  </span>
+                  <span className="text-xl font-bold text-amber-500">
+                    {pomodoroCount}
+                  </span>
+                </div>
+              </div>
+
+              {/* 7-Day Activity Chart */}
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorHomeActivity" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartFill} stopOpacity={0.25}/>
+                        <stop offset="95%" stopColor={chartFill} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
+                    <RechartsTooltip 
+                      contentStyle={{ 
+                        backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
+                        borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                      }}
+                    />
+                    <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2} fillOpacity={1} fill="url(#colorHomeActivity)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
+
+          {/* 3. TANTANGAN HARIAN */}
+          <DailyChallengeCard
+            theme={theme}
+            userXP={userXP}
+            startDailyChallenge={startDailyChallenge}
+            setShowIosInstallModal={setShowIosInstallModal}
+          />
+
+          {/* 4. SESI TERTUNDA */}
+          {pendingSessions.length > 0 && (
+            <PendingSessionsCard
+              theme={theme}
+              sessions={pendingSessions}
+              onResume={resumeQuizSession}
+              onDiscard={discardQuizSession}
+              onOpenAll={() => setDashboardTab('banks')}
+            />
+          )}
+
+          {/* 5. ANALISIS SUB-KOMPETENSI */}
+          <HistoryAnalyticsPanel
+            theme={theme}
+            analytics={historyAnalytics}
+            expandedCompetencies={expandedCompetencies}
+            onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
+          />
         </div>
 
-        {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD                        */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-7 p-5 rounded-xl border backdrop-blur-md flex flex-col ${
-          theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-            : 'bg-white/80 border-white/80 shadow-sm'
-        }`}>
+        {/* ======================================================================= */}
+        {/* COLUMN 2 (KANAN - lg:col-span-7): RIWAYAT KUIS & LEADERBOARD CBT        */}
+        {/* ======================================================================= */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* 1. RIWAYAT PERCOBAAN KUIS (STANDALONE DEDICATED CARD) */}
+          <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col ${
+            theme === 'dark'
+              ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
+              : 'bg-white/80 border-white/80 shadow-sm'
+          }`}>
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -529,54 +577,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           </div>
         </div>
 
-        {/* ======================================================================= */}
-        {/* ROW 2 - LEFT: POMODORO TIMER, TANTANGAN, SESI TERTUNDA & ANALISIS       */}
-        {/* ======================================================================= */}
-        <div className="lg:col-span-5 space-y-4">
-          <PomodoroWidget
-            theme={theme}
-            mode={pomodoroMode}
-            secondsLeft={pomodoroSecondsLeft}
-            isActive={pomodoroActive}
-            completedSessions={pomodoroCount}
-            onToggle={onTogglePomodoro || (() => setPomodoroActive?.(!pomodoroActive))}
-            onReset={onResetPomodoro || (() => {
-              setPomodoroActive?.(false);
-              setPomodoroSecondsLeft?.(pomodoroMode === 'focus' ? 25 * 60 : pomodoroMode === 'long_break' ? 15 * 60 : 5 * 60);
-            })}
-            onSelectMode={onSelectPomodoroMode}
-            onAddMinutes={onAddPomodoroMinutes}
-          />
-
-          <DailyChallengeCard
-            theme={theme}
-            userXP={userXP}
-            startDailyChallenge={startDailyChallenge}
-            setShowIosInstallModal={setShowIosInstallModal}
-          />
-
-          {pendingSessions.length > 0 && (
-            <PendingSessionsCard
-              theme={theme}
-              sessions={pendingSessions}
-              onResume={resumeQuizSession}
-              onDiscard={discardQuizSession}
-              onOpenAll={() => setDashboardTab('banks')}
-            />
-          )}
-
-          <HistoryAnalyticsPanel
-            theme={theme}
-            analytics={historyAnalytics}
-            expandedCompetencies={expandedCompetencies}
-            onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
-          />
-        </div>
-
-        {/* ======================================================================= */}
-        {/* ROW 2 - RIGHT: LEADERBOARD CBT (STANDALONE DEDICATED CARD)              */}
-        {/* ======================================================================= */}
-        <div className={`lg:col-span-7 p-5 rounded-xl border backdrop-blur-md flex flex-col ${
+        {/* 2. LEADERBOARD CBT (STANDALONE DEDICATED CARD) */}
+        <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col ${
           theme === 'dark'
             ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
             : 'bg-white/80 border-white/80 shadow-sm'
@@ -1461,6 +1463,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               </div>
             </div>
           </div>
+        </div>
       </div>
     </div>
   );

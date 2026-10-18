@@ -3512,8 +3512,38 @@ export default function App() {
                     Aura-Infused Question Drilling Platform
                   </div>
 
-                  {/* Header actions (XP, Theme, Bell) */}
+                  {/* Header actions (Pomodoro, XP, Theme, Bell) */}
                   <div className="flex items-center gap-2.5">
+                    {/* Header Pomodoro Quick Pill */}
+                    <div
+                      onClick={() => {
+                        if (screen !== 'setup') setScreen('setup');
+                        if (dashboardTab !== 'home') setDashboardTab('home');
+                      }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer select-none ${
+                        pomodoroActive
+                          ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
+                          : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200/50'
+                      }`}
+                      title="Pomodoro Timer (Klik untuk membuka di Beranda)"
+                    >
+                      <span className="text-xs">{pomodoroMode === 'focus' ? '🧠' : pomodoroMode === 'break' ? '☕' : '🌴'}</span>
+                      <span className="font-mono">
+                        {Math.floor(pomodoroSecondsLeft / 60).toString().padStart(2, '0')}:{(pomodoroSecondsLeft % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePomodoro();
+                        }}
+                        className="p-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
+                        title={pomodoroActive ? 'Jeda Pomodoro' : 'Mulai Pomodoro'}
+                      >
+                        {pomodoroActive ? <Pause className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                      </button>
+                    </div>
+
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${
                       theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'
                     }`}>
