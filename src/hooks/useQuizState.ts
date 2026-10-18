@@ -9,6 +9,8 @@ export const useQuizState = () => {
   const [doubtStatus, setDoubtStatus] = useState<boolean[]>([]);
   const [isRevealed, setIsRevealed] = useState<boolean[]>([]);
   const [unlockedHints, setUnlockedHints] = useState<Record<number, number>>({});
+  const [questionHighlights, setQuestionHighlights] = useState<Record<number, string[]>>({});
+  const [strikethroughOptions, setStrikethroughOptions] = useState<Record<number, number[]>>({});
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
   const [quizSecondsLeft, setQuizSecondsLeft] = useState<number>(0);
   const [quizTimerActive, setQuizTimerActive] = useState<boolean>(false);
@@ -29,6 +31,8 @@ export const useQuizState = () => {
     doubtStatus, setDoubtStatus,
     isRevealed, setIsRevealed,
     unlockedHints, setUnlockedHints,
+    questionHighlights, setQuestionHighlights,
+    strikethroughOptions, setStrikethroughOptions,
     showSidebar, setShowSidebar,
     quizSecondsLeft, setQuizSecondsLeft,
     quizTimerActive, setQuizTimerActive,

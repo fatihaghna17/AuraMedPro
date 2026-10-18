@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Bookmark, Check, CheckCircle2, Copy, Eye, Flame, Lock, Sparkles, XCircle, ChevronRight, Share2, MessageCircleQuestion, ExternalLink } from 'lucide-react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
+import { Bookmark, Check, CheckCircle2, Copy, Eye, EyeOff, Flame, Highlighter, Lock, Sparkles, Trash2, XCircle, ChevronRight, Share2, MessageCircleQuestion, ExternalLink } from 'lucide-react';
 import QuizHeader from '../QuizHeader';
 import MobileQuizNavDrawer from '../MobileQuizNavDrawer';
 import KeyboardHintPanel from '../KeyboardHintPanel';
@@ -7,7 +7,7 @@ import MobileBottomActionBar from '../MobileBottomActionBar';
 import { EXPLAIN_MODES } from '../../utils/aiExplain';
 import { generateQuestionFingerprint } from '../../utils/srsAlgorithm';
 import { getLevelInfo, getComboFlameStyle } from '../../utils/appHelpers';
-import { getCorrectLetterForQuestion, renderHtmlText, getQuestionImage, renderQuestionImage, isUserAnswerCorrect, renderMarkdown } from '../../utils/quizUtils';
+import { getCorrectLetterForQuestion, renderHtmlText, renderHighlightedHtmlText, getQuestionImage, renderQuestionImage, isUserAnswerCorrect, renderMarkdown } from '../../utils/quizUtils';
 import { formatQuestionForGemini, openGeminiTutor } from '../../utils/geminiTutor';
 import StableImage from '../StableImage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -66,6 +66,10 @@ interface QuizScreenProps {
   finishQuiz?: any;
   quizMode?: string;
   quizTimerActive?: boolean;
+  questionHighlights?: Record<number, string[]>;
+  setQuestionHighlights?: React.Dispatch<React.SetStateAction<Record<number, string[]>>>;
+  strikethroughOptions?: Record<number, number[]>;
+  setStrikethroughOptions?: React.Dispatch<React.SetStateAction<Record<number, number[]>>>;
 }
 
 export const QuizScreen: React.FC<QuizScreenProps> = ({
@@ -78,10 +82,157 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
   setUserAnswers, setUnlockedHints, setModalTitle, setModalDesc, setModalAction,
   setModalOpen, setAiFollowUp, setCurrentIndex, setDoubtStatus, exitQuiz,
   toggleFullscreen, isFullscreen, answerNotes, openNotePopup, selectedDatabases, userXP, currentStreak, currentCombo = 0, finishQuiz,
-  quizMode = 'utuh'
+  quizMode = 'utuh',
+  questionHighlights = {},
+  setQuestionHighlights,
+  strikethroughOptions = {},
+  setStrikethroughOptions
 }) => {
-  const [soundPack, setSoundPack] = React.useState<SoundPackId>(getSavedSoundPack());
+  const [soundPack, setSoundPack] = useState<SoundPackId>(getSavedSoundPack());
+  const [isHighlighterMode, setIsHighlighterMode] = useState<boolean>(false);
+  const questionTextRef = useRef<HTMLDivElement | null>(null);
   const comboFlame = getComboFlameStyle(currentCombo);
+
+  const currentHighlights = questionHighlights[currentIndex] || [];
+  const currentStrikethroughs = strikethroughOptions[currentIndex] || [];
+
+  const addHighlightPhrase = useCallback((rawPhrase: string) => {
+    if (!setQuestionHighlights) return;
+    const cleaned = rawPhrase.replace(/\s+/g, ' ').trim();
+    if (cleaned.length < 2 || cleaned.length > 220) return;
+
+    setQuestionHighlights((prev) => {
+      const existing = prev[currentIndex] || [];
+      if (existing.some(h => h.toLowerCase() === cleaned.toLowerCase())) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [currentIndex]: [...existing, cleaned]
+      };
+    });
+  }, [currentIndex, setQuestionHighlights]);
+
+  const removeHighlightPhrase = useCallback((phraseToRemove: string) => {
+    if (!setQuestionHighlights) return;
+    setQuestionHighlights((prev) => {
+      const existing = prev[currentIndex] || [];
+      const next = existing.filter(h => h.toLowerCase() !== phraseToRemove.trim().toLowerCase());
+      return {
+        ...prev,
+        [currentIndex]: next
+      };
+    });
+  }, [currentIndex, setQuestionHighlights]);
+
+  const clearCurrentHighlights = useCallback(() => {
+    if (!setQuestionHighlights) return;
+    setQuestionHighlights((prev) => {
+      const next = { ...prev };
+      delete next[currentIndex];
+      return next;
+    });
+    triggerToast('Stabilo pada soal ini dihapus', '🧹');
+  }, [currentIndex, setQuestionHighlights, triggerToast]);
+
+  const handleToggleOrApplyHighlighter = useCallback(() => {
+    const sel = window.getSelection();
+    const selectedText = sel ? sel.toString().trim() : '';
+    if (selectedText.length >= 2 && questionTextRef.current && sel?.anchorNode && questionTextRef.current.contains(sel.anchorNode)) {
+      addHighlightPhrase(selectedText);
+      sel?.removeAllRanges();
+      triggerToast('Kata kunci klinis distabilo!', '🖍️');
+      return;
+    }
+
+    setIsHighlighterMode((prev) => {
+      const next = !prev;
+      if (next) {
+        triggerToast('Mode Stabilo Aktif: Blok kalimat atau ketuk kata pada soal!', '🖍️');
+      }
+      return next;
+    });
+  }, [addHighlightPhrase, triggerToast]);
+
+  const handleVignetteSelectionEnd = useCallback(() => {
+    if (!isHighlighterMode) return;
+    const sel = window.getSelection();
+    const selectedText = sel ? sel.toString().trim() : '';
+    if (selectedText.length >= 2 && questionTextRef.current && sel?.anchorNode && questionTextRef.current.contains(sel.anchorNode)) {
+      addHighlightPhrase(selectedText);
+      setTimeout(() => {
+        try { window.getSelection()?.removeAllRanges(); } catch {}
+      }, 40);
+    }
+  }, [isHighlighterMode, addHighlightPhrase]);
+
+  const handleVignetteClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const markEl = target.closest('mark[data-highlight]');
+    if (markEl) {
+      const phrase = markEl.getAttribute('data-highlight') || markEl.textContent || '';
+      if (phrase) {
+        removeHighlightPhrase(phrase);
+      }
+      return;
+    }
+
+    if (!isHighlighterMode) return;
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length >= 2) return;
+
+    // Detect single word tap when Highlighter Mode is ON (great for mobile/tablet)
+    let textNode: Node | null = null;
+    let offset = 0;
+    const docAny = document as any;
+    if (docAny.caretRangeFromPoint) {
+      const range = docAny.caretRangeFromPoint(e.clientX, e.clientY);
+      if (range) {
+        textNode = range.startContainer;
+        offset = range.startOffset;
+      }
+    } else if (docAny.caretPositionFromPoint) {
+      const pos = docAny.caretPositionFromPoint(e.clientX, e.clientY);
+      if (pos) {
+        textNode = pos.offsetNode;
+        offset = pos.offset;
+      }
+    }
+
+    if (textNode && textNode.nodeType === Node.TEXT_NODE && textNode.textContent) {
+      const content = textNode.textContent;
+      let start = offset;
+      let end = offset;
+      const isWordChar = (ch: string) => /[a-zA-Z0-9\-\/\.%(),+]/.test(ch);
+      while (start > 0 && isWordChar(content[start - 1])) start--;
+      while (end < content.length && isWordChar(content[end])) end++;
+      const word = content.slice(start, end).replace(/^[.,()]+|[.,()]+$/g, '').trim();
+      if (word.length >= 2) {
+        addHighlightPhrase(word);
+      }
+    }
+  }, [isHighlighterMode, removeHighlightPhrase, addHighlightPhrase]);
+
+  const toggleOptionStrikethrough = useCallback((optIndex: number, optValue: string) => {
+    if (!setStrikethroughOptions || isRevealed[currentIndex]) return;
+    setStrikethroughOptions((prev) => {
+      const existing = prev[currentIndex] || [];
+      const isCurrentlyStruck = existing.includes(optIndex);
+      const nextList = isCurrentlyStruck
+        ? existing.filter(idx => idx !== optIndex)
+        : [...existing, optIndex];
+
+      // Jika opsi yang baru dicoret sedang terpilih sebagai jawaban, batalkan pilihannya
+      if (!isCurrentlyStruck && userAnswers[currentIndex] === optValue) {
+        selectAnswer(null);
+      }
+
+      return {
+        ...prev,
+        [currentIndex]: nextList
+      };
+    });
+  }, [currentIndex, isRevealed, setStrikethroughOptions, userAnswers, selectAnswer]);
 
   const handleCycleSoundPack = () => {
     const order: SoundPackId[] = ['medical', 'arcade', 'zen', 'mute'];
@@ -133,7 +284,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                   }`}>
                     
                     {/* Sub-kompetensi & Kesulitan tag */}
-                    <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
+                    <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-200/50 dark:border-slate-800/50 flex-wrap">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <span>🏷️</span>
                         <span className="truncate">
@@ -172,7 +323,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {Boolean(isRevealed[currentIndex] && userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== '') && (
                           <button
                             onClick={() => {
@@ -193,6 +344,39 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           >
                             <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                             <span>Tanya Gemini</span>
+                          </button>
+                        )}
+                        {/* Tombol Stabilo / Vignette Highlighter */}
+                        <button
+                          type="button"
+                          onClick={handleToggleOrApplyHighlighter}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+                            isHighlighterMode
+                              ? 'bg-amber-400/20 text-amber-600 dark:text-amber-300 border-amber-400/60 ring-2 ring-amber-400/25 shadow-sm'
+                              : currentHighlights.length > 0
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                : theme === 'dark'
+                                  ? 'bg-slate-800/80 hover:bg-slate-850 text-slate-300 border-slate-700/50'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-655 border-slate-200'
+                          }`}
+                          title="Stabilo kata kunci klinis pada soal (blok teks atau aktifkan Mode Stabilo)"
+                        >
+                          <Highlighter className="w-3.5 h-3.5 text-amber-500" />
+                          <span>{isHighlighterMode ? 'Stabilo: ON' : 'Stabilo'}</span>
+                          {currentHighlights.length > 0 && (
+                            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white">
+                              {currentHighlights.length}
+                            </span>
+                          )}
+                        </button>
+                        {currentHighlights.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={clearCurrentHighlights}
+                            className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-rose-500/25 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all cursor-pointer"
+                            title="Bersihkan stabilo pada soal ini"
+                          >
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         )}
                         <button
@@ -247,6 +431,25 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     </div>
 
+                    {/* Highlighter Mode Helper Bar */}
+                    {isHighlighterMode && (
+                      <div className="mb-4 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300 animate-fade-in">
+                        <div className="flex items-center gap-2">
+                          <Highlighter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>
+                            <strong>Mode Stabilo Aktif:</strong> Blok kalimat atau ketuk kata penting pada soal untuk menstabilo. Klik stabilo untuk menghapus.
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsHighlighterMode(false)}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-200 shrink-0 cursor-pointer"
+                        >
+                          Selesai
+                        </button>
+                      </div>
+                    )}
+
                     {/* Sudden Death Tension Banner */}
                     {quizMode === 'suddendeath' && (
                       <div className="mb-5 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-600/20 via-red-500/15 to-amber-500/20 border border-rose-500/40 flex items-center justify-between animate-pulse">
@@ -269,10 +472,19 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     {/* Question text block — memoized to avoid Safari repainting on timer tick */}
                     {useMemo(() => (
-                      <div key={`qtext-${currentIndex}`} className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6 animate-fade-in">
-                        {renderHtmlText(currentQuiz[currentIndex].pertanyaan)}
+                      <div
+                        ref={questionTextRef}
+                        key={`qtext-${currentIndex}`}
+                        onMouseUp={handleVignetteSelectionEnd}
+                        onTouchEnd={handleVignetteSelectionEnd}
+                        onClick={handleVignetteClick}
+                        className={`text-sm sm:text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100 mb-6 animate-fade-in ${
+                          isHighlighterMode ? 'cursor-text select-text rounded-xl ring-1 ring-amber-400/30 p-2 -mx-2 bg-amber-500/[0.02]' : ''
+                        }`}
+                      >
+                        {renderHighlightedHtmlText(currentQuiz[currentIndex].pertanyaan, currentHighlights, true)}
                       </div>
-                    ), [currentQuiz[currentIndex].pertanyaan, currentIndex])}
+                    ), [currentQuiz[currentIndex].pertanyaan, currentIndex, currentHighlights, isHighlighterMode, handleVignetteSelectionEnd, handleVignetteClick])}
 
                     {/* Clinical Image — memoized; StableImage reserves space via aspect-ratio so iOS WebKit never collapses the layout (anti-flicker) */}
                     {useMemo(() => {
@@ -301,11 +513,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                     {/* Answer Options List (pilihan) OR Short Answer Input (isian) */}
                     {currentQuiz[currentIndex].pilihan && currentQuiz[currentIndex].pilihan.length > 0 ? (
                       <div key={`options-${currentIndex}`} className="space-y-3">
-                        {currentQuiz[currentIndex].pilihan.map((opt, i) => {
+                        {currentQuiz[currentIndex].pilihan.map((opt: string, i: number) => {
                           const letters = ['A', 'B', 'C', 'D', 'E'];
                           const isSelected = userAnswers[currentIndex] === opt;
                           const isCorrect = i === ['A', 'B', 'C', 'D', 'E'].indexOf(getCorrectLetterForQuestion(currentQuiz[currentIndex]));
                           const revealed = isRevealed[currentIndex];
+                          const isStruck = currentStrikethroughs.includes(i);
 
                           let tileClass = theme === 'dark'
                             ? 'bg-slate-900/30 border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-900/50 text-slate-350'
@@ -325,26 +538,80 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             } else {
                               tileClass = 'opacity-50 cursor-default ' + (theme === 'dark' ? 'bg-slate-900/10 border-slate-850' : 'bg-slate-50/30 border-slate-100');
                             }
+                          } else if (isStruck) {
+                            tileClass = theme === 'dark'
+                              ? 'bg-slate-950/40 border-slate-800/40 text-slate-500 opacity-55'
+                              : 'bg-slate-100/60 border-slate-200/50 text-slate-400 opacity-60';
+                            bubbleClass = theme === 'dark'
+                              ? 'border-rose-500/30 bg-rose-950/30 text-rose-400 line-through'
+                              : 'border-rose-300 bg-rose-50 text-rose-400 line-through';
                           } else if (isSelected) {
                             tileClass = 'bg-indigo-500/15 border-indigo-500 text-indigo-500 dark:text-indigo-400 ring-1 ring-indigo-500/20';
                             bubbleClass = 'bg-indigo-500 border-indigo-500 text-white shadow-sm';
                           }
 
                           return (
-                            <button
+                            <div
                               key={i}
-                              disabled={revealed}
-                              onClick={() => selectAnswer(opt)}
+                              onContextMenu={(e) => {
+                                if (!revealed) {
+                                  e.preventDefault();
+                                  toggleOptionStrikethrough(i, opt);
+                                }
+                              }}
                               style={{ animationDelay: `${i * 45}ms` }}
-                              className={`w-full flex items-start gap-3.5 p-4 rounded-xl border text-left text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-150 min-h-[48px] active:scale-[0.98] hover:translate-x-1 animate-fade-in-up ${tileClass}`}
+                              className={`w-full flex items-center gap-2 rounded-xl border transition-all duration-150 min-h-[48px] animate-fade-in-up pr-2.5 ${tileClass}`}
                             >
-                              <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
-                                {letters[i]}
-                              </div>
-                              <div className="flex-1 mt-0.5 text-xs sm:text-sm font-semibold leading-relaxed">
-                                {renderHtmlText(opt)}
-                              </div>
-                            </button>
+                              <button
+                                type="button"
+                                disabled={revealed}
+                                onClick={() => {
+                                  if (isStruck) {
+                                    triggerToast('Opsi ini sedang dicoret. Klik ikon coret di kanan untuk membuka kembali.', '🚫');
+                                    return;
+                                  }
+                                  selectAnswer(opt);
+                                }}
+                                className="flex-1 flex items-start gap-3.5 p-4 text-left text-xs sm:text-sm font-semibold cursor-pointer active:scale-[0.99]"
+                              >
+                                <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
+                                  {letters[i]}
+                                </div>
+                                <div className={`flex-1 mt-0.5 text-xs sm:text-sm font-semibold leading-relaxed ${
+                                  isStruck ? 'line-through decoration-2 decoration-rose-500/70' : ''
+                                }`}>
+                                  {renderHtmlText(opt)}
+                                </div>
+                              </button>
+
+                              {/* Badge atau Tombol Coret Opsi (Eliminasi) */}
+                              {!revealed ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleOptionStrikethrough(i, opt);
+                                  }}
+                                  title={isStruck ? 'Batal coret opsi ini' : 'Coret / eliminasi opsi ini (atau klik kanan)'}
+                                  className={`p-2 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                                    isStruck
+                                      ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30 hover:bg-rose-500/25'
+                                      : theme === 'dark'
+                                        ? 'text-slate-500 hover:text-rose-400 hover:bg-slate-800/80'
+                                        : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  <EyeOff className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">{isStruck ? 'Dicoret' : 'Coret'}</span>
+                                </button>
+                              ) : (
+                                isStruck && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                    🚫 Dicoret
+                                  </span>
+                                )
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -868,7 +1135,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               theme, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, 
               isAdaptiveMode, currentDifficulty, aiPanelOpen, aiLoading, aiExplanation, 
               aiFollowUp, aiMode, studyRoom, currentUser, selectedDatabases, unlockedHints, 
-              userXP, currentStreak, currentCombo
+              userXP, currentStreak, currentCombo, questionHighlights, strikethroughOptions, isHighlighterMode
             ])}
 
             <MobileQuizNavDrawer

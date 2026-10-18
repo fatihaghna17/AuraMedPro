@@ -89,6 +89,7 @@ import {
   getCorrectLetterForQuestion,
   isUserAnswerCorrect,
   renderHtmlText,
+  renderHighlightedHtmlText,
   renderMarkdown,
   getQuestionImage,
   renderQuestionImage,
@@ -724,6 +725,8 @@ export default function App() {
     doubtStatus, setDoubtStatus,
     isRevealed, setIsRevealed,
     unlockedHints, setUnlockedHints,
+    questionHighlights, setQuestionHighlights,
+    strikethroughOptions, setStrikethroughOptions,
     showSidebar, setShowSidebar,
     quizSecondsLeft, setQuizSecondsLeft,
     quizTimerActive, setQuizTimerActive,
@@ -1337,6 +1340,12 @@ export default function App() {
       const hints = typeof session.unlocked_hints_json === 'string'
         ? JSON.parse(session.unlocked_hints_json)
         : session.unlocked_hints_json;
+      const highlights = typeof session.question_highlights_json === 'string'
+        ? JSON.parse(session.question_highlights_json)
+        : (session.question_highlights_json || {});
+      const strikethroughs = typeof session.strikethrough_options_json === 'string'
+        ? JSON.parse(session.strikethrough_options_json)
+        : (session.strikethrough_options_json || {});
       const selectedDbs = typeof session.selected_databases === 'string'
         ? JSON.parse(session.selected_databases)
         : session.selected_databases;
@@ -1347,7 +1356,9 @@ export default function App() {
       setUserAnswers(answers);
       setDoubtStatus(doubt);
       setIsRevealed(revealed);
-      setUnlockedHints(hints);
+      setUnlockedHints(hints || {});
+      setQuestionHighlights(highlights || {});
+      setStrikethroughOptions(strikethroughs || {});
       setCurrentIndex(session.current_index);
       setSelectedDatabases(selectedDbs || []);
       setQuizMode(session.quiz_mode);
@@ -1492,6 +1503,8 @@ export default function App() {
           doubt_status_json: doubtStatus,
           is_revealed_json: isRevealed,
           unlocked_hints_json: unlockedHints,
+          question_highlights_json: questionHighlights,
+          strikethrough_options_json: strikethroughOptions,
           selected_databases: selectedDatabases,
           quiz_mode: quizMode,
           seconds_left: quizSecondsLeft,
@@ -1522,7 +1535,7 @@ export default function App() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, selectedDatabases, quizMode, currentUser]);
+  }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, questionHighlights, strikethroughOptions, selectedDatabases, quizMode, currentUser]);
 
   useEffect(() => {
     if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
@@ -2445,6 +2458,8 @@ export default function App() {
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
+    setQuestionHighlights({});
+    setStrikethroughOptions({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
     setLastQuizXPGained(0);
@@ -2495,6 +2510,8 @@ export default function App() {
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
+    setQuestionHighlights({});
+    setStrikethroughOptions({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
     setLastQuizXPGained(0);
@@ -2544,6 +2561,8 @@ export default function App() {
     setXpHistory([userXP]);
     setOpenReviewIndices({});
     setUnlockedHints({});
+    setQuestionHighlights({});
+    setStrikethroughOptions({});
     setHasSubmittedLeaderboard(false);
     setLastQuizScore(0);
     setLastQuizXPGained(0);
@@ -2966,7 +2985,9 @@ export default function App() {
       files: selectedDatabases,
       mode: quizMode,
       questions: [...currentQuiz],
-      userAnswers: [...userAnswers]
+      userAnswers: [...userAnswers],
+      questionHighlights: { ...questionHighlights },
+      strikethroughOptions: { ...strikethroughOptions }
     };
 
     const updatedHistory = [newEntry, ...quizHistory].slice(0, 50);
@@ -3121,6 +3142,8 @@ export default function App() {
             doubt_status_json: doubtStatus,
             is_revealed_json: isRevealed,
             unlocked_hints_json: unlockedHints,
+            question_highlights_json: questionHighlights,
+            strikethrough_options_json: strikethroughOptions,
             selected_databases: selectedDatabases,
             quiz_mode: quizMode,
             updated_at: new Date().toISOString()
@@ -4458,10 +4481,10 @@ export default function App() {
         )}
 
         {/* === ACTIVE CBT SIMULATOR SCREEN === */}
-        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} quizTimerActive={quizTimerActive} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} finishQuiz={finishQuiz} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} quizMode={quizMode} />}
+        {screen === 'quiz' && currentQuiz.length > 0 && <QuizScreen theme={theme} currentQuiz={currentQuiz} currentIndex={currentIndex} userAnswers={userAnswers} doubtStatus={doubtStatus} isRevealed={isRevealed} quizSecondsLeft={quizSecondsLeft} quizTimerActive={quizTimerActive} keyboardNavEnabled={keyboardNavEnabled} isAdaptiveMode={isAdaptiveMode} currentDifficulty={currentDifficulty} aiPanelOpen={aiPanelOpen} aiLoading={aiLoading} aiExplanation={aiExplanation} aiFollowUp={aiFollowUp} aiMode={aiMode} mobileQuizNavOpen={mobileQuizNavOpen} studyRoom={studyRoom} currentUser={currentUser} triggerToast={triggerToast} copyQuestionToClipboard={copyQuestionToClipboard} setLightboxImage={setLightboxImage} selectAnswer={selectAnswer} handleAIRequest={handleAIRequest} navigateQuestion={navigateQuestion} checkAnswerNow={checkAnswerNow} toggleDoubt={toggleDoubt} handleNextQuestion={handleNextQuestion} openFinishModal={openFinishModal} finishQuiz={finishQuiz} unlockedHints={unlockedHints} setMobileQuizNavOpen={setMobileQuizNavOpen} setUserAnswers={setUserAnswers} setUnlockedHints={setUnlockedHints} setModalTitle={setModalTitle} setModalDesc={setModalDesc} setModalAction={setModalAction} setModalOpen={setModalOpen} setAiFollowUp={setAiFollowUp} setCurrentIndex={setCurrentIndex} setDoubtStatus={setDoubtStatus} exitQuiz={exitQuiz} toggleFullscreen={toggleFullscreen} isFullscreen={isFullscreen} answerNotes={answerNotes} openNotePopup={openNotePopup} selectedDatabases={selectedDatabases} userXP={userXP} currentStreak={currentStreak} currentCombo={currentCombo} quizMode={quizMode} questionHighlights={questionHighlights} setQuestionHighlights={setQuestionHighlights} strikethroughOptions={strikethroughOptions} setStrikethroughOptions={setStrikethroughOptions} />}
 
         {/* === RESULT & ANALYTICS SUMMARY SCREEN === */}
-        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} lastQuizXPGained={lastQuizXPGained} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} quizMode={quizMode} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} totalQuestionsAnswered={totalQuestionsAnswered} userAngkatan={userAngkatan} triggerToast={triggerToast} suddenDeathStreak={currentCombo} />}
+        {screen === 'result' && currentQuiz.length > 0 && <ResultScreen theme={theme} currentQuiz={currentQuiz} userAnswers={userAnswers} studyRoom={studyRoom} currentUser={currentUser} openNotePopup={openNotePopup} answerNotes={answerNotes} setScreen={setScreen} setDashboardTab={setDashboardTab} selectedDatabases={selectedDatabases} submitScoreToLeaderboard={submitScoreToLeaderboard} lastQuizScore={lastQuizScore} lastQuizXPGained={lastQuizXPGained} setLightboxImage={setLightboxImage} setReportModal={setReportModal} startQuiz={startQuiz} shareResult={shareResult} srs={srs} hasSubmittedLeaderboard={hasSubmittedLeaderboard} isLeaderboardLoading={isLeaderboardLoading} analytics={analytics} weaknessesList={weaknessesList} openReviewIndices={openReviewIndices} toggleReviewAccordion={toggleReviewAccordion} quizMode={quizMode} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} totalQuestionsAnswered={totalQuestionsAnswered} userAngkatan={userAngkatan} triggerToast={triggerToast} suddenDeathStreak={currentCombo} questionHighlights={questionHighlights} strikethroughOptions={strikethroughOptions} />}
 
       </div>
 
@@ -4741,7 +4764,7 @@ export default function App() {
                           {isOpen && (
                             <div className="p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] space-y-4 animate-slide-down">
                               <div className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100">
-                                {renderHtmlText(q.pertanyaan)}
+                                {renderHighlightedHtmlText(q.pertanyaan, selectedHistoryDetail.questionHighlights?.[idx], false)}
                                 {renderQuestionImage(q, setLightboxImage, theme)}
                               </div>
 
@@ -4752,6 +4775,7 @@ export default function App() {
                                     const letters = ['A', 'B', 'C', 'D', 'E'];
                                     const isCorrectOption = oIdx === ['A', 'B', 'C', 'D', 'E'].indexOf(getCorrectLetterForQuestion(q));
                                     const isUserSelected = opt === userAns;
+                                    const isStruck = (selectedHistoryDetail.strikethroughOptions?.[idx] || []).includes(oIdx);
 
                                     let optClass = theme === 'dark' ? 'bg-slate-900/10 border-slate-800/50 text-slate-400' : 'bg-slate-50/50 border-slate-200/60 text-slate-500';
                                     let letterBadgeClass = theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500';
@@ -4772,9 +4796,16 @@ export default function App() {
                                         <div className={`w-6 h-6 rounded-full border flex items-center justify-center font-black text-xs flex-shrink-0 ${letterBadgeClass}`}>
                                           {letters[oIdx]}
                                         </div>
-                                        <div className="flex-1 mt-0.5 text-xs font-semibold leading-relaxed">
+                                        <div className={`flex-1 mt-0.5 text-xs font-semibold leading-relaxed ${
+                                          isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-70' : ''
+                                        }`}>
                                           {renderHtmlText(opt)}
                                         </div>
+                                        {isStruck && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider text-rose-500 border border-rose-500/20 px-1.5 py-0.5 rounded-full bg-rose-500/10 flex-shrink-0">
+                                            🚫 Dicoret
+                                          </span>
+                                        )}
                                         {isCorrectOption && (
                                           <span className="text-[9px] font-black uppercase tracking-wider text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded-full bg-emerald-500/5 flex-shrink-0">
                                             Kunci

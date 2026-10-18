@@ -553,6 +553,51 @@ export const renderHtmlText = (text: any) => {
   return el;
 };
 
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export const renderHighlightedHtmlText = (
+  text: any,
+  highlights?: string[],
+  interactive: boolean = false
+) => {
+  if (!text || typeof text !== 'string') return text || null;
+  const validHighlights = (highlights || []).map(h => h.trim()).filter(h => h.length > 0);
+  if (validHighlights.length === 0) {
+    return renderHtmlText(text);
+  }
+
+  let clean = htmlSanitizeCache.get(text);
+  if (!clean) {
+    clean = DOMPurify.sanitize(text, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 's', 'sub', 'sup', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'img'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'colspan', 'rowspan'],
+      ALLOW_DATA_ATTR: false
+    });
+    htmlSanitizeCache.set(text, clean);
+  }
+
+  // Sort longest phrases first to avoid partial overlapping replacements
+  const sorted = [...new Set(validHighlights)].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(`(${sorted.map(escapeRegExp).join('|')})`, 'gi');
+
+  // Split by HTML tags so we only highlight text nodes, never attributes or tag names
+  const parts = clean.split(/(<[^>]+>)/g);
+  const highlightedHtml = parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part; // HTML tag
+      return part.replace(pattern, (match) => {
+        const safeAttr = match.replace(/"/g, '&quot;');
+        if (interactive) {
+          return `<mark data-highlight="${safeAttr}" title="Klik untuk hapus stabilo ini" class="bg-amber-300/80 dark:bg-amber-400/35 text-slate-900 dark:text-amber-100 px-1 py-0.5 rounded font-bold cursor-pointer hover:bg-rose-300/80 dark:hover:bg-rose-500/40 transition-colors border-b-2 border-amber-500/60">${match}</mark>`;
+        }
+        return `<mark class="bg-amber-300/75 dark:bg-amber-400/30 text-slate-900 dark:text-amber-100 px-1 py-0.5 rounded font-bold border-b-2 border-amber-500/50">${match}</mark>`;
+      });
+    })
+    .join('');
+
+  return <span dangerouslySetInnerHTML={{ __html: highlightedHtml }} />;
+};
+
 export const getQuestionImage = (q: Question): string | null => {
   if (q.gambar && typeof q.gambar === 'string') return q.gambar;
   if (q.gambar_url && typeof q.gambar_url === 'string') return q.gambar_url;

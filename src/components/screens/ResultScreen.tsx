@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Activity, AlertCircle, Award, Bookmark, Brain, ChevronDown, FileText, Flag, Home, RefreshCw, RotateCcw, Share2, StickyNote, Camera, Sparkles } from 'lucide-react';
-import { getCorrectLetterForQuestion, renderHtmlText, renderQuestionImage, isUserAnswerCorrect, getFeedbackForScore } from '../../utils/quizUtils';
+import { Activity, AlertCircle, Award, Bookmark, Brain, ChevronDown, EyeOff, FileText, Flag, Highlighter, Home, RefreshCw, RotateCcw, Share2, StickyNote, Camera, Sparkles } from 'lucide-react';
+import { getCorrectLetterForQuestion, renderHtmlText, renderHighlightedHtmlText, renderQuestionImage, isUserAnswerCorrect, getFeedbackForScore } from '../../utils/quizUtils';
 import { generateQuestionFingerprint } from '../../utils/srsAlgorithm';
 import { StoryCardModal } from '../StoryCardModal';
 import { getSavedAvatarFrame } from '../../utils/avatarFrames';
@@ -41,6 +41,8 @@ interface ResultScreenProps {
   userAngkatan?: string | null;
   triggerToast?: any;
   suddenDeathStreak?: number;
+  questionHighlights?: Record<number, string[]>;
+  strikethroughOptions?: Record<number, number[]>;
 }
 
 export const ResultScreen: React.FC<ResultScreenProps> = ({
@@ -54,7 +56,9 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
   totalQuestionsAnswered = 0,
   userAngkatan = null,
   triggerToast,
-  suddenDeathStreak = 0
+  suddenDeathStreak = 0,
+  questionHighlights = {},
+  strikethroughOptions = {}
 }) => {
   const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
   const total = currentQuiz.length;
@@ -553,7 +557,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                       {isOpen && (
                         <div className="p-3.5 sm:p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] space-y-4 animate-slide-down w-full max-w-full min-w-0 overflow-hidden">
                           <div className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100 break-words">
-                            {renderHtmlText(q.pertanyaan)}
+                            {renderHighlightedHtmlText(q.pertanyaan, questionHighlights?.[idx], false)}
                             {renderQuestionImage(q, setLightboxImage, theme)}
                           </div>
 
@@ -581,7 +585,55 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                 </>
                               );
                             })()}
+                            {(questionHighlights?.[idx]?.length || 0) > 0 && (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center gap-1">
+                                <Highlighter className="w-3 h-3" />
+                                {questionHighlights[idx].length} Stabilo
+                              </span>
+                            )}
+                            {(strikethroughOptions?.[idx]?.length || 0) > 0 && (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1">
+                                <EyeOff className="w-3 h-3" />
+                                Dicoret: {strikethroughOptions[idx].map((oIdx: number) => ['A', 'B', 'C', 'D', 'E'][oIdx] || oIdx + 1).join(', ')}
+                              </span>
+                            )}
                           </div>
+
+                          {/* Daftar Opsi Jawaban beserta status Coretan User (jika soal pilihan ganda & tidak punya eliminasi_opsi lengkap) */}
+                          {q.pilihan && q.pilihan.length > 0 && (!q.eliminasi_opsi || Object.keys(q.eliminasi_opsi).length === 0) && (strikethroughOptions?.[idx]?.length || 0) > 0 && (
+                            <div className="grid grid-cols-1 gap-2 pt-1">
+                              {q.pilihan.map((opt: string, oIdx: number) => {
+                                const letters = ['A', 'B', 'C', 'D', 'E'];
+                                const isStruck = (strikethroughOptions?.[idx] || []).includes(oIdx);
+                                const isCorrectOption = oIdx === letters.indexOf(getCorrectLetterForQuestion(q));
+                                const isUserSelected = opt === userAnswer;
+                                return (
+                                  <div
+                                    key={oIdx}
+                                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs ${
+                                      isCorrectOption
+                                        ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                        : isUserSelected
+                                          ? 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold'
+                                          : 'bg-slate-500/[0.02] border-slate-200/60 dark:border-slate-800/80 text-slate-500'
+                                    }`}
+                                  >
+                                    <span className="w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] border border-current shrink-0">
+                                      {letters[oIdx]}
+                                    </span>
+                                    <span className={`flex-1 ${isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-60' : ''}`}>
+                                      {renderHtmlText(opt)}
+                                    </span>
+                                    {isStruck && (
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                        🚫 Dicoret saat kuis
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
 
                           {/* Catatan yang sudah ada (inline) */}
                           {answerNotes[generateQuestionFingerprint(q)] && (
@@ -636,6 +688,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                     const matchesKey = letter.toUpperCase() === getCorrectLetterForQuestion(q).toUpperCase();
                                     const optIdx = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].indexOf(letter.toUpperCase());
                                     const optText = optIdx !== -1 && q.pilihan ? q.pilihan[optIdx] : null;
+                                    const isStruck = optIdx !== -1 && (strikethroughOptions?.[idx] || []).includes(optIdx);
 
                                     return (
                                       <div
@@ -653,8 +706,17 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                         </span>
                                         <div className="flex-1 min-w-0">
                                           {optText && (
-                                            <div className="font-bold text-[11px] text-slate-800 dark:text-slate-200 mb-0.5 leading-snug">
-                                              {renderHtmlText(optText)}
+                                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                              <span className={`font-bold text-[11px] text-slate-800 dark:text-slate-200 leading-snug ${
+                                                isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-70' : ''
+                                              }`}>
+                                                {renderHtmlText(optText)}
+                                              </span>
+                                              {isStruck && (
+                                                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                                  🚫 Dicoret saat kuis
+                                                </span>
+                                              )}
                                             </div>
                                           )}
                                           <div className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">

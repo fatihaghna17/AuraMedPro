@@ -64,7 +64,9 @@ export const loadHistoryFromLocalStorage = (): HistoryEntry[] => {
 export const slimEntry = (entry: HistoryEntry): HistoryEntry => ({
   ...entry,
   questions: undefined,
-  userAnswers: entry.userAnswers
+  userAnswers: entry.userAnswers,
+  questionHighlights: entry.questionHighlights,
+  strikethroughOptions: entry.strikethroughOptions
 });
 
 /**

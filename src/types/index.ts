@@ -43,6 +43,8 @@ export interface HistoryEntry {
   mode: QuizMode;
   questions?: Question[];
   userAnswers?: (string | null)[];
+  questionHighlights?: Record<number, string[]>;
+  strikethroughOptions?: Record<number, number[]>;
 }
 
 export type AppMode = 'dashboard' | 'quiz' | 'review' | 'history';
