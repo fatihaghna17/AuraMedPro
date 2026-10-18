@@ -21,25 +21,25 @@ export default React.memo(function QuizHeader({
   quizSecondsLeft, quizTimerActive = true, isFullscreen, onExit, onToggleFullscreen, onOpenMobileNav,
 }: QuizHeaderProps) {
   return (
-    <header className={`sticky top-0 z-40 border-b transition-colors quiz-card ${
-      theme === 'dark' ? 'bg-slate-950 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-900'
+    <header className={`sticky top-0 z-40 border-b transition-colors ${
+      theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-50' : 'bg-white border-slate-200 text-slate-900'
     }`}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between relative">
         <button
           onClick={onExit}
-          className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Keluar</span>
         </button>
 
-        <div className="flex items-center gap-4">
-          <span className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <span className="text-xs sm:text-sm font-bold tracking-tight text-slate-700 dark:text-slate-200">
             Soal {currentIndex + 1} {isAdaptiveMode ? '' : `dari ${totalQuestions}`}
           </span>
           
           {isAdaptiveMode && (
-            <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
               currentDifficulty === 'mudah' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
               currentDifficulty === 'sedang' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
               'bg-rose-500/10 text-rose-500 border-rose-500/20'
@@ -49,24 +49,24 @@ export default React.memo(function QuizHeader({
           )}
           
           {!quizTimerActive ? (
-            <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border ${
+            <span className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-semibold ${
               theme === 'dark'
-                ? 'bg-slate-900/80 border-slate-800 text-slate-400 font-bold'
-                : 'bg-slate-100 border-slate-200 text-slate-600 font-bold'
+                ? 'bg-slate-800 border-slate-700 text-slate-300'
+                : 'bg-slate-100 border-slate-200 text-slate-600'
             }`}>
-              ⏱️ Tanpa Batas Waktu
+              Tanpa Batas Waktu
             </span>
           ) : (
-            <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1 rounded-full border transition-colors ${
+            <span className={`flex items-center gap-1.5 text-xs sm:text-sm px-2.5 py-1 rounded-md border font-mono transition-colors ${
               quizSecondsLeft < 300
-                ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-black animate-pulse'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 font-bold animate-pulse'
                 : quizSecondsLeft < 600
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-extrabold'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-bold'
                   : theme === 'dark'
-                    ? 'bg-slate-900 border-slate-800 text-slate-300 font-bold'
-                    : 'bg-slate-100 border-slate-200 text-slate-750 font-bold'
+                    ? 'bg-slate-800 border-slate-700 text-slate-200 font-semibold'
+                    : 'bg-slate-100 border-slate-200 text-slate-700 font-semibold'
             }`}>
-              ⏱️ {formatTimer(quizSecondsLeft)}
+              {formatTimer(quizSecondsLeft)}
             </span>
           )}
         </div>
@@ -74,10 +74,10 @@ export default React.memo(function QuizHeader({
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleFullscreen}
-            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+            className={`p-2 rounded-lg border transition-colors cursor-pointer ${
               theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
             }`}
             title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
           >
@@ -86,10 +86,10 @@ export default React.memo(function QuizHeader({
 
           <button
             onClick={onOpenMobileNav}
-            className={`lg:hidden p-2 rounded-xl border transition-all cursor-pointer ${
+            className={`lg:hidden p-2 rounded-lg border transition-colors cursor-pointer ${
               theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-slate-450 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-655 hover:bg-slate-200'
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
             }`}
             title="Peta Soal"
           >
@@ -98,9 +98,9 @@ export default React.memo(function QuizHeader({
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-slate-800/50">
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-800">
         <div 
-          className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
+          className="h-full bg-indigo-600 transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
         />
       </div>

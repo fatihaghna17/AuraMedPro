@@ -179,19 +179,17 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       <IosInstallBanner theme={theme} onInstallClick={() => setShowIosInstallModal(true)} />
 
       {/* ========================================================================= */}
-      {/* TOP ROW: GREETING HERO BAR                                               */}
+      {/* TOP ROW: PAGE HEADER                                                     */}
       {/* ========================================================================= */}
-      <div className={`w-full p-5 sm:p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-up ${
+      <div className={`w-full p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
         theme === 'dark'
-          ? 'bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/80 border-indigo-500/15 shadow-xl'
-          : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
+          ? 'bg-slate-900 border-slate-800'
+          : 'bg-white border-slate-200 shadow-xs'
       }`}>
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
-        
         <div className="flex items-center gap-3.5">
           <div 
             onClick={() => setDashboardTab('profile')}
-            className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-all ${currentFrame.ringClass} ${currentFrame.glowClass}`}
+            className={`relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer ${currentFrame.ringClass}`}
             title="Klik untuk melihat profil & kustomisasi avatar"
           >
             <CultivatorAvatar 
@@ -200,16 +198,16 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               className="w-full h-full"
               uid="home_hero"
             />
-            <span className="absolute -bottom-1 -right-1 text-xs drop-shadow">
+            <span className="absolute -bottom-1 -right-1 text-xs">
               {currentFrame.badge}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className={`text-xl sm:text-2xl font-black tracking-tight truncate ${theme === 'dark' ? 'text-white' : 'text-indigo-900'}`}>
-              Selamat datang, {profileUsername}!
+            <h1 className={`text-lg sm:text-xl font-bold tracking-tight truncate ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
+              Halo, {profileUsername}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1 text-indigo-400 font-extrabold">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
                 <span>{CULTIVATOR_TIERS[cultivatorTier - 1]?.badge}</span>
                 <span>Tingkat {cultivatorTier}</span>
               </span>
@@ -220,15 +218,15 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-teal-500" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>{userXP} XP</span>
               </span>
               <span>•</span>
               <span 
-                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-bold transition-all duration-300 ${streakFlame.badgeClass}`}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold"
                 title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}
               >
-                <Flame className={`w-3.5 h-3.5 fill-current ${streakFlame.flameColor} ${streakFlame.glowClass} ${streakFlame.iconAnimClass}`} />
+                <Flame className={`w-3.5 h-3.5 fill-current ${streakFlame.flameColor}`} />
                 <span>{currentStreak} Hari Streak</span>
               </span>
             </div>
@@ -236,14 +234,14 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         </div>
 
         {/* Level progress bar on right */}
-        <div className="w-full md:w-72 shrink-0">
-          <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+        <div className="w-full md:w-64 shrink-0">
+          <div className="flex justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Progres Level</span>
-            <span>{getLevelInfo(userXP).progress}% ke Level {getLevelInfo(userXP).level + 1}</span>
+            <span>{getLevelInfo(userXP).progress}% ke Lv {getLevelInfo(userXP).level + 1}</span>
           </div>
-          <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-teal-400 to-indigo-500 rounded-full transition-all duration-550"
+              className="h-full bg-indigo-600 rounded-full transition-all duration-300"
               style={{ width: `${getLevelInfo(userXP).progress}%` }}
             />
           </div>
@@ -267,49 +265,49 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       />
 
       {/* ========================================================================= */}
-      {/* BENTO GRID (4 PANELS): COMPACT 2x2 LAYOUT                                  */}
+      {/* DASHBOARD GRID (4 PANELS): COMPACT 2x2 LAYOUT                             */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR (Task Time / Study Activity)     */}
+        {/* PANEL 1: KIRI ATAS - AKTIVITAS BELAJAR                                  */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-5 p-6 rounded-3xl transition-all duration-300 border flex flex-col justify-between animate-fade-in-up animation-delay-100 ${
+        <div className={`lg:col-span-5 p-5 rounded-xl border flex flex-col justify-between ${
           theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
-            : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
+            ? 'bg-slate-900 border-slate-800'
+            : 'bg-white border-slate-200 shadow-xs'
         }`}>
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
               <div>
-                <h3 className="text-sm font-black tracking-tight text-slate-800 dark:text-white uppercase">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   Aktivitas Belajar
                 </h3>
-                <p className="text-[11px] font-bold text-slate-400">7 hari terakhir</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">7 hari terakhir</p>
               </div>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                 {totalQuestionsAnswered} Total Soal
               </span>
             </div>
 
             {/* Mini stats row */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`p-3 rounded-2xl border text-center ${
-                theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-200/60'
+              <div className={`p-3 rounded-lg border text-center ${
+                theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
               }`}>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                   Benar Minggu Ini
                 </span>
-                <span className="text-xl font-black text-emerald-500">
+                <span className="text-xl font-bold text-emerald-500">
                   {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
                 </span>
               </div>
-              <div className={`p-3 rounded-2xl border text-center ${
-                theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-200/60'
+              <div className={`p-3 rounded-lg border text-center ${
+                theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
               }`}>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                   Sesi Pomodoro
                 </span>
-                <span className="text-xl font-black text-amber-500">
+                <span className="text-xl font-bold text-amber-500">
                   {pomodoroCount}
                 </span>
               </div>
@@ -321,24 +319,24 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorHomeActivity" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartFill} stopOpacity={0.4}/>
+                      <stop offset="5%" stopColor={chartFill} stopOpacity={0.25}/>
                       <stop offset="95%" stopColor={chartFill} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: textColor }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: textColor }} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
                   <RechartsTooltip 
                     contentStyle={{ 
                       backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
                       borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       fontSize: '11px',
-                      fontWeight: 'bold',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                      fontWeight: '600',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                   />
-                  <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2.5} fillOpacity={1} fill="url(#colorHomeActivity)" />
+                  <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2} fillOpacity={1} fill="url(#colorHomeActivity)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -346,21 +344,21 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         </div>
 
         {/* ----------------------------------------------------------------------- */}
-        {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD (SCROLLABLE IN 1 SPOT) */}
+        {/* PANEL 2: KANAN ATAS - RIWAYAT KUIS & LEADERBOARD                        */}
         {/* ----------------------------------------------------------------------- */}
-        <div className={`lg:col-span-7 p-6 rounded-3xl transition-all duration-300 border flex flex-col animate-fade-in-up animation-delay-150 ${
+        <div className={`lg:col-span-7 p-5 rounded-xl border flex flex-col ${
           theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-2xl backdrop-blur-md'
-            : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
+            ? 'bg-slate-900 border-slate-800'
+            : 'bg-white border-slate-200 shadow-xs'
         }`}>
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setActiveDashboardTab('riwayat')}
-                className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
+                className={`text-xs sm:text-sm font-bold pb-1 transition-colors duration-150 border-b-2 cursor-pointer ${
                   activeDashboardTab === 'riwayat'
-                    ? 'text-indigo-500 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
+                    ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                    : 'text-slate-500 border-transparent hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
                 Riwayat Percobaan
@@ -377,23 +375,23 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     await fetchFileLeaderboard(firstFile);
                   }
                 }}
-                className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider pb-1 transition-all border-b-2 cursor-pointer ${
+                className={`text-xs sm:text-sm font-bold pb-1 transition-colors duration-150 border-b-2 cursor-pointer ${
                   activeDashboardTab === 'leaderboard'
-                    ? 'text-indigo-500 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-350'
+                    ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                    : 'text-slate-500 border-transparent hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
-                🏆 Leaderboard CBT
+                Leaderboard CBT
               </button>
             </div>
 
             {activeDashboardTab === 'riwayat' && quizHistory.length > 0 && (
               <button
                 onClick={clearAllHistory}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer ${
                   theme === 'dark'
-                    ? 'bg-slate-800/50 hover:bg-slate-800 border-slate-700/80 text-rose-400'
-                    : 'bg-rose-50 hover:bg-rose-100 border-rose-200/60 text-rose-600'
+                    ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-rose-400'
+                    : 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600'
                 }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -406,48 +404,48 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
             {activeDashboardTab === 'riwayat' ? (
                   quizHistory.length === 0 ? (
-                    <div className="text-center p-12">
-                      <Award className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                    <div className="text-center p-10">
+                      <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                        Belum ada riwayat pengerjaan kuis.
+                        Belum ada riwayat pengerjaan kuis
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[420px] mx-auto">
-                        Selesaikan minimal satu kali try-out kuis CBT untuk mencatat riwayat skor beserta hasil analisis sub-kompetensi detail di sini.
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[400px] mx-auto">
+                        Selesaikan minimal satu kali kuis untuk mencatat riwayat skor beserta hasil analisis sub-kompetensi di sini.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-6 animate-fade-in">
+                    <div className="space-y-4">
                       {/* Top Stats Overview */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className={`p-4 rounded-xl border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-100/50 border-slate-200/60'
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className={`p-3.5 rounded-lg border text-center ${
+                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
                         }`}>
-                          <div className="text-2xl font-extrabold text-indigo-500">
+                          <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                             {quizHistory.length}
                           </div>
-                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                             Jumlah Percobaan
                           </div>
                         </div>
 
-                        <div className={`p-4 rounded-xl border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-100/50 border-slate-200/60'
+                        <div className={`p-3.5 rounded-lg border text-center ${
+                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
                         }`}>
-                          <div className="text-2xl font-extrabold text-emerald-500">
+                          <div className="text-xl font-bold text-emerald-500">
                             {Math.round(quizHistory.reduce((a, b) => a + b.score, 0) / quizHistory.length)}
                           </div>
-                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                             Rata-rata Skor
                           </div>
                         </div>
 
-                        <div className={`p-4 rounded-xl border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-100/50 border-slate-200/60'
+                        <div className={`p-3.5 rounded-lg border text-center ${
+                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
                         }`}>
-                          <div className="text-2xl font-extrabold text-amber-500">
+                          <div className="text-xl font-bold text-amber-500">
                             {Math.max(...quizHistory.map((h) => h.score))}
                           </div>
-                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                             Skor Tertinggi
                           </div>
                         </div>
@@ -455,41 +453,40 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
                       {/* Detailed List */}
                       <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                        {quizHistory.map((item, index) => {
+                        {quizHistory.map((item) => {
                           const scoreColor = item.score >= 80 
-                            ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
+                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
                             : item.score >= 65 
-                            ? 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' 
+                            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20' 
                             : item.score >= 40 
-                            ? 'text-amber-500 bg-amber-500/10 border-amber-500/20' 
-                            : 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+                            ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' 
+                            : 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
 
                           return (
                             <div
                               key={item.id}
-                              style={{ animationDelay: `${Math.min(index * 40, 300)}ms` }}
                               onClick={() => {
                                 setSelectedHistoryDetail(item);
                                 setOpenHistoryReviewIndices({});
                               }}
-                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4 transition-all hover:translate-x-1 cursor-pointer group/history animate-fade-in-up ${
+                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border gap-3 transition-colors duration-150 cursor-pointer group/history ${
                                 theme === 'dark'
-                                  ? 'bg-slate-800/20 hover:bg-slate-800/40 border-slate-800'
-                                  : 'bg-white hover:bg-slate-100 border-slate-200/60 shadow-sm'
+                                  ? 'bg-slate-800/30 hover:bg-slate-800/70 border-slate-800'
+                                  : 'bg-white hover:bg-slate-50 border-slate-200'
                               }`}
                               title="Klik untuk membuka detail soal & pembahasan"
                             >
-                              <div className="flex items-center gap-3.5">
-                                <div className={`w-12 h-12 rounded-full border flex flex-col items-center justify-center font-extrabold text-sm ${scoreColor}`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-11 h-11 rounded-lg border flex flex-col items-center justify-center font-bold text-sm shrink-0 ${scoreColor}`}>
                                   <span>{item.score}</span>
-                                  <span className="text-[7px] opacity-75 uppercase">Skor</span>
+                                  <span className="text-[8px] opacity-80">Skor</span>
                                 </div>
 
                                 <div className="min-w-0">
-                                  <div className="font-bold text-xs truncate max-w-[280px] sm:max-w-md group-hover/history:text-indigo-500 transition-colors">
+                                  <div className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md text-slate-900 dark:text-slate-100 group-hover/history:text-indigo-600 dark:group-hover/history:text-indigo-400 transition-colors">
                                     {item.files.join(', ')}
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
+                                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="w-3 h-3" />
                                       {new Date(item.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -497,26 +494,26 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                     <span>•</span>
                                     <span>{item.total} Soal</span>
                                     <span>•</span>
-                                    <span className="text-emerald-500 font-bold">✔ {item.correct}</span>
-                                    <span className="text-rose-500 font-bold">✘ {item.wrong}</span>
-                                    <span className="text-slate-400 font-bold">∅ {item.empty}</span>
+                                    <span className="text-emerald-500 font-semibold">✔ {item.correct}</span>
+                                    <span className="text-rose-500 font-semibold">✘ {item.wrong}</span>
+                                    <span className="text-slate-400 font-semibold">∅ {item.empty}</span>
                                   </div>
                                 </div>
                               </div>
 
                               <div className="flex items-center justify-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                <span className="text-[10px] font-extrabold text-indigo-500 group-hover/history:translate-x-1 transition-transform flex items-center gap-0.5">
-                                  Lihat Pembahasan →
+                                <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                                  Pembahasan →
                                 </span>
 
-                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
                                   item.mode === 'rmo'
                                     ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                                     : item.mode === 'blok'
                                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                    : 'bg-indigo-500/10 text-indigo-500'
+                                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
                                 }`}>
-                                  {item.mode === 'rmo' ? '🏆 RMO' : item.mode === 'blok' ? '📝 Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
+                                  {item.mode === 'rmo' ? 'RMO' : item.mode === 'blok' ? 'Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
                                 </span>
                                 
                                 <button
@@ -524,7 +521,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                     e.stopPropagation();
                                     deleteHistoryItem(item.id);
                                   }}
-                                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
                                   title="Hapus riwayat"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -537,16 +534,16 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     </div>
                   )
                 ) : (
-                  <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-4">
                     {/* Leaderboard Type Toggles */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200/40 dark:border-slate-700/30">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
                         <button
                           onClick={() => setLeaderboardType('global')}
-                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                             leaderboardType === 'global'
-                              ? 'bg-indigo-50 text-white shadow-sm'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                              ? 'bg-indigo-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                           }`}
                         >
                           Global (Total Soal)
@@ -560,10 +557,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                               fetchFileLeaderboard(firstFile);
                             }
                           }}
-                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                             leaderboardType === 'file'
-                              ? 'bg-indigo-50 text-white shadow-sm'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                              ? 'bg-indigo-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                           }`}
                         >
                           Per File Soal
@@ -1404,7 +1401,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 3: KIRI BAWAH - TANTANGAN HARIAN & SESI TERTUNDA                 */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 space-y-4 animate-fade-in-up animation-delay-200">
+        <div className="lg:col-span-5 space-y-4">
           {pendingSessions.length > 0 && (
             <PendingSessionsCard
               theme={theme}
@@ -1419,38 +1416,26 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* PANEL 4: KANAN BAWAH - ANALISIS SUB-KOMPETENSI & POMODORO TIMER        */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up animation-delay-250">
-          <div className={`p-5 rounded-3xl border transition-all duration-300 ${
-            theme === 'dark'
-              ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
-              : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
-          }`}>
-            <HistoryAnalyticsPanel
-              theme={theme}
-              analytics={historyAnalytics}
-              expandedCompetencies={expandedCompetencies}
-              onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
-            />
-          </div>
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <HistoryAnalyticsPanel
+            theme={theme}
+            analytics={historyAnalytics}
+            expandedCompetencies={expandedCompetencies}
+            onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
+          />
 
-          <div className={`p-5 rounded-3xl border transition-all duration-300 ${
-            theme === 'dark'
-              ? 'bg-slate-900/60 border-white/[0.08] shadow-xl backdrop-blur-md'
-              : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
-          }`}>
-            <PomodoroWidget
-              theme={theme}
-              mode={pomodoroMode}
-              secondsLeft={pomodoroSecondsLeft}
-              isActive={pomodoroActive}
-              completedSessions={pomodoroCount}
-              onToggle={() => setPomodoroActive(!pomodoroActive)}
-              onReset={() => {
-                setPomodoroActive(false);
-                setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
-              }}
-            />
-          </div>
+          <PomodoroWidget
+            theme={theme}
+            mode={pomodoroMode}
+            secondsLeft={pomodoroSecondsLeft}
+            isActive={pomodoroActive}
+            completedSessions={pomodoroCount}
+            onToggle={() => setPomodoroActive(!pomodoroActive)}
+            onReset={() => {
+              setPomodoroActive(false);
+              setPomodoroSecondsLeft(pomodoroMode === 'focus' ? 25 * 60 : 5 * 60);
+            }}
+          />
         </div>
       </div>
     </div>

@@ -3,44 +3,57 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-brand-bg: #0B1120;
-  --color-brand-surface: #131C31;
-  --color-brand-surface-hover: #1A2540;
-  --color-brand-border: #1E2D4A;
-  --color-brand-border-subtle: #162036;
+  --color-brand-bg: #0f172a;
+  --color-brand-surface: #1e293b;
+  --color-brand-surface-hover: #334155;
+  --color-brand-border: #334155;
+  --color-brand-border-subtle: #1e293b;
   
-  --color-brand-primary: #818CF8;
-  --color-brand-primary-hover: #6366F1;
-  --color-brand-secondary: #A78BFA;
+  --color-brand-primary: #4f46e5;
+  --color-brand-primary-hover: #4338ca;
+  --color-brand-secondary: #6366f1;
   
-  --color-brand-text: #F1F5F9;
-  --color-brand-text-muted: #94A3B8;
-  --color-brand-text-faint: #64748B;
+  --color-brand-text: #f1f5f9;
+  --color-brand-text-muted: #94a3b8;
+  --color-brand-text-faint: #64748b;
   
-  --color-brand-xp: #FCD34D;
+  --color-brand-xp: #f59e0b;
+
+  /* Fallback tokens for non-standard shades used across legacy components */
+  --color-slate-250: #e2e8f0;
+  --color-slate-350: #cbd5e1;
+  --color-slate-450: #94a3b8;
+  --color-slate-655: #475569;
+  --color-slate-750: #334155;
+  --color-slate-805: #1e293b;
+  --color-slate-850: #1e293b;
+  --color-slate-905: #0f172a;
+  --color-rose-455: #f43f5e;
+  --color-rose-555: #f43f5e;
+  --color-indigo-650: #4f46e5;
 }
 
 @layer base {
   html {
-    background-color: #0B1120;
+    background-color: #0f172a;
     color-scheme: dark light;
     overscroll-behavior-y: none;
   }
 
   html.dark,
   html.dark body {
-    background-color: #0B1120 !important;
+    background-color: #0f172a !important;
     color-scheme: dark;
   }
 
   html.light,
   html.light body {
-    background-color: #F8FAFC !important;
+    background-color: #f8fafc !important;
     color-scheme: light;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -67,14 +80,7 @@
   contain: paint;
 }
 
-/* Stabilise images inside quiz cards & inline HTML (dangerouslySetInnerHTML)
-   so Safari does not re-paint / flicker them on every 1-second timer re-render.
-
-   PENTING (iOS bug fix): JANGAN pakai `content-visibility: auto` pada <img>.
-   WebKit iOS menerapkan size-containment pada elemen yg dianggap "not relevant"
-   sesaat (scroll momentum, re-layout timer) → img tanpa tinggi eksplisit COLLAPSE
-   ke 0px → pilihan jawaban melompat naik → gambar muncul lagi → flicker berulang.
-   Ruang gambar kini dicadangkan via aspect-ratio di komponen StableImage. */
+/* Stabilise images inside quiz cards & inline HTML (dangerouslySetInnerHTML) */
 .quiz-img,
 .quiz-card img,
 .quiz-card span[dangerouslysetinnerhtml] img,
@@ -83,24 +89,22 @@
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  will-change: auto;          /* reset – do NOT keep will-change: transform permanently */
+  will-change: auto;
   image-rendering: auto;
-  object-fit: contain;        /* konten tetap center di dalam box ber-aspect-ratio stabil */
+  object-fit: contain;
 }
 
-/* Glassmorphism Card Style */
+/* Restrained Card Style (no-slop-ui compliant) */
 @layer components {
   .glass-card {
-    background: rgba(19, 28, 49, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(129, 140, 248, 0.1);
-    border-radius: 16px;
-    transition: all 0.3s ease;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
   }
   
   .glass-card:hover {
-    border-color: rgba(129, 140, 248, 0.3);
-    box-shadow: 0 0 20px rgba(129, 140, 248, 0.1);
+    border-color: #475569;
   }
 }
 

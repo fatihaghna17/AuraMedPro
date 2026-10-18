@@ -7,33 +7,30 @@ interface DailyChallengeCardProps {
 
 export default function DailyChallengeCard({ theme, onStart }: DailyChallengeCardProps) {
   return (
-    <div className={`p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+    <div className={`p-5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
       theme === 'dark'
-        ? 'bg-gradient-to-r from-amber-500/10 to-orange-600/10 border-amber-500/20 shadow-lg'
-        : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 shadow-sm'
+        ? 'bg-slate-900 border-slate-800'
+        : 'bg-white border-slate-200 shadow-xs'
     }`}>
-      <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-10">
-        <Flame className="w-40 h-40 text-amber-500" />
-      </div>
-      <div className="flex items-start gap-4 z-10 relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-          <Flame className="w-6 h-6 text-white" />
+      <div className="flex items-start gap-3.5">
+        <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+          <Flame className="w-5 h-5 text-amber-500" />
         </div>
         <div>
-          <h3 className="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
             Tantangan Harian
           </h3>
-          <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            Kerjakan 5 soal acak dalam 10 menit. Dapatkan <strong className="text-amber-600 dark:text-amber-400">2x XP</strong> dan pertahankan Streak Belajar Anda!
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+            Kerjakan 5 soal acak dalam 10 menit untuk mendapatkan <strong className="text-amber-600 dark:text-amber-400">2x XP</strong> dan menjaga Streak.
           </p>
         </div>
       </div>
       <button
         onClick={onStart}
-        className="z-10 relative flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-500/25 transition-all cursor-pointer whitespace-nowrap min-w-[140px]"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0"
       >
-        <Play className="w-4 h-4 fill-current" />
-        Mulai Sekarang
+        <Play className="w-3.5 h-3.5 fill-current" />
+        Mulai Tantangan
       </button>
     </div>
   );

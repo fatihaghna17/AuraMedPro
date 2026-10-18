@@ -3396,27 +3396,35 @@ export default function App() {
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
-              <header className={`sticky top-0 z-20 backdrop-blur-md transition-colors border-b ${
-                theme === 'dark' ? 'bg-slate-950/60 border-slate-900/80 text-white' : 'bg-slate-50/60 border-slate-200/60 text-slate-900'
+              <header className={`sticky top-0 z-20 transition-colors border-b ${
+                theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-50' : 'bg-white border-slate-200 text-slate-900'
               }`}>
-                <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
                   <div className="lg:hidden flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-extrabold shadow-sm">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">
                       <Activity className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-black text-base tracking-tight">AuraMed</span>
+                    <span className="font-bold text-base tracking-tight">AuraMed</span>
                   </div>
 
-                  <div className="hidden lg:block text-xs font-extrabold text-slate-400 tracking-wide">
-                    Aura-Infused Question Drilling Platform
+                  <div className="hidden lg:block text-sm font-semibold text-slate-700 dark:text-slate-200 tracking-tight">
+                    {dashboardTab === 'home' && 'Beranda'}
+                    {dashboardTab === 'banks' && 'Bank Soal'}
+                    {dashboardTab === 'start' && 'Konfigurasi & Mulai Kuis'}
+                    {dashboardTab === 'srs' && 'Spaced Repetition (SRS)'}
+                    {dashboardTab === 'studyroom' && 'Study Room'}
+                    {dashboardTab === 'groups' && 'Grup Belajar'}
+                    {dashboardTab === 'analytics' && 'Analisis Performa'}
+                    {dashboardTab === 'profile' && 'Profil & Langganan'}
+                    {dashboardTab === 'reports' && 'Laporan Admin'}
                   </div>
 
                   {/* Header actions (XP, Theme, Bell) */}
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold border ${
-                      theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-amber-500/5 border-amber-500/15 text-amber-600'
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${
+                      theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'
                     }`}>
-                      <Flame className="w-3.5 h-3.5 fill-current text-amber-500 animate-pulse" />
+                      <Flame className="w-3.5 h-3.5 fill-current text-amber-500" />
                       <span>LV {getLevelInfo(userXP).level}</span>
                       <span className="opacity-30 font-normal">|</span>
                       <span>{userXP} XP</span>
@@ -3438,8 +3446,8 @@ export default function App() {
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-                      className={`p-2 rounded-xl border transition-all ${
-                        theme === 'dark' ? 'bg-slate-900/80 border-slate-800 text-indigo-400' : 'bg-white border-slate-200 text-amber-500'
+                      className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-amber-500 hover:bg-slate-100'
                       }`}
                     >
                       {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -3465,12 +3473,12 @@ export default function App() {
               <div className="space-y-6 animate-fade-in">
                 
                 {activeStudyGroupId && (
-                  <div className="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded text-indigo-900 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-lg text-indigo-900 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                        <h3 className="font-bold text-lg">Folder Soal Khusus: {activeStudyGroupName}</h3>
                        <p className="text-sm">Soal yang diupload di sini hanya akan terlihat oleh anggota grup ini.</p>
                     </div>
-                    <button onClick={() => { setActiveStudyGroupId(null); setActiveStudyGroupName(null); }} className="px-4 py-2 bg-white rounded shadow-sm hover:bg-gray-50 text-sm font-semibold whitespace-nowrap">Tutup Mode Grup</button>
+                    <button onClick={() => { setActiveStudyGroupId(null); setActiveStudyGroupName(null); }} className="px-4 py-2 bg-white rounded-lg shadow-xs hover:bg-gray-50 text-sm font-semibold whitespace-nowrap">Tutup Mode Grup</button>
                   </div>
                 )}
 
@@ -3501,23 +3509,23 @@ export default function App() {
                 </div>
 
                 {/* Databases Lists (Folders & Root Items) */}
-                <div className={`p-6 rounded-3xl border transition-all duration-300 ${
+                <div className={`p-5 sm:p-6 rounded-xl border transition-colors ${
                   theme === 'dark'
-                    ? 'bg-slate-900/40 border-white/[0.08] shadow-xl'
-                    : 'bg-white/80 backdrop-blur-xl border-white/80 shadow-sm'
+                    ? 'bg-slate-900 border-slate-800 shadow-xs'
+                    : 'bg-white border-slate-200 shadow-xs'
                 }`}>
                   {isCollector && (
-                    <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                    <div className="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                           <Download className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                               Akun Collector {userAngkatan ? `(Angkatan 20${userAngkatan})` : 'Aktif'}
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                               {Object.keys(questionDatabase).length} Bank Soal • {Object.values(questionDatabase).reduce((a: number, b: any) => a + (b?.length || 0), 0)} Soal
                             </span>
                           </div>
@@ -3530,7 +3538,7 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => setDownloadCollectorModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                       >
                         <Download className="w-4 h-4" />
                         Unduh Semua Soal

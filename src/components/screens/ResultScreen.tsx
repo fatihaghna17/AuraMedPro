@@ -95,10 +95,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
       <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-in px-3.5 sm:px-6 pb-28 pt-2 min-w-0 overflow-x-hidden">
         
         {/* Main Score Ring card */}
-        <div className={`w-full max-w-full min-w-0 overflow-hidden p-4 sm:p-8 rounded-3xl transition-all duration-300 border text-center relative ${
+        <div className={`w-full max-w-full min-w-0 overflow-hidden p-5 sm:p-8 rounded-xl transition-colors border text-center relative ${
           theme === 'dark'
-            ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
-            : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+            ? 'bg-slate-900 border-slate-800 shadow-xs'
+            : 'bg-white border-slate-200 shadow-xs'
         }`}>
               
               {/* Radial Animated Circular meter */}
@@ -127,10 +127,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 </svg>
 
                 <div className="flex flex-col items-center justify-center h-full pt-1.5">
-                  <span className="text-4xl font-extrabold tracking-tight text-indigo-500">
+                  <span className="text-4xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
                     {displayScore}
                   </span>
-                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mt-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">
                     {scoreSublabel}
                   </span>
                 </div>
@@ -141,37 +141,37 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 const evalPercentage = total > 0 ? Math.round((correct / total) * 100) : 0;
                 const feedbackText = getFeedbackForScore(evalPercentage);
 
-                let titleText = "🔴 Zona Darurat Klinis";
+                let titleText = "Zona Darurat Klinis";
                 let badgeColor = "bg-rose-500/10 text-rose-500 border-rose-500/20";
                 
                 if (evalPercentage >= 86) {
-                  titleText = "🌟 Zona Dewa Akademis!";
+                  titleText = "Zona Dewa Akademis";
                   badgeColor = "bg-amber-500/10 text-amber-500 border-amber-500/20";
                 } else if (evalPercentage >= 65) {
-                  titleText = "🟢 Zona Aman & Lulus";
+                  titleText = "Zona Aman & Lulus";
                   badgeColor = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
                 } else if (evalPercentage >= 40) {
-                  titleText = "🟠 Zona Kritis Remedial";
+                  titleText = "Zona Kritis Remedial";
                   badgeColor = "bg-amber-500/10 text-amber-500 border-amber-500/20";
                 }
 
                 return (
-                  <div className="space-y-4 animate-fade-in-up animation-delay-100">
-                    <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase border ${badgeColor}`}>
+                  <div className="space-y-3 animate-fade-in-up animation-delay-100">
+                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border ${badgeColor}`}>
                       {titleText}
                     </span>
 
-                    <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 max-w-xl mx-auto leading-relaxed">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 max-w-xl mx-auto leading-relaxed">
                       &quot;{feedbackText}&quot;
                     </h2>
 
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {quizMode === 'rmo' ? (
                         <span>Simulasi RMO: Skor <strong className="text-amber-500">{lastQuizScore}</strong> (Benar <strong className="text-emerald-500">{correct}</strong> [+4], Salah <strong className="text-rose-500">{wrong}</strong> [-1], Kosong <strong className="text-slate-400">{empty}</strong> [0])</span>
                       ) : quizMode === 'blok' ? (
                         <span>Simulasi Ujian Blok: <strong className="text-emerald-500">{correct}</strong> benar dari total <strong className="text-slate-700 dark:text-slate-200">{total}</strong> butir soal</span>
                       ) : (
-                        <span>(Anda menjawab benar <strong className="text-slate-700 dark:text-slate-200">{correct}</strong> dari total <strong className="text-slate-700 dark:text-slate-200">{total}</strong> soal tryout)</span>
+                        <span>Anda menjawab benar <strong className="text-slate-700 dark:text-slate-200">{correct}</strong> dari total <strong className="text-slate-700 dark:text-slate-200">{total}</strong> soal tryout</span>
                       )}
                     </p>
                   </div>
@@ -179,46 +179,46 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
               })()}
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-6 sm:mt-8 w-full max-w-lg mx-auto min-w-0">
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-150 ${
-                  theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
+                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-150 ${
+                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
                 }`}>
-                  <div className="text-lg sm:text-xl font-extrabold text-emerald-500">
+                  <div className="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400">
                     {correct}
                   </div>
-                  <div className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mt-0.5 sm:mt-1 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
                     {quizMode === 'rmo' ? `Benar (+${correct * 4})` : 'Benar'}
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-200 ${
-                  theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
+                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-200 ${
+                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
                 }`}>
-                  <div className="text-lg sm:text-xl font-extrabold text-rose-500">
+                  <div className="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400">
                     {wrong}
                   </div>
-                  <div className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mt-0.5 sm:mt-1 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
                     {quizMode === 'rmo' ? `Salah (-${wrong})` : 'Salah'}
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-250 ${
-                  theme === 'dark' ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/50 border-slate-200/60'
+                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-250 ${
+                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
                 }`}>
-                  <div className="text-lg sm:text-xl font-extrabold text-slate-400 dark:text-slate-500">
+                  <div className="text-lg sm:text-xl font-bold text-slate-500 dark:text-slate-400">
                     {empty}
                   </div>
-                  <div className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mt-0.5 sm:mt-1 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
                     Kosong (0)
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-xl border min-w-0 text-center animate-fade-in-up animation-delay-300 ${
-                  theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200/80'
+                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-300 ${
+                  theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'
                 }`}>
-                  <div className="text-lg sm:text-xl font-extrabold text-amber-500">
+                  <div className="text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-400">
                     +{lastQuizXPGained || 0}
                   </div>
-                  <div className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mt-0.5 truncate">
                     {quizMode === 'rmo' ? 'XP (×20)' : quizMode === 'blok' ? 'XP (×10)' : 'XP Masuk'}
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 justify-center mt-6 sm:mt-8 w-full max-w-xl mx-auto min-w-0 animate-fade-in-up animation-delay-350">
                 <button
                   onClick={() => setIsStoryModalOpen(true)}
-                  className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 rounded-2xl text-xs font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-teal-500 text-white shadow-xl shadow-purple-500/25 transition-all duration-200 active:scale-98 cursor-pointer hover:opacity-95 min-w-0"
+                  className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer min-w-0"
                 >
                   <Share2 className="w-4 h-4 shrink-0" />
                   <span className="truncate">Bagikan Hasil & Rapor (Story 9:16)</span>
@@ -235,15 +235,19 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                 <button
                   onClick={() => startQuiz()}
-                  className="w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-bold bg-indigo-500 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-98 cursor-pointer hover:bg-indigo-600 min-w-0"
+                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer min-w-0 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'
+                  }`}
                 >
-                  <RotateCcw className="w-4 h-4 fill-current shrink-0" />
+                  <RotateCcw className="w-4 h-4 shrink-0" />
                   <span>Mulai Ulang Tryout</span>
                 </button>
 
                 <button
                   onClick={() => setScreen('setup')}
-                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-bold border transition-all duration-200 active:scale-98 cursor-pointer min-w-0 ${
+                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer min-w-0 ${
                     theme === 'dark'
                       ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
                       : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
@@ -260,7 +264,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                       setDashboardTab('srs');
                       srs.startReview();
                     }}
-                    className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-bold bg-rose-500 text-white shadow-md shadow-rose-500/10 transition-all duration-200 active:scale-98 cursor-pointer hover:bg-rose-600 min-w-0"
+                    className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer min-w-0"
                   >
                     <Brain className="w-4 h-4 shrink-0" />
                     <span>Review Salah di SRS</span>
@@ -272,16 +276,16 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Leaderboard Submission Box */}
             {currentUser && selectedDatabases.length === 1 && (
-              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
+              <div className={`p-4 sm:p-6 rounded-xl transition-colors border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
                 theme === 'dark'
-                  ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
-                  : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+                  ? 'bg-slate-900 border-slate-800 shadow-xs'
+                  : 'bg-white border-slate-200 shadow-xs'
               }`}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <Award className="w-8 h-8 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <Award className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-indigo-500 uppercase tracking-wider">🏆 LEADERBOARD FILE SOAL</h3>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Leaderboard File Soal</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words">
                         Apakah Anda ingin mempublikasikan skor Anda ({lastQuizScore}%) ke papan peringkat untuk file <strong className="break-all">{selectedDatabases[0]}</strong>?
                       </p>
@@ -290,14 +294,14 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                   <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                     {hasSubmittedLeaderboard ? (
-                      <span className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <span className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                         Skor Terkirim!
                       </span>
                     ) : (
                       <button
                         onClick={submitScoreToLeaderboard}
                         disabled={isLeaderboardLoading}
-                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition-all cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                        className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                       >
                         {isLeaderboardLoading ? (
                           <>
@@ -314,15 +318,15 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Battle Report / Analytics dashboard */}
             {analytics.hasMetadata && (
-              <div className={`p-4 sm:p-6 rounded-3xl transition-all duration-300 border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
+              <div className={`p-4 sm:p-6 rounded-xl transition-colors border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
                 theme === 'dark'
-                  ? 'bg-slate-900/45 border-white/[0.08] shadow-2xl backdrop-blur-md'
-                  : 'bg-white/70 border-slate-200/60 shadow-sm backdrop-blur-md'
+                  ? 'bg-slate-900 border-slate-800 shadow-xs'
+                  : 'bg-white border-slate-200 shadow-xs'
               }`}>
-                <div className="flex items-center gap-2 pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
-                  <Activity className="w-5 h-5 text-indigo-500" />
-                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-indigo-500">
-                    BATTLE REPORT & METADATA PERFORMA
+                <div className="flex items-center gap-2 pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <Activity className="w-4 h-4 text-indigo-500" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                    Battle Report & Metadata Performa
                   </h3>
                 </div>
 

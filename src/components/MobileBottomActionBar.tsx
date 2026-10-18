@@ -1,5 +1,7 @@
+import { Check, ChevronLeft, ChevronRight, Flag, LayoutGrid } from 'lucide-react';
+
 interface MobileBottomActionBarProps {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | string;
   currentIndex: number;
   totalQuestions: number;
   isDoubt: boolean;
@@ -11,65 +13,90 @@ interface MobileBottomActionBarProps {
   onNext: () => void;
   onCheck: () => void;
   onFinish: () => void;
+  onOpenMap?: () => void;
 }
 
 export default function MobileBottomActionBar({
   theme, currentIndex, totalQuestions, isDoubt, isRevealed, hasAnswer, hideCheckAnswer = false,
-  onDoubtToggle, onPrev, onNext, onCheck, onFinish,
+  onDoubtToggle, onPrev, onNext, onCheck, onFinish, onOpenMap,
 }: MobileBottomActionBarProps) {
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden p-4 border-t backdrop-blur-md transition-colors ${
-      theme === 'dark' ? 'bg-slate-950/90 border-slate-900/80' : 'bg-slate-50/90 border-slate-200/60'
+    <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden px-3 py-2.5 border-t transition-colors ${
+      theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
     }`}>
       <div className="flex items-center gap-2 max-w-md mx-auto">
+        {onOpenMap && (
+          <button
+            type="button"
+            onClick={onOpenMap}
+            title="Peta Soal"
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg border transition-colors cursor-pointer ${
+              theme === 'dark'
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        )}
+
         <button
+          type="button"
           onClick={onDoubtToggle}
-          className={`flex-1 py-3 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+          className={`px-3 h-10 flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
             isDoubt
-              ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+              ? 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400'
               : theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
           }`}
         >
-          🤔 Ragu
+          <Flag className={`w-3.5 h-3.5 ${isDoubt ? 'fill-current' : ''}`} />
+          <span>Ragu</span>
         </button>
 
         <button
+          type="button"
           onClick={onPrev}
           disabled={currentIndex === 0}
-          className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl border text-xs font-bold transition-all disabled:opacity-40 cursor-pointer ${
+          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg border transition-colors disabled:opacity-40 cursor-pointer ${
             theme === 'dark'
-              ? 'bg-slate-900 border-slate-800 text-slate-350 hover:bg-slate-800'
-              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
           }`}
+          title="Soal Sebelumnya"
         >
-          ←
+          <ChevronLeft className="w-4 h-4" />
         </button>
 
         {!isRevealed && !hideCheckAnswer && (
           <button
+            type="button"
             onClick={() => onCheck()}
             disabled={!hasAnswer}
-            className="flex-1 py-3 px-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/15 transition-all duration-200 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer text-center"
+            className="flex-1 h-10 px-3 flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer"
           >
-            ✓ Cek
+            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Cek</span>
           </button>
         )}
 
         {currentIndex === totalQuestions - 1 ? (
           <button
+            type="button"
             onClick={() => onFinish()}
-            className="flex-1 py-3 px-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/10 transition-all cursor-pointer text-center"
+            className="flex-1 h-10 px-3 flex items-center justify-center gap-1 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
           >
-            Selesai
+            <span>Selesai</span>
           </button>
         ) : (
           <button
+            type="button"
             onClick={() => onNext()}
-            className="flex-1 py-3 px-2 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/10 transition-all duration-200 cursor-pointer text-center"
+            className="flex-1 h-10 px-3 flex items-center justify-center gap-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
           >
-            Lanjut →
+            <span>Lanjut</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
