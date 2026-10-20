@@ -131,6 +131,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       window.removeEventListener('auramedpro_frame_changed', handleUpdate);
       window.removeEventListener('auramedpro_avatar_gender_changed', handleUpdate);
       window.removeEventListener('auramedpro_avatar_tier_changed', handleUpdate);
+    };
   }, [userXP]);
 
   // Initial fetch for Leaderboard
