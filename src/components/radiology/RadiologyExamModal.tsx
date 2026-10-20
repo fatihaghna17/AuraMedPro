@@ -755,20 +755,25 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
                 )}
 
                 {/* RINCIAN CHECKLIST YANG DIVERIFIKASI ADMIN */}
-                {submission?.graded_checklists && currentQ && (
+                {currentQ && (
                   <div className="space-y-2 pt-2 border-t border-green-500/20">
                     <span className="text-[11px] font-bold text-slate-300 block">
-                      Rincian Checklist Yang Tercapai Pada Soal Ini:
+                      Rincian Checklist Yang Tercapai Pada Soal #{currentIdx + 1} ({currentQ.region.toUpperCase()}):
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto p-1">
-                      {(currentQ.region === 'thorax' ? THORAX_CHECKLIST_ITEMS : ABDOMEN_CHECKLIST_ITEMS).map(item => {
-                        const isChecked = Boolean(submission.graded_checklists?.[currentQ.id]?.[item.id]);
+                      {(currentQ.region === 'thorax' ? THORAX_CHECKLIST_ITEMS : ABDOMEN_CHECKLIST_ITEMS).flatMap(cat => cat.items).map(item => {
+                        const byQ = (submission?.checklist as any)?.by_question;
+                        const qChecklist = byQ?.[currentQ.id];
+                        const isChecked = Boolean(
+                          (currentQ.region === 'thorax' ? qChecklist?.thorax?.[item.id] : qChecklist?.abdomen?.[item.id]) ??
+                          (currentQ.region === 'thorax' ? submission?.checklist?.thorax?.[item.id] : submission?.checklist?.abdomen?.[item.id])
+                        );
                         return (
                           <div 
                             key={item.id}
                             className={`p-2 rounded-xl text-xs flex items-start gap-2 border ${
                               isChecked 
-                                ? 'bg-green-500/10 border-green-500/30 text-green-200' 
+                                ? 'bg-green-500/10 border-green-500/30 text-green-200 font-bold' 
                                 : 'bg-slate-900/50 border-slate-800 text-slate-500 opacity-60'
                             }`}
                           >

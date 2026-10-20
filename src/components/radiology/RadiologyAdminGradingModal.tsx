@@ -30,19 +30,49 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
   const isDark = theme === 'dark';
   const questions: RadiologyQuestion[] = packet.questions || [];
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
-  
-  // Checklist states
-  const [thoraxChecklist, setThoraxChecklist] = useState<Record<string, boolean>>(
-    submission.checklist?.thorax || {}
-  );
-  const [abdomenChecklist, setAbdomenChecklist] = useState<Record<string, boolean>>(
-    submission.checklist?.abdomen || {}
-  );
+
+  interface QuestionRubricState {
+    thorax: Record<string, boolean>;
+    abdomen: Record<string, boolean>;
+  }
+
+  // Checklist states PER SOAL (tiap soal memiliki rubric mandiri)
+  const [questionChecklists, setQuestionChecklists] = useState<Record<string, QuestionRubricState>>(() => {
+    const initial: Record<string, QuestionRubricState> = {};
+    const byQ = (submission.checklist as any)?.by_question;
+
+    questions.forEach((q, idx) => {
+      if (byQ && byQ[q.id]) {
+        initial[q.id] = {
+          thorax: byQ[q.id]?.thorax || {},
+          abdomen: byQ[q.id]?.abdomen || {}
+        };
+      } else if (idx === 0 && (submission.checklist?.thorax || submission.checklist?.abdomen)) {
+        initial[q.id] = {
+          thorax: submission.checklist.thorax || {},
+          abdomen: submission.checklist.abdomen || {}
+        };
+      } else {
+        initial[q.id] = {
+          thorax: {},
+          abdomen: {}
+        };
+      }
+    });
+
+    return initial;
+  });
+
   const [feedback, setFeedback] = useState<string>(submission.feedback || '');
   const [saving, setSaving] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const currentQ = questions[activeQuestionIdx] || questions[0];
+  const currentQuestionId = currentQ?.id || `q-${activeQuestionIdx}`;
+  const currentChecklist = questionChecklists[currentQuestionId] || { thorax: {}, abdomen: {} };
+  const thoraxChecklist = currentChecklist.thorax || {};
+  const abdomenChecklist = currentChecklist.abdomen || {};
+
   const adminImage = (currentQ as any)?.image_url || (Array.isArray((currentQ as any)?.image_urls) ? (currentQ as any)?.image_urls[0] : null);
 
   useEffect(() => {
@@ -55,40 +85,113 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
     };
   }, []);
 
-  // Kalkulasi Skor Otomatis berdasarkan checklist yang dicentang
-  const calculateTotalScore = (): number => {
+  // Kalkulasi Skor per butir soal
+  const calculateScoreForQuestion = (qId: string, region?: string): number => {
+    const qState = questionChecklists[qId];
+    if (!qState) return 0;
     let score = 0;
-    
-    // Hitung Thorax jika ada yang dicentang
-    THORAX_CHECKLIST_ITEMS.forEach(cat => {
-      cat.items.forEach(item => {
-        if (thoraxChecklist[item.id]) {
-          score += item.weight;
-        }
-      });
-    });
 
-    // Hitung Abdomen jika ada yang dicentang
-    ABDOMEN_CHECKLIST_ITEMS.forEach(cat => {
-      cat.items.forEach(item => {
-        if (abdomenChecklist[item.id]) {
-          score += item.weight;
-        }
+    if (!region || region === 'thorax') {
+      THORAX_CHECKLIST_ITEMS.forEach(cat => {
+        cat.items.forEach(item => {
+          if (qState.thorax?.[item.id]) {
+            score += item.weight;
+          }
+        });
       });
-    });
+    }
 
-    // Jika kedua checklist terisi, atau salah satu, batasi dan bulatkan ke 100
+    if (!region || region === 'abdomen') {
+      ABDOMEN_CHECKLIST_ITEMS.forEach(cat => {
+        cat.items.forEach(item => {
+          if (qState.abdomen?.[item.id]) {
+            score += item.weight;
+          }
+        });
+      });
+    }
+
     return Math.min(100, Math.round(score));
   };
 
+  // Kalkulasi Rata-rata Nilai Total Paket
+  const calculateTotalScore = (): number => {
+    if (questions.length === 0) return 0;
+    let total = 0;
+    questions.forEach(q => {
+      total += calculateScoreForQuestion(q.id, q.region);
+    });
+    return Math.min(100, Math.round(total / questions.length));
+  };
+
   const calculatedScore = calculateTotalScore();
+  const currentQScore = calculateScoreForQuestion(currentQuestionId, currentQ?.region);
 
   const handleToggleThorax = (itemId: string) => {
-    setThoraxChecklist(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+    if (!currentQuestionId) return;
+    setQuestionChecklists(prev => {
+      const prevQ = prev[currentQuestionId] || { thorax: {}, abdomen: {} };
+      return {
+        ...prev,
+        [currentQuestionId]: {
+          ...prevQ,
+          thorax: {
+            ...prevQ.thorax,
+            [itemId]: !prevQ.thorax?.[itemId]
+          }
+        }
+      };
+    });
   };
 
   const handleToggleAbdomen = (itemId: string) => {
-    setAbdomenChecklist(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+    if (!currentQuestionId) return;
+    setQuestionChecklists(prev => {
+      const prevQ = prev[currentQuestionId] || { thorax: {}, abdomen: {} };
+      return {
+        ...prev,
+        [currentQuestionId]: {
+          ...prevQ,
+          abdomen: {
+            ...prevQ.abdomen,
+            [itemId]: !prevQ.abdomen?.[itemId]
+          }
+        }
+      };
+    });
+  };
+
+  const handleFillPerfectCurrent = () => {
+    if (!currentQuestionId || !currentQ) return;
+    const isThorax = currentQ.region === 'thorax';
+    const all: Record<string, boolean> = {};
+    if (isThorax) {
+      THORAX_CHECKLIST_ITEMS.forEach(c => c.items.forEach(i => (all[i.id] = true)));
+    } else {
+      ABDOMEN_CHECKLIST_ITEMS.forEach(c => c.items.forEach(i => (all[i.id] = true)));
+    }
+
+    setQuestionChecklists(prev => {
+      const prevQ = prev[currentQuestionId] || { thorax: {}, abdomen: {} };
+      return {
+        ...prev,
+        [currentQuestionId]: {
+          thorax: isThorax ? all : prevQ.thorax,
+          abdomen: !isThorax ? all : prevQ.abdomen
+        }
+      };
+    });
+  };
+
+  const handleResetCurrent = () => {
+    if (!currentQuestionId) return;
+    setQuestionChecklists(prev => ({
+      ...prev,
+      [currentQuestionId]: {
+        thorax: {},
+        abdomen: {}
+      }
+    }));
   };
 
   const handleSubmitGrade = async () => {
@@ -98,9 +201,10 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
         submission.id,
         packet.group_id,
         {
-          thorax: thoraxChecklist,
-          abdomen: abdomenChecklist
-        },
+          thorax: questionChecklists[questions[0]?.id]?.thorax || {},
+          abdomen: questionChecklists[questions[0]?.id]?.abdomen || {},
+          by_question: questionChecklists
+        } as any,
         calculatedScore,
         feedback,
         currentUser?.id || 'admin',
@@ -144,10 +248,13 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
           </div>
 
           <div className="flex items-center gap-3">
-            {/* REAL-TIME TOTAL SCORE ACCUMULATION */}
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-600 dark:text-green-400 font-black text-sm">
-              <span>Total Skor:</span>
-              <span className="text-base">{calculatedScore}</span>
+            {/* REAL-TIME SCORE DISPLAY */}
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-600 dark:text-green-400 font-black text-xs sm:text-sm">
+              <span className="opacity-75 hidden sm:inline">Skor Soal #{activeQuestionIdx + 1}:</span>
+              <span className="text-sm sm:text-base text-green-400 font-extrabold">{currentQScore} pts</span>
+              <span className="opacity-30">|</span>
+              <span className="opacity-75">Total Nilai:</span>
+              <span className="text-base sm:text-lg">{calculatedScore}</span>
               <span className="text-xs font-normal opacity-70">/ 100</span>
             </div>
 
@@ -163,23 +270,31 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
 
         {/* SELECTOR SOAL JIKA LEBIH DARI 1 */}
         {questions.length > 1 && (
-          <div className={`px-5 py-2.5 flex items-center gap-2 border-b text-xs font-bold shrink-0 ${
+          <div className={`px-5 py-2.5 flex items-center gap-2 border-b text-xs font-bold shrink-0 overflow-x-auto ${
             isDark ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/70 border-slate-200'
           }`}>
-            <span className="opacity-70">Pilih Soal yang Dinilai:</span>
-            {questions.map((q, idx) => (
-              <button
-                key={q.id}
-                onClick={() => setActiveQuestionIdx(idx)}
-                className={`px-3 py-1 rounded-lg transition ${
-                  activeQuestionIdx === idx
-                    ? 'bg-indigo-600 text-white font-black'
-                    : isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
-                }`}
-              >
-                Soal {idx + 1} ({q.region.toUpperCase()})
-              </button>
-            ))}
+            <span className="opacity-70 shrink-0">Pilih Soal yang Dinilai:</span>
+            {questions.map((q, idx) => {
+              const qScore = calculateScoreForQuestion(q.id, q.region);
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => setActiveQuestionIdx(idx)}
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                    activeQuestionIdx === idx
+                      ? 'bg-indigo-600 text-white font-black shadow-md'
+                      : isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>Soal {idx + 1} ({q.region.toUpperCase()})</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                    qScore > 0 ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-slate-700/50 text-slate-400'
+                  }`}>
+                    {qScore} pts
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -301,32 +416,18 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    // Cepat centang semua sesuai region soal
-                    if (currentQ?.region === 'thorax') {
-                      const all: Record<string, boolean> = {};
-                      THORAX_CHECKLIST_ITEMS.forEach(c => c.items.forEach(i => all[i.id] = true));
-                      setThoraxChecklist(all);
-                    } else {
-                      const all: Record<string, boolean> = {};
-                      ABDOMEN_CHECKLIST_ITEMS.forEach(c => c.items.forEach(i => all[i.id] = true));
-                      setAbdomenChecklist(all);
-                    }
-                  }}
-                  className="text-[11px] font-bold text-indigo-500 hover:underline"
+                  onClick={handleFillPerfectCurrent}
+                  className="text-[11px] font-bold text-indigo-500 hover:underline cursor-pointer"
                 >
-                  Centang Sempurna ({currentQ?.region.toUpperCase()})
+                  Centang Sempurna ({currentQ?.region?.toUpperCase() || 'SOAL'})
                 </button>
                 <span>•</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setThoraxChecklist({});
-                    setAbdomenChecklist({});
-                  }}
-                  className="text-[11px] font-bold text-red-500 hover:underline"
+                  onClick={handleResetCurrent}
+                  className="text-[11px] font-bold text-rose-500 hover:underline cursor-pointer"
                 >
-                  Reset Checklist
+                  Reset Checklist Soal Ini
                 </button>
               </div>
             </div>
