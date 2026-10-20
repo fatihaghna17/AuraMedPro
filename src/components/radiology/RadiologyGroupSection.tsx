@@ -94,7 +94,8 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
           metadata: q.metadata,
           identitas_pasien: q.identitas_pasien,
           vignette: q.vignette || q.pertanyaan || '',
-          image_url: q.image_url || q.gambar_url || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1000&q=80',
+          image_url: q.image_url || q.gambar_url || (Array.isArray(q.image_urls) ? q.image_urls[0] : null) || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1000&q=80',
+          image_urls: Array.isArray(q.image_urls) ? q.image_urls : (q.image_url ? [q.image_url] : undefined),
           pertanyaan: q.pertanyaan || 'Lakukan pembacaan sistematis foto radiologi di atas!',
           kunci_interpretasi: q.kunci_interpretasi || {}
         }))
