@@ -12,13 +12,47 @@ function getLocalSubmissionsKey(groupId: string): string {
   return `auramed_rad_submissions_${groupId}`;
 }
 
+// Auto-migrate and purge legacy bloated radiology data from localStorage to IndexedDB to free 5MB quota
+if (typeof window !== 'undefined' && window.localStorage) {
+  setTimeout(() => {
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('auramed_rad_packets_') || k.startsWith('auramed_rad_submissions_'))) {
+          keysToRemove.push(k);
+        }
+      }
+      for (const k of keysToRemove) {
+        const val = localStorage.getItem(k);
+        if (val) {
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) {
+              if (k.startsWith('auramed_rad_packets_')) {
+                parsed.forEach(p => radiologyDb.savePacket(p));
+              } else {
+                parsed.forEach(s => radiologyDb.saveSubmission(s));
+              }
+            }
+          } catch {}
+        }
+        localStorage.removeItem(k);
+        console.log(`[Radiology] Memindahkan & membebaskan kuota localStorage: ${k}`);
+      }
+    } catch (e) {
+      console.warn('[Radiology] Gagal membersihkan localStorage:', e);
+    }
+  }, 50);
+}
+
 export const radiologyApi = {
   /**
    * Mengambil semua paket latihan CBT Radiologi untuk grup tertentu.
    * Urutan sumber:
    * 1. Server Cloudflare Pages API (/api/radiology)
    * 2. IndexedDB (kuota gigabyte)
-   * 3. LocalStorage (fallback legacy)
+   * 3. Fallback migrasi dari LocalStorage legacy
    * 4. Sample packet default
    */
   async getPackets(groupId: string): Promise<RadiologyPacket[]> {
@@ -43,51 +77,58 @@ export const radiologyApi = {
     try {
       const dbPackets = await radiologyDb.getPackets(groupId);
       if (dbPackets && dbPackets.length > 0) {
+        // Hapus key lama di localStorage jika ada agar kuota 5MB bebas
+        try {
+          const key = getLocalPacketsKey(groupId);
+          localStorage.removeItem(key);
+        } catch {}
         return dbPackets;
       }
     } catch (err) {
       console.warn('[Radiology API] Gagal membaca IndexedDB:', err);
     }
 
-    // 3. Fallback Local Storage legacy
+    // 3. Fallback migrasi Local Storage legacy jika ada
     const key = getLocalPacketsKey(groupId);
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      try {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
         const list: RadiologyPacket[] = JSON.parse(raw);
         if (Array.isArray(list) && list.length > 0) {
-          // Migrasikan ke IndexedDB
           for (const p of list) {
             await radiologyDb.savePacket(p);
           }
+          localStorage.removeItem(key); // Langsung hapus dari localStorage untuk membebaskan 5MB
           return list;
         }
-      } catch {}
-    }
+      }
+    } catch {}
 
-    // 4. Jika belum ada paket sama sekali di grup ini, inisialisasi dengan paket contoh default
+    // 4. Jika belum ada paket sama sekali di grup ini, inisialisasi dengan paket contoh default di IndexedDB
     const initialPacket: RadiologyPacket = {
       ...DEFAULT_SAMPLE_RADIOLOGY_PACKET,
       group_id: groupId,
       id: `packet-${groupId}-sample-1`
     };
     await radiologyDb.savePacket(initialPacket);
-    try {
-      localStorage.setItem(key, JSON.stringify([initialPacket]));
-    } catch {}
-
     return [initialPacket];
   },
 
   /**
    * Menyimpan / menambah paket soal radiologi baru.
-   * Disimpan ke IndexedDB untuk mencegah QuotaExceededError (5MB limit localStorage).
+   * Disimpan ke IndexedDB (kapasitas puluhan GB, bebas batas 5MB localStorage).
    */
   async savePacket(packet: RadiologyPacket): Promise<boolean> {
     // 1. Simpan ke IndexedDB (kapasitas puluhan GB, aman untuk base64 / gambar besar)
     await radiologyDb.savePacket(packet);
 
-    // 2. Coba kirim ke server backend
+    // 2. Bersihkan key legacy localStorage agar tidak memakan kuota 5MB browser
+    try {
+      const key = getLocalPacketsKey(packet.group_id);
+      localStorage.removeItem(key);
+    } catch {}
+
+    // 3. Coba kirim ke server backend
     try {
       await fetch(API_BASE, {
         method: 'POST',
@@ -96,23 +137,6 @@ export const radiologyApi = {
       });
     } catch (err) {
       console.log('[Radiology API] Server sync gagal, tersimpan aman di IndexedDB:', err);
-    }
-
-    // 3. Cadangkan ke LocalStorage jika masih cukup (abaikan error quota jika penuh)
-    try {
-      const key = getLocalPacketsKey(packet.group_id);
-      const raw = localStorage.getItem(key);
-      let packets: RadiologyPacket[] = raw ? JSON.parse(raw) : [];
-      const existingIndex = packets.findIndex(p => p.id === packet.id);
-      if (existingIndex >= 0) {
-        packets[existingIndex] = packet;
-      } else {
-        packets.unshift(packet);
-      }
-      localStorage.setItem(key, JSON.stringify(packets));
-    } catch (quotaErr) {
-      // LocalStorage kuota penuh (~5MB) — abaikan dengan aman karena sudah tersimpan di IndexedDB
-      console.warn('[Radiology API] LocalStorage quota penuh, data aman tersimpan di IndexedDB.');
     }
 
     return true;
@@ -125,21 +149,17 @@ export const radiologyApi = {
     // Hapus dari IndexedDB
     await radiologyDb.deletePacket(packetId);
 
+    // Hapus dari localStorage jika ada
+    try {
+      const key = getLocalPacketsKey(groupId);
+      localStorage.removeItem(key);
+    } catch {}
+
     // Hapus dari server
     try {
       await fetch(`${API_BASE}?action=delete_packet&id=${encodeURIComponent(packetId)}&group_id=${encodeURIComponent(groupId)}`, {
         method: 'DELETE'
       });
-    } catch {}
-
-    // Hapus dari localStorage jika ada
-    try {
-      const key = getLocalPacketsKey(groupId);
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const packets = (JSON.parse(raw) as RadiologyPacket[]).filter(p => p.id !== packetId);
-        localStorage.setItem(key, JSON.stringify(packets));
-      }
     } catch {}
 
     return true;
@@ -238,16 +258,11 @@ export const radiologyApi = {
       });
     } catch {}
 
-    // 3. Simpan ke LocalStorage jika muat
+    // 3. Bersihkan localStorage lama jika ada
     try {
       const key = getLocalSubmissionsKey(groupId);
-      const current = await this.getSubmissions(groupId);
-      const filtered = current.filter(s => !(s.packet_id === packetId && s.user_id === userId));
-      filtered.unshift(newSubmission);
-      localStorage.setItem(key, JSON.stringify(filtered));
-    } catch (e) {
-      console.warn('[Radiology API] LocalStorage penuh, submission tersimpan di IndexedDB.');
-    }
+      localStorage.removeItem(key);
+    } catch {}
 
     return newSubmission;
   },
@@ -285,13 +300,11 @@ export const radiologyApi = {
       // Simpan ke IndexedDB
       await radiologyDb.saveSubmission(target);
 
-      // Simpan ke localStorage jika muat
+      // Bersihkan dari localStorage
       try {
         const key = getLocalSubmissionsKey(groupId);
-        localStorage.setItem(key, JSON.stringify(list));
-      } catch (e) {
-        console.warn('[Radiology API] LocalStorage penuh saat grading, tersimpan di IndexedDB.');
-      }
+        localStorage.removeItem(key);
+      } catch {}
     }
 
     // 2. Sync ke server backend

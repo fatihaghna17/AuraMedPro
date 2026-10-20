@@ -104,8 +104,10 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
       await radiologyApi.savePacket(newPacket);
       setShowImportModal(false);
       setImportJson('');
-      loadData();
+      await loadData();
+      alert(`Berhasil mengunggah paket "${newPacket.title}" (${newPacket.questions.length} soal)! Data tersimpan aman di database lokal.`);
     } catch (err: any) {
+      console.error('[Radiology Import Error]', err);
       alert(`Gagal memproses JSON: ${err.message}`);
     }
   };
