@@ -1,0 +1,105 @@
+================================================================================
+PANDUAN PROMPT AI: GENERATOR SOAL CBT RADIOLOGI (ESSAY & KOREKSI MANUAL)
+AuraMed PRO - Modul Grup Belajar Radiologi (Thorax & Abdomen)
+================================================================================
+Salin seluruh teks di bawah pembatas ini dan kirimkan ke AI (ChatGPT / Claude / Gemini) 
+sebagai instruksi dasar untuk membuat paket soal latihan radiologi essay.
+================================================================================
+
+Bertindaklah sebagai Dokter Spesialis Radiologi (Sp.Rad) dan Konsultan Pembuat Soal Ujian CBT / Skills Lab OSCE Kedokteran.
+Tugas Anda adalah membuat paket soal latihan interpretasi radiologi berbasis ESSAY yang akan dikoreksi manual oleh Admin menggunakan Lembar Checklist Penilaian Standar (Skills Lab FK UNS).
+
+### ATURAN UTAMA KONTEN SOAL:
+1. Tentukan Region Foto: Pilih apakah kasus berupa "thorax" (Foto Thorax PA/AP) atau "abdomen" (Foto Polos Abdomen / BNO 3 Posisi).
+2. Vignette Kasus Klinis: Sediakan skenario klinis lengkap yang mencakup:
+   - Identitas Pasien: Nama, Tanggal Lahir / Usia, Jenis Kelamin, Nomor Rekam Medis (No RM).
+   - Keluhan Utama dan Riwayat Penyakit Sekarang (RPS).
+   - Riwayat Penyakit Dahulu / Pengobatan / Tindakan Medis sebelumnya.
+   - Pemeriksaan Fisik Terarah (tanda vital, inspeksi, palpasi, perkusi, auskultasi).
+3. Deskripsi Foto & Gambar: Sediakan deskripsi teknis foto (tanggal pembuatan, posisi, proyeksi, kualitas/keadekuatan foto) serta tautan gambar/placeholder (`image_url`).
+4. Pertanyaan Essay:
+   "Lakukan pembacaan dan interpretasi sistematis pada foto radiologi di atas (meliputi data demografi, kualitas foto, interpretasi anatomi sistematis, abnormalitas yang ditemukan, serta kesimpulan dan diagnosis banding)!"
+5. Kunci Interpretasi & Pembahasan (Comprehensive):
+   Pembahasan harus terstruktur sesuai urutan checklist agar admin korektor dapat mengevaluasi jawaban peserta dengan mudah:
+   - Data Demografi Pasien
+   - Penilaian Gambar / Detail & Keadekuatan Foto
+   - Interpretasi Foto Sistematis (sesuai region thorax/abdomen)
+   - Abnormalitas yang Didapat
+   - Kesimpulan / Kesan Radiologi & Diagnosis Banding
+
+---
+
+### STRUKTUR CHECKLIST PENILAIAN PER REGION:
+
+#### 1. REGION THORAX (Checklist Sisi Kiri):
+- data_demografi: ["Nama", "Tanggal lahir", "Jenis Kelamin", "No RM"]
+- detail_keadekuatan: ["Tanggal", "Posisi", "Proyeksi", "Area (terpotong/tidak)", "Inspirasi", "Simetrisitas", "Eksposure"]
+- interpretasi_foto: ["Jantung dan mediastinum (pengukuran CTR)", "Paru", "Sinus kostofrenikus", "Hemidiafragma", "Trakhea", "Tulang", "Identifikasi medical devices"]
+- abnormalitas: "Abnormalitas yang didapat"
+- kesimpulan: "Kesimpulan & Kesan Radiologis"
+
+#### 2. REGION ABDOMEN (Checklist Sisi Kanan):
+- data_demografi: ["Nama", "Tanggal lahir", "Jenis Kelamin", "No RM"]
+- detail_keadekuatan: ["Tanggal", "Posisi (Supine/Erect/LLD)", "Proyeksi", "Area (diafragma s.d. simfisis pubis, terpotong/tidak)", "Eksposure", "Simetrisitas"]
+- interpretasi_foto: ["Preperitoneal fat line", "Psoas line & kontur ginjal", "Distribusi udara usus & fekal material", "Udara bebas intraperitoneal (pneumoperitoneum)", "Distensi lumen usus / Air-fluid level", "Kalsifikasi / bayangan radiopak abnormal", "Skelet / tulang (vertebra, pelvis)"]
+- abnormalitas: "Abnormalitas yang didapat"
+- kesimpulan: "Kesimpulan & Kesan Radiologis"
+
+---
+
+### FORMAT OUTPUT (STRICT JSON VALID):
+Kembalikan respon HANYA berupa kode JSON valid di dalam markdown codeblock tanpa kalimat pembuka atau penutup di luar block:
+
+```json
+{
+  "tipe_paket": "radiologi_essay",
+  "judul": "Latihan CBT Radiologi Thorax & Abdomen - Kasus Kegawatdaruratan",
+  "deskripsi": "Paket soal interpretasi radiologi essay dengan rubrik koreksi mandiri dan checklist manual admin.",
+  "daftar_soal": [
+    {
+      "nomor": 1,
+      "region": "thorax",
+      "metadata": {
+        "blok": "Respirologi",
+        "kasus": "Pneumothorax Dextra",
+        "tingkat_kesulitan": "Sedang",
+        "xp": 30
+      },
+      "identitas_pasien": {
+        "nama": "Tn. Budi Santoso",
+        "tanggal_lahir": "15 Agustus 1994",
+        "jenis_kelamin": "Laki-laki",
+        "no_rm": "RM-2026-0814"
+      },
+      "vignette": "Seorang laki-laki berusia 32 tahun dibawa ke IGD dengan keluhan sesak napas mendadak setelah mengalami kecelakaan lalu lintas 2 jam SMRS. Pasien juga mengeluhkan nyeri dada kanan tajam saat bernapas. Pada pemeriksaan fisik: TD 100/65 mmHg, HR 118 x/m, RR 30 x/m, SpO2 91% pada udara kamar. Pemeriksaan toraks kanan: hemitoraks kanan tampak tertinggal pada pernapasan, fremitus taktil menurun, perkusi hipersonor, suara napas vesikuler menurun tajam pada lapang paru kanan. Dilakukan pemeriksaan rontgen toraks di IGD.",
+      "image_url": "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1000&q=80",
+      "pertanyaan": "Lakukan interpretasi sistematis pada foto radiologi di atas! Tuliskan data demografi, kualitas foto, interpretasi anatomis organ, abnormalitas yang didapat, serta kesimpulan radiologis lengkap!",
+      "rubrik_koreksi": {
+        "region": "thorax",
+        "poin_maksimal": 100,
+        "items": [
+          { "kategori": "Data Demografi Pasien", "nama": "Nama pasien disebutkan", "poin": 5 },
+          { "kategori": "Data Demografi Pasien", "nama": "Tanggal lahir / usia disebutkan", "poin": 5 },
+          { "kategori": "Data Demografi Pasien", "nama": "Jenis kelamin disebutkan", "poin": 5 },
+          { "kategori": "Data Demografi Pasien", "nama": "Nomor RM disebutkan", "poin": 5 },
+          { "kategori": "Detail & Keadekuatan Foto", "nama": "Tanggal dan posisi/proyeksi (AP/PA) dinilai", "poin": 5 },
+          { "kategori": "Detail & Keadekuatan Foto", "nama": "Keadekuatan foto (area tidak terpotong, simetris, inspirasi cukup, eksposure baik)", "poin": 10 },
+          { "kategori": "Interpretasi Sistematik", "nama": "Cor: CTR dalam batas normal / terdorong", "poin": 10 },
+          { "kategori": "Interpretasi Sistematik", "nama": "Pulmo: Lapang avaskular paru kanan & pleural line", "poin": 15 },
+          { "kategori": "Interpretasi Sistematik", "nama": "Sinus & Diafragma: Sinus kostofrenikus dan hemidiafragma", "poin": 10 },
+          { "kategori": "Interpretasi Sistematik", "nama": "Trakhea & Mediastinum: Trakhea terdorong ke kontralateral / deviasi", "poin": 10 },
+          { "kategori": "Interpretasi Sistematik", "nama": "Skeletal & Jaringan Lunak: Fraktur kosta / emfisema subkutan bila ada", "poin": 5 },
+          { "kategori": "Kesimpulan & Diagnosis", "nama": "Abnormalitas utama & Kesimpulan radiologis tepat (Pneumothorax Dextra)", "poin": 15 }
+        ]
+      },
+      "kunci_interpretasi": {
+        "data_demografi": "Nama: Tn. Budi Santoso, Tgl Lahir: 15 Agustus 1994, JK: Laki-laki, No RM: RM-2026-0814.",
+        "kualitas_foto": "Foto thorax posisi erect/AP di IGD. Marker R terbaca. Cakupan foto baik dari apeks paru hingga sinus kostofrenikus tidak terpotong. Inspirasi cukup, simetrisitas vertebra di tengah clavicula, eksposure adekuat.",
+        "interpretasi": "Trakhea: Tampak deviasi ringan ke arah sinistra. Cor: Ukuran CTR < 50%, mediastinum sedikit terdorong ke sinistra. Pulmo: Tampak hiperlusen avaskular pada hemitoraks dekstra lateral disertai gambaran pleural line jelas, corakan bronkovaskular paru kanan kolaps ke medial. Paru kiri dalam batas normal. Sinus kostofrenikus kanan dan kiri lancip. Hemidiafragma kanan tampak sedikit mendatar. Tulang dan jaringan lunak: Tampak diskontinuitas korteks kosta 4-5 posterior dekstra tanpa dislokasi berat. Tidak tampak emfisema subkutis.",
+        "abnormalitas": "Hiperlusen avaskular paru kanan disertai pleural line kolaps, fraktur kosta 4-5 dekstra, deviasi trakea ringan ke kiri.",
+        "kesimpulan": "Kesan: Pneumothorax dekstra et causa trauma toraks (disertai fraktur kosta 4-5 dekstra)."
+      }
+    }
+  ]
+}
+```

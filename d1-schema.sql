@@ -198,3 +198,35 @@ CREATE TABLE IF NOT EXISTS study_group_members (
 );
 
 ALTER TABLE question_banks ADD COLUMN study_group_id TEXT;
+
+-- 12. Tabel CBT Radiologi (Khusus Grup Belajar: Soal Essay & Koreksi Manual)
+CREATE TABLE IF NOT EXISTS radiology_packets (
+    id TEXT PRIMARY KEY,
+    group_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    admin_id TEXT NOT NULL,
+    admin_name TEXT,
+    questions_json TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS radiology_submissions (
+    id TEXT PRIMARY KEY,
+    packet_id TEXT NOT NULL,
+    group_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    answers_json TEXT NOT NULL,
+    checklist_json TEXT,
+    score REAL DEFAULT 0,
+    feedback TEXT,
+    status TEXT DEFAULT 'pending', -- 'pending' | 'graded'
+    graded_by TEXT,
+    graded_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_radiology_packets_group ON radiology_packets(group_id);
+CREATE INDEX IF NOT EXISTS idx_radiology_submissions_packet ON radiology_submissions(packet_id);
+CREATE INDEX IF NOT EXISTS idx_radiology_submissions_user ON radiology_submissions(user_id);

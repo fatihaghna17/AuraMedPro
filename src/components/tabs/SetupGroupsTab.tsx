@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Link as LinkIcon, PlusCircle } from 'lucide-react';
+import { X, Users, Link as LinkIcon, PlusCircle, BookOpen, Stethoscope, Folder } from 'lucide-react';
+import { RadiologyGroupSection } from '../radiology/RadiologyGroupSection';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -8,6 +9,7 @@ interface StudyGroup {
   name: string;
   description: string;
   invite_code: string;
+  creator_id: string;
   creator_name: string;
   created_at: string;
 }
@@ -26,6 +28,7 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
   const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [activeGroupViewTab, setActiveGroupViewTab] = useState<'radiology' | 'regular'>('radiology');
 
   const isDark = theme === 'dark';
 
@@ -95,65 +98,116 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
           &larr; Kembali ke Daftar Grup
         </button>
         
-        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm mb-6`}>
+        {/* HEADER GRUP */}
+        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm mb-6`}>
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-3xl font-black mb-2">{selectedGroup.name}</h2>
+              <div className="flex items-center gap-2.5 mb-2">
+                <h2 className="text-3xl font-black">{selectedGroup.name}</h2>
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                  Grup Belajar
+                </span>
+              </div>
               <p className={`text-base ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{selectedGroup.description || 'Tidak ada deskripsi.'}</p>
             </div>
             
-            <div className={`flex flex-col items-end gap-2 p-4 rounded-xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+            <div className={`flex flex-col items-end gap-2 p-4 rounded-2xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
               <div className="text-sm font-bold opacity-70">Kode Undangan</div>
               <div className="text-2xl font-mono font-black text-indigo-500 tracking-widest bg-indigo-500/10 px-3 py-1 rounded-lg">
                 {selectedGroup.invite_code}
               </div>
               <button 
                 onClick={() => handleInviteWA(selectedGroup.invite_code)}
-                className="mt-2 flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600 transition hover:scale-105 active:scale-95"
+                className="mt-2 flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-600 transition hover:scale-105 active:scale-95 text-xs shadow-md shadow-green-500/20"
               >
                 <LinkIcon className="w-4 h-4" /> Undang via WhatsApp
               </button>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className={`lg:col-span-1 p-6 rounded-2xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
-            <div className="flex items-center gap-3 mb-4">
-              <Users className="w-6 h-6 text-indigo-500" />
-              <h3 className="font-black text-xl">Anggota ({groupMembers.length})</h3>
-            </div>
-            <ul className="space-y-3">
-              {groupMembers.map(m => (
-                <li key={m.user_id} className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                    {(m.username || 'U')[0].toUpperCase()}
-                  </div>
-                  <span className="font-semibold">{m.username || 'Tanpa Nama'}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className={`lg:col-span-2 p-6 rounded-2xl border flex flex-col items-center justify-center text-center ${isDark ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'} shadow-sm`}>
-            <div className="w-16 h-16 bg-indigo-500/20 text-indigo-500 rounded-2xl flex items-center justify-center mb-4">
-              <Users className="w-8 h-8" />
-            </div>
-            <h3 className="font-black text-2xl mb-2">Folder Soal Khusus Grup</h3>
-            <p className={`mb-6 max-w-md ${isDark ? 'text-indigo-200/70' : 'text-indigo-800/70'}`}>
-              Soal yang diunggah ke grup ini terpisah dari Bank Soal utama dan hanya bisa diakses oleh sesama anggota grup.
-            </p>
-            <button 
-               onClick={() => onJoinGroup && onJoinGroup(selectedGroup.id, selectedGroup.name)}
-               className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/30"
+          {/* TAB SWITCHER DI DALAM GRUP */}
+          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-700/80">
+            <button
+              onClick={() => setActiveGroupViewTab('radiology')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition ${
+                activeGroupViewTab === 'radiology'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                  : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-700/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
             >
-              Buka Bank Soal Grup
+              <Stethoscope className="w-4 h-4" />
+              <span>Latihan CBT Radiologi (Essay)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveGroupViewTab('regular')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition ${
+                activeGroupViewTab === 'regular'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                  : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-700/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Folder className="w-4 h-4" />
+              <span>Bank Soal Reguler & Anggota ({groupMembers.length})</span>
             </button>
           </div>
         </div>
+
+        {/* TAB CONTENT 1: LATIHAN CBT RADIOLOGI */}
+        {activeGroupViewTab === 'radiology' && (
+          <div className="animate-fade-in">
+            <RadiologyGroupSection
+              groupId={selectedGroup.id}
+              groupName={selectedGroup.name}
+              currentUser={currentUser}
+              groupCreatorId={selectedGroup.creator_id}
+              groupMembers={groupMembers}
+              theme={theme}
+            />
+          </div>
+        )}
+
+        {/* TAB CONTENT 2: BANK SOAL REGULER & ANGGOTA */}
+        {activeGroupViewTab === 'regular' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+            <div className={`lg:col-span-1 p-6 rounded-2xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
+              <div className="flex items-center gap-3 mb-4">
+                <Users className="w-6 h-6 text-indigo-500" />
+                <h3 className="font-black text-xl">Anggota ({groupMembers.length})</h3>
+              </div>
+              <ul className="space-y-3">
+                {groupMembers.map(m => (
+                  <li key={m.user_id} className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                      {(m.username || 'U')[0].toUpperCase()}
+                    </div>
+                    <span className="font-semibold">{m.username || 'Tanpa Nama'}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={`lg:col-span-2 p-6 rounded-2xl border flex flex-col items-center justify-center text-center ${isDark ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'} shadow-sm`}>
+              <div className="w-16 h-16 bg-indigo-500/20 text-indigo-500 rounded-2xl flex items-center justify-center mb-4">
+                <Users className="w-8 h-8" />
+              </div>
+              <h3 className="font-black text-2xl mb-2">Folder Soal Khusus Grup</h3>
+              <p className={`mb-6 max-w-md ${isDark ? 'text-indigo-200/70' : 'text-indigo-800/70'}`}>
+                Soal yang diunggah ke grup ini terpisah dari Bank Soal utama dan hanya bisa diakses oleh sesama anggota grup.
+              </p>
+              <button 
+                 onClick={() => onJoinGroup && onJoinGroup(selectedGroup.id, selectedGroup.name)}
+                 className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/30"
+              >
+                Buka Bank Soal Grup
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+
 
   return (
     <div className={`p-4 md:p-8 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
