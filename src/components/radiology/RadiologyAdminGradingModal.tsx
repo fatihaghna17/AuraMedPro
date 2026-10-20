@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Check, Award, MessageSquare, Maximize2, FileText, 
   CheckCircle2, Clock, Save, User, Sparkles
@@ -42,6 +43,17 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const currentQ = questions[activeQuestionIdx] || questions[0];
+  const adminImage = (currentQ as any)?.image_url || (Array.isArray((currentQ as any)?.image_urls) ? (currentQ as any)?.image_urls[0] : null);
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('radiology-exam-active');
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.classList.remove('radiology-exam-active');
+    };
+  }, []);
 
   // Kalkulasi Skor Otomatis berdasarkan checklist yang dicentang
   const calculateTotalScore = (): number => {
@@ -103,8 +115,10 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
     setSaving(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className={`w-full max-w-7xl max-h-[96vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden border ${
         isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
       }`}>
@@ -197,7 +211,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             </div>
 
             {/* GAMBAR RONTGEN */}
-            {currentQ?.image_url && (
+            {adminImage && (
               <div className={`p-3 rounded-2xl border ${
                 isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'
               }`}>
@@ -206,18 +220,18 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                     Foto Rontgen Kasus
                   </span>
                   <button
-                    onClick={() => setLightboxImg(currentQ.image_url)}
+                    onClick={() => setLightboxImg(adminImage)}
                     className="flex items-center gap-1 text-[11px] font-bold text-indigo-500 hover:underline"
                   >
                     <Maximize2 className="w-3 h-3" /> Zoom Foto
                   </button>
                 </div>
                 <div 
-                  onClick={() => setLightboxImg(currentQ.image_url)}
+                  onClick={() => setLightboxImg(adminImage)}
                   className="rounded-xl overflow-hidden bg-black/90 max-h-[220px] flex items-center justify-center cursor-zoom-in group"
                 >
                   <img
-                    src={currentQ.image_url}
+                    src={adminImage}
                     alt="Foto Radiologi"
                     className="w-full h-auto max-h-[220px] object-contain transition group-hover:scale-105 duration-200"
                     onError={(e) => {
@@ -483,6 +497,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
           </button>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };

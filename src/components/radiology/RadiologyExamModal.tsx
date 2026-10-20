@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, CheckCircle, Clock, AlertCircle, ArrowLeft, ArrowRight, 
   Send, Eye, FileText, Check, Award, MessageSquare, Maximize2, 
@@ -46,10 +47,29 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
 
   const currentQ = questions[currentIdx] || null;
 
-  // Lock body scroll and sync fullscreen status
+  // Helper untuk mengekstrak array gambar secara aman (mendukung image_url string maupun image_urls array)
+  const getQuestionImages = (q: RadiologyQuestion | null): string[] => {
+    if (!q) return [];
+    const anyQ = q as any;
+    if (Array.isArray(anyQ.image_urls) && anyQ.image_urls.length > 0) {
+      return anyQ.image_urls.filter((u: any) => typeof u === 'string' && u.trim().length > 0);
+    }
+    if (typeof anyQ.image_url === 'string' && anyQ.image_url.trim().length > 0) {
+      return [anyQ.image_url.trim()];
+    }
+    if (Array.isArray(anyQ.images) && anyQ.images.length > 0) {
+      return anyQ.images.filter((u: any) => typeof u === 'string' && u.trim().length > 0);
+    }
+    return [];
+  };
+
+  const activeImages = getQuestionImages(currentQ);
+
+  // Lock body scroll, hide main dashboard sidebars, and sync fullscreen status
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('radiology-exam-active');
 
     const handleFsChange = () => {
       const doc = document as any;
@@ -69,12 +89,18 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.body.classList.remove('radiology-exam-active');
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('webkitfullscreenchange', handleFsChange);
       document.removeEventListener('mozfullscreenchange', handleFsChange);
       document.removeEventListener('MSFullscreenChange', handleFsChange);
     };
   }, []);
+
+  const renderPortal = (content: React.ReactNode) => {
+    if (typeof document === 'undefined') return null;
+    return createPortal(content, document.body);
+  };
 
   useEffect(() => {
     loadSubmission();
@@ -264,8 +290,8 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   // 1. TAHAP PERALIHAN: GERBANG MASUK CBT RADIOLOGI (BRIEFING & FULLSCREEN GATE)
   // =========================================================================
   if (stage === 'briefing') {
-    return (
-      <div className="fixed inset-0 z-[9999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto select-none animate-in fade-in duration-200">
+    return renderPortal(
+      <div className="fixed inset-0 z-[999999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto select-none animate-in fade-in duration-200">
         <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden my-auto">
           {/* Glowing background accents */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -375,10 +401,10 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   // 2. TAHAP PERALIHAN ANIMASI COUNTDOWN (TRANSITIONING SCREEN)
   // =========================================================================
   if (stage === 'transitioning') {
-    return (
+    return renderPortal(
       <div 
         onClick={() => setStage('exam')}
-        className="fixed inset-0 z-[9999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 select-none cursor-pointer animate-in fade-in duration-150"
+        className="fixed inset-0 z-[999999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 select-none cursor-pointer animate-in fade-in duration-150"
       >
         <div className="relative flex items-center justify-center mb-8">
           {/* Animated concentric rings */}
@@ -409,8 +435,8 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   // =========================================================================
   // 3. TAHAP RUANG UJIAN PENUH (DISTRACTION-FREE FULLSCREEN EXAM MODE)
   // =========================================================================
-  return (
-    <div className="fixed inset-0 z-[9999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col m-0 p-0 overflow-hidden select-none animate-in fade-in duration-200">
+  return renderPortal(
+    <div className="fixed inset-0 z-[999999] w-screen h-[100dvh] max-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col m-0 p-0 overflow-hidden select-none animate-in fade-in duration-200">
       
       {/* ----------------------------------------------------------------------- */}
       {/* TOP CBT HEADER (NO DASHBOARD, NO GROUP HEADER, CLEAN EXAM BAR)          */}
@@ -569,7 +595,7 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-indigo-400" />
-                Foto Rontgen ({currentQ?.image_urls.length || 0} Citra)
+                Foto Rontgen ({activeImages.length} Citra)
               </span>
 
               {/* TOOLBAR X-RAY */}
@@ -611,29 +637,35 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
 
             {/* CONTAINER GAMBAR */}
             <div className="grid grid-cols-1 gap-3">
-              {currentQ?.image_urls.map((url, i) => (
-                <div 
-                  key={i} 
-                  className="relative group rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center p-2 min-h-[300px] max-h-[460px]"
-                >
-                  <img
-                    src={url}
-                    alt={`Rontgen Soal ${currentIdx + 1} #${i + 1}`}
-                    style={{
-                      transform: `scale(${imgZoom})`,
-                      filter: invertColors ? 'invert(1) contrast(1.2)' : 'none',
-                      transition: 'transform 0.2s ease-out'
-                    }}
-                    className="max-h-[440px] max-w-full object-contain cursor-zoom-in"
-                    onClick={() => setLightboxImg(url)}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider pointer-events-none">
-                    <span className="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center gap-1.5 shadow-lg">
-                      <Maximize2 className="w-3.5 h-3.5" /> Klik untuk Perbesar Penuh
-                    </span>
+              {activeImages.length > 0 ? (
+                activeImages.map((url, i) => (
+                  <div 
+                    key={i} 
+                    className="relative group rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center p-2 min-h-[300px] max-h-[460px]"
+                  >
+                    <img
+                      src={url}
+                      alt={`Rontgen Soal ${currentIdx + 1} #${i + 1}`}
+                      style={{
+                        transform: `scale(${imgZoom})`,
+                        filter: invertColors ? 'invert(1) contrast(1.2)' : 'none',
+                        transition: 'transform 0.2s ease-out'
+                      }}
+                      className="max-h-[440px] max-w-full object-contain cursor-zoom-in"
+                      onClick={() => setLightboxImg(url)}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider pointer-events-none">
+                      <span className="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center gap-1.5 shadow-lg">
+                        <Maximize2 className="w-3.5 h-3.5" /> Klik untuk Perbesar Penuh
+                      </span>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-8 text-center rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 text-xs">
+                  Tidak ada citra foto rontgen pada soal ini.
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="text-[11px] text-slate-400 text-center italic">
@@ -763,25 +795,25 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
               </span>
 
               <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
-                {currentQ?.kunci_interpretasi.syarat_layak_baca && (
+                {(currentQ?.kunci_interpretasi?.syarat_layak_baca || currentQ?.kunci_interpretasi?.kualitas_foto) && (
                   <div>
-                    <strong className="block text-indigo-400">1. Syarat Layak Baca:</strong>
-                    <span>{currentQ.kunci_interpretasi.syarat_layak_baca}</span>
+                    <strong className="block text-indigo-400">1. Syarat Layak Baca & Kualitas:</strong>
+                    <span>{currentQ?.kunci_interpretasi?.syarat_layak_baca || currentQ?.kunci_interpretasi?.kualitas_foto}</span>
                   </div>
                 )}
-                {currentQ?.kunci_interpretasi.sistematika_organ && (
+                {(currentQ?.kunci_interpretasi?.sistematika_organ || currentQ?.kunci_interpretasi?.interpretasi) && (
                   <div>
-                    <strong className="block text-indigo-400">2. Sistematika Organ:</strong>
-                    <span>{currentQ.kunci_interpretasi.sistematika_organ}</span>
+                    <strong className="block text-indigo-400">2. Sistematika Organ / Interpretasi:</strong>
+                    <span>{currentQ?.kunci_interpretasi?.sistematika_organ || currentQ?.kunci_interpretasi?.interpretasi}</span>
                   </div>
                 )}
-                {currentQ?.kunci_interpretasi.abnormalitas && (
+                {currentQ?.kunci_interpretasi?.abnormalitas && (
                   <div>
                     <strong className="block text-indigo-400">3. Abnormalitas yang Didapat:</strong>
                     <span>{currentQ.kunci_interpretasi.abnormalitas}</span>
                   </div>
                 )}
-                {currentQ?.kunci_interpretasi.kesimpulan && (
+                {currentQ?.kunci_interpretasi?.kesimpulan && (
                   <div className="p-3 rounded-xl bg-indigo-950/60 border border-indigo-500/20">
                     <strong className="block text-indigo-400 font-black">4. Kesimpulan & Diagnosis Kerja:</strong>
                     <span className="font-semibold">{currentQ.kunci_interpretasi.kesimpulan}</span>

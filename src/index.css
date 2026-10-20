@@ -473,5 +473,12 @@
   filter: drop-shadow(0 0 16px rgba(220, 38, 38, 1));
 }
 
+/* Sembunyikan sidebar, navbar header, dan bottom nav saat ujian CBT radiologi aktif */
+body.radiology-exam-active aside,
+body.radiology-exam-active header.sticky,
+body.radiology-exam-active nav {
+  display: none !important;
+}
+
 
 
