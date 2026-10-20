@@ -1,7 +1,7 @@
 // AuraMed PRO — Service Worker
 // Handles background notifications for PWA
 
-const CACHE_NAME = 'auramed-v5';
+const CACHE_NAME = 'auramed-v6';
 
 // Install: cache essential assets
 self.addEventListener('install', (event) => {
