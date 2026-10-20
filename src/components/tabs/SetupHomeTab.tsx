@@ -445,7 +445,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
           {/* Scrollable Container (Fixed height, internal scroll) */}
           <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
-                  quizHistory.length === 0 ? (
+                  {quizHistory.length === 0 ? (
                     <div className="text-center p-10">
                       <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -1452,20 +1452,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                         {new Date(row.created_at).toLocaleDateString('id-ID')}
                                       </td>
                                     </tr>
-                                  )})
-                                )
-                              )}
+                                  );
+                                })
+                              )
+                            )}
                             </tbody>
                           </table>
                         </div>
                     </div>
                   </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   );
 };
