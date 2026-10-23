@@ -1638,17 +1638,19 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [screen, currentQuiz, currentIndex, userAnswers, doubtStatus, isRevealed, unlockedHints, questionHighlights, strikethroughOptions, selectedDatabases, quizMode, currentUser]);
 
+  // Leaderboard kini tampil sebagai kartu mandiri di tab Beranda ('home'),
+  // jadi refetch dipicu berdasarkan dashboardTab (bukan activeDashboardTab yang sudah tidak dipakai).
   useEffect(() => {
-    if (selectedLeaderboardFile && activeDashboardTab === 'leaderboard' && leaderboardType === 'file') {
+    if (selectedLeaderboardFile && dashboardTab === 'home' && leaderboardType === 'file') {
       fetchFileLeaderboard(selectedLeaderboardFile);
     }
-  }, [selectedLeaderboardFile, activeDashboardTab, fileTimeFilter, leaderboardType, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
+  }, [selectedLeaderboardFile, dashboardTab, fileTimeFilter, leaderboardType, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
 
   useEffect(() => {
-    if (activeDashboardTab === 'leaderboard' && leaderboardType === 'global') {
+    if (dashboardTab === 'home' && leaderboardType === 'global') {
       fetchGlobalLeaderboard();
     }
-  }, [activeDashboardTab, leaderboardType, globalTimeFilter, profileUsername, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
+  }, [dashboardTab, leaderboardType, globalTimeFilter, profileUsername, adminAngkatanFilter, userAngkatan, leaderboardScope, isAdminAngkatan, isSuperAdmin, leaderboardProdiFilter, userProdi]);
 
 
 
