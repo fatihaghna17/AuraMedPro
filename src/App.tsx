@@ -1378,9 +1378,9 @@ export default function App() {
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
-      root.style.backgroundColor = '#F8FAFC';
-      document.body.style.backgroundColor = '#F8FAFC';
-      if (metaThemeColor) metaThemeColor.setAttribute('content', '#F8FAFC');
+      root.style.backgroundColor = '#e6e9ef';
+      document.body.style.backgroundColor = '#e6e9ef';
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#e6e9ef');
     }
   }, [theme]);
 
@@ -1518,6 +1518,25 @@ export default function App() {
       } catch (err) {
         console.error(err);
         triggerToast('Gagal menghapus sesi tertunda', '❌');
+      }
+    });
+    setModalOpen(true);
+  };
+
+  const discardAllQuizSessions = async () => {
+    if (!currentUser || pendingSessions.length === 0) return;
+    const count = pendingSessions.length;
+    setModalTitle('Hapus Semua Sesi Tertunda?');
+    setModalDesc(`${count} sesi kuis tertunda akan dihapus secara permanen. Apakah Anda yakin?`);
+    setModalAction(() => async () => {
+      try {
+        try { localStorage.setItem('cbt_active_sessions', JSON.stringify([])); } catch (e) { console.warn('localStorage full'); }
+        setPendingSessions([]);
+        await cloudflareApi.deleteQuizSession(currentUser.id);
+        triggerToast(`${count} sesi kuis tertunda dihapus.`, '🗑');
+      } catch (err) {
+        console.error(err);
+        triggerToast('Gagal menghapus semua sesi tertunda', '❌');
       }
     });
     setModalOpen(true);
@@ -3591,7 +3610,7 @@ export default function App() {
               </div>
             }>
             {/* 🏠 TAB 1: BERANDA */}
-            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} onTogglePomodoro={togglePomodoro} onResetPomodoro={resetPomodoro} onSelectPomodoroMode={switchPomodoroMode} onAddPomodoroMinutes={addPomodoroMinutes} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} userProdi={userProdi} leaderboardProdiFilter={leaderboardProdiFilter} setLeaderboardProdiFilter={setLeaderboardProdiFilter} />}
+            {dashboardTab === 'home' && <SetupHomeTab theme={theme} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} totalQuestionsAnswered={totalQuestionsAnswered} quizHistory={quizHistory} achievements={achievements} profileUsername={profileUsername} expandedCompetencies={expandedCompetencies} setExpandedCompetencies={setExpandedCompetencies} pomodoroMode={pomodoroMode} pomodoroSecondsLeft={pomodoroSecondsLeft} pomodoroActive={pomodoroActive} pomodoroCount={pomodoroCount} onTogglePomodoro={togglePomodoro} onResetPomodoro={resetPomodoro} onSelectPomodoroMode={switchPomodoroMode} onAddPomodoroMinutes={addPomodoroMinutes} setPomodoroActive={setPomodoroActive} setPomodoroSecondsLeft={setPomodoroSecondsLeft} activeDashboardTab={activeDashboardTab} setActiveDashboardTab={setActiveDashboardTab} fileLeaderboard={fileLeaderboard} isLeaderboardLoading={isLeaderboardLoading} globalTimeFilter={globalTimeFilter} setGlobalTimeFilter={setGlobalTimeFilter} fileTimeFilter={fileTimeFilter} setFileTimeFilter={setFileTimeFilter} leaderboardType={leaderboardType} setLeaderboardType={setLeaderboardType} fetchFileLeaderboard={fetchFileLeaderboard} selectedLeaderboardFile={selectedLeaderboardFile} setSelectedLeaderboardFile={setSelectedLeaderboardFile} globalLeaderboard={globalLeaderboard} fetchGlobalLeaderboard={fetchGlobalLeaderboard} startDailyChallenge={startDailyChallenge} setShowIosInstallModal={setShowIosInstallModal} pendingSessions={pendingSessions} setDashboardTab={setDashboardTab} resumeQuizSession={resumeQuizSession} discardQuizSession={discardQuizSession} discardAllQuizSessions={discardAllQuizSessions} historyAnalytics={historyAnalytics} questionDatabase={questionDatabase} clearAllHistory={clearAllHistory} setSelectedHistoryDetail={setSelectedHistoryDetail} setOpenHistoryReviewIndices={setOpenHistoryReviewIndices} deleteHistoryItem={deleteHistoryItem} isSuperAdmin={isSuperAdmin} isAdminAngkatan={isAdminAngkatan} adminAngkatanFilter={adminAngkatanFilter} setAdminAngkatanFilter={setAdminAngkatanFilter} userAngkatan={userAngkatan} leaderboardScope={leaderboardScope} setLeaderboardScope={setLeaderboardScope} userProdi={userProdi} leaderboardProdiFilter={leaderboardProdiFilter} setLeaderboardProdiFilter={setLeaderboardProdiFilter} />}
 
             {/* 📚 TAB 2: BANK SOAL */}
             {dashboardTab === 'banks' && (
@@ -5038,7 +5057,7 @@ export default function App() {
                                   style={{
                                     backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
                                     border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
-                                    color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                                    color: theme === 'dark' ? '#f9e2af' : '#b5741a',
                                   }}
                                 >
                                   <div className="flex items-center justify-between mb-1.5">

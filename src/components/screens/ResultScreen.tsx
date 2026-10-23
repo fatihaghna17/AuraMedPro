@@ -109,7 +109,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                     cy="80" 
                     r="70" 
                     fill="none" 
-                    stroke={theme === 'dark' ? '#313244' : '#f1f5f9'} 
+                    stroke={theme === 'dark' ? '#313244' : '#dce0e8'} 
                     strokeWidth="8"
                   />
                   <circle 
@@ -541,7 +541,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                               color: answerNotes[generateQuestionFingerprint(q)]
                                 ? '#f59e0b'
                                 : (isCorrect
-                                  ? (theme === 'dark' ? '#94a3b8' : '#64748b')
+                                  ? (theme === 'dark' ? '#9399b2' : '#6c6f85')
                                   : '#f59e0b'),
                             }}
                           >
@@ -657,7 +657,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                               style={{
                                 backgroundColor: theme === 'dark' ? 'rgb(245 158 11 / 0.08)' : 'rgb(254 243 199)',
                                 border: `1px solid ${theme === 'dark' ? 'rgb(245 158 11 / 0.2)' : 'rgb(253 224 71 / 0.5)'}`,
-                                color: theme === 'dark' ? '#fcd34d' : '#92400e',
+                                color: theme === 'dark' ? '#f9e2af' : '#b5741a',
                               }}
                             >
                               <div className="flex items-center justify-between mb-1.5">

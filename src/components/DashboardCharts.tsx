@@ -103,9 +103,9 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
     }));
   }, [quizHistory]);
 
-  const textColor = theme === 'dark' ? '#94a3b8' : '#64748b';
+  const textColor = theme === 'dark' ? '#9399b2' : '#6c6f85';
   const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  const radarFill = theme === 'dark' ? '#818cf8' : '#6366f1';
+  const radarFill = theme === 'dark' ? '#74c7ec' : '#209fb5';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -126,8 +126,8 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
               <RechartsTooltip 
                 contentStyle={{ 
-                  backgroundColor: theme === 'dark' ? '#181825' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#313244' : '#e2e8f0',
+                  backgroundColor: theme === 'dark' ? '#181825' : '#eff1f5',
+                  borderColor: theme === 'dark' ? '#313244' : '#ccd0da',
                   borderRadius: '12px',
                   fontSize: '12px',
                   fontWeight: 'bold',
@@ -164,8 +164,8 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
                 />
                 <RechartsTooltip
                   contentStyle={{ 
-                    backgroundColor: theme === 'dark' ? '#181825' : '#ffffff',
-                    borderColor: theme === 'dark' ? '#313244' : '#e2e8f0',
+                    backgroundColor: theme === 'dark' ? '#181825' : '#eff1f5',
+                    borderColor: theme === 'dark' ? '#313244' : '#ccd0da',
                     borderRadius: '12px',
                     fontSize: '12px',
                     fontWeight: 'bold',
