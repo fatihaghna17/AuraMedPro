@@ -362,8 +362,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: textColor }} />
                     <RechartsTooltip 
                       contentStyle={{ 
-                        backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                        borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
+                        backgroundColor: theme === 'dark' ? '#181825' : '#ffffff',
+                        borderColor: theme === 'dark' ? '#313244' : '#e2e8f0',
                         borderRadius: '8px',
                         fontSize: '11px',
                         fontWeight: '600',

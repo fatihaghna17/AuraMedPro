@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./catppuccin-mocha.css";
 
 @variant dark (&:where(.dark, .dark *));
 
@@ -35,14 +36,14 @@
 
 @layer base {
   html {
-    background-color: #0f172a;
+    background-color: #1e1e2e;
     color-scheme: dark light;
     overscroll-behavior-y: none;
   }
 
   html.dark,
   html.dark body {
-    background-color: #0f172a !important;
+    background-color: #1e1e2e !important; /* Catppuccin Mocha base */
     color-scheme: dark;
   }
 
@@ -106,7 +107,7 @@
   }
 
   :is(.dark .glass-card) {
-    background: rgba(15, 23, 42, 0.65);
+    background: rgba(30, 30, 46, 0.7); /* Mocha base */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);

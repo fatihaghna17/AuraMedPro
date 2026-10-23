@@ -1372,9 +1372,9 @@ export default function App() {
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
-      root.style.backgroundColor = '#0B1120';
-      document.body.style.backgroundColor = '#0B1120';
-      if (metaThemeColor) metaThemeColor.setAttribute('content', '#0B1120');
+      root.style.backgroundColor = '#1e1e2e';
+      document.body.style.backgroundColor = '#1e1e2e';
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#1e1e2e');
     } else {
       root.classList.remove('dark');
       root.classList.add('light');

@@ -109,7 +109,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                     cy="80" 
                     r="70" 
                     fill="none" 
-                    stroke={theme === 'dark' ? '#1e293b' : '#f1f5f9'} 
+                    stroke={theme === 'dark' ? '#313244' : '#f1f5f9'} 
                     strokeWidth="8"
                   />
                   <circle 

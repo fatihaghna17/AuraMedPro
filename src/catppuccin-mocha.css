@@ -1,0 +1,401 @@
+/* ===================================================================
+ * Catppuccin Mocha (accent: Sapphire) - dark mode palette remap.
+ * Tailwind v4 utilities resolve colours through --color-* variables,
+ * so overriding them under html.dark re-themes every dark:/ternary class
+ * without touching component code. Light mode is unaffected.
+ * =================================================================== */
+html.dark {
+  --ctp-rosewater: #f5e0dc;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-text: #cdd6f4;
+  --ctp-base: #1e1e2e;
+  --ctp-crust: #11111b;
+  --ctp-mantle: #181825;
+
+  --color-slate-50: #e3e8fa;
+  --color-slate-100: #cdd6f4;
+  --color-slate-200: #bac2de;
+  --color-slate-250: #b0b8d3;
+  --color-slate-300: #a6adc8;
+  --color-slate-350: #a6adc8;
+  --color-slate-400: #9399b2;
+  --color-slate-450: #9399b2;
+  --color-slate-500: #7f849c;
+  --color-slate-600: #585b70;
+  --color-slate-655: #585b70;
+  --color-slate-700: #45475a;
+  --color-slate-750: #45475a;
+  --color-slate-800: #313244;
+  --color-slate-805: #313244;
+  --color-slate-850: #313244;
+  --color-slate-900: #1e1e2e;
+  --color-slate-905: #1e1e2e;
+  --color-slate-950: #181825;
+  --color-gray-50: #e3e8fa;
+  --color-gray-100: #cdd6f4;
+  --color-gray-200: #bac2de;
+  --color-gray-300: #a6adc8;
+  --color-gray-400: #9399b2;
+  --color-gray-500: #7f849c;
+  --color-gray-600: #585b70;
+  --color-gray-700: #45475a;
+  --color-gray-800: #313244;
+  --color-gray-900: #1e1e2e;
+  --color-gray-950: #181825;
+  --color-zinc-50: #e3e8fa;
+  --color-zinc-100: #cdd6f4;
+  --color-zinc-200: #bac2de;
+  --color-zinc-300: #a6adc8;
+  --color-zinc-400: #9399b2;
+  --color-zinc-500: #7f849c;
+  --color-zinc-600: #585b70;
+  --color-zinc-700: #45475a;
+  --color-zinc-800: #313244;
+  --color-zinc-900: #1e1e2e;
+  --color-zinc-950: #181825;
+  --color-neutral-50: #e3e8fa;
+  --color-neutral-100: #cdd6f4;
+  --color-neutral-200: #bac2de;
+  --color-neutral-300: #a6adc8;
+  --color-neutral-400: #9399b2;
+  --color-neutral-500: #7f849c;
+  --color-neutral-600: #585b70;
+  --color-neutral-700: #45475a;
+  --color-neutral-800: #313244;
+  --color-neutral-900: #1e1e2e;
+  --color-neutral-950: #181825;
+  --color-stone-50: #e3e8fa;
+  --color-stone-100: #cdd6f4;
+  --color-stone-200: #bac2de;
+  --color-stone-300: #a6adc8;
+  --color-stone-400: #9399b2;
+  --color-stone-500: #7f849c;
+  --color-stone-600: #585b70;
+  --color-stone-700: #45475a;
+  --color-stone-800: #313244;
+  --color-stone-900: #1e1e2e;
+  --color-stone-950: #181825;
+
+  --color-indigo-50: #d5eef9;
+  --color-indigo-100: #c0e6f6;
+  --color-indigo-200: #a5dbf3;
+  --color-indigo-300: #89cfef;
+  --color-indigo-400: #74c7ec;
+  --color-indigo-500: #74c7ec;
+  --color-indigo-600: #67aed0;
+  --color-indigo-700: #5a94b3;
+  --color-indigo-800: #49728d;
+  --color-indigo-900: #3c5970;
+  --color-indigo-950: #314358;
+  --color-blue-50: #d5eef9;
+  --color-blue-100: #c0e6f6;
+  --color-blue-200: #a5dbf3;
+  --color-blue-300: #89cfef;
+  --color-blue-400: #74c7ec;
+  --color-blue-500: #74c7ec;
+  --color-blue-600: #67aed0;
+  --color-blue-700: #5a94b3;
+  --color-blue-800: #49728d;
+  --color-blue-900: #3c5970;
+  --color-blue-950: #314358;
+  --color-sky-50: #dcf4f9;
+  --color-sky-100: #caeff6;
+  --color-sky-200: #b2e8f2;
+  --color-sky-300: #9be1ee;
+  --color-sky-400: #89dceb;
+  --color-sky-500: #89dceb;
+  --color-sky-600: #79c0cf;
+  --color-sky-700: #69a3b2;
+  --color-sky-800: #547d8c;
+  --color-sky-900: #436070;
+  --color-sky-950: #364858;
+  --color-cyan-50: #dcf4f9;
+  --color-cyan-100: #caeff6;
+  --color-cyan-200: #b2e8f2;
+  --color-cyan-300: #9be1ee;
+  --color-cyan-400: #89dceb;
+  --color-cyan-500: #89dceb;
+  --color-cyan-600: #79c0cf;
+  --color-cyan-700: #69a3b2;
+  --color-cyan-800: #547d8c;
+  --color-cyan-900: #436070;
+  --color-cyan-950: #364858;
+  --color-teal-50: #dff6f2;
+  --color-teal-100: #cff2ec;
+  --color-teal-200: #b9ece4;
+  --color-teal-300: #a4e6db;
+  --color-teal-400: #94e2d5;
+  --color-teal-500: #94e2d5;
+  --color-teal-600: #82c5bc;
+  --color-teal-700: #71a7a3;
+  --color-teal-800: #598082;
+  --color-teal-900: #476368;
+  --color-teal-950: #384953;
+  --color-violet-50: #efe4fd;
+  --color-violet-100: #e8d7fb;
+  --color-violet-200: #ddc5fa;
+  --color-violet-300: #d3b3f8;
+  --color-violet-400: #cba6f7;
+  --color-violet-500: #cba6f7;
+  --color-violet-600: #b192d9;
+  --color-violet-700: #977dbb;
+  --color-violet-800: #746292;
+  --color-violet-900: #5b4e74;
+  --color-violet-950: #443c5a;
+  --color-purple-50: #efe4fd;
+  --color-purple-100: #e8d7fb;
+  --color-purple-200: #ddc5fa;
+  --color-purple-300: #d3b3f8;
+  --color-purple-400: #cba6f7;
+  --color-purple-500: #cba6f7;
+  --color-purple-600: #b192d9;
+  --color-purple-700: #977dbb;
+  --color-purple-800: #746292;
+  --color-purple-900: #5b4e74;
+  --color-purple-950: #443c5a;
+  --color-fuchsia-50: #fcedf8;
+  --color-fuchsia-100: #fae4f4;
+  --color-fuchsia-200: #f8d7ef;
+  --color-fuchsia-300: #f6cbeb;
+  --color-fuchsia-400: #f5c2e7;
+  --color-fuchsia-500: #f5c2e7;
+  --color-fuchsia-600: #d5a9cb;
+  --color-fuchsia-700: #b491b0;
+  --color-fuchsia-800: #8a708a;
+  --color-fuchsia-900: #69576f;
+  --color-fuchsia-950: #4d4257;
+  --color-pink-50: #fcedf8;
+  --color-pink-100: #fae4f4;
+  --color-pink-200: #f8d7ef;
+  --color-pink-300: #f6cbeb;
+  --color-pink-400: #f5c2e7;
+  --color-pink-500: #f5c2e7;
+  --color-pink-600: #d5a9cb;
+  --color-pink-700: #b491b0;
+  --color-pink-800: #8a708a;
+  --color-pink-900: #69576f;
+  --color-pink-950: #4d4257;
+  --color-rose-50: #fbdce5;
+  --color-rose-100: #facbd8;
+  --color-rose-200: #f7b4c6;
+  --color-rose-300: #f59cb5;
+  --color-rose-400: #f38ba8;
+  --color-rose-500: #f38ba8;
+  --color-rose-600: #d37b96;
+  --color-rose-700: #b36a83;
+  --color-rose-800: #88546b;
+  --color-rose-900: #694459;
+  --color-rose-950: #4d3649;
+  --color-red-50: #fbdce5;
+  --color-red-100: #facbd8;
+  --color-red-200: #f7b4c6;
+  --color-red-300: #f59cb5;
+  --color-red-400: #f38ba8;
+  --color-red-500: #f38ba8;
+  --color-red-600: #d37b96;
+  --color-red-700: #b36a83;
+  --color-red-800: #88546b;
+  --color-red-900: #694459;
+  --color-red-950: #4d3649;
+  --color-orange-50: #fee8db;
+  --color-orange-100: #fdddc9;
+  --color-orange-200: #fcceb1;
+  --color-orange-300: #fbbe99;
+  --color-orange-400: #fab387;
+  --color-orange-500: #fab387;
+  --color-orange-600: #d99d7a;
+  --color-orange-700: #b8866c;
+  --color-orange-800: #8c685a;
+  --color-orange-900: #6b524d;
+  --color-orange-950: #4e3f42;
+  --color-amber-50: #fdf6e7;
+  --color-amber-100: #fcf2db;
+  --color-amber-200: #fbeccb;
+  --color-amber-300: #fae6bb;
+  --color-amber-400: #f9e2af;
+  --color-amber-500: #f9e2af;
+  --color-amber-600: #d8c59c;
+  --color-amber-700: #b7a788;
+  --color-amber-800: #8c806e;
+  --color-amber-900: #6b635b;
+  --color-amber-950: #4e494a;
+  --color-yellow-50: #fdf6e7;
+  --color-yellow-100: #fcf2db;
+  --color-yellow-200: #fbeccb;
+  --color-yellow-300: #fae6bb;
+  --color-yellow-400: #f9e2af;
+  --color-yellow-500: #f9e2af;
+  --color-yellow-600: #d8c59c;
+  --color-yellow-700: #b7a788;
+  --color-yellow-800: #8c806e;
+  --color-yellow-900: #6b635b;
+  --color-yellow-950: #4e494a;
+  --color-lime-50: #e4f7e3;
+  --color-lime-100: #d7f2d5;
+  --color-lime-200: #c5edc2;
+  --color-lime-300: #b3e7af;
+  --color-lime-400: #a6e3a1;
+  --color-lime-500: #a6e3a1;
+  --color-lime-600: #92c590;
+  --color-lime-700: #7da87e;
+  --color-lime-800: #628068;
+  --color-lime-900: #4e6356;
+  --color-lime-950: #3c4947;
+  --color-green-50: #e4f7e3;
+  --color-green-100: #d7f2d5;
+  --color-green-200: #c5edc2;
+  --color-green-300: #b3e7af;
+  --color-green-400: #a6e3a1;
+  --color-green-500: #a6e3a1;
+  --color-green-600: #92c590;
+  --color-green-700: #7da87e;
+  --color-green-800: #628068;
+  --color-green-900: #4e6356;
+  --color-green-950: #3c4947;
+  --color-emerald-50: #e4f7e3;
+  --color-emerald-100: #d7f2d5;
+  --color-emerald-200: #c5edc2;
+  --color-emerald-300: #b3e7af;
+  --color-emerald-400: #a6e3a1;
+  --color-emerald-500: #a6e3a1;
+  --color-emerald-600: #92c590;
+  --color-emerald-700: #7da87e;
+  --color-emerald-800: #628068;
+  --color-emerald-900: #4e6356;
+  --color-emerald-950: #3c4947;
+  --color-indigo-650: #67aed0;
+  --color-rose-455: #f38ba8;
+  --color-rose-555: #f38ba8;
+
+  --color-brand-bg: #1e1e2e;
+  --color-brand-surface: #313244;
+  --color-brand-surface-hover: #45475a;
+  --color-brand-border: #45475a;
+  --color-brand-border-subtle: #313244;
+  --color-brand-primary: #74c7ec;
+  --color-brand-primary-hover: #67aed0;
+  --color-brand-secondary: #89b4fa;
+  --color-brand-text: #cdd6f4;
+  --color-brand-text-muted: #a6adc8;
+  --color-brand-text-faint: #7f849c;
+  --color-brand-xp: #f9e2af;
+}
+
+/* Catppuccin accents are pastel: white text on solid accent fills has poor
+   contrast, so use Crust for text (as official Catppuccin ports do). */
+html.dark .text-white:is([class*="bg-indigo-400 "], [class$="bg-indigo-400"]),
+html.dark .text-white:is([class*="from-indigo-400 "], [class$="from-indigo-400"]),
+html.dark .text-white:is([class*="bg-indigo-500 "], [class$="bg-indigo-500"]),
+html.dark .text-white:is([class*="from-indigo-500 "], [class$="from-indigo-500"]),
+html.dark .text-white:is([class*="bg-indigo-600 "], [class$="bg-indigo-600"]),
+html.dark .text-white:is([class*="from-indigo-600 "], [class$="from-indigo-600"]),
+html.dark .text-white:is([class*="bg-blue-400 "], [class$="bg-blue-400"]),
+html.dark .text-white:is([class*="from-blue-400 "], [class$="from-blue-400"]),
+html.dark .text-white:is([class*="bg-blue-500 "], [class$="bg-blue-500"]),
+html.dark .text-white:is([class*="from-blue-500 "], [class$="from-blue-500"]),
+html.dark .text-white:is([class*="bg-blue-600 "], [class$="bg-blue-600"]),
+html.dark .text-white:is([class*="from-blue-600 "], [class$="from-blue-600"]),
+html.dark .text-white:is([class*="bg-sky-400 "], [class$="bg-sky-400"]),
+html.dark .text-white:is([class*="from-sky-400 "], [class$="from-sky-400"]),
+html.dark .text-white:is([class*="bg-sky-500 "], [class$="bg-sky-500"]),
+html.dark .text-white:is([class*="from-sky-500 "], [class$="from-sky-500"]),
+html.dark .text-white:is([class*="bg-sky-600 "], [class$="bg-sky-600"]),
+html.dark .text-white:is([class*="from-sky-600 "], [class$="from-sky-600"]),
+html.dark .text-white:is([class*="bg-cyan-400 "], [class$="bg-cyan-400"]),
+html.dark .text-white:is([class*="from-cyan-400 "], [class$="from-cyan-400"]),
+html.dark .text-white:is([class*="bg-cyan-500 "], [class$="bg-cyan-500"]),
+html.dark .text-white:is([class*="from-cyan-500 "], [class$="from-cyan-500"]),
+html.dark .text-white:is([class*="bg-cyan-600 "], [class$="bg-cyan-600"]),
+html.dark .text-white:is([class*="from-cyan-600 "], [class$="from-cyan-600"]),
+html.dark .text-white:is([class*="bg-teal-400 "], [class$="bg-teal-400"]),
+html.dark .text-white:is([class*="from-teal-400 "], [class$="from-teal-400"]),
+html.dark .text-white:is([class*="bg-teal-500 "], [class$="bg-teal-500"]),
+html.dark .text-white:is([class*="from-teal-500 "], [class$="from-teal-500"]),
+html.dark .text-white:is([class*="bg-teal-600 "], [class$="bg-teal-600"]),
+html.dark .text-white:is([class*="from-teal-600 "], [class$="from-teal-600"]),
+html.dark .text-white:is([class*="bg-violet-400 "], [class$="bg-violet-400"]),
+html.dark .text-white:is([class*="from-violet-400 "], [class$="from-violet-400"]),
+html.dark .text-white:is([class*="bg-violet-500 "], [class$="bg-violet-500"]),
+html.dark .text-white:is([class*="from-violet-500 "], [class$="from-violet-500"]),
+html.dark .text-white:is([class*="bg-violet-600 "], [class$="bg-violet-600"]),
+html.dark .text-white:is([class*="from-violet-600 "], [class$="from-violet-600"]),
+html.dark .text-white:is([class*="bg-purple-400 "], [class$="bg-purple-400"]),
+html.dark .text-white:is([class*="from-purple-400 "], [class$="from-purple-400"]),
+html.dark .text-white:is([class*="bg-purple-500 "], [class$="bg-purple-500"]),
+html.dark .text-white:is([class*="from-purple-500 "], [class$="from-purple-500"]),
+html.dark .text-white:is([class*="bg-purple-600 "], [class$="bg-purple-600"]),
+html.dark .text-white:is([class*="from-purple-600 "], [class$="from-purple-600"]),
+html.dark .text-white:is([class*="bg-fuchsia-400 "], [class$="bg-fuchsia-400"]),
+html.dark .text-white:is([class*="from-fuchsia-400 "], [class$="from-fuchsia-400"]),
+html.dark .text-white:is([class*="bg-fuchsia-500 "], [class$="bg-fuchsia-500"]),
+html.dark .text-white:is([class*="from-fuchsia-500 "], [class$="from-fuchsia-500"]),
+html.dark .text-white:is([class*="bg-fuchsia-600 "], [class$="bg-fuchsia-600"]),
+html.dark .text-white:is([class*="from-fuchsia-600 "], [class$="from-fuchsia-600"]),
+html.dark .text-white:is([class*="bg-pink-400 "], [class$="bg-pink-400"]),
+html.dark .text-white:is([class*="from-pink-400 "], [class$="from-pink-400"]),
+html.dark .text-white:is([class*="bg-pink-500 "], [class$="bg-pink-500"]),
+html.dark .text-white:is([class*="from-pink-500 "], [class$="from-pink-500"]),
+html.dark .text-white:is([class*="bg-pink-600 "], [class$="bg-pink-600"]),
+html.dark .text-white:is([class*="from-pink-600 "], [class$="from-pink-600"]),
+html.dark .text-white:is([class*="bg-rose-400 "], [class$="bg-rose-400"]),
+html.dark .text-white:is([class*="from-rose-400 "], [class$="from-rose-400"]),
+html.dark .text-white:is([class*="bg-rose-500 "], [class$="bg-rose-500"]),
+html.dark .text-white:is([class*="from-rose-500 "], [class$="from-rose-500"]),
+html.dark .text-white:is([class*="bg-rose-600 "], [class$="bg-rose-600"]),
+html.dark .text-white:is([class*="from-rose-600 "], [class$="from-rose-600"]),
+html.dark .text-white:is([class*="bg-red-400 "], [class$="bg-red-400"]),
+html.dark .text-white:is([class*="from-red-400 "], [class$="from-red-400"]),
+html.dark .text-white:is([class*="bg-red-500 "], [class$="bg-red-500"]),
+html.dark .text-white:is([class*="from-red-500 "], [class$="from-red-500"]),
+html.dark .text-white:is([class*="bg-red-600 "], [class$="bg-red-600"]),
+html.dark .text-white:is([class*="from-red-600 "], [class$="from-red-600"]),
+html.dark .text-white:is([class*="bg-orange-400 "], [class$="bg-orange-400"]),
+html.dark .text-white:is([class*="from-orange-400 "], [class$="from-orange-400"]),
+html.dark .text-white:is([class*="bg-orange-500 "], [class$="bg-orange-500"]),
+html.dark .text-white:is([class*="from-orange-500 "], [class$="from-orange-500"]),
+html.dark .text-white:is([class*="bg-orange-600 "], [class$="bg-orange-600"]),
+html.dark .text-white:is([class*="from-orange-600 "], [class$="from-orange-600"]),
+html.dark .text-white:is([class*="bg-amber-400 "], [class$="bg-amber-400"]),
+html.dark .text-white:is([class*="from-amber-400 "], [class$="from-amber-400"]),
+html.dark .text-white:is([class*="bg-amber-500 "], [class$="bg-amber-500"]),
+html.dark .text-white:is([class*="from-amber-500 "], [class$="from-amber-500"]),
+html.dark .text-white:is([class*="bg-amber-600 "], [class$="bg-amber-600"]),
+html.dark .text-white:is([class*="from-amber-600 "], [class$="from-amber-600"]),
+html.dark .text-white:is([class*="bg-yellow-400 "], [class$="bg-yellow-400"]),
+html.dark .text-white:is([class*="from-yellow-400 "], [class$="from-yellow-400"]),
+html.dark .text-white:is([class*="bg-yellow-500 "], [class$="bg-yellow-500"]),
+html.dark .text-white:is([class*="from-yellow-500 "], [class$="from-yellow-500"]),
+html.dark .text-white:is([class*="bg-yellow-600 "], [class$="bg-yellow-600"]),
+html.dark .text-white:is([class*="from-yellow-600 "], [class$="from-yellow-600"]),
+html.dark .text-white:is([class*="bg-lime-400 "], [class$="bg-lime-400"]),
+html.dark .text-white:is([class*="from-lime-400 "], [class$="from-lime-400"]),
+html.dark .text-white:is([class*="bg-lime-500 "], [class$="bg-lime-500"]),
+html.dark .text-white:is([class*="from-lime-500 "], [class$="from-lime-500"]),
+html.dark .text-white:is([class*="bg-lime-600 "], [class$="bg-lime-600"]),
+html.dark .text-white:is([class*="from-lime-600 "], [class$="from-lime-600"]),
+html.dark .text-white:is([class*="bg-green-400 "], [class$="bg-green-400"]),
+html.dark .text-white:is([class*="from-green-400 "], [class$="from-green-400"]),
+html.dark .text-white:is([class*="bg-green-500 "], [class$="bg-green-500"]),
+html.dark .text-white:is([class*="from-green-500 "], [class$="from-green-500"]),
+html.dark .text-white:is([class*="bg-green-600 "], [class$="bg-green-600"]),
+html.dark .text-white:is([class*="from-green-600 "], [class$="from-green-600"]),
+html.dark .text-white:is([class*="bg-emerald-400 "], [class$="bg-emerald-400"]),
+html.dark .text-white:is([class*="from-emerald-400 "], [class$="from-emerald-400"]),
+html.dark .text-white:is([class*="bg-emerald-500 "], [class$="bg-emerald-500"]),
+html.dark .text-white:is([class*="from-emerald-500 "], [class$="from-emerald-500"]),
+html.dark .text-white:is([class*="bg-emerald-600 "], [class$="bg-emerald-600"]),
+html.dark .text-white:is([class*="from-emerald-600 "], [class$="from-emerald-600"]) {
+  color: var(--ctp-crust);
+}

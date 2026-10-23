@@ -38,7 +38,7 @@ export default function AnswerNotePopup({
       <div
         className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
         style={{
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+          backgroundColor: theme === 'dark' ? '#313244' : '#ffffff',
           border: theme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(226 232 240)',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -55,7 +55,7 @@ export default function AnswerNotePopup({
                 style={{ color: data.isCorrect ? '#22c55e' : '#f59e0b' }}
               />
             </div>
-            <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}>
+            <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#cdd6f4' : '#0f172a' }}>
               {existingNote ? 'Edit Catatan' : 'Tambah Catatan'}
             </h3>
           </div>
@@ -79,7 +79,7 @@ export default function AnswerNotePopup({
             color: theme === 'dark' ? '#cbd5e1' : '#475569',
           }}
         >
-          <span className="font-semibold" style={{ color: theme === 'dark' ? '#e2e8f0' : '#334155' }}>Soal:</span>{' '}
+          <span className="font-semibold" style={{ color: theme === 'dark' ? '#bac2de' : '#334155' }}>Soal:</span>{' '}
           {truncated}
         </div>
 
@@ -121,7 +121,7 @@ export default function AnswerNotePopup({
           className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all"
           style={{
             backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
-            color: theme === 'dark' ? '#e2e8f0' : '#1e293b',
+            color: theme === 'dark' ? '#bac2de' : '#1e293b',
             border: `1px solid ${theme === 'dark' ? 'rgb(51 65 85)' : 'rgb(226 232 240)'}`,
           }}
           autoFocus
