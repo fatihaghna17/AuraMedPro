@@ -198,10 +198,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* TOP ROW: PAGE HEADER                                                     */}
       {/* ========================================================================= */}
-      <div className={`w-full p-5 rounded-xl border backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`w-full p-5 rounded-xl border backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4 ${
         theme === 'dark'
-          ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-          : 'bg-white/80 border-white/80 shadow-sm'
+          ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
+          : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
       }`}>
         <div className="flex items-center gap-3.5">
           <div 
@@ -306,10 +306,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           />
 
           {/* 2. AKTIVITAS BELAJAR */}
-          <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col justify-between ${
+          <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col justify-between ${
             theme === 'dark'
-              ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-              : 'bg-white/80 border-white/80 shadow-sm'
+              ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
+              : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
           }`}>
             <div>
               <div className="flex items-center justify-between gap-2 mb-4">
@@ -326,8 +326,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
               {/* Mini stats row */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className={`p-3 rounded-lg border text-center ${
-                  theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                <div className={`p-3 rounded-lg border text-center backdrop-blur-md ${
+                  theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
                 }`}>
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Benar Minggu Ini
@@ -336,8 +336,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
                   </span>
                 </div>
-                <div className={`p-3 rounded-lg border text-center ${
-                  theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                <div className={`p-3 rounded-lg border text-center backdrop-blur-md ${
+                  theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
                 }`}>
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Sesi Pomodoro
@@ -412,12 +412,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ======================================================================= */}
         <div className="lg:col-span-7 space-y-5">
           {/* 1. RIWAYAT PERCOBAAN KUIS (STANDALONE DEDICATED CARD) */}
-          <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col ${
+          <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col ${
             theme === 'dark'
-              ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-              : 'bg-white/80 border-white/80 shadow-sm'
+              ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
+              : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
           }`}>
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-white/15 dark:border-white/10 pb-3">
             <div className="flex items-center gap-2">
               <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -433,10 +433,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             {quizHistory.length > 0 && (
               <button
                 onClick={clearAllHistory}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer backdrop-blur-md ${
                   theme === 'dark'
-                    ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-rose-400'
-                    : 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600'
+                    ? 'bg-white/[0.06] hover:bg-rose-950/40 border-white/15 text-rose-400'
+                    : 'bg-white/50 hover:bg-rose-50/80 border-white/60 text-rose-600 shadow-xs'
                 }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -461,8 +461,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     <div className="space-y-4">
                       {/* Top Stats Overview */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className={`p-3.5 rounded-lg border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
+                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
                         }`}>
                           <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                             {quizHistory.length}
@@ -472,19 +472,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                           </div>
                         </div>
 
-                        <div className={`p-3.5 rounded-lg border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
+                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
                         }`}>
                           <div className="text-xl font-bold text-emerald-500">
-                            {Math.round(quizHistory.reduce((a, b) => a + b.score, 0) / quizHistory.length)}
+                            {Math.round(quizHistory.reduce((acc, curr) => acc + curr.score, 0) / quizHistory.length)}
                           </div>
                           <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                             Rata-rata Skor
                           </div>
                         </div>
 
-                        <div className={`p-3.5 rounded-lg border text-center ${
-                          theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
+                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
                         }`}>
                           <div className="text-xl font-bold text-amber-500">
                             {Math.max(...quizHistory.map((h) => h.score))}
@@ -513,10 +513,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                 setSelectedHistoryDetail(item);
                                 setOpenHistoryReviewIndices({});
                               }}
-                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border gap-3 transition-colors duration-150 cursor-pointer group/history ${
+                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border gap-3 transition-colors duration-150 cursor-pointer group/history backdrop-blur-md ${
                                 theme === 'dark'
-                                  ? 'bg-slate-800/30 hover:bg-slate-800/70 border-slate-800'
-                                  : 'bg-white hover:bg-slate-50 border-slate-200'
+                                  ? 'bg-white/[0.04] hover:bg-white/[0.09] border-white/10'
+                                  : 'bg-white/45 hover:bg-white/70 border-white/60 shadow-xs'
                               }`}
                               title="Klik untuk membuka detail soal & pembahasan"
                             >
@@ -581,12 +581,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         </div>
 
         {/* 2. LEADERBOARD CBT (STANDALONE DEDICATED CARD) */}
-        <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col ${
+        <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col ${
           theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-            : 'bg-white/80 border-white/80 shadow-sm'
+            ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
+            : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
         }`}>
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-white/15 dark:border-white/10 pb-3">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-amber-500" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -605,7 +605,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             <div className="space-y-4">
                     {/* Leaderboard Type Toggles */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+                      <div className="flex rounded-lg bg-white/40 dark:bg-slate-800/60 p-1 border border-white/60 dark:border-slate-700 backdrop-blur-md">
                         <button
                           onClick={() => setLeaderboardType('global')}
                           className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
@@ -861,13 +861,13 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     )}
 
                     <div className={`overflow-hidden rounded-xl border ${
-                        theme === 'dark' ? 'bg-slate-900/35 border-slate-800' : 'bg-slate-50/50 border-slate-200/50'
+                        theme === 'dark' ? 'bg-white/[0.04] border-white/10' : 'bg-white/35 border-white/60 backdrop-blur-md'
                       }`}>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
                               <tr className={`border-b text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 ${
-                                theme === 'dark' ? 'bg-slate-800/30 border-slate-800' : 'bg-slate-100/50 border-slate-200/50'
+                                theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/50 border-white/60'
                               }`}>
                                 <th className="py-3 px-4 w-16 text-center">Rank</th>
                                 <th className="py-3 px-4">Peserta</th>

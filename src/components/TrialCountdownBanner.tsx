@@ -95,10 +95,10 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   if (isSuperAdmin || isAdminAngkatan) {
     return (
       <div
-        className={`w-full rounded-2xl p-3.5 border transition-all animate-fade-in-down ${
+        className={`w-full rounded-2xl p-3.5 border transition-all backdrop-blur-xl animate-fade-in-down ${
           isDark
-            ? 'bg-slate-900/60 border-indigo-500/30 shadow-md'
-            : 'bg-indigo-50/80 border-indigo-200 shadow-sm'
+            ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-indigo-500/30 shadow-md'
+            : 'bg-white/45 border-indigo-200/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)]'
         }`}
       >
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -108,12 +108,12 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
               <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isSuperAdmin ? 'Akun Super Admin' : 'Akun Admin Angkatan'}
               </span>
-              <span className="text-[11px] text-slate-400 ml-2">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-2">
                 Akses Penuh Permanen (Bebas Batas Trial)
               </span>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             Akses Aktif
           </span>
         </div>
@@ -125,10 +125,10 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   if (isTrialExtended && !isActiveSubscription) {
     return (
       <div
-        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden animate-fade-in-down ${
+        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl animate-fade-in-down ${
           isDark
-            ? 'bg-gradient-to-r from-teal-950/60 via-emerald-950/40 to-slate-900/80 border-teal-500/30 shadow-lg shadow-teal-500/10'
-            : 'bg-gradient-to-r from-teal-50/95 via-emerald-50/80 to-sky-50/90 border-teal-200/90 shadow-md shadow-teal-500/5'
+            ? 'bg-gradient-to-r from-teal-950/40 via-emerald-950/30 to-slate-900/50 border-teal-500/30 shadow-lg shadow-teal-500/10'
+            : 'bg-white/45 border-teal-300/60 shadow-[0_8px_32px_0_rgba(20,184,166,0.08)]'
         }`}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -158,8 +158,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto">
-            <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-sm ${
-              isDark ? 'bg-slate-900/90 border-teal-500/30' : 'bg-white/95 border-teal-200'
+            <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border backdrop-blur-md shadow-xs ${
+              isDark ? 'bg-white/[0.06] border-teal-500/30' : 'bg-white/55 border-teal-300/70'
             }`}>
               <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" />
               <div>
@@ -172,7 +172,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 
         {!compact && (
           <div className={`mt-3 pt-2.5 border-t flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 ${
-            isDark ? 'border-slate-800' : 'border-slate-200/80'
+            isDark ? 'border-white/10' : 'border-slate-200/60'
           }`}>
             <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span>
@@ -191,10 +191,10 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
   // JIKA MASA TRIAL ATAU SUBSCRIPTION MASIH BERJALAN (COUNTDOWN AKTIF):
   return (
     <div
-      className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden animate-fade-in-down ${
+      className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl animate-fade-in-down ${
         isDark
-          ? 'bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900/80 border-indigo-500/30 shadow-lg shadow-indigo-500/10'
-          : 'bg-gradient-to-r from-indigo-50/95 via-purple-50/80 to-sky-50/90 border-indigo-200/90 shadow-md shadow-indigo-500/5'
+          ? 'bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-900/50 border-indigo-500/30 shadow-lg shadow-indigo-500/10'
+          : 'bg-white/45 border-indigo-300/60 shadow-[0_8px_32px_0_rgba(99,102,241,0.08)]'
       }`}
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -227,8 +227,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
         {/* Right Countdown boxes */}
         <div className="flex items-center gap-2 self-start md:self-auto">
           {/* Hari */}
-          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border shadow-sm ${
-            isDark ? 'bg-slate-900/90 border-indigo-500/30' : 'bg-white/95 border-indigo-200'
+          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
+            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.days).padStart(2, '0')}
@@ -241,8 +241,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
           <span className="font-black text-indigo-400 text-sm">:</span>
 
           {/* Jam */}
-          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border shadow-sm ${
-            isDark ? 'bg-slate-900/90 border-indigo-500/30' : 'bg-white/95 border-indigo-200'
+          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
+            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.hours).padStart(2, '0')}
@@ -255,8 +255,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
           <span className="font-black text-indigo-400 text-sm">:</span>
 
           {/* Menit */}
-          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border shadow-sm ${
-            isDark ? 'bg-slate-900/90 border-indigo-500/30' : 'bg-white/95 border-indigo-200'
+          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
+            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.minutes).padStart(2, '0')}
@@ -269,8 +269,8 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
           <span className="font-black text-indigo-400 text-sm">:</span>
 
           {/* Detik */}
-          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border shadow-sm ${
-            isDark ? 'bg-slate-900/90 border-purple-500/40' : 'bg-white/95 border-purple-300'
+          <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
+            isDark ? 'bg-white/[0.06] border-purple-500/30' : 'bg-white/55 border-purple-300/70'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-purple-600 dark:text-purple-400 animate-pulse">
               {String(timeLeft.seconds).padStart(2, '0')}

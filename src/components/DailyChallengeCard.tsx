@@ -7,10 +7,10 @@ interface DailyChallengeCardProps {
 
 export default function DailyChallengeCard({ theme, onStart }: DailyChallengeCardProps) {
   return (
-    <div className={`p-5 rounded-xl border backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+    <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
       theme === 'dark'
-        ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-        : 'bg-white/80 border-white/80 shadow-sm'
+        ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
+        : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
     }`}>
       <div className="flex items-start gap-3.5">
         <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">

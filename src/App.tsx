@@ -3518,8 +3518,8 @@ export default function App() {
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
-              <header className={`sticky top-0 z-20 backdrop-blur-md transition-colors border-b ${
-                theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] text-slate-50' : 'bg-white/70 border-slate-200/60 text-slate-900'
+              <header className={`sticky top-0 z-20 backdrop-blur-xl transition-colors border-b ${
+                theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 text-slate-50' : 'bg-white/45 border-white/60 text-slate-900 shadow-xs'
               }`}>
                 <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
                   <div className="lg:hidden flex items-center gap-2">
@@ -3529,7 +3529,7 @@ export default function App() {
                     <span className="font-bold text-base tracking-tight">AuraMed</span>
                   </div>
 
-                  <div className="hidden lg:block text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wide">
+                  <div className="hidden lg:block text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
                     Aura-Infused Question Drilling Platform
                   </div>
 
@@ -3544,7 +3544,7 @@ export default function App() {
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer select-none ${
                         pomodoroActive
                           ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
-                          : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200/50'
+                          : 'bg-white/50 dark:bg-slate-800/60 border-white/60 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white/70 shadow-xs backdrop-blur-md'
                       }`}
                       title="Pomodoro Timer (Klik untuk membuka di Beranda)"
                     >
@@ -3565,7 +3565,7 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border backdrop-blur-md ${
                       theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'
                     }`}>
                       <Flame className="w-3.5 h-3.5 fill-current text-amber-500" />
@@ -3590,8 +3590,8 @@ export default function App() {
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-                      className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-                        theme === 'dark' ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-amber-500 hover:bg-slate-100'
+                      className={`p-2 rounded-lg border transition-colors cursor-pointer backdrop-blur-md ${
+                        theme === 'dark' ? 'bg-white/[0.08] hover:bg-white/[0.15] border-white/20 text-indigo-400' : 'bg-white/50 hover:bg-white/75 border-white/60 text-amber-500 shadow-xs'
                       }`}
                     >
                       {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

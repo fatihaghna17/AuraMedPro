@@ -14,10 +14,10 @@ export default function QuickActionsRow({
   theme, pendingCount, pendingProgress, onNewQuiz, onResumeOrBanks, onBanks,
 }: QuickActionsRowProps) {
   const isDark = theme === 'dark';
-  const cardClass = `group flex items-center justify-between p-4 rounded-xl border backdrop-blur-md transition-colors duration-150 cursor-pointer ${
+  const cardClass = `group flex items-center justify-between p-4 rounded-xl border backdrop-blur-xl transition-all duration-200 cursor-pointer ${
     isDark 
-      ? 'bg-slate-900/60 hover:bg-slate-800/80 border-white/[0.08] hover:border-slate-700 shadow-lg' 
-      : 'bg-white/80 hover:bg-white border-white/80 hover:border-slate-300 shadow-sm'
+      ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 hover:from-white/[0.12] hover:via-slate-900/45 hover:to-slate-900/55 border-white/15 hover:border-white/25 shadow-lg shadow-black/15' 
+      : 'bg-white/45 hover:bg-white/65 border-white/70 hover:border-white/90 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
   }`;
 
   return (

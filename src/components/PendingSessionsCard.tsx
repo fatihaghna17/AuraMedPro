@@ -21,8 +21,8 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
   if (sessions.length === 0) return null;
 
   return (
-    <div className={`p-5 rounded-xl border backdrop-blur-md ${
-      theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] shadow-lg' : 'bg-white/80 border-white/80 shadow-sm'
+    <div className={`p-5 rounded-xl border backdrop-blur-xl ${
+      theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl' : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
     }`}>
       <div className="flex items-center justify-between gap-2 mb-3">
         <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -46,8 +46,8 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
           return (
             <div
               key={session.id}
-              className={`p-3.5 rounded-lg border flex flex-col justify-between gap-3 transition-colors ${
-                theme === 'dark' ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+              className={`p-3.5 rounded-lg border flex flex-col justify-between gap-3 transition-colors backdrop-blur-md ${
+                theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'bg-white/45 border-white/60 shadow-xs'
               }`}
             >
               <div className="min-w-0">
