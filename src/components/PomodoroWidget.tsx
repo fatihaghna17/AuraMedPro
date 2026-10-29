@@ -64,14 +64,14 @@ export default function PomodoroWidget({
     <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col justify-between transition-colors ${
       theme === 'dark'
         ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-        : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
+        : 'liquid-glass-card'
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Pomodoro Timer</h3>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-            isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 animate-pulse' : 'bg-white/50 dark:bg-slate-800/60 border border-white/60 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+            isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 animate-pulse' : 'liquid-glass-subtle dark:bg-slate-800/60 dark:border-slate-700 text-slate-600 dark:text-slate-400'
           }`}>
             {isActive ? 'Berjalan' : 'Jeda'}
           </span>
@@ -84,7 +84,7 @@ export default function PomodoroWidget({
 
       {/* Mode Selector Tabs */}
       {onSelectMode && (
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-white/40 dark:bg-slate-800/60 border border-white/60 dark:border-slate-700/50 mb-3 backdrop-blur-md">
+        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg liquid-glass-subtle dark:bg-slate-800/60 dark:border-slate-700/50 mb-3 backdrop-blur-md">
           {(['focus', 'break', 'long_break'] as PomodoroMode[]).map((m) => {
             const isSelected = mode === m;
             const meta = modeThemes[m];

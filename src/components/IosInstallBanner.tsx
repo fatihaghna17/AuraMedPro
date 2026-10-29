@@ -10,7 +10,7 @@ export default function IosInstallBanner({ theme, onInstallClick }: IosInstallBa
     <div className={`p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 backdrop-blur-xl ${
       theme === 'dark'
         ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-        : 'bg-white/45 border-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]'
+        : 'liquid-glass-card'
     }`}>
       <div className="flex items-start gap-3.5">
         <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-500 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">

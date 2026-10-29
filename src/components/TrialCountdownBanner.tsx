@@ -98,7 +98,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
         className={`w-full rounded-2xl p-3.5 border transition-all backdrop-blur-xl animate-fade-in-down ${
           isDark
             ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-indigo-500/30 shadow-md'
-            : 'bg-white/45 border-indigo-200/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)]'
+            : 'liquid-glass-card border-indigo-200/80 shadow-[0_12px_36px_0_rgba(31,38,135,0.06)]'
         }`}
       >
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -128,7 +128,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
         className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl animate-fade-in-down ${
           isDark
             ? 'bg-gradient-to-r from-teal-950/40 via-emerald-950/30 to-slate-900/50 border-teal-500/30 shadow-lg shadow-teal-500/10'
-            : 'bg-white/45 border-teal-300/60 shadow-[0_8px_32px_0_rgba(20,184,166,0.08)]'
+            : 'liquid-glass-card border-teal-300/80 shadow-[0_12px_36px_0_rgba(20,184,166,0.08)]'
         }`}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -194,7 +194,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
       className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl animate-fade-in-down ${
         isDark
           ? 'bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-900/50 border-indigo-500/30 shadow-lg shadow-indigo-500/10'
-          : 'bg-white/45 border-indigo-300/60 shadow-[0_8px_32px_0_rgba(99,102,241,0.08)]'
+          : 'liquid-glass-card border-indigo-300/80 shadow-[0_12px_36px_0_rgba(99,102,241,0.08)]'
       }`}
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -228,7 +228,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
         <div className="flex items-center gap-2 self-start md:self-auto">
           {/* Hari */}
           <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
-            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
+            isDark ? 'bg-white/[0.06] border-white/15' : 'liquid-glass-subtle'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.days).padStart(2, '0')}
@@ -242,7 +242,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 
           {/* Jam */}
           <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
-            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
+            isDark ? 'bg-white/[0.06] border-white/15' : 'liquid-glass-subtle'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.hours).padStart(2, '0')}
@@ -256,7 +256,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 
           {/* Menit */}
           <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
-            isDark ? 'bg-white/[0.06] border-white/15' : 'bg-white/55 border-white/70'
+            isDark ? 'bg-white/[0.06] border-white/15' : 'liquid-glass-subtle'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
               {String(timeLeft.minutes).padStart(2, '0')}
@@ -270,7 +270,7 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 
           {/* Detik */}
           <div className={`flex flex-col items-center justify-center min-w-[52px] px-2.5 py-1.5 rounded-xl border backdrop-blur-md shadow-xs ${
-            isDark ? 'bg-white/[0.06] border-purple-500/30' : 'bg-white/55 border-purple-300/70'
+            isDark ? 'bg-white/[0.06] border-purple-500/30' : 'liquid-glass-subtle'
           }`}>
             <span className="text-base sm:text-lg font-black font-mono text-purple-600 dark:text-purple-400 animate-pulse">
               {String(timeLeft.seconds).padStart(2, '0')}

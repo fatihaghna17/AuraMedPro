@@ -75,7 +75,7 @@ export default function SidebarNav({
 
   return (
     <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r backdrop-blur-2xl transition-colors duration-150 ${
-      theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 text-slate-100' : 'bg-white/45 border-white/60 text-slate-900 shadow-sm'
+      theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 text-slate-100' : 'liquid-glass-card border-r border-white/80 text-slate-900'
     }`}>
       {/* Logo & Header */}
       <div className="p-5">
@@ -87,7 +87,7 @@ export default function SidebarNav({
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-base tracking-tight">AuraMed</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border backdrop-blur-md ${
-                theme === 'dark' ? 'bg-white/[0.08] text-slate-200 border-white/15' : 'bg-white/60 text-slate-700 border-white/70 shadow-xs'
+                theme === 'dark' ? 'bg-white/[0.08] text-slate-200 border-white/15' : 'liquid-glass-subtle text-slate-700'
               }`}>
                 PRO
               </span>
@@ -144,7 +144,7 @@ export default function SidebarNav({
               </div>
             </div>
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border backdrop-blur-md ${
-              theme === 'dark' ? 'bg-white/[0.06] border-white/15' : 'bg-white/60 border-white/70 shadow-xs'
+              theme === 'dark' ? 'bg-white/[0.06] border-white/15' : 'liquid-glass-subtle'
             }`} title={`${streakFreezeLeft} Streak Freeze Tersedia`}>
               <span className="text-xs font-bold text-sky-600 dark:text-sky-400">{streakFreezeLeft}</span>
               <span className="text-[10px]">❄️</span>
@@ -156,7 +156,7 @@ export default function SidebarNav({
         <div className="p-4 border-t border-white/15 dark:border-white/10">
           <div 
             onClick={() => onTabChange('profile')}
-            className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer group"
+            className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-white/60 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer group"
             title="Buka Halaman Profil & Kustomisasi Avatar"
           >
             <div className="relative shrink-0">
@@ -189,7 +189,7 @@ export default function SidebarNav({
             className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer backdrop-blur-md ${
               theme === 'dark'
                 ? 'bg-white/[0.06] hover:bg-rose-950/40 border-white/15 hover:border-rose-800 text-slate-300 hover:text-rose-400'
-                : 'bg-white/50 hover:bg-rose-50/80 border-white/60 hover:border-rose-300 text-slate-700 hover:text-rose-600 shadow-xs'
+                : 'liquid-glass-subtle-interactive hover:bg-rose-50/80 hover:border-rose-300 text-slate-700 hover:text-rose-600'
             }`}
           >
             <LogOut className="w-3.5 h-3.5" />

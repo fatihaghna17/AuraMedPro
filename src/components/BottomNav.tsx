@@ -48,7 +48,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
             className={`fixed bottom-16 left-3 right-3 rounded-xl border p-2 shadow-xl backdrop-blur-2xl ${
               theme === 'dark'
                 ? 'bg-slate-900/60 border-white/15 text-slate-100'
-                : 'bg-white/60 border-white/80 text-slate-900 shadow-lg'
+                : 'liquid-glass-card text-slate-900 shadow-xl'
             }`}
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-white/15 dark:border-white/10 mb-1">
@@ -92,7 +92,7 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
       )}
 
       <nav className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden grid grid-cols-5 items-center h-16 border-t px-1 backdrop-blur-xl transition-colors duration-150 ${
-        theme === 'dark' ? 'bg-slate-900/80 border-slate-800/80 text-slate-400' : 'bg-white/80 border-slate-200/80 text-slate-600'
+        theme === 'dark' ? 'bg-slate-900/80 border-slate-800/80 text-slate-400' : 'liquid-glass-card border-t border-white/80 text-slate-700 shadow-lg'
       }`}>
         {primaryItems.map((item) => {
           const Icon = item.icon;
