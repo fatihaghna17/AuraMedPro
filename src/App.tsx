@@ -101,7 +101,6 @@ import { useQuizState } from './hooks/useQuizState';
 import { useSRS } from './hooks/useSRS';
 import { useToast } from './hooks/useToast';
 import { useAuth } from './hooks/useAuth';
-import { useNotifications } from './hooks/useNotifications';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import { useAnswerNotes } from './hooks/useAnswerNotes';
 import { SetupHomeTab } from './components/tabs/SetupHomeTab';
@@ -142,7 +141,6 @@ import SkeletonLoader from './components/SkeletonLoader';
 import ConfirmModal from './components/ConfirmModal';
 import BottomNav from './components/BottomNav';
 import PomodoroWidget from './components/PomodoroWidget';
-import NotificationDropdown from './components/NotificationDropdown';
 import SidebarNav from './components/SidebarNav';
 import { ScenicBackground } from './components/ScenicBackground';
 import LoginForm from './components/LoginForm';
@@ -863,70 +861,6 @@ export default function App() {
       }
     }
   }, [currentUser, profileUsername, subscriptionStatus]);
-
-  // === NOTIFIKASI ===
-// moved useToast
-// extracted notifOpen
-  const {
-    notifOpen, notifList, notifCount, pushEnabled,
-    setNotifOpen, requestPushPermission, fetchNotifications, markAllNotifRead,
-    showBrowserNotification
-  } = useNotifications(currentUser, srs, triggerToast, userAngkatan || undefined, userProdi || undefined);
-
-  // Klik notifikasi -> Masuk Bank Soal dan auto-select soal
-  const handleNotificationClick = (notif: { id: string; type: string; text: string; time: string; bankName?: string }) => {
-    setNotifOpen(false);
-    if (notif.type === 'lifetime') {
-      setLifetimeModalOpen(true);
-      return;
-    }
-    if (notif.type === 'new_quiz' && notif.bankName) {
-      const bankKey = notif.bankName;
-      // 1. Pindah tab ke Bank Soal
-      setDashboardTab('banks');
-      
-      // 2. Autoselect kuis
-      setSelectedDatabases((prev) => (prev.includes(bankKey) ? prev : [...prev, bankKey]));
-      
-      // 3. Pastikan parent folder filter tidak menyembunyikan kolom ini
-      setActiveParentFilter('all');
-      
-      // 4. Buka / unminimize folder jika sebelumnya diminimize
-      const folderOfBank = quizFolderMap[bankKey] || (bankKey.includes('/') ? bankKey.split('/')[0] : null);
-      setMinimizedFolders((prev) => {
-        const next = { ...prev };
-        if (folderOfBank && next[folderOfBank]) next[folderOfBank] = false;
-        // Buka juga folder Terbaru
-        Object.keys(next).forEach((k) => {
-          if (k.startsWith('Terbaru')) next[k] = false;
-        });
-        return next;
-      });
-
-      // 5. Berikan feedback dan scroll ke kartu kuis
-      const cleanName = bankKey.replace(/\.(json|yaml|yml)$/i, '');
-      triggerToast(`Soal "${cleanName}" otomatis dipilih!`, '🎯');
-      setTimeout(() => {
-        const el = document.getElementById(`quiz-card-${bankKey}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-          el.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
-          setTimeout(() => {
-            el.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
-          }, 3000);
-        }
-      }, 350);
-    } else if (notif.type === 'srs') {
-      setDashboardTab('srs');
-    }
-  };
-// extracted notifList
-// extracted notifCount
-// extracted pushEnabled
-
-  // Show browser Notification (appears on device lock screen / notification center)
-
-  // Request push notification permission
 
   // Modal confirm states
   const [modalOpen, setModalOpen] = useState(false);
@@ -3608,20 +3542,6 @@ export default function App() {
                       <span className="opacity-30 font-normal">|</span>
                       <span>{userXP} XP</span>
                     </div>
-
-                    {/* Notification Bell + Dropdown */}
-                    <NotificationDropdown
-                      theme={theme}
-                      isOpen={notifOpen}
-                      onClose={() => setNotifOpen(false)}
-                      onToggle={() => setNotifOpen(!notifOpen)}
-                      notifList={notifList}
-                      notifCount={notifCount}
-                      onMarkAllRead={markAllNotifRead}
-                      pushPermission={typeof Notification !== 'undefined' ? Notification.permission : 'default'}
-                      onRequestPush={requestPushPermission}
-                      onItemClick={handleNotificationClick}
-                    />
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
