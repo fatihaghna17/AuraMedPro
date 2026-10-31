@@ -670,8 +670,8 @@ export const mapUnifiedQuestion = (item: any, rootFeatureFlags: any = {}): Quest
 
   return {
     pertanyaan: (() => {
-      const p = item.pertanyaan || item.clue || item.question;
-      if (typeof p === 'object' && p !== null) return p.text || "Tanpa pertanyaan";
+      const p = item.pertanyaan || item.stem || item.soal || item.vignette || item.clue || item.question;
+      if (typeof p === 'object' && p !== null) return p.text || p.pertanyaan || p.stem || "Tanpa pertanyaan";
       return typeof p === 'string' ? p : "Tanpa pertanyaan";
     })(),
     pilihan,
