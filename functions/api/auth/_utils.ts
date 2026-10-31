@@ -234,6 +234,11 @@ export function checkSubscriptionStatus(profile: any): { canAccess: boolean, sta
   if (profile.subscription_status === 'lifetime' || username === 'jidan') {
     return { canAccess: true, status: 'lifetime', expiresAt: null };
   }
+
+  // Khusus Akun Nao
+  if (username === 'nao') {
+    return { canAccess: true, status: 'active', expiresAt: null };
+  }
   
   const now = new Date();
   

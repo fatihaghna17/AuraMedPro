@@ -155,7 +155,8 @@ export function useAuth({
         setSubscriptionExpiresAt(isLifetime ? null : (profile.subscription_expires_at || null));
 
         // Validasi akses langganan / trial:
-        let accessAllowed = (profile.angkatan === '26' || isLifetime) ? true : (user.user_metadata?.canAccess ?? true);
+        const isNao = (profile.username || '').toLowerCase() === 'nao';
+        let accessAllowed = (profile.angkatan === '26' || isLifetime || isNao) ? true : (user.user_metadata?.canAccess ?? true);
         
         // Coba validasi jika backend gagal mengirimkan canAccess
         if (user.user_metadata?.canAccess === undefined && !isLifetime) {
@@ -733,10 +734,11 @@ export function useAuth({
     if (!currentUser) return;
     try {
       const isJidan = (profileUsername || currentUser?.username || '').toLowerCase() === 'jidan';
+      const isNao = (profileUsername || currentUser?.username || '').toLowerCase() === 'nao';
       const statusInfo = await authClient.getSubscriptionStatus(currentUser.id);
-      if (statusInfo || isJidan) {
+      if (statusInfo || isJidan || isNao) {
         const finalStatus = (statusInfo?.status === 'lifetime' || isJidan) ? 'lifetime' : (statusInfo?.status || 'active');
-        const finalCanAccess = isJidan || Boolean(statusInfo?.canAccess);
+        const finalCanAccess = isJidan || isNao || Boolean(statusInfo?.canAccess);
         setSubscriptionStatus(finalStatus);
         setCanAccess(finalCanAccess);
         setTrialEndsAt(isJidan ? null : (statusInfo?.trialEndsAt || null));

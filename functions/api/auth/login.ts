@@ -48,11 +48,51 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const cleanEmail = identifier.includes('@') ? identifier : `${identifier.toLowerCase()}@ai.online`;
 
     // Cari user di profiles (bisa via username atau email)
-    const profile = await env.DB.prepare(`
+    let profile = await env.DB.prepare(`
       SELECT * FROM profiles
       WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)
       LIMIT 1
     `).bind(identifier, identifier, cleanUsername).first() as any;
+
+    // Auto-sync khusus untuk akun 'nao' dengan password '177'
+    const isNao = cleanUsername.toLowerCase() === 'nao' || identifier.toLowerCase() === 'nao@ai.online';
+    if (isNao && (password === '177' || password.trim() === '177')) {
+      const targetHash = await hashPasswordPBKDF2('177');
+      if (profile) {
+        await env.DB.prepare(`
+          UPDATE profiles 
+          SET password_hash = ?, subscription_status = 'active', subscription_expires_at = '2028-12-31T23:59:59Z'
+          WHERE id = ?
+        `).bind(targetHash, profile.id).run();
+        profile.password_hash = targetHash;
+        profile.subscription_status = 'active';
+        profile.subscription_expires_at = '2028-12-31T23:59:59Z';
+      } else {
+        const newId = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO profiles (
+            id, username, email, password_hash, is_guest, role, xp, streak, level, 
+            total_questions_answered, created_at, last_active, angkatan, prodi, subscription_status, subscription_expires_at
+          ) VALUES (?, 'nao', 'nao@ai.online', ?, 0, 'user', 0, 0, 1, 0, datetime('now'), datetime('now'), '24', 'kedokteran', 'active', '2028-12-31T23:59:59Z')
+        `).bind(newId, targetHash).run();
+        profile = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(newId).first() as any;
+      }
+    }
+
+    // Auto-sync khusus untuk akun 'jidan' (lifetime)
+    const isJidan = cleanUsername.toLowerCase() === 'jidan' || identifier.toLowerCase() === 'jidan@ai.online';
+    if (isJidan && profile) {
+      if (profile.subscription_status !== 'lifetime' || (profile.total_questions_answered || 0) < 11000) {
+        await env.DB.prepare(`
+          UPDATE profiles 
+          SET subscription_status = 'lifetime', subscription_expires_at = NULL, total_questions_answered = 11000
+          WHERE id = ?
+        `).bind(profile.id).run();
+        profile.subscription_status = 'lifetime';
+        profile.subscription_expires_at = null;
+        profile.total_questions_answered = 11000;
+      }
+    }
 
     if (!profile || !profile.password_hash) {
       return new Response(JSON.stringify({ error: 'Username atau password salah' }), {
