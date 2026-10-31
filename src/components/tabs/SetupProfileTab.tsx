@@ -356,14 +356,24 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
               </div>
               <div className="py-2.5 flex justify-between items-center">
                 <span className="font-semibold text-slate-400">Tipe Akun</span>
-                <span className="font-extrabold text-teal-500 uppercase tracking-widest text-[9px] bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">Pro</span>
+                <span className={`font-extrabold uppercase tracking-widest text-[9px] px-2 py-0.5 rounded border ${
+                  subscriptionStatus === 'lifetime'
+                    ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+                    : 'bg-teal-500/10 text-teal-500 border-teal-500/20'
+                }`}>
+                  {subscriptionStatus === 'lifetime' ? '👑 Lifetime Pro' : 'Pro'}
+                </span>
               </div>
               <div className="py-2.5 flex justify-between items-center">
                 <span className="font-semibold text-slate-400">Masa Berlaku</span>
-                <span className="font-extrabold text-indigo-500 dark:text-indigo-400 text-[10px] flex items-center gap-1">
+                <span className={`font-extrabold text-[10px] flex items-center gap-1 ${
+                  subscriptionStatus === 'lifetime' ? 'text-amber-500 dark:text-amber-400 font-black' : 'text-indigo-500 dark:text-indigo-400'
+                }`}>
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   {isSuperAdmin
                     ? 'Akses Permanen'
+                    : subscriptionStatus === 'lifetime'
+                    ? '👑 Lifetime (Permanen - Bebas Batas)'
                     : subscriptionStatus === 'active' && subscriptionExpiresAt
                     ? `Aktif s.d. ${new Date(subscriptionExpiresAt).toLocaleDateString('id-ID')}`
                     : userAngkatan === '26'

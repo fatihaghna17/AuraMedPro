@@ -1,10 +1,10 @@
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Clock, BookOpen, BellRing } from 'lucide-react';
+import { Bell, Clock, BookOpen, BellRing, Sparkles } from 'lucide-react';
 
-interface NotificationItem {
+export interface NotificationItem {
   id: string;
-  type: 'srs' | 'new_quiz';
+  type: 'srs' | 'new_quiz' | 'lifetime';
   text: string;
   time: string;
   bankName?: string;
@@ -107,20 +107,31 @@ export default function NotificationDropdown({
                     }`}
                   >
                     <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${
-                      notif.type === 'srs' ? 'bg-amber-500/10 text-amber-500' : 'bg-indigo-500/10 text-indigo-500'
+                      notif.type === 'lifetime'
+                        ? 'bg-amber-500/20 text-amber-500 ring-1 ring-amber-500/40 shadow-xs'
+                        : notif.type === 'srs'
+                        ? 'bg-amber-500/10 text-amber-500'
+                        : 'bg-indigo-500/10 text-indigo-500'
                     }`}>
-                      {notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+                      {notif.type === 'lifetime' ? <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" /> : notif.type === 'srs' ? <Clock className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-semibold leading-snug transition-colors ${
-                        theme === 'dark' ? 'text-slate-200 group-hover:text-indigo-400' : 'text-slate-700 group-hover:text-indigo-600'
+                        notif.type === 'lifetime'
+                          ? 'text-amber-500 dark:text-amber-300 font-bold'
+                          : theme === 'dark' ? 'text-slate-200 group-hover:text-indigo-400' : 'text-slate-700 group-hover:text-indigo-600'
                       }`}>
                         {notif.text}
                       </p>
                       <div className="flex items-center justify-between mt-1">
-                        <span className={`text-[10px] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] ${notif.type === 'lifetime' ? 'text-amber-400/80 font-bold' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                           {notif.time}
                         </span>
+                        {notif.type === 'lifetime' && (
+                          <span className="text-[10px] font-black text-amber-500 group-hover:underline flex items-center gap-0.5">
+                            👑 Lihat Detail Lifetime →
+                          </span>
+                        )}
                         {notif.type === 'new_quiz' && (
                           <span className="text-[10px] font-bold text-indigo-500 group-hover:underline flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
                             Pilih soal & buka →

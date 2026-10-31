@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, ShieldCheck, Search, Clock, CheckCircle2, AlertCircle, 
   Trash2, User, RefreshCw, Sparkles, ExternalLink, Calendar,
-  Sun, Moon, ArrowLeft, Database, Check, Users, ShieldAlert
+  Sun, Moon, ArrowLeft, Database, Check, Users, ShieldAlert, Key, X
 } from 'lucide-react';
 import { ScenicBackground } from './ScenicBackground';
 
@@ -51,6 +51,21 @@ export default function AdminScreen() {
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+
+  // Reset Password states
+  const [resetPasswordModal, setResetPasswordModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    username: string;
+    newPassword: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    userId: '',
+    username: '',
+    newPassword: '',
+    loading: false,
+  });
 
   const isDark = theme === 'dark';
 
@@ -118,7 +133,7 @@ export default function AdminScreen() {
         body: JSON.stringify({ paymentId, userId })
       });
       
-      const data = await res.json();
+      const data = (await res.json()) as any;
       if (data.success) {
         alert('User berhasil diaktifkan! 🎉');
         setPayments(payments.filter(p => p.id !== paymentId));
@@ -140,7 +155,7 @@ export default function AdminScreen() {
         body: JSON.stringify({ paymentId })
       });
       
-      const data = await res.json();
+      const data = (await res.json()) as any;
       if (data.success) {
         setPayments(payments.filter(p => p.id !== paymentId));
       } else {
@@ -151,26 +166,30 @@ export default function AdminScreen() {
     }
   };
 
-  const handleManualActivate = async (userId: string, username: string, days = 30) => {
-    if (!confirm(`Aktifkan akun "${username}" selama ${days} hari dari sekarang?`)) return;
+  const handleManualActivate = async (userId: string, username: string, days: number | string = 30) => {
+    const isLifetime = days === 'lifetime' || days === 99999;
+    const confirmMsg = isLifetime 
+      ? `Aktifkan akun "${username}" sebagai LIFETIME (Permanen tanpa batas waktu)?`
+      : `Aktifkan akun "${username}" selama ${days} hari dari sekarang?`;
+    if (!confirm(confirmMsg)) return;
 
     setActivatingId(userId);
     try {
       const res = await fetch('/api/admin/manual-activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, days })
+        body: JSON.stringify({ userId, days: isLifetime ? 'lifetime' : days })
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as any;
       if (data.success) {
-        alert(`Akun "${username}" berhasil diaktifkan selama ${days} hari! 🎉`);
+        alert(isLifetime ? `Akun "${username}" berhasil diaktifkan LIFETIME! 🎉` : `Akun "${username}" berhasil diaktifkan selama ${days} hari! 🎉`);
         // Update local search results
         setSearchResults(prev => prev.map(u => {
           if (u.id === userId) {
             return {
               ...u,
-              subscription_status: 'active',
+              subscription_status: isLifetime ? 'lifetime' : 'active',
               subscription_expires_at: data.expiresAt
             };
           }
@@ -183,6 +202,52 @@ export default function AdminScreen() {
       alert('Terjadi kesalahan jaringan.');
     } finally {
       setActivatingId(null);
+    }
+  };
+
+  const openResetPasswordModal = (userId: string, username: string) => {
+    const random3Digit = Math.floor(100 + Math.random() * 900).toString();
+    setResetPasswordModal({
+      isOpen: true,
+      userId,
+      username,
+      newPassword: random3Digit,
+      loading: false,
+    });
+  };
+
+  const handleResetPassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const { userId, username, newPassword } = resetPasswordModal;
+    if (!newPassword || newPassword.trim().length < 3) {
+      alert('Password minimal 3 karakter!');
+      return;
+    }
+
+    setResetPasswordModal(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, newPassword: newPassword.trim() }),
+      });
+      const data = (await res.json()) as any;
+      if (data.success) {
+        alert(`✅ Password untuk akun "${username}" berhasil diubah menjadi: ${newPassword.trim()}!`);
+        setResetPasswordModal({
+          isOpen: false,
+          userId: '',
+          username: '',
+          newPassword: '',
+          loading: false,
+        });
+      } else {
+        alert('❌ Gagal mengubah password: ' + (data.error || 'Unknown error'));
+        setResetPasswordModal(prev => ({ ...prev, loading: false }));
+      }
+    } catch {
+      alert('❌ Terjadi kesalahan jaringan saat mengubah password.');
+      setResetPasswordModal(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -549,9 +614,10 @@ export default function AdminScreen() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {searchResults.map(user => {
-                  const isActive = user.subscription_status === 'active';
+                  const isLifetime = user.subscription_status === 'lifetime';
+                  const isActive = user.subscription_status === 'active' || isLifetime;
                   const expiresDate = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
-                  const isExpired = expiresDate ? expiresDate.getTime() < Date.now() : true;
+                  const isExpired = isLifetime ? false : (expiresDate ? expiresDate.getTime() < Date.now() : true);
                   const isActivating = activatingId === user.id;
 
                   return (
@@ -568,7 +634,9 @@ export default function AdminScreen() {
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-black text-lg truncate">{user.username}</h3>
                           <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                            isActive && !isExpired
+                            isLifetime
+                              ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 font-black'
+                              : isActive && !isExpired
                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                               : user.angkatan === '26'
                               ? 'bg-teal-500/20 text-teal-400 border-teal-500/30'
@@ -576,7 +644,9 @@ export default function AdminScreen() {
                               ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                               : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                           }`}>
-                            {isActive && !isExpired
+                            {isLifetime
+                              ? '👑 Lifetime'
+                              : isActive && !isExpired
                               ? 'Active'
                               : user.angkatan === '26'
                               ? 'Trial Diperpanjang'
@@ -605,7 +675,11 @@ export default function AdminScreen() {
                           <div className="flex justify-between text-xs">
                             <span className="text-slate-400">Masa Aktif:</span>
                             <span className="font-bold">
-                              {expiresDate ? expiresDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (user.angkatan === '26' ? 'Trial Aktif' : 'Belum aktif')}
+                              {isLifetime
+                                ? '👑 Lifetime (Permanen)'
+                                : expiresDate
+                                ? expiresDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : (user.angkatan === '26' ? 'Trial Aktif' : 'Belum aktif')}
                             </span>
                           </div>
                           {user.angkatan === '26' && !isActive ? (
@@ -638,18 +712,6 @@ export default function AdminScreen() {
                           <button
                             type="button"
                             disabled={isActivating}
-                            onClick={() => handleManualActivate(user.id, user.username, 60)}
-                            className={`py-2 rounded-full text-[10px] font-bold border transition-all cursor-pointer text-center ${
-                              isDark 
-                                ? 'bg-white/[0.05] hover:bg-white/10 border-white/10 text-slate-300' 
-                                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            +60 Hari
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isActivating}
                             onClick={() => handleManualActivate(user.id, user.username, 90)}
                             className={`py-2 rounded-full text-[10px] font-bold border transition-all cursor-pointer text-center ${
                               isDark 
@@ -659,7 +721,29 @@ export default function AdminScreen() {
                           >
                             +90 Hari
                           </button>
+                          <button
+                            type="button"
+                            disabled={isActivating}
+                            onClick={() => handleManualActivate(user.id, user.username, 'lifetime')}
+                            className="py-2 rounded-full text-[10px] font-extrabold border transition-all cursor-pointer text-center bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-500"
+                          >
+                            👑 Lifetime
+                          </button>
                         </div>
+
+                        {/* Ganti Password Button */}
+                        <button
+                          type="button"
+                          onClick={() => openResetPasswordModal(user.id, user.username)}
+                          className={`w-full py-2.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                            isDark 
+                              ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-amber-300' 
+                              : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800'
+                          }`}
+                        >
+                          <Key className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Ganti Password</span>
+                        </button>
                       </div>
                     </div>
                   );
@@ -669,6 +753,114 @@ export default function AdminScreen() {
           </div>
         )}
       </main>
+
+      {/* Modal Reset Password */}
+      {resetPasswordModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className={`w-full max-w-md rounded-2xl p-6 shadow-2xl border ${
+              isDark 
+                ? 'bg-slate-900 border-white/10 text-white' 
+                : 'bg-white border-slate-200 text-slate-800'
+            }`}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">Ganti Password Akun</h3>
+                  <p className="text-xs text-slate-400">User: <span className="font-semibold text-teal-400">{resetPasswordModal.username}</span></p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetPasswordModal(prev => ({ ...prev, isOpen: false }))}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1 text-slate-300">
+                  Password Baru (misal: 3 digit angka / teks):
+                </label>
+                <input
+                  type="text"
+                  value={resetPasswordModal.newPassword}
+                  onChange={(e) => setResetPasswordModal(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Masukkan password baru..."
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-mono tracking-wider border outline-none transition-all ${
+                    isDark 
+                      ? 'bg-black/30 border-white/10 focus:border-amber-400 text-white' 
+                      : 'bg-slate-50 border-slate-200 focus:border-amber-500 text-slate-900'
+                  }`}
+                  autoFocus
+                />
+              </div>
+
+              {/* Preset buttons */}
+              <div>
+                <p className="text-[11px] text-slate-400 mb-2">Preset Cepat:</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rand = Math.floor(100 + Math.random() * 900).toString();
+                      setResetPasswordModal(prev => ({ ...prev, newPassword: rand }));
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                      isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    🎲 Acak 3 Digit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResetPasswordModal(prev => ({ ...prev, newPassword: '177' }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                      isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-300' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-amber-700'
+                    }`}
+                  >
+                    177
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResetPasswordModal(prev => ({ ...prev, newPassword: '123' }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                      isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    123
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResetPasswordModal(prev => ({ ...prev, isOpen: false }))}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border ${
+                    isDark ? 'border-white/10 hover:bg-white/5 text-slate-400' : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                  }`}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetPasswordModal.loading || !resetPasswordModal.newPassword}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {resetPasswordModal.loading ? 'Menyimpan...' : 'Simpan Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer className="relative z-20 w-full px-6 sm:px-10 py-6 text-center">

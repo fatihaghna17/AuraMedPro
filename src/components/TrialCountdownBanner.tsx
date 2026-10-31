@@ -25,12 +25,15 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
 }) => {
   const isDark = theme === 'dark';
 
-  const isActiveSubscription = subscriptionStatus === 'active' && !!subscriptionExpiresAt;
+  const isLifetime = subscriptionStatus === 'lifetime';
+  const isActiveSubscription = (subscriptionStatus === 'active' && !!subscriptionExpiresAt) || isLifetime;
   const isAngkatan26 = userAngkatan === '26';
   const isTrialExtended = isAngkatan26 || subscriptionStatus === 'trial_extended';
 
   // Tentukan target batas trial
-  const effectiveTrialEnd = isActiveSubscription
+  const effectiveTrialEnd = isLifetime
+    ? null
+    : isActiveSubscription
     ? subscriptionExpiresAt
     : (isTrialExtended ? null : (trialEndsAt || (userAngkatan && TRIAL_ENDS_MAP[userAngkatan] ? TRIAL_ENDS_MAP[userAngkatan] : '2026-09-14T05:00:00Z')));
 
@@ -117,6 +120,64 @@ export const TrialCountdownBanner: React.FC<TrialCountdownBannerProps> = ({
             Akses Aktif
           </span>
         </div>
+      </div>
+    );
+  }
+
+  // JIKA AKUN ADALAH LIFETIME PRO MEMBER:
+  if (isLifetime) {
+    return (
+      <div
+        className={`w-full rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl animate-fade-in-down ${
+          isDark
+            ? 'bg-gradient-to-r from-amber-950/40 via-yellow-950/30 to-slate-900/50 border-amber-500/40 shadow-lg shadow-amber-500/10'
+            : 'liquid-glass-card border-amber-300/80 shadow-[0_12px_36px_0_rgba(245,158,11,0.12)]'
+        }`}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-sm">
+                <span>👑</span>
+                <span>Akun Lifetime Pro</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Akses Permanen Selamanya</span>
+              </span>
+            </div>
+
+            <h3 className={`text-sm sm:text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Selamat! Akun Anda Telah Menjadi Lifetime 🎉
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Pencapaian luar biasa 11.000 soal pertama telah membuka akses penuh permanen tanpa batas masa berlaku.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border backdrop-blur-md shadow-xs ${
+              isDark ? 'bg-white/[0.06] border-amber-500/30 text-amber-300' : 'bg-white/70 border-amber-300 text-amber-700'
+            }`}>
+              <Sparkles className="w-5 h-5 text-amber-400 shrink-0 animate-bounce" />
+              <div>
+                <div className="text-[9px] font-black uppercase tracking-wider opacity-75">Status Keanggotaan</div>
+                <div className="text-xs font-black">Lifetime Member</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!compact && (
+          <div className={`mt-3 pt-2.5 border-t flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 ${
+            isDark ? 'border-white/10' : 'border-slate-200/60'
+          }`}>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>
+              Nikmati seluruh bank soal, simulasi CBT, SRS kartu pintar, grup belajar, dan fitur eksklusif lainnya tanpa batas waktu.
+            </span>
+          </div>
+        )}
       </div>
     );
   }

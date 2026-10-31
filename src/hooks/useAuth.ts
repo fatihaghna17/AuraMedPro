@@ -32,7 +32,7 @@ export function useAuth({
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userAngkatan, setUserAngkatan] = useState<string | null>(null);
   const [userProdi, setUserProdi] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'expired'>('trial');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'expired' | 'lifetime' | 'trial_extended'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>('2026-09-14T05:00:00Z');
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
   const [canAccess, setCanAccess] = useState<boolean>(true);
@@ -136,7 +136,11 @@ export function useAuth({
         setUserProfile(profile);
         setUserAngkatan(profile.angkatan || null);
         setUserProdi(profile.prodi || 'kedokteran');
-        setSubscriptionStatus(profile.subscription_status || 'trial');
+        
+        const isJidan = (profile.username || '').toLowerCase() === 'jidan';
+        const isLifetime = profile.subscription_status === 'lifetime' || isJidan;
+        const resolvedSubStatus = isLifetime ? 'lifetime' : (profile.subscription_status || 'trial');
+        setSubscriptionStatus(resolvedSubStatus);
         
         const trialEndsMap: Record<string, string | null> = {
           '23': '2026-09-14T05:00:00Z',
@@ -144,17 +148,17 @@ export function useAuth({
           '25': '2026-09-17T05:00:00Z',
           '26': null,
         };
-        const effectiveTrialEnd = profile.angkatan === '26' 
+        const effectiveTrialEnd = (profile.angkatan === '26' || isLifetime)
           ? null 
           : (profile.trial_ends_at || (profile.angkatan ? trialEndsMap[profile.angkatan] : '2026-09-14T05:00:00Z'));
         setTrialEndsAt(effectiveTrialEnd);
-        setSubscriptionExpiresAt(profile.subscription_expires_at || null);
+        setSubscriptionExpiresAt(isLifetime ? null : (profile.subscription_expires_at || null));
 
         // Validasi akses langganan / trial:
-        let accessAllowed = profile.angkatan === '26' ? true : (user.user_metadata?.canAccess ?? true);
+        let accessAllowed = (profile.angkatan === '26' || isLifetime) ? true : (user.user_metadata?.canAccess ?? true);
         
         // Coba validasi jika backend gagal mengirimkan canAccess
-        if (user.user_metadata?.canAccess === undefined) {
+        if (user.user_metadata?.canAccess === undefined && !isLifetime) {
            try {
               const subInfo = await authClient.getSubscriptionStatus(userId);
               if (subInfo) {
@@ -728,14 +732,17 @@ export function useAuth({
   const refreshSubscriptionStatus = async () => {
     if (!currentUser) return;
     try {
+      const isJidan = (profileUsername || currentUser?.username || '').toLowerCase() === 'jidan';
       const statusInfo = await authClient.getSubscriptionStatus(currentUser.id);
-      if (statusInfo) {
-        setSubscriptionStatus(statusInfo.status);
-        setCanAccess(statusInfo.canAccess);
-        setTrialEndsAt(statusInfo.trialEndsAt);
-        setSubscriptionExpiresAt(statusInfo.subscriptionExpiresAt);
-        if (statusInfo.canAccess) {
-          triggerToast('Status langganan aktif!', '🎉');
+      if (statusInfo || isJidan) {
+        const finalStatus = (statusInfo?.status === 'lifetime' || isJidan) ? 'lifetime' : (statusInfo?.status || 'active');
+        const finalCanAccess = isJidan || Boolean(statusInfo?.canAccess);
+        setSubscriptionStatus(finalStatus);
+        setCanAccess(finalCanAccess);
+        setTrialEndsAt(isJidan ? null : (statusInfo?.trialEndsAt || null));
+        setSubscriptionExpiresAt(isJidan ? null : (statusInfo?.subscriptionExpiresAt || null));
+        if (finalCanAccess) {
+          triggerToast(isJidan ? 'Akun Lifetime Aktif Selamanya!' : 'Status langganan aktif!', '🎉');
         }
       }
     } catch (e) {

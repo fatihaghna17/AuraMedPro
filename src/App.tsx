@@ -1,6 +1,7 @@
 import AdminScreen from "./components/AdminScreen";
 import { WhatsNewModal } from "./components/WhatsNewModal";
 import LevelUpCelebration from "./components/LevelUpCelebration";
+import { LifetimeCelebrationModal } from "./components/LifetimeCelebrationModal";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as jsYaml from 'js-yaml';
@@ -833,6 +834,36 @@ export default function App() {
   // Floating text / XP notification
   const [floatingXP, setFloatingXP] = useState<{ id: number; text: string; isBenar: boolean; x: number; y: number } | null>(null);
 
+  // Modal / Popup Selamat Lifetime (Khusus Akun Jidan)
+  const [lifetimeModalOpen, setLifetimeModalOpen] = useState(false);
+
+  // Munculkan popup sekali aja saat membuka akun Jidan
+  useEffect(() => {
+    if (!currentUser) return;
+    const username = (
+      profileUsername ||
+      currentUser?.user_metadata?.username ||
+      currentUser?.profile?.username ||
+      currentUser?.username ||
+      ''
+    ).toLowerCase();
+
+    const isJidan = username === 'jidan';
+    const isLifetime = isJidan || subscriptionStatus === 'lifetime';
+
+    if (isJidan || isLifetime) {
+      const popupKey = `auramed_lifetime_popup_seen_${currentUser.id || username}`;
+      const hasSeenPopup = localStorage.getItem(popupKey);
+      if (!hasSeenPopup) {
+        localStorage.setItem(popupKey, 'true');
+        const timer = setTimeout(() => {
+          setLifetimeModalOpen(true);
+        }, 700);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentUser, profileUsername, subscriptionStatus]);
+
   // === NOTIFIKASI ===
 // moved useToast
 // extracted notifOpen
@@ -843,8 +874,12 @@ export default function App() {
   } = useNotifications(currentUser, srs, triggerToast, userAngkatan || undefined, userProdi || undefined);
 
   // Klik notifikasi -> Masuk Bank Soal dan auto-select soal
-  const handleNotificationClick = (notif: { id: string; type: 'srs' | 'new_quiz'; text: string; time: string; bankName?: string }) => {
+  const handleNotificationClick = (notif: { id: string; type: string; text: string; time: string; bankName?: string }) => {
     setNotifOpen(false);
+    if (notif.type === 'lifetime') {
+      setLifetimeModalOpen(true);
+      return;
+    }
     if (notif.type === 'new_quiz' && notif.bankName) {
       const bankKey = notif.bankName;
       // 1. Pindah tab ke Bank Soal
@@ -5526,6 +5561,14 @@ export default function App() {
       newLevel={levelUpCelebration.level}
       theme={theme}
       onDismiss={() => setLevelUpCelebration({ show: false, level: 0 })}
+    />
+
+    {/* Popup Selamat Akun Lifetime (Khusus Jidan / 11.000 Soal Pertama) */}
+    <LifetimeCelebrationModal
+      isOpen={lifetimeModalOpen}
+      onClose={() => setLifetimeModalOpen(false)}
+      username={profileUsername || 'Jidan'}
+      theme={theme}
     />
 
     </div>

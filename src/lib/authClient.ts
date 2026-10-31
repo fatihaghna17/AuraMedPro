@@ -19,10 +19,11 @@ export interface AuthSession {
 }
 
 export interface SubscriptionInfo {
-  status: 'trial' | 'active' | 'expired';
+  status: 'trial' | 'active' | 'expired' | 'lifetime' | 'trial_extended';
   canAccess: boolean;
   trialEndsAt: string | null;
   subscriptionExpiresAt: string | null;
+  isLifetime?: boolean;
 }
 
 export interface PaymentInfo {

@@ -224,14 +224,23 @@ export function generatePassword(): string {
   return num.toString().padStart(3, '0');
 }
 
-export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired' | 'trial_extended', expiresAt: string | null } {
-  if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || profile.username === 'admin' || profile.username === 'fatih17') {
+export function checkSubscriptionStatus(profile: any): { canAccess: boolean, status: 'trial' | 'active' | 'expired' | 'trial_extended' | 'lifetime', expiresAt: string | null } {
+  const username = (profile.username || '').toLowerCase();
+  if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || username === 'admin' || username === 'fatih17') {
     return { canAccess: true, status: 'active', expiresAt: null };
+  }
+
+  // Khusus Akun Lifetime (termasuk Jidan - reward 11.000 soal pertama)
+  if (profile.subscription_status === 'lifetime' || username === 'jidan') {
+    return { canAccess: true, status: 'lifetime', expiresAt: null };
   }
   
   const now = new Date();
   
-  if (profile.subscription_status === 'active' && profile.subscription_expires_at) {
+  if (profile.subscription_status === 'active') {
+    if (!profile.subscription_expires_at) {
+      return { canAccess: true, status: 'active', expiresAt: null };
+    }
     const expiresAt = new Date(profile.subscription_expires_at);
     if (expiresAt > now) {
       return { canAccess: true, status: 'active', expiresAt: profile.subscription_expires_at };

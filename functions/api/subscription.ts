@@ -47,11 +47,16 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     let trialEndsAt = String(profile.angkatan) === '26' ? null : (profile.trial_ends_at || trialEndsMap[String(profile.angkatan)] || '2026-09-14T05:00:00Z');
     let subscriptionExpiresAt = profile.subscription_expires_at;
 
-    if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || profile.username === 'admin' || profile.username === 'fatih17') {
+    const username = (profile.username || '').toLowerCase();
+    if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || username === 'admin' || username === 'fatih17') {
       status = 'active';
       canAccess = true;
-    } else if (profile.subscription_status === 'active' && profile.subscription_expires_at) {
-      if (new Date(profile.subscription_expires_at) > now) {
+    } else if (profile.subscription_status === 'lifetime' || username === 'jidan') {
+      status = 'lifetime';
+      canAccess = true;
+      subscriptionExpiresAt = null;
+    } else if (profile.subscription_status === 'active') {
+      if (!profile.subscription_expires_at || new Date(profile.subscription_expires_at) > now) {
         status = 'active';
         canAccess = true;
       }
