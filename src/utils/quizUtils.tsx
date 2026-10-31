@@ -668,12 +668,19 @@ export const mapUnifiedQuestion = (item: any, rootFeatureFlags: any = {}): Quest
         xp: 100
       };
 
+  const resolvedText = (() => {
+    let p = item.pertanyaan || item.stem || item.soal || item.vignette || item.clue || item.question;
+    if (typeof p === 'object' && p !== null) p = p.text || p.pertanyaan || p.stem;
+    if (typeof p === 'string' && p.trim() && p.trim() !== "Tanpa pertanyaan") return p;
+    // Jika item.pertanyaan bernilai 'Tanpa pertanyaan' tapi item.stem ada
+    const fallback = item.stem || item.soal || item.vignette || item.clue || item.question;
+    if (typeof fallback === 'string' && fallback.trim() && fallback.trim() !== "Tanpa pertanyaan") return fallback;
+    return typeof p === 'string' ? p : "Tanpa pertanyaan";
+  })();
+
   return {
-    pertanyaan: (() => {
-      const p = item.pertanyaan || item.stem || item.soal || item.vignette || item.clue || item.question;
-      if (typeof p === 'object' && p !== null) return p.text || p.pertanyaan || p.stem || "Tanpa pertanyaan";
-      return typeof p === 'string' ? p : "Tanpa pertanyaan";
-    })(),
+    pertanyaan: resolvedText,
+    stem: resolvedText,
     pilihan,
     jawaban_benar,
     pembahasan: item.pembahasan || item.explanation || "",

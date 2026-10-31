@@ -15,6 +15,7 @@ export interface FeatureFlags {
 
 export interface Question {
   pertanyaan: string;
+  stem?: string;
   pilihan: string[];
   jawaban_benar: string;
   pembahasan: string;

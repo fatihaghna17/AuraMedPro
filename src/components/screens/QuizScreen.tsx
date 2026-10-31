@@ -501,9 +501,15 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           isHighlighterMode ? 'cursor-text select-text rounded-lg ring-1 ring-amber-400/30 p-2 -mx-2 bg-amber-500/[0.02]' : ''
                         }`}
                       >
-                        {renderHighlightedHtmlText(currentQuiz[currentIndex].pertanyaan, currentHighlights, true)}
+                        {renderHighlightedHtmlText(
+                          (currentQuiz[currentIndex].pertanyaan && currentQuiz[currentIndex].pertanyaan !== "Tanpa pertanyaan")
+                            ? currentQuiz[currentIndex].pertanyaan
+                            : (currentQuiz[currentIndex].stem || currentQuiz[currentIndex].pertanyaan),
+                          currentHighlights,
+                          true
+                        )}
                       </div>
-                    ), [currentQuiz[currentIndex].pertanyaan, currentIndex, currentHighlights, isHighlighterMode, vignetteFontSize, handleVignetteSelectionEnd, handleVignetteClick])}
+                    ), [currentQuiz[currentIndex].pertanyaan, currentQuiz[currentIndex].stem, currentIndex, currentHighlights, isHighlighterMode, vignetteFontSize, handleVignetteSelectionEnd, handleVignetteClick])}
 
                     {/* Clinical Image — memoized; StableImage reserves space via aspect-ratio so iOS WebKit never collapses the layout (anti-flicker) */}
                     {useMemo(() => {
