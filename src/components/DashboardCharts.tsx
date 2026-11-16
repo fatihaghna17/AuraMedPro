@@ -108,10 +108,10 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
   const radarFill = theme === 'dark' ? '#74c7ec' : '#209fb5';
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
       {/* Area Chart: Aktivitas Harian */}
-      <div className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <h3 className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Aktivitas 7 Hari Terakhir</h3>
+      <div className="p-5 rounded-2xl liquid-glass-subtle">
+        <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300 mb-4 uppercase tracking-wider">Aktivitas 7 Hari Terakhir</h3>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -141,11 +141,11 @@ export function DashboardCharts({ quizHistory, theme }: DashboardChartsProps) {
       </div>
 
       {/* Radar Chart: Analisis Sub-kompetensi */}
-      <div className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <h3 className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Kekuatan Sub-kompetensi (%)</h3>
+      <div className="p-5 rounded-2xl liquid-glass-subtle">
+        <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300 mb-4 uppercase tracking-wider">Kekuatan Sub-kompetensi (%)</h3>
         <div className="h-64 w-full flex items-center justify-center">
           {quizHistory.length === 0 ? (
-            <div className="text-xs text-slate-500 font-bold text-center">
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-bold text-center">
               Selesaikan kuis untuk melihat analisis kekuatan belajar Anda.
             </div>
           ) : (

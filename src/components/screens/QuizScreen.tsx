@@ -275,28 +275,24 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left Side: Active Question Card Panel */}
-                <div className="lg:col-span-8 space-y-6 w-full max-w-[800px] mx-auto">
+                <div className="lg:col-span-8 space-y-6 w-full max-w-[820px] mx-auto">
                   
-                  {/* Main Question Card with Rounded-xl */}
-                  <div className={`p-5 sm:p-6 rounded-xl border backdrop-blur-md transition-colors duration-200 ${
-                    theme === 'dark'
-                      ? 'bg-slate-900/70 border-white/[0.08] shadow-lg'
-                      : 'bg-white/85 border-white/80 shadow-sm'
-                  }`}>
+                  {/* Main Question Card with Liquid Glass */}
+                  <div className="p-5 sm:p-7 rounded-2xl liquid-glass-card quiz-card">
                     
                     {/* Sub-kompetensi & Kesulitan tag */}
-                    <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800 flex-wrap">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                        <span className="truncate">
+                    <div className="flex items-center justify-between gap-3 mb-5 pb-3.5 border-b border-slate-200/60 dark:border-white/10 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <span className="truncate font-bold text-slate-800 dark:text-slate-100">
                           {currentQuiz[currentIndex].metadata?.sub_kompetensi_klinis || 'Sains Medis'}
                         </span>
                         <span className="text-slate-300 dark:text-slate-700">•</span>
                         {quizMode === 'rmo' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 tabular-nums">
                             RMO (+4 / -1 / 0)
                           </span>
                         ) : quizMode === 'blok' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
                             Ujian Blok
                           </span>
                         ) : quizMode === 'suddendeath' ? (
@@ -306,10 +302,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         ) : (
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold border ${
                             currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
-                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
                               : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
@@ -335,11 +331,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               );
                               openGeminiTutor(prompt, triggerToast);
                             }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
-                              theme === 'dark'
-                                ? 'bg-indigo-950/50 hover:bg-indigo-900/60 text-indigo-300 border-indigo-800'
-                                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
-                            }`}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 transition-colors cursor-pointer"
                             title="Salin konteks soal & buka Gemini AI"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
@@ -352,19 +344,17 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           onClick={handleToggleOrApplyHighlighter}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                             isHighlighterMode
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/50'
+                              ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50'
                               : currentHighlights.length > 0
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                : theme === 'dark'
-                                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                           }`}
                           title="Stabilo kata kunci klinis pada soal (blok teks atau aktifkan Mode Stabilo)"
                         >
                           <Highlighter className="w-3.5 h-3.5 text-amber-500" />
                           <span>{isHighlighterMode ? 'Stabilo: ON' : 'Stabilo'}</span>
                           {currentHighlights.length > 0 && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-white">
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold tabular-nums bg-amber-500 text-white">
                               {currentHighlights.length}
                             </span>
                           )}
@@ -383,12 +373,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         <button
                           type="button"
                           onClick={() => setVignetteFontSize(prev => prev === 'normal' ? 'large' : 'normal')}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
                             vignetteFontSize === 'large'
-                              ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/40'
-                              : theme === 'dark'
-                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                              ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border-indigo-500/40'
+                              : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                           }`}
                           title={vignetteFontSize === 'large' ? 'Ukuran Teks: Besar (Klik untuk Normal)' : 'Perbesar Ukuran Teks Soal'}
                         >
@@ -396,11 +384,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         </button>
                         <button
                           onClick={copyQuestionToClipboard}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
-                            theme === 'dark'
-                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                              : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
-                          }`}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 cursor-pointer"
                           title="Salin Soal & Opsi ke Clipboard"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -418,10 +402,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             }}
                             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                               studyRoom.isBookmarked(currentQuiz[currentIndex]) 
-                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' 
-                                : theme === 'dark'
-                                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                                ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/35' 
+                                : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                             }`}
                             title="Bookmark Soal"
                           >
@@ -431,12 +413,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         )}
                         <button
                           onClick={handleCycleSoundPack}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                             soundPack === 'mute'
                               ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                              : theme === 'dark'
-                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                              : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                           }`}
                           title={`Efek Suara: ${SOUND_PACKS.find(p => p.id === soundPack)?.name} (Klik untuk ganti)`}
                         >
@@ -448,7 +428,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     {/* Highlighter Mode Helper Bar */}
                     {isHighlighterMode && (
-                      <div className="mb-4 px-3.5 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300 animate-fade-in">
+                      <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200 animate-fade-in">
                         <div className="flex items-center gap-2">
                           <Highlighter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                           <span>
@@ -458,7 +438,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsHighlighterMode(false)}
-                          className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-200 shrink-0 cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/25 hover:bg-amber-500/35 text-amber-900 dark:text-amber-100 shrink-0 cursor-pointer"
                         >
                           Selesai
                         </button>
@@ -475,7 +455,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             <span className="text-[11px] text-slate-500 dark:text-slate-400">1 kali salah = Langsung Gugur! Presisi klinis tanpa kompromi.</span>
                           </div>
                         </div>
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border ${comboFlame.badgeClass}`} title={`Streak: ${currentCombo} Soal • ${comboFlame.tierName}`}>
+                        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border tabular-nums ${comboFlame.badgeClass}`} title={`Streak: ${currentCombo} Soal • ${comboFlame.tierName}`}>
                           <span className="text-xs font-bold">Streak:</span>
                           <span className={`text-sm font-bold flex items-center gap-1 ${comboFlame.textColor}`}>
                             {currentCombo}
@@ -497,8 +477,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           vignetteFontSize === 'large'
                             ? 'text-base sm:text-lg leading-relaxed'
                             : 'text-sm sm:text-base leading-relaxed'
-                        } font-medium text-slate-900 dark:text-slate-100 mb-6 animate-fade-in ${
-                          isHighlighterMode ? 'cursor-text select-text rounded-lg ring-1 ring-amber-400/30 p-2 -mx-2 bg-amber-500/[0.02]' : ''
+                        } font-medium text-slate-900 dark:text-slate-100 mb-6 animate-fade-in max-w-[72ch] ${
+                          isHighlighterMode ? 'cursor-text select-text rounded-xl ring-1 ring-amber-400/40 p-2.5 -mx-2.5 bg-amber-500/[0.03]' : ''
                         }`}
                       >
                         {renderHighlightedHtmlText(
@@ -516,7 +496,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       const imageUrl = getQuestionImage(currentQuiz[currentIndex]);
                       if (!imageUrl) return null;
                       return (
-                        <div key={`img-${currentIndex}`} className="my-5 relative group max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-250 dark:border-slate-800 animate-scale-in">
+                        <div key={`img-${currentIndex}`} className="my-5 relative group max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-200/80 dark:border-white/10 animate-scale-in">
                           <StableImage
                             src={imageUrl}
                             alt="Visual Klinis"
@@ -525,7 +505,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             onClick={() => setLightboxImage(imageUrl)}
                           />
                           <div 
-                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            className="absolute bottom-2.5 right-2.5 bg-slate-900/85 hover:bg-slate-900 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                             onClick={() => setLightboxImage(imageUrl)}
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -545,34 +525,25 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           const revealed = isRevealed[currentIndex];
                           const isStruck = currentStrikethroughs.includes(i);
 
-                          let tileClass = theme === 'dark'
-                            ? 'bg-slate-900/30 border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-900/50 text-slate-350'
-                            : 'bg-white border-slate-250/60 hover:border-indigo-500/30 hover:bg-slate-50/50 text-slate-655';
-
-                          let bubbleClass = theme === 'dark'
-                            ? 'border-slate-800 bg-slate-950 text-slate-500'
-                            : 'border-slate-200 bg-slate-50 text-slate-400';
+                          let tileClass = 'liquid-glass-subtle-interactive text-slate-800 dark:text-slate-200';
+                          let bubbleClass = 'border-slate-300/80 dark:border-white/15 bg-white/70 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300';
 
                           if (revealed) {
                             if (isCorrect) {
-                              tileClass = 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/5';
-                              bubbleClass = 'bg-emerald-500 border-emerald-500 text-white';
+                              tileClass = 'bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs';
+                              bubbleClass = 'bg-emerald-600 border-emerald-600 text-white';
                             } else if (isSelected) {
-                              tileClass = 'bg-rose-500/10 border-rose-500 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/5 animate-shake';
-                              bubbleClass = 'bg-rose-500 border-rose-500 text-white';
+                              tileClass = 'bg-rose-500/15 border-rose-500 text-rose-700 dark:text-rose-300 shadow-xs animate-shake';
+                              bubbleClass = 'bg-rose-600 border-rose-600 text-white';
                             } else {
-                              tileClass = 'opacity-50 cursor-default ' + (theme === 'dark' ? 'bg-slate-900/10 border-slate-850' : 'bg-slate-50/30 border-slate-100');
+                              tileClass = 'opacity-50 cursor-default liquid-glass-subtle text-slate-500 dark:text-slate-400';
                             }
                           } else if (isStruck) {
-                            tileClass = theme === 'dark'
-                              ? 'bg-slate-950/40 border-slate-800/40 text-slate-500 opacity-55'
-                              : 'bg-slate-100/60 border-slate-200/50 text-slate-400 opacity-60';
-                            bubbleClass = theme === 'dark'
-                              ? 'border-rose-500/30 bg-rose-950/30 text-rose-400 line-through'
-                              : 'border-rose-300 bg-rose-50 text-rose-400 line-through';
+                            tileClass = 'liquid-glass-subtle opacity-55 text-slate-400 dark:text-slate-500';
+                            bubbleClass = 'border-rose-500/30 bg-rose-500/10 text-rose-500 line-through';
                           } else if (isSelected) {
-                            tileClass = 'bg-indigo-500/15 border-indigo-500 text-indigo-500 dark:text-indigo-400 ring-1 ring-indigo-500/20';
-                            bubbleClass = 'bg-indigo-500 border-indigo-500 text-white shadow-sm';
+                            tileClass = 'bg-indigo-500/15 border-indigo-500 text-indigo-700 dark:text-indigo-200 ring-1 ring-indigo-500/30 shadow-xs';
+                            bubbleClass = 'bg-indigo-600 border-indigo-600 text-white shadow-xs';
                           }
 
                           return (
@@ -585,7 +556,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 }
                               }}
                               style={{ animationDelay: `${i * 45}ms` }}
-                              className={`w-full flex items-center gap-2 rounded-xl border transition-all duration-150 min-h-[48px] animate-fade-in-up pr-2.5 ${tileClass}`}
+                              className={`w-full flex items-center gap-2 rounded-xl border transition-all duration-150 min-h-[52px] animate-fade-in-up pr-2.5 ${tileClass}`}
                             >
                               <button
                                 type="button"
@@ -597,9 +568,9 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                   }
                                   selectAnswer(opt);
                                 }}
-                                className="flex-1 flex items-start gap-3.5 p-4 text-left text-xs sm:text-sm font-semibold cursor-pointer active:scale-[0.99]"
+                                className="flex-1 flex items-start gap-3.5 p-3.5 sm:p-4 text-left text-xs sm:text-sm font-semibold cursor-pointer active:scale-[0.99]"
                               >
-                                <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
+                                <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
                                   {letters[i]}
                                 </div>
                                 <div className={`flex-1 mt-0.5 text-xs sm:text-sm font-semibold leading-relaxed ${
@@ -621,9 +592,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                   className={`p-2 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                                     isStruck
                                       ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30 hover:bg-rose-500/25'
-                                      : theme === 'dark'
-                                        ? 'text-slate-500 hover:text-rose-400 hover:bg-slate-800/80'
-                                        : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100'
+                                      : 'text-slate-400 hover:text-rose-500 hover:bg-rose-500/10'
                                   }`}
                                 >
                                   <EyeOff className="w-3.5 h-3.5" />
@@ -631,7 +600,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 </button>
                               ) : (
                                 isStruck && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
                                     🚫 Dicoret
                                   </span>
                                 )
@@ -642,7 +611,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     ) : (
                       <div key={`input-${currentIndex}`} className="space-y-4 animate-fade-in">
-                        <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-905/20 border-slate-800' : 'bg-white border-slate-200'}`}>
+                        <div className="p-4 rounded-xl liquid-glass-subtle">
                           <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                             Jawaban Isian Singkat:
                           </label>
@@ -662,26 +631,22 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 checkAnswerNow();
                               }
                             }}
-                            placeholder="Ketik jawaban Anda disini..."
-                            className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold outline-none transition-all duration-200 ${
+                            placeholder="Ketik jawaban Anda di sini..."
+                            className={`w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none transition-all duration-200 ${
                               isRevealed[currentIndex]
-                                ? theme === 'dark'
-                                  ? 'bg-slate-900 border-slate-805 text-slate-400 cursor-not-allowed'
-                                  : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed'
-                                : theme === 'dark'
-                                ? 'bg-slate-950 border-slate-800 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30'
-                                : 'bg-white border-slate-200 text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30'
+                                ? 'bg-slate-200/60 dark:bg-slate-800/60 text-slate-500 cursor-not-allowed'
+                                : 'liquid-glass-input text-slate-900 dark:text-white'
                             }`}
                           />
                         </div>
 
                         {/* Hints Section */}
                         {currentQuiz[currentIndex].hints && currentQuiz[currentIndex].hints.length > 0 && currentQuiz[currentIndex].featureFlags?.showHints !== false && (
-                          <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-900/10 border-slate-800/60' : 'bg-slate-50 border-slate-200/60'}`}>
+                          <div className="p-4 rounded-xl liquid-glass-subtle">
                             <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                               <div className="flex items-center gap-1.5">
                                 <Sparkles className="w-4 h-4 text-amber-500" />
-                                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-350">
+                                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 tabular-nums">
                                   Bantuan Petunjuk ({unlockedHints[currentIndex] || 0}/{currentQuiz[currentIndex].hints.length})
                                 </span>
                               </div>
@@ -702,7 +667,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                       : 0.25;
                                     
                                     const confirmUnlock = () => {
-                                      setUnlockedHints((prev) => ({
+                                      setUnlockedHints((prev: any) => ({
                                         ...prev,
                                         [currentIndex]: currentUnlocked + 1
                                       }));
@@ -718,7 +683,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                       confirmUnlock();
                                     }
                                   }}
-                                  className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors cursor-pointer"
+                                  className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/25 transition-colors cursor-pointer"
                                 >
                                   💡 Tampilkan Petunjuk
                                 </button>
@@ -730,16 +695,16 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 {currentQuiz[currentIndex].hints!.slice(0, unlockedHints[currentIndex] || 0).map((hint: string, hIdx: number) => (
                                   <div 
                                     key={hIdx}
-                                    className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400 bg-amber-500/[0.02] border border-amber-500/10 rounded-lg p-2.5"
+                                    className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5"
                                   >
-                                    <span className="font-extrabold text-amber-500">#{hIdx + 1}:</span>
+                                    <span className="font-extrabold text-amber-600 dark:text-amber-400">#{hIdx + 1}:</span>
                                     <span>{hint}</span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <div className="text-center py-2 text-xs text-slate-400 dark:text-slate-500 italic">
-                                Belum ada petunjuk yang dibuka. Gunakan tombol petunjuk jika Anda kesulitan!
+                              <div className="text-center py-2 text-xs text-slate-500 dark:text-slate-400 italic">
+                                Belum ada petunjuk yang dibuka. Gunakan tombol petunjuk jika Anda membutuhkan arah diagnosis!
                               </div>
                             )}
                           </div>
@@ -747,16 +712,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     )}
 
-                    {/* Navigation Buttons inside card (Positioned directly under options, stays on top after check answer) */}
-                    <div className="hidden lg:flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                    {/* Navigation Buttons inside card */}
+                    <div className="hidden lg:flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200/60 dark:border-white/10">
                       <button
                         onClick={() => navigateQuestion(-1)}
                         disabled={currentIndex === 0}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-                          theme === 'dark'
-                            ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                        }`}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         ← Sebelumnya
                       </button>
@@ -767,17 +728,17 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             <button
                               onClick={checkAnswerNow}
                               disabled={userAnswers[currentIndex] === null}
-                              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer ${
+                              className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-sm transition-colors disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer ${
                                 quizMode === 'suddendeath'
-                                  ? 'bg-rose-600 hover:bg-rose-700'
-                                  : 'bg-indigo-600 hover:bg-indigo-700'
+                                  ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
                               }`}
                             >
                               <Check className="w-4 h-4 stroke-[2.5]" />
                               {quizMode === 'suddendeath' ? 'Kunci Jawaban' : 'Cek Jawaban'}
                             </button>
                           ) : (
-                            <span className="text-[11px] font-semibold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 bg-indigo-500/10 px-3 py-2 rounded-xl border border-indigo-500/20">
                               <Lock className="w-3 h-3" />
                               Terkunci
                             </span>
@@ -786,12 +747,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                         <button
                           onClick={toggleDoubt}
-                          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                             doubtStatus[currentIndex]
-                              ? 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400'
-                              : theme === 'dark'
-                              ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
-                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+                              ? 'bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300'
+                              : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <div className={`w-2 h-2 rounded-full ${doubtStatus[currentIndex] ? 'bg-amber-500' : 'bg-slate-400'}`} />
@@ -802,11 +761,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           <button
                             onClick={() => selectAnswer(null)}
                             disabled={userAnswers[currentIndex] === null || isRevealed[currentIndex]}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-                              theme === 'dark'
-                                ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-rose-400'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-rose-600'
-                            }`}
+                            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-rose-600 dark:text-rose-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             title="Kosongkan jawaban (menghindari -1 jika salah)"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -819,21 +774,21 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         <button
                           onClick={handleNextQuestion}
                           disabled={userAnswers[currentIndex] === null}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Selanjutnya →
                         </button>
                       ) : currentIndex < currentQuiz.length - 1 ? (
                         <button
                           onClick={handleNextQuestion}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer"
                         >
                           Selanjutnya →
                         </button>
                       ) : (
                         <button
                           onClick={handleNextQuestion}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20 transition-colors cursor-pointer"
                         >
                           Selesai & Kirim
                         </button>
@@ -847,16 +802,16 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       const correctOptionText = currentQuiz[currentIndex].pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || currentQuiz[currentIndex].jawaban_benar;
 
                       return (
-                        <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-6 animate-slide-down">
+                        <div className="mt-6 border-t border-slate-200/60 dark:border-white/10 pt-6 animate-slide-down">
                           <div className={`rounded-xl border overflow-hidden ${
                             isAnswerCorrect
-                              ? 'border-emerald-500/30 bg-emerald-500/[0.02]'
-                              : 'border-rose-500/30 bg-rose-500/[0.02]'
+                              ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
+                              : 'border-rose-500/30 bg-rose-500/[0.03]'
                           }`}>
                             <div className={`flex items-center gap-2 px-4 py-3 font-bold text-xs uppercase tracking-wider ${
                               isAnswerCorrect
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-b border-emerald-500/10'
-                                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-b border-rose-500/10'
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-b border-emerald-500/20'
+                                : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-b border-rose-500/20'
                             }`}>
                               {isAnswerCorrect ? (
                                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -869,7 +824,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                             </div>
 
                             <div className="p-5 space-y-4">
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
                                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                                 {currentQuiz[currentIndex].pilihan && currentQuiz[currentIndex].pilihan.length > 0 ? (
                                   <span>Kunci Jawaban: {correctLetter}. {correctOptionText}</span>
@@ -879,17 +834,17 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               </div>
 
                               <div>
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                                   Pembahasan Detail
                                 </h4>
-                                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
                                   {currentQuiz[currentIndex].pembahasan ? renderHtmlText(currentQuiz[currentIndex].pembahasan) : 'Tidak ada uraian penjelasan untuk soal ini.'}
                                 </p>
                               </div>
 
                               {currentQuiz[currentIndex].eliminasi_opsi && Object.keys(currentQuiz[currentIndex].eliminasi_opsi!).length > 0 && (
-                                <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
-                                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                                <div className="border-t border-slate-200/60 dark:border-white/10 pt-4">
+                                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
                                     Analisis Opsi & Eliminasi Jawaban
                                   </h4>
                                   <div className="grid grid-cols-1 gap-2">
@@ -903,26 +858,26 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                         return (
                                           <div
                                             key={key}
-                                            className={`flex items-start gap-3 p-3 rounded-lg border text-xs leading-relaxed transition-colors ${
+                                            className={`flex items-start gap-3 p-3.5 rounded-xl border text-xs leading-relaxed transition-colors ${
                                               isKunci
-                                                ? 'bg-emerald-500/5 border-emerald-500/30 text-slate-800 dark:text-slate-200'
-                                                : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                                                ? 'bg-emerald-500/10 border-emerald-500/35 text-slate-900 dark:text-slate-100'
+                                                : 'liquid-glass-subtle text-slate-700 dark:text-slate-300'
                                             }`}
                                           >
-                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5 ${
+                                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5 ${
                                               isKunci
                                                 ? 'bg-emerald-600 text-white'
-                                                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                                : 'bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                                             }`}>
                                               {key}
                                             </span>
                                             <div className="flex-1 min-w-0">
                                               {optText && (
-                                                <div className="font-bold text-[11px] text-slate-800 dark:text-slate-200 mb-1 leading-snug">
+                                                <div className="font-bold text-xs text-slate-900 dark:text-slate-100 mb-1 leading-snug">
                                                   {renderHtmlText(optText)}
                                                 </div>
                                               )}
-                                              <div className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+                                              <div className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
                                                 {renderHtmlText(desc)}
                                               </div>
                                             </div>
@@ -935,23 +890,19 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                               {/* Shortcut AI Tutor (Gemini) */}
                               {Boolean(isRevealed[currentIndex] && userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== '') && (
-                                <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
-                                  <div className={`p-4 rounded-xl border transition-colors ${
-                                    theme === 'dark' 
-                                      ? 'bg-slate-800/60 border-slate-700' 
-                                      : 'bg-slate-50 border-slate-200'
-                                  }`}>
+                                <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-white/10">
+                                  <div className="p-4 rounded-xl liquid-glass-subtle">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                       <div className="flex items-start gap-3 min-w-0">
-                                        <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
                                           <Sparkles className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-1.5 flex-wrap">
-                                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                                            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                                               AI Tutor (Gemini Web Chat)
                                             </h4>
-                                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25">
                                               Shortcut Bebas Kuota
                                             </span>
                                           </div>
@@ -971,7 +922,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                           );
                                           openGeminiTutor(prompt, triggerToast);
                                         }}
-                                        className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer transition-colors"
+                                        className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 cursor-pointer transition-colors"
                                         title="Salin konteks soal & buka web Gemini"
                                       >
                                         <Sparkles className="w-3.5 h-3.5 shrink-0" />
@@ -984,10 +935,10 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               )}
 
                               {/* Bottom Continue Button if user scrolled all the way through explanation */}
-                              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 flex justify-end">
                                 <button
                                   onClick={handleNextQuestion}
-                                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
+                                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer"
                                 >
                                   {currentIndex < currentQuiz.length - 1 ? 'Lanjut ke Soal Berikutnya →' : 'Selesai & Kirim'}
                                 </button>
@@ -1003,20 +954,16 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 </div>
 
                 {/* Right Side: Sticky Peta Soal Panel (Desktop only) */}
-                <aside className="hidden lg:block lg:col-span-4 sticky top-20 w-full max-w-[320px] space-y-5">
+                <aside className="hidden lg:block lg:col-span-4 sticky top-20 w-full max-w-[340px] space-y-5">
                   
                   {/* Gamification Level stats */}
-                  <div className={`p-5 rounded-xl border backdrop-blur-md transition-colors duration-200 relative overflow-hidden ${
-                    theme === 'dark'
-                      ? 'bg-slate-900/70 border-white/[0.08] shadow-lg'
-                      : 'bg-white/85 border-white/80 shadow-sm'
-                  }`}>
+                  <div className="p-5 rounded-2xl liquid-glass-card relative overflow-hidden tabular-nums">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase font-mono">
                           Level {getLevelInfo(userXP).level}
                         </span>
-                        <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                        <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
                           {getLevelInfo(userXP).rank}
                         </span>
                       </div>
@@ -1027,7 +974,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                       </div>
                     </div>
 
-                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-indigo-600 rounded-full transition-all duration-500" 
                         style={{ width: `${getLevelInfo(userXP).progress}%` }}
@@ -1041,65 +988,56 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                   </div>
 
                   {/* Question navigation grid sidebar */}
-                  <div className={`p-5 rounded-xl border backdrop-blur-md transition-colors duration-200 ${
-                    theme === 'dark' ? 'bg-slate-900/70 border-white/[0.08] shadow-lg' : 'bg-white/85 border-white/80 shadow-sm'
-                  }`}>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 flex items-center justify-between">
+                  <div className="p-5 rounded-2xl liquid-glass-card">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 flex items-center justify-between">
                       <span>Peta Soal</span>
-                      <span className="text-[11px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md font-semibold normal-case tracking-normal">
+                      <span className="text-[11px] tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md font-bold normal-case tracking-normal border border-indigo-500/20">
                         {userAnswers.filter(a => a !== null).length} / {currentQuiz.length} Terjawab
                       </span>
                     </h3>
 
-                    <div className="grid grid-cols-5 gap-2 max-h-[350px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-5 gap-2 max-h-[350px] overflow-y-auto pr-1 tabular-nums">
                       {currentQuiz.map((_, idx) => {
                         const isAnswered = userAnswers[idx] !== null && userAnswers[idx] !== undefined && userAnswers[idx] !== '';
                         const isDoubt = doubtStatus[idx];
                         const isActive = idx === currentIndex;
                         const revealed = !!isRevealed[idx];
                         const isCorrect = isAnswered && isUserAnswerCorrect(userAnswers[idx], currentQuiz[idx]);
-                        
-                        const diff = currentQuiz[idx].metadata?.tingkat_kesulitan?.toLowerCase();
-                        let diffBorder = 'border-l-[3px] border-l-amber-500';
-                        if (diff === 'mudah') diffBorder = 'border-l-[3px] border-l-emerald-500';
-                        if (diff === 'sukar' || diff === 'sulit') diffBorder = 'border-l-[3px] border-l-rose-500';
 
                         let btnClass = "";
                         if (isActive) {
                           if (isDoubt) {
-                            btnClass = `bg-amber-500 border-amber-400 text-white font-bold ring-2 ring-amber-400/50 ${diffBorder}`;
+                            btnClass = "bg-amber-500 border-amber-400 text-white font-bold ring-2 ring-amber-400/50";
                           } else if (revealed) {
                             if (isCorrect) {
-                              btnClass = `bg-blue-600 border-blue-500 text-white font-bold ring-2 ring-blue-400/50 ${diffBorder}`;
+                              btnClass = "bg-blue-600 border-blue-500 text-white font-bold ring-2 ring-blue-400/50";
                             } else {
-                              btnClass = `bg-rose-600 border-rose-500 text-white font-bold ring-2 ring-rose-400/50 ${diffBorder}`;
+                              btnClass = "bg-rose-600 border-rose-500 text-white font-bold ring-2 ring-rose-400/50";
                             }
                           } else if (isAnswered) {
-                            btnClass = `bg-emerald-600 border-emerald-500 text-white font-bold ring-2 ring-emerald-400/50 ${diffBorder}`;
+                            btnClass = "bg-emerald-600 border-emerald-500 text-white font-bold ring-2 ring-emerald-400/50";
                           } else {
-                            btnClass = `border-indigo-500 text-indigo-600 dark:text-indigo-400 border-2 font-bold ${diffBorder}`;
+                            btnClass = "border-indigo-500 text-indigo-600 dark:text-indigo-400 border-2 font-bold bg-indigo-500/10";
                           }
                         } else if (isDoubt) {
-                          btnClass = `bg-amber-500 border-amber-500 text-white ${diffBorder}`;
+                          btnClass = "bg-amber-500 border-amber-500 text-white";
                         } else if (revealed) {
                           if (isCorrect) {
-                            btnClass = `bg-blue-600 border-blue-600 text-white ${diffBorder}`;
+                            btnClass = "bg-blue-600 border-blue-600 text-white";
                           } else {
-                            btnClass = `bg-rose-500 border-rose-500 text-white ${diffBorder}`;
+                            btnClass = "bg-rose-500 border-rose-500 text-white";
                           }
                         } else if (isAnswered) {
-                          btnClass = `bg-emerald-500 border-emerald-500 text-white ${diffBorder}`;
+                          btnClass = "bg-emerald-500 border-emerald-500 text-white";
                         } else {
-                          btnClass = theme === 'dark' 
-                            ? `bg-slate-800/60 hover:bg-slate-800 text-slate-300 border-r border-y border-slate-700 ${diffBorder}` 
-                            : `bg-slate-50 hover:bg-slate-100 text-slate-600 border-r border-y border-slate-200 ${diffBorder}`;
+                          btnClass = "liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300";
                         }
 
                         return (
                           <button
                             key={idx}
                             onClick={() => setCurrentIndex(idx)}
-                            className={`h-9 rounded-lg border text-xs font-semibold transition-colors flex items-center justify-center cursor-pointer ${btnClass}`}
+                            className={`h-9 rounded-xl border text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${btnClass}`}
                           >
                             {idx + 1}
                           </button>
@@ -1108,37 +1046,37 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                     </div>
                     
                     {/* Legend */}
-                    <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/60 dark:border-white/10 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                         <span>Terjawab (Belum Cek)</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                         <span>Benar (Sudah Cek)</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                         <span>Salah (Sudah Cek)</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                         <span>Ragu-ragu</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-sm border-2 border-indigo-500" />
+                        <span className="w-2.5 h-2.5 rounded-full border-2 border-indigo-500" />
                         <span>Sedang Aktif</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2.5 h-2.5 rounded-sm ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
+                        <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                         <span>Belum Dijawab</span>
                       </div>
                     </div>
 
-                    <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-white/10">
                       <button
                         onClick={openFinishModal}
-                        className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20 transition-colors cursor-pointer"
                       >
                         Selesai Ujian
                       </button>

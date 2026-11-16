@@ -92,17 +92,13 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
   return (
     <>
-      <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-in px-3.5 sm:px-6 pb-28 pt-2 min-w-0 overflow-x-hidden">
+      <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-7 animate-fade-in px-4 sm:px-6 pb-28 pt-6 min-w-0 overflow-x-hidden">
         
         {/* Main Score Ring card */}
-        <div className={`w-full max-w-full min-w-0 overflow-hidden p-5 sm:p-8 rounded-xl backdrop-blur-md transition-colors border text-center relative ${
-          theme === 'dark'
-            ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-            : 'bg-white/80 border-white/80 shadow-sm'
-        }`}>
+        <div className="w-full max-w-full min-w-0 overflow-hidden p-6 sm:p-8 rounded-2xl liquid-glass-card text-center relative">
               
               {/* Radial Animated Circular meter */}
-              <div className="relative w-44 h-44 mx-auto mb-6 flex items-center justify-between flex-col animate-pop-in">
+              <div className="relative w-44 h-44 mx-auto mb-6 flex items-center justify-between flex-col animate-pop-in tabular-nums">
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 160 160">
                   <circle 
                     cx="80" 
@@ -127,10 +123,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 </svg>
 
                 <div className="flex flex-col items-center justify-center h-full pt-1.5">
-                  <span className="text-4xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
+                  <span className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                     {displayScore}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
                     {scoreSublabel}
                   </span>
                 </div>
@@ -142,80 +138,72 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 const feedbackText = getFeedbackForScore(evalPercentage);
 
                 let titleText = "Zona Darurat Klinis";
-                let badgeColor = "bg-rose-500/10 text-rose-500 border-rose-500/20";
+                let badgeColor = "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25";
                 
                 if (evalPercentage >= 86) {
                   titleText = "Zona Dewa Akademis";
-                  badgeColor = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                  badgeColor = "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25";
                 } else if (evalPercentage >= 65) {
                   titleText = "Zona Aman & Lulus";
-                  badgeColor = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                  badgeColor = "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25";
                 } else if (evalPercentage >= 40) {
                   titleText = "Zona Kritis Remedial";
-                  badgeColor = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                  badgeColor = "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25";
                 }
 
                 return (
                   <div className="space-y-3 animate-fade-in-up animation-delay-100">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border ${badgeColor}`}>
+                    <span className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase border ${badgeColor}`}>
                       {titleText}
                     </span>
 
                     <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 max-w-xl mx-auto leading-relaxed">
-                      &quot;{feedbackText}&quot;
+                      &ldquo;{feedbackText}&rdquo;
                     </h2>
 
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
                       {quizMode === 'rmo' ? (
                         <span>Simulasi RMO: Skor <strong className="text-amber-500">{lastQuizScore}</strong> (Benar <strong className="text-emerald-500">{correct}</strong> [+4], Salah <strong className="text-rose-500">{wrong}</strong> [-1], Kosong <strong className="text-slate-400">{empty}</strong> [0])</span>
                       ) : quizMode === 'blok' ? (
-                        <span>Simulasi Ujian Blok: <strong className="text-emerald-500">{correct}</strong> benar dari total <strong className="text-slate-700 dark:text-slate-200">{total}</strong> butir soal</span>
+                        <span>Simulasi Ujian Blok: <strong className="text-emerald-500">{correct}</strong> benar dari total <strong className="text-slate-800 dark:text-slate-200">{total}</strong> butir soal</span>
                       ) : (
-                        <span>Anda menjawab benar <strong className="text-slate-700 dark:text-slate-200">{correct}</strong> dari total <strong className="text-slate-700 dark:text-slate-200">{total}</strong> soal tryout</span>
+                        <span>Anda menjawab benar <strong className="text-slate-800 dark:text-slate-200">{correct}</strong> dari total <strong className="text-slate-800 dark:text-slate-200">{total}</strong> soal tryout</span>
                       )}
                     </p>
                   </div>
                 );
               })()}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-6 sm:mt-8 w-full max-w-lg mx-auto min-w-0">
-                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-150 ${
-                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
-                }`}>
-                  <div className="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-6 sm:mt-8 w-full max-w-lg mx-auto min-w-0 tabular-nums">
+                <div className="p-3 sm:p-3.5 rounded-xl liquid-glass-subtle min-w-0 text-center">
+                  <div className="text-lg sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
                     {correct}
                   </div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     {quizMode === 'rmo' ? `Benar (+${correct * 4})` : 'Benar'}
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-200 ${
-                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
-                }`}>
-                  <div className="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400">
+                <div className="p-3 sm:p-3.5 rounded-xl liquid-glass-subtle min-w-0 text-center">
+                  <div className="text-lg sm:text-xl font-extrabold text-rose-600 dark:text-rose-400">
                     {wrong}
                   </div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     {quizMode === 'rmo' ? `Salah (-${wrong})` : 'Salah'}
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-250 ${
-                  theme === 'dark' ? 'bg-slate-800/60 border-slate-800' : 'bg-slate-50 border-slate-200'
-                }`}>
-                  <div className="text-lg sm:text-xl font-bold text-slate-500 dark:text-slate-400">
+                <div className="p-3 sm:p-3.5 rounded-xl liquid-glass-subtle min-w-0 text-center">
+                  <div className="text-lg sm:text-xl font-extrabold text-slate-500 dark:text-slate-400">
                     {empty}
                   </div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5 truncate">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     Kosong (0)
                   </div>
                 </div>
 
-                <div className={`p-2.5 sm:p-3.5 rounded-lg border min-w-0 text-center animate-fade-in-up animation-delay-300 ${
-                  theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'
-                }`}>
-                  <div className="text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-400">
+                <div className="p-3 sm:p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/25 min-w-0 text-center">
+                  <div className="text-lg sm:text-xl font-extrabold text-amber-600 dark:text-amber-400">
                     +{lastQuizXPGained || 0}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mt-0.5 truncate">
@@ -224,10 +212,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 justify-center mt-6 sm:mt-8 w-full max-w-xl mx-auto min-w-0 animate-fade-in-up animation-delay-350">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 justify-center mt-6 sm:mt-8 w-full max-w-xl mx-auto min-w-0">
                 <button
                   onClick={() => setIsStoryModalOpen(true)}
-                  className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer min-w-0"
+                  className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer min-w-0"
                 >
                   <Share2 className="w-4 h-4 shrink-0" />
                   <span className="truncate">Bagikan Hasil & Rapor (Story 9:16)</span>
@@ -235,11 +223,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                 <button
                   onClick={() => startQuiz()}
-                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer min-w-0 ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'
-                  }`}
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-800 dark:text-slate-200 cursor-pointer min-w-0"
                 >
                   <RotateCcw className="w-4 h-4 shrink-0" />
                   <span>Mulai Ulang Tryout</span>
@@ -247,11 +231,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                 <button
                   onClick={() => setScreen('setup')}
-                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer min-w-0 ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
-                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                  }`}
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-800 dark:text-slate-200 cursor-pointer min-w-0"
                 >
                   <Home className="w-4 h-4 text-indigo-500 shrink-0" />
                   <span>Kembali ke Menu Utama</span>
@@ -264,7 +244,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                       setDashboardTab('srs');
                       srs.startReview();
                     }}
-                    className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer min-w-0"
+                    className="sm:col-span-2 lg:flex-initial w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20 transition-colors cursor-pointer min-w-0"
                   >
                     <Brain className="w-4 h-4 shrink-0" />
                     <span>Review Salah di SRS</span>
@@ -276,32 +256,28 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Leaderboard Submission Box */}
             {currentUser && selectedDatabases.length === 1 && (
-              <div className={`p-4 sm:p-6 rounded-xl backdrop-blur-md transition-colors border w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-400 ${
-                theme === 'dark'
-                  ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-                  : 'bg-white/80 border-white/80 shadow-sm'
-              }`}>
+              <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card w-full max-w-full min-w-0 overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <Award className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Leaderboard File Soal</h3>
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Leaderboard File Soal</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words">
-                        Apakah Anda ingin mempublikasikan skor Anda ({lastQuizScore}%) ke papan peringkat untuk file <strong className="break-all">{selectedDatabases[0]}</strong>?
+                        Apakah Anda ingin mempublikasikan skor Anda ({lastQuizScore}%) ke papan peringkat untuk file <strong className="break-all text-slate-800 dark:text-slate-200">{selectedDatabases[0]}</strong>?
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                     {hasSubmittedLeaderboard ? (
-                      <span className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <span className="w-full sm:w-auto text-center px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
                         Skor Terkirim!
                       </span>
                     ) : (
                       <button
                         onClick={submitScoreToLeaderboard}
                         disabled={isLeaderboardLoading}
-                        className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                       >
                         {isLeaderboardLoading ? (
                           <>
@@ -318,14 +294,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
             {/* Battle Report / Analytics dashboard */}
             {analytics.hasMetadata && (
-              <div className={`p-4 sm:p-6 rounded-xl backdrop-blur-md transition-colors border space-y-6 w-full max-w-full min-w-0 overflow-hidden animate-fade-in-up animation-delay-450 ${
-                theme === 'dark'
-                  ? 'bg-slate-900/60 border-white/[0.08] shadow-lg'
-                  : 'bg-white/80 border-white/80 shadow-sm'
-              }`}>
-                <div className="flex items-center gap-2 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card space-y-6 w-full max-w-full min-w-0 overflow-hidden tabular-nums">
+                <div className="flex items-center gap-2 pb-4 border-b border-slate-200/60 dark:border-white/10">
                   <Activity className="w-4 h-4 text-indigo-500" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                     Battle Report & Metadata Performa
                   </h3>
                 </div>
@@ -333,7 +305,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 {/* Sub-competencies progress list */}
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
                       ⚔️ Analisis Sub-Kompetensi
                     </h4>
                     <div className="space-y-2">
@@ -347,8 +319,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                         return (
                           <div key={name} className="flex items-center gap-2.5 sm:gap-4 text-xs font-semibold">
-                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0" title={name}>{name}</span>
-                            <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0 text-slate-800 dark:text-slate-200" title={name}>{name}</span>
+                            <div className="flex-1 h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden">
                               <div className={`h-full ${progressColor} rounded-full`} style={{ width: `${pct}%` }} />
                             </div>
                             <span className="w-9 sm:w-10 text-right font-extrabold text-[11px] sm:text-xs shrink-0">{pct}%</span>
@@ -360,7 +332,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                   {/* Cognitives list */}
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
                       🧠 Analisis Kemampuan Kognitif
                     </h4>
                     <div className="space-y-2">
@@ -374,8 +346,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                         return (
                           <div key={name} className="flex items-center gap-2.5 sm:gap-4 text-xs font-semibold">
-                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0">{name}</span>
-                            <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0 text-slate-800 dark:text-slate-200">{name}</span>
+                            <div className="flex-1 h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden">
                               <div className={`h-full ${progressColor} rounded-full`} style={{ width: `${pct}%` }} />
                             </div>
                             <span className="w-9 sm:w-10 text-right font-extrabold text-[11px] sm:text-xs shrink-0">{pct}%</span>
@@ -387,7 +359,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                   {/* Difficulties progress list */}
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
                       🛡️ Performa Tingkat Kesulitan
                     </h4>
                     <div className="space-y-2">
@@ -401,8 +373,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                         return (
                           <div key={name} className="flex items-center gap-2.5 sm:gap-4 text-xs font-semibold">
-                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0">{name}</span>
-                            <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <span className="w-24 sm:w-36 truncate text-[11px] sm:text-xs shrink-0 text-slate-800 dark:text-slate-200">{name}</span>
+                            <div className="flex-1 h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden">
                               <div className={`h-full ${progressColor} rounded-full`} style={{ width: `${pct}%` }} />
                             </div>
                             <span className="w-9 sm:w-10 text-right font-extrabold text-[11px] sm:text-xs shrink-0">{pct}%</span>
@@ -414,8 +386,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                 </div>
 
                 {/* Quest log: remedial lists */}
-                <div className="border-t border-slate-200/40 dark:border-slate-800/40 pt-4">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-500 mb-3 flex items-center gap-1">
+                <div className="border-t border-slate-200/60 dark:border-white/10 pt-4">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-500 mb-3 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4" />
                     📜 Quest Log: Misi Remedial Khusus
                   </h4>
@@ -425,7 +397,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                       {weaknessesList.map((w) => (
                         <div
                           key={w.name}
-                          className="flex items-start gap-3 p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/[0.02]"
+                          className="flex items-start gap-3 p-3.5 rounded-xl border border-rose-500/25 bg-rose-500/10"
                         >
                           <div className="w-5 h-5 rounded-full flex items-center justify-center bg-rose-500 text-white font-extrabold text-[10px] mt-0.5 flex-shrink-0">
                             !
@@ -434,7 +406,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                             <h5 className="font-extrabold text-xs text-rose-600 dark:text-rose-400 uppercase tracking-wide">
                               Misi Remedial: {w.name}
                             </h5>
-                            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                            <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
                               Akurasi diagnosis Anda pada topik ini hanya <strong>{w.percentage}%</strong> ({w.correct} dari {w.total} benar). Kami merekomendasikan membaca ulang jurnal dan panduan literatur referensi klinis terkait.
                             </p>
                           </div>
@@ -442,15 +414,15 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02]">
-                      <div className="w-6 h-6 rounded-xl flex items-center justify-center bg-emerald-500 text-white font-extrabold text-xs flex-shrink-0">
+                    <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10">
+                      <div className="w-6 h-6 rounded-xl flex items-center justify-center bg-emerald-600 text-white font-extrabold text-xs flex-shrink-0">
                         🏆
                       </div>
                       <div className="space-y-0.5">
-                        <h5 className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+                        <h5 className="font-extrabold text-xs text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
                           Misi Selesai Tanpa Cela!
                         </h5>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
                           Tidak ditemukan kelemahan mayor dengan akurasi di bawah 70% pada sesi tryout ini. Pertahankan ketajaman klinis diagnosis Anda!
                         </p>
                       </div>
@@ -461,8 +433,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
             )}
 
             {/* Accordion Review Section per question */}
-            <div className="space-y-4 w-full max-w-full min-w-0 animate-fade-in-up animation-delay-500">
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <div className="space-y-4 w-full max-w-full min-w-0">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-indigo-500" />
                 Daftar Pembahasan & Kunci Jawaban Soal
               </h3>
@@ -474,18 +446,18 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   const isOpen = !!openReviewIndices[idx];
 
                   let statusBadge = (
-                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200 shrink-0">
+                    <span className="px-2.5 py-0.5 rounded-md text-[9px] font-bold liquid-glass-subtle text-slate-500 dark:text-slate-400 shrink-0">
                       Kosong
                     </span>
                   );
 
                   if (userAnswer !== null) {
                     statusBadge = isCorrect ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                      <span className="px-2.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
                         Benar
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                      <span className="px-2.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 shrink-0">
                         Salah
                       </span>
                     );
@@ -494,24 +466,19 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                   return (
                     <div
                       key={idx}
-                      style={{ animationDelay: `${Math.min(idx * 35, 350)}ms` }}
-                      className={`rounded-xl border backdrop-blur-md overflow-hidden transition-all w-full max-w-full min-w-0 animate-fade-in-up ${
-                        theme === 'dark' ? 'bg-slate-900/60 border-white/[0.08] shadow-sm' : 'bg-white/80 border-white/80 shadow-sm'
-                      }`}
+                      className="rounded-2xl liquid-glass-card overflow-hidden transition-all w-full max-w-full min-w-0"
                     >
                       {/* Accordion Header */}
                       <div
                         onClick={() => toggleReviewAccordion(idx)}
-                        className={`flex items-center justify-between gap-2.5 sm:gap-4 p-3 sm:p-4 cursor-pointer transition-all ${
-                          theme === 'dark' ? 'hover:bg-slate-800/15' : 'hover:bg-slate-50'
-                        }`}
+                        className="flex items-center justify-between gap-2.5 sm:gap-4 p-4 cursor-pointer hover:bg-white/40 dark:hover:bg-white/[0.04] transition-all"
                       >
                         <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
-                          <span className="text-xs font-extrabold text-slate-400 flex-shrink-0">
+                          <span className="text-xs font-extrabold tabular-nums text-slate-500 dark:text-slate-400 flex-shrink-0">
                             Soal {idx + 1}
                           </span>
                           {statusBadge}
-                          <p className="text-xs font-semibold truncate text-slate-700 dark:text-slate-300">
+                          <p className="text-xs font-semibold truncate text-slate-800 dark:text-slate-200">
                             {q.pertanyaan.replace(/<[^>]*>/g, '').slice(0, 80)}...
                           </p>
                         </div>
@@ -530,20 +497,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                 isCorrect
                               );
                             }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer hover:scale-[1.05]"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium liquid-glass-subtle-interactive cursor-pointer text-amber-600 dark:text-amber-400"
                             title={answerNotes[generateQuestionFingerprint(q)] ? 'Lihat/Edit Catatan' : 'Tambah Catatan'}
-                            style={{
-                              backgroundColor: answerNotes[generateQuestionFingerprint(q)]
-                                ? (theme === 'dark' ? 'rgb(245 158 11 / 0.15)' : 'rgb(245 158 11 / 0.1)')
-                                : (isCorrect
-                                  ? (theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)')
-                                  : 'rgb(245 158 11 / 0.15)'),
-                              color: answerNotes[generateQuestionFingerprint(q)]
-                                ? '#f59e0b'
-                                : (isCorrect
-                                  ? (theme === 'dark' ? '#9399b2' : '#6c6f85')
-                                  : '#f59e0b'),
-                            }}
                           >
                             <StickyNote className="w-3.5 h-3.5" />
                             {answerNotes[generateQuestionFingerprint(q)] && (

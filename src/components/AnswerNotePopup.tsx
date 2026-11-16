@@ -33,21 +33,17 @@ export default function AnswerNotePopup({
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       <div
-        className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
-        style={{
-          backgroundColor: theme === 'dark' ? '#313244' : '#eff1f5',
-          border: theme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(226 232 240)',
-        }}
+        className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 liquid-glass-card text-slate-900 dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: data.isCorrect ? 'rgb(34 197 94 / 0.15)' : 'rgb(245 158 11 / 0.15)' }}
             >
               <StickyNote
@@ -55,57 +51,35 @@ export default function AnswerNotePopup({
                 style={{ color: data.isCorrect ? '#22c55e' : '#f59e0b' }}
               />
             </div>
-            <h3 className="text-sm font-bold" style={{ color: theme === 'dark' ? '#cdd6f4' : '#4c4f69' }}>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
               {existingNote ? 'Edit Catatan' : 'Tambah Catatan'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-            style={{
-              color: theme === 'dark' ? '#9399b2' : '#6c6f85',
-              backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
-            }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Question Context */}
-        <div
-          className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3"
-          style={{
-            backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
-            color: theme === 'dark' ? '#a6adc8' : '#5c5f77',
-          }}
-        >
-          <span className="font-semibold" style={{ color: theme === 'dark' ? '#bac2de' : '#4c4f69' }}>Soal:</span>{' '}
+        <div className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3 liquid-glass-subtle text-slate-600 dark:text-slate-300">
+          <span className="font-semibold text-slate-800 dark:text-slate-100">Soal:</span>{' '}
           {truncated}
         </div>
 
         {!data.isCorrect && (
           <div className="flex gap-2">
-            <div
-              className="flex-1 rounded-xl p-3 text-xs"
-              style={{
-                backgroundColor: 'rgb(239 68 68 / 0.08)',
-                border: '1px solid rgb(239 68 68 / 0.2)',
-              }}
-            >
-              <span className="font-semibold text-red-400">Jawabanmu:</span>
-              <p className="mt-1" style={{ color: theme === 'dark' ? '#f38ba8' : '#d20f39' }}>
+            <div className="flex-1 rounded-xl p-3 text-xs bg-rose-500/10 border border-rose-500/20">
+              <span className="font-semibold text-rose-500">Jawabanmu:</span>
+              <p className="mt-1 text-rose-700 dark:text-rose-300">
                 {data.userAnswer || '-'}
               </p>
             </div>
-            <div
-              className="flex-1 rounded-xl p-3 text-xs"
-              style={{
-                backgroundColor: 'rgb(34 197 94 / 0.08)',
-                border: '1px solid rgb(34 197 94 / 0.2)',
-              }}
-            >
-              <span className="font-semibold text-green-400">Jawaban Benar:</span>
-              <p className="mt-1" style={{ color: theme === 'dark' ? '#a6e3a1' : '#40a02b' }}>
+            <div className="flex-1 rounded-xl p-3 text-xs bg-emerald-500/10 border border-emerald-500/20">
+              <span className="font-semibold text-emerald-500">Jawaban Benar:</span>
+              <p className="mt-1 text-emerald-700 dark:text-emerald-300">
                 {data.correctAnswer || '-'}
               </p>
             </div>
@@ -118,12 +92,7 @@ export default function AnswerNotePopup({
           onChange={(e) => onNoteInputChange(e.target.value)}
           placeholder="Tulis catatan belajar di sini... (misal: konsep yang perlu diingat, tips mnemonik, referensi halaman buku, dll)"
           rows={5}
-          className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all"
-          style={{
-            backgroundColor: theme === 'dark' ? 'rgb(15 23 42 / 0.6)' : 'rgb(248 250 252)',
-            color: theme === 'dark' ? '#bac2de' : '#4c4f69',
-            border: `1px solid ${theme === 'dark' ? 'rgb(51 65 85)' : 'rgb(226 232 240)'}`,
-          }}
+          className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all liquid-glass-input text-slate-800 dark:text-slate-100 placeholder-slate-400"
           autoFocus
         />
 
@@ -133,7 +102,7 @@ export default function AnswerNotePopup({
             <button
               onClick={() => onDelete(data.questionText)}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5" /> Hapus
             </button>
@@ -143,18 +112,14 @@ export default function AnswerNotePopup({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-              style={{
-                color: theme === 'dark' ? '#9399b2' : '#6c6f85',
-                backgroundColor: theme === 'dark' ? 'rgb(51 65 85 / 0.5)' : 'rgb(241 245 249)',
-              }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300"
             >
               Batal
             </button>
             <button
               onClick={() => onSave(data.questionText, noteInput)}
               disabled={isSaving || !noteInput.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
             >
               <Save className="w-3.5 h-3.5" />
               {isSaving ? 'Menyimpan...' : 'Simpan'}

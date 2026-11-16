@@ -15,27 +15,25 @@ interface MobileQuizNavDrawerProps {
 }
 
 export default function MobileQuizNavDrawer({
-  theme, isOpen, currentQuiz, userAnswers, doubtStatus, isRevealed, currentIndex, onNavigate, onClose,
+  isOpen, currentQuiz, userAnswers, doubtStatus, isRevealed, currentIndex, onNavigate, onClose,
 }: MobileQuizNavDrawerProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className={`w-full max-w-sm p-6 rounded-3xl border shadow-2xl relative animate-scale-up ${
-        theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-      }`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-sm p-6 rounded-2xl liquid-glass-card relative animate-scale-in text-slate-900 dark:text-slate-100">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-455 hover:text-slate-205 hover:bg-slate-800/50 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-500 cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 mb-4 pr-8">
+        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 pr-8">
           Peta Soal Ujian
         </h3>
 
-        <div className="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1">
+        <div className="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1 tabular-nums">
           {currentQuiz.map((_, idx) => {
             const isAnswered = userAnswers[idx] !== null && userAnswers[idx] !== undefined && userAnswers[idx] !== '';
             const isDoubt = doubtStatus[idx];
@@ -46,35 +44,30 @@ export default function MobileQuizNavDrawer({
             let btnClass = "";
             if (isActive) {
               if (isDoubt) {
-                btnClass = "bg-amber-500 border-amber-400 text-white font-black shadow-md ring-2 ring-amber-400 ring-offset-2";
+                btnClass = "bg-amber-500 border-amber-400 text-white font-bold shadow-sm ring-2 ring-amber-400/50";
               } else if (revealed) {
                 if (isCorrect) {
-                  btnClass = "bg-blue-600 border-blue-500 text-white font-black shadow-md ring-2 ring-blue-400 ring-offset-2";
+                  btnClass = "bg-blue-600 border-blue-500 text-white font-bold shadow-sm ring-2 ring-blue-400/50";
                 } else {
-                  btnClass = "bg-rose-600 border-rose-500 text-white font-black shadow-md ring-2 ring-rose-400 ring-offset-2";
+                  btnClass = "bg-rose-600 border-rose-500 text-white font-bold shadow-sm ring-2 ring-rose-400/50";
                 }
               } else if (isAnswered) {
-                btnClass = "bg-emerald-600 border-emerald-500 text-white font-black shadow-md ring-2 ring-emerald-400 ring-offset-2";
+                btnClass = "bg-emerald-600 border-emerald-500 text-white font-bold shadow-sm ring-2 ring-emerald-400/50";
               } else {
-                btnClass = "border-indigo-500 text-indigo-500 border-2 font-black shadow-sm ring-2 ring-indigo-500/30";
+                btnClass = "border-indigo-500 text-indigo-600 dark:text-indigo-400 border-2 font-bold ring-2 ring-indigo-500/30";
               }
             } else if (isDoubt) {
-              btnClass = "bg-amber-500 border-amber-500 text-white shadow-sm";
+              btnClass = "bg-amber-500 border-amber-500 text-white";
             } else if (revealed) {
               if (isCorrect) {
-                // SUDAH DICEK & BENAR: Biru / Indigo (bukan hijau!)
-                btnClass = "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/20";
+                btnClass = "bg-blue-600 border-blue-600 text-white";
               } else {
-                // SUDAH DICEK & SALAH: Merah
-                btnClass = "bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-500/20";
+                btnClass = "bg-rose-500 border-rose-500 text-white";
               }
             } else if (isAnswered) {
-              // TERJAWAB TAPI BELUM DICEK: Hijau
-              btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-sm";
+              btnClass = "bg-emerald-500 border-emerald-500 text-white";
             } else {
-              btnClass = theme === 'dark' 
-                ? 'bg-slate-800 border-slate-750 text-slate-450' 
-                : 'bg-slate-100 text-slate-600 border-slate-200/60';
+              btnClass = "liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300";
             }
 
             return (
@@ -89,7 +82,7 @@ export default function MobileQuizNavDrawer({
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold text-slate-500">
+        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/60 dark:border-white/10 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
             <span>Terjawab (Belum Cek)</span>
@@ -111,7 +104,7 @@ export default function MobileQuizNavDrawer({
             <span>Sedang Aktif</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
+            <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-slate-300 dark:bg-slate-700" />
             <span>Belum Dijawab</span>
           </div>
         </div>

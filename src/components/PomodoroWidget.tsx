@@ -61,22 +61,18 @@ export default function PomodoroWidget({
   const currentMeta = modeThemes[mode] || modeThemes.focus;
 
   return (
-    <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col justify-between transition-colors ${
-      theme === 'dark'
-        ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-        : 'liquid-glass-card'
-    }`}>
+    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-2 mb-3.5">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Pomodoro Timer</h3>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-            isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 animate-pulse' : 'liquid-glass-subtle dark:bg-slate-800/60 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+            isActive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 animate-pulse' : 'liquid-glass-subtle text-slate-600 dark:text-slate-400'
           }`}>
             {isActive ? 'Berjalan' : 'Jeda'}
           </span>
         </div>
-        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5" title="Total sesi fokus yang diselesaikan">
+        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 tabular-nums" title="Total sesi fokus yang diselesaikan">
           <Coffee className="w-3.5 h-3.5 text-amber-500" />
           <span>{completedSessions} Selesai</span>
         </div>
@@ -84,7 +80,7 @@ export default function PomodoroWidget({
 
       {/* Mode Selector Tabs */}
       {onSelectMode && (
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg liquid-glass-subtle dark:bg-slate-800/60 dark:border-slate-700/50 mb-3 backdrop-blur-md">
+        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl liquid-glass-subtle mb-4">
           {(['focus', 'break', 'long_break'] as PomodoroMode[]).map((m) => {
             const isSelected = mode === m;
             const meta = modeThemes[m];
@@ -93,10 +89,10 @@ export default function PomodoroWidget({
                 key={m}
                 type="button"
                 onClick={() => onSelectMode(m)}
-                className={`py-1.5 px-1.5 rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer truncate ${
+                className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer truncate ${
                   isSelected
-                    ? meta.activeBadge + ' shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                    ? meta.activeBadge + ' shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/10'
                 }`}
               >
                 <span>{meta.icon}</span>
@@ -115,7 +111,7 @@ export default function PomodoroWidget({
               cx="64"
               cy="64"
               r="58"
-              className="fill-none stroke-slate-200 dark:stroke-slate-800"
+              className="fill-none stroke-slate-200/80 dark:stroke-slate-800/80"
               strokeWidth="8"
             />
             <circle
@@ -130,10 +126,10 @@ export default function PomodoroWidget({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-mono">
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-mono tabular-nums">
               {minutes}:{seconds}
             </span>
-            <span className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${currentMeta.badgeColor}`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wider mt-1 tabular-nums ${currentMeta.badgeColor}`}>
               {currentMeta.label} ({Math.round(totalTime / 60)}m)
             </span>
           </div>
@@ -144,10 +140,10 @@ export default function PomodoroWidget({
           <button
             type="button"
             onClick={onToggle}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
               isActive
                 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-600/20'
             }`}
           >
             {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
@@ -158,7 +154,7 @@ export default function PomodoroWidget({
             <button
               type="button"
               onClick={() => onAddMinutes(5)}
-              className="px-2.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer"
+              className="px-3 py-2.5 rounded-xl liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 text-xs font-bold tabular-nums cursor-pointer"
               title="Tambah 5 Menit (+5m)"
             >
               +5m
@@ -168,7 +164,7 @@ export default function PomodoroWidget({
           <button
             type="button"
             onClick={onReset}
-            className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="p-2.5 rounded-xl liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
             title="Reset Timer"
           >
             <RotateCcw className="w-4 h-4" />
@@ -178,4 +174,5 @@ export default function PomodoroWidget({
     </div>
   );
 }
+
 

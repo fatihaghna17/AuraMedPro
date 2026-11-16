@@ -74,26 +74,22 @@ export default function SidebarNav({
   ];
 
   return (
-    <aside className={`fixed top-0 bottom-0 left-0 z-30 w-60 hidden lg:flex flex-col justify-between border-r backdrop-blur-2xl transition-colors duration-150 ${
-      theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 text-slate-100' : 'liquid-glass-card border-r border-white/80 text-slate-900'
-    }`}>
+    <aside className="fixed top-0 bottom-0 left-0 z-30 w-64 hidden lg:flex flex-col justify-between liquid-glass-card border-r text-slate-900 dark:text-slate-100 transition-all duration-200">
       {/* Logo & Header */}
       <div className="p-5">
-        <div className="flex items-center gap-2.5 mb-6 px-1">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
-            <Activity className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-3 mb-7 px-1.5">
+          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0 shadow-md shadow-indigo-500/25 ring-1 ring-white/25">
+            <Activity className="w-4.5 h-4.5 text-white" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-base tracking-tight">AuraMed</span>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border backdrop-blur-md ${
-                theme === 'dark' ? 'bg-white/[0.08] text-slate-200 border-white/15' : 'liquid-glass-subtle text-slate-700'
-              }`}>
+              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">AuraMed</span>
+              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider liquid-glass-subtle text-indigo-600 dark:text-indigo-300">
                 PRO
               </span>
             </div>
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tight leading-tight mt-0.5">
-              Aura-Infused Question Drilling Platform
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-tight leading-tight mt-0.5 truncate">
+              Clinical Question Drilling
             </p>
           </div>
         </div>
@@ -107,21 +103,19 @@ export default function SidebarNav({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer relative group ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : theme === 'dark'
-                      ? 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
-                      : 'text-slate-700 hover:text-slate-950 hover:bg-white/50'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-white/20'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/55 dark:hover:bg-white/[0.08]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isActive ? 'scale-105' : ' opacity-80 group-hover:opacity-100'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.id === 'srs' && srsDueCount > 0 && (
-                  <span className={`text-[10px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5 ${
-                    isActive ? 'bg-white text-indigo-600' : 'bg-rose-600 text-white'
+                  <span className={`text-[10px] font-bold tabular-nums rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5 ${
+                    isActive ? 'bg-white text-indigo-600 shadow-xs' : 'bg-rose-600 text-white'
                   }`}>
                     {srsDueCount > 99 ? '99+' : srsDueCount}
                   </span>
@@ -132,31 +126,32 @@ export default function SidebarNav({
         </nav>
       </div>
 
-      <div className="mt-auto">
-        {/* Streak Overview */}
-        <div className="px-5 py-3.5 border-t border-white/15 dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5" title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}>
+      <div className="mt-auto p-4 space-y-3">
+        {/* Streak Overview Card */}
+        <div className="p-3 rounded-xl liquid-glass-subtle flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0" title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}>
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
               <Flame className={`w-4 h-4 fill-current ${streakFlame.flameColor}`} />
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold leading-tight text-slate-800 dark:text-slate-200">{currentStreak} Hari Streak</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight truncate">{streakFlame.tierName}</span>
-              </div>
             </div>
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border backdrop-blur-md ${
-              theme === 'dark' ? 'bg-white/[0.06] border-white/15' : 'liquid-glass-subtle'
-            }`} title={`${streakFreezeLeft} Streak Freeze Tersedia`}>
-              <span className="text-xs font-bold text-sky-600 dark:text-sky-400">{streakFreezeLeft}</span>
-              <span className="text-[10px]">❄️</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-bold tabular-nums leading-tight text-slate-900 dark:text-slate-100">{currentStreak} Hari Streak</span>
+              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight truncate mt-0.5">{streakFlame.tierName}</span>
             </div>
+          </div>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 shrink-0"
+            title={`${streakFreezeLeft} Streak Freeze Tersedia`}
+          >
+            <span className="text-xs font-bold tabular-nums text-sky-600 dark:text-sky-400">{streakFreezeLeft}</span>
+            <span className="text-[10px]">❄️</span>
           </div>
         </div>
 
         {/* Profile & Logout */}
-        <div className="p-4 border-t border-white/15 dark:border-white/10">
+        <div className="p-2.5 rounded-xl liquid-glass-subtle space-y-2.5">
           <div 
             onClick={() => onTabChange('profile')}
-            className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-white/60 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer group"
+            className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer group"
             title="Buka Halaman Profil & Kustomisasi Avatar"
           >
             <div className="relative shrink-0">
@@ -173,11 +168,11 @@ export default function SidebarNav({
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              <p className="text-xs font-bold truncate text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 {username}
               </p>
-              <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{tierInfo.badge} T{tier}</span>
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tabular-nums">
+                <span className="text-indigo-600 dark:text-indigo-400">{tierInfo.badge} T{tier}</span>
                 <span>•</span>
                 <span>Lv {userLevel}</span>
               </div>
@@ -186,14 +181,10 @@ export default function SidebarNav({
 
           <button
             onClick={onLogout}
-            className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer backdrop-blur-md ${
-              theme === 'dark'
-                ? 'bg-white/[0.06] hover:bg-rose-950/40 border-white/15 hover:border-rose-800 text-slate-300 hover:text-rose-400'
-                : 'liquid-glass-subtle-interactive hover:bg-rose-50/80 hover:border-rose-300 text-slate-700 hover:text-rose-600'
-            }`}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-200/70 dark:border-white/10 bg-white/50 dark:bg-white/[0.04] hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:border-rose-500/30 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-150 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar</span>
+            <span>Keluar Sesi</span>
           </button>
         </div>
       </div>

@@ -198,15 +198,11 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* TOP ROW: PAGE HEADER                                                     */}
       {/* ========================================================================= */}
-      <div className={`w-full p-5 rounded-xl border backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-        theme === 'dark'
-          ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-          : 'liquid-glass-card'
-      }`}>
+      <div className="w-full p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div 
             onClick={() => setDashboardTab('profile')}
-            className={`relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer ${currentFrame.ringClass}`}
+            className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-105 ${currentFrame.ringClass}`}
             title="Klik untuk melihat profil & kustomisasi avatar"
           >
             <CultivatorAvatar 
@@ -220,10 +216,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className={`text-lg sm:text-xl font-bold tracking-tight truncate ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
+            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight truncate text-slate-900 dark:text-slate-100">
               Halo, {profileUsername}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 tabular-nums">
               <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
                 <span>{CULTIVATOR_TIERS[cultivatorTier - 1]?.badge}</span>
                 <span>Tingkat {cultivatorTier}</span>
@@ -251,12 +247,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         </div>
 
         {/* Level progress bar on right */}
-        <div className="w-full md:w-64 shrink-0">
+        <div className="w-full md:w-64 shrink-0 tabular-nums">
           <div className="flex justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Progres Level</span>
             <span>{getLevelInfo(userXP).progress}% ke Lv {getLevelInfo(userXP).level + 1}</span>
           </div>
-          <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden">
             <div
               className="h-full bg-indigo-600 rounded-full transition-all duration-300"
               style={{ width: `${getLevelInfo(userXP).progress}%` }}
@@ -291,7 +287,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         <div className="lg:col-span-5 space-y-5">
           {/* 1. POMODORO TIMER (DI PALING ATAS, LANGSUNG KELIHATAN) */}
           <PomodoroWidget
-            theme={theme}
+            theme={theme as 'light' | 'dark'}
             mode={pomodoroMode}
             secondsLeft={pomodoroSecondsLeft}
             isActive={pomodoroActive}
@@ -306,11 +302,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           />
 
           {/* 2. AKTIVITAS BELAJAR */}
-          <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col justify-between ${
-            theme === 'dark'
-              ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-              : 'liquid-glass-card'
-          }`}>
+          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div>
@@ -319,30 +311,26 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">7 hari terakhir</p>
                 </div>
-                <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                <span className="px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                   {totalQuestionsAnswered} Total Soal
                 </span>
               </div>
 
               {/* Mini stats row */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className={`p-3 rounded-lg border text-center backdrop-blur-md ${
-                  theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                }`}>
+              <div className="grid grid-cols-2 gap-3 mb-4 tabular-nums">
+                <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Benar Minggu Ini
                   </span>
-                  <span className="text-xl font-bold text-emerald-500">
+                  <span className="text-xl font-extrabold text-emerald-500 mt-0.5 block">
                     {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
                   </span>
                 </div>
-                <div className={`p-3 rounded-lg border text-center backdrop-blur-md ${
-                  theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                }`}>
+                <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Sesi Pomodoro
                   </span>
-                  <span className="text-xl font-bold text-amber-500">
+                  <span className="text-xl font-extrabold text-amber-500 mt-0.5 block">
                     {pomodoroCount}
                   </span>
                 </div>
@@ -354,7 +342,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                   <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorHomeActivity" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={chartFill} stopOpacity={0.25}/>
+                        <stop offset="5%" stopColor={chartFill} stopOpacity={0.28}/>
                         <stop offset="95%" stopColor={chartFill} stopOpacity={0}/>
                       </linearGradient>
                     </defs>
@@ -365,13 +353,13 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       contentStyle={{ 
                         backgroundColor: theme === 'dark' ? '#181825' : '#eff1f5',
                         borderColor: theme === 'dark' ? '#313244' : '#ccd0da',
-                        borderRadius: '8px',
+                        borderRadius: '10px',
                         fontSize: '11px',
                         fontWeight: '600',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)'
                       }}
                     />
-                    <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2} fillOpacity={1} fill="url(#colorHomeActivity)" />
+                    <Area type="monotone" dataKey="JawabanBenar" stroke={chartFill} strokeWidth={2.5} fillOpacity={1} fill="url(#colorHomeActivity)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -389,18 +377,17 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           {/* 4. SESI TERTUNDA */}
           {pendingSessions.length > 0 && (
             <PendingSessionsCard
-              theme={theme}
+              theme={theme as 'light' | 'dark'}
               sessions={pendingSessions}
               onResume={resumeQuizSession}
               onDiscard={discardQuizSession}
               onDiscardAll={discardAllQuizSessions}
-              onOpenAll={() => setDashboardTab('banks')}
             />
           )}
 
           {/* 5. ANALISIS SUB-KOMPETENSI */}
           <HistoryAnalyticsPanel
-            theme={theme}
+            theme={theme as 'light' | 'dark'}
             analytics={historyAnalytics}
             expandedCompetencies={expandedCompetencies}
             onToggleExpand={(name) => setExpandedCompetencies((prev: any) => ({ ...prev, [name]: !prev[name] }))}
@@ -412,465 +399,431 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ======================================================================= */}
         <div className="lg:col-span-7 space-y-5">
           {/* 1. RIWAYAT PERCOBAAN KUIS (STANDALONE DEDICATED CARD) */}
-          <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col ${
-            theme === 'dark'
-              ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-              : 'liquid-glass-card'
-          }`}>
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-white/15 dark:border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Riwayat Percobaan Kuis
-              </h3>
+          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col">
+            <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-white/10 pb-3.5">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Riwayat Percobaan Kuis
+                </h3>
+                {quizHistory.length > 0 && (
+                  <span className="text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    {quizHistory.length} Sesi
+                  </span>
+                )}
+              </div>
+
               {quizHistory.length > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  {quizHistory.length} Sesi
-                </span>
+                <button
+                  onClick={clearAllHistory}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold liquid-glass-subtle-interactive text-rose-600 dark:text-rose-400 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Kosongkan Riwayat
+                </button>
               )}
             </div>
 
-            {quizHistory.length > 0 && (
-              <button
-                onClick={clearAllHistory}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors duration-150 cursor-pointer backdrop-blur-md ${
-                  theme === 'dark'
-                    ? 'bg-white/[0.06] hover:bg-rose-950/40 border-white/15 text-rose-400'
-                    : 'liquid-glass-subtle-interactive hover:bg-rose-50/80 hover:border-rose-300 text-rose-600'
-                }`}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Kosongkan Riwayat
-              </button>
-            )}
-          </div>
-
-          {/* Scrollable Container (Fixed height, internal scroll) */}
-          <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
-                  {quizHistory.length === 0 ? (
-                    <div className="text-center p-10">
-                      <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                        Belum ada riwayat pengerjaan kuis
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[400px] mx-auto">
-                        Selesaikan minimal satu kali kuis untuk mencatat riwayat skor beserta hasil analisis sub-kompetensi di sini.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Top Stats Overview */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
-                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                        }`}>
-                          <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                            {quizHistory.length}
-                          </div>
-                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                            Jumlah Percobaan
-                          </div>
-                        </div>
-
-                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
-                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                        }`}>
-                          <div className="text-xl font-bold text-emerald-500">
-                            {Math.round(quizHistory.reduce((acc, curr) => acc + curr.score, 0) / quizHistory.length)}
-                          </div>
-                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                            Rata-rata Skor
-                          </div>
-                        </div>
-
-                        <div className={`p-3.5 rounded-lg border text-center backdrop-blur-md ${
-                          theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                        }`}>
-                          <div className="text-xl font-bold text-amber-500">
-                            {Math.max(...quizHistory.map((h) => h.score))}
-                          </div>
-                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                            Skor Tertinggi
-                          </div>
-                        </div>
+            {/* Scrollable Container (Fixed height, internal scroll) */}
+            <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
+              {quizHistory.length === 0 ? (
+                <div className="text-center p-10">
+                  <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Belum ada riwayat pengerjaan kuis
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[400px] mx-auto">
+                    Selesaikan minimal satu kali kuis untuk mencatat riwayat skor beserta hasil analisis sub-kompetensi di sini.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Top Stats Overview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 tabular-nums">
+                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                        {quizHistory.length}
                       </div>
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                        Jumlah Percobaan
+                      </div>
+                    </div>
 
-                      {/* Detailed List */}
-                      <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                        {quizHistory.map((item) => {
-                          const scoreColor = item.score >= 80 
-                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                            : item.score >= 65 
-                            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20' 
-                            : item.score >= 40 
-                            ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' 
-                            : 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
+                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-xl font-extrabold text-emerald-500">
+                        {Math.round(quizHistory.reduce((acc, curr) => acc + curr.score, 0) / quizHistory.length)}
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                        Rata-rata Skor
+                      </div>
+                    </div>
 
-                          return (
-                            <div
-                              key={item.id}
-                              onClick={() => {
-                                setSelectedHistoryDetail(item);
-                                setOpenHistoryReviewIndices({});
-                              }}
-                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border gap-3 transition-colors duration-150 cursor-pointer group/history backdrop-blur-md ${
-                                theme === 'dark'
-                                  ? 'bg-white/[0.04] hover:bg-white/[0.09] border-white/10'
-                                  : 'liquid-glass-subtle-interactive'
-                              }`}
-                              title="Klik untuk membuka detail soal & pembahasan"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-11 h-11 rounded-lg border flex flex-col items-center justify-center font-bold text-sm shrink-0 ${scoreColor}`}>
-                                  <span>{item.score}</span>
-                                  <span className="text-[8px] opacity-80">Skor</span>
-                                </div>
+                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-xl font-extrabold text-amber-500">
+                        {Math.max(...quizHistory.map((h) => h.score))}
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                        Skor Tertinggi
+                      </div>
+                    </div>
+                  </div>
 
-                                <div className="min-w-0">
-                                  <div className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md text-slate-900 dark:text-slate-100 group-hover/history:text-indigo-600 dark:group-hover/history:text-indigo-400 transition-colors">
-                                    {item.files.join(', ')}
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="w-3 h-3" />
-                                      {new Date(item.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
-                                    </span>
-                                    <span>•</span>
-                                    <span>{item.total} Soal</span>
-                                    <span>•</span>
-                                    <span className="text-emerald-500 font-semibold">✔ {item.correct}</span>
-                                    <span className="text-rose-500 font-semibold">✘ {item.wrong}</span>
-                                    <span className="text-slate-400 font-semibold">∅ {item.empty}</span>
-                                  </div>
-                                </div>
+                  {/* Detailed List */}
+                  <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                    {quizHistory.map((item) => {
+                      const scoreColor = item.score >= 80 
+                        ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
+                        : item.score >= 65 
+                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20' 
+                        : item.score >= 40 
+                        ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' 
+                        : 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedHistoryDetail(item);
+                            setOpenHistoryReviewIndices({});
+                          }}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl liquid-glass-subtle-interactive gap-3 cursor-pointer group/history"
+                          title="Klik untuk membuka detail soal & pembahasan"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-11 h-11 rounded-xl border flex flex-col items-center justify-center font-bold text-sm tabular-nums shrink-0 ${scoreColor}`}>
+                              <span>{item.score}</span>
+                              <span className="text-[8px] opacity-80">Skor</span>
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md text-slate-900 dark:text-slate-100 group-hover/history:text-indigo-600 dark:group-hover/history:text-indigo-400 transition-colors">
+                                {item.files.join(', ')}
                               </div>
-
-                              <div className="flex items-center justify-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                                  Pembahasan →
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap tabular-nums">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(item.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
                                 </span>
-
-                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                                  item.mode === 'rmo'
-                                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                    : item.mode === 'blok'
-                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                                }`}>
-                                  {item.mode === 'rmo' ? 'RMO' : item.mode === 'blok' ? 'Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
-                                </span>
-                                
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteHistoryItem(item.id);
-                                  }}
-                                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
-                                  title="Hapus riwayat"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <span>•</span>
+                                <span>{item.total} Soal</span>
+                                <span>•</span>
+                                <span className="text-emerald-500 font-semibold">✔ {item.correct}</span>
+                                <span className="text-rose-500 font-semibold">✘ {item.wrong}</span>
+                                <span className="text-slate-400 font-semibold">∅ {item.empty}</span>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                              Pembahasan →
+                            </span>
+
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                              item.mode === 'rmo'
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                : item.mode === 'blok'
+                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                            }`}>
+                              {item.mode === 'rmo' ? 'RMO' : item.mode === 'blok' ? 'Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
+                            </span>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteHistoryItem(item.id);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
+                              title="Hapus riwayat"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 2. LEADERBOARD CBT (STANDALONE DEDICATED CARD) */}
+          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col">
+            <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-white/10 pb-3.5">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-amber-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Leaderboard CBT
+                </h3>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                  {leaderboardType === 'global' ? `${globalLeaderboard.length} Peserta` : `${fileLeaderboard.length} Peserta`}
+                </span>
+              </div>
+            </div>
+
+            <div className="max-h-[500px] overflow-y-auto pr-1 space-y-4">
+              <div className="space-y-4">
+                {/* Leaderboard Type Toggles */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex rounded-xl liquid-glass-subtle p-1">
+                    <button
+                      onClick={() => setLeaderboardType('global')}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                        leaderboardType === 'global'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      Global (Total Soal)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLeaderboardType('file');
+                        if (!selectedLeaderboardFile && Object.keys(questionDatabase).length > 0) {
+                          const firstFile = Object.keys(questionDatabase)[0];
+                          setSelectedLeaderboardFile(firstFile);
+                          fetchFileLeaderboard(firstFile);
+                        }
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                        leaderboardType === 'file'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      Per File Soal
+                    </button>
+                  </div>
+
+                  {leaderboardType === 'file' && Object.keys(questionDatabase).length > 0 && (
+                    <div className="w-full sm:w-64">
+                      <select
+                        value={selectedLeaderboardFile}
+                        onChange={(e) => setSelectedLeaderboardFile(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl liquid-glass-input text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+                      >
+                        {Object.keys(questionDatabase).map((name) => (
+                          <option key={name} value={name} className="dark:bg-slate-900">
+                            {name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
-          </div>
-        </div>
+                </div>
 
-        {/* 2. LEADERBOARD CBT (STANDALONE DEDICATED CARD) */}
-        <div className={`p-5 rounded-xl border backdrop-blur-xl flex flex-col ${
-          theme === 'dark'
-            ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
-            : 'liquid-glass-card'
-        }`}>
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-white/15 dark:border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Leaderboard CBT
-              </h3>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                {leaderboardType === 'global' ? `${globalLeaderboard.length} Peserta` : `${fileLeaderboard.length} Peserta`}
-              </span>
-            </div>
-          </div>
+                {/* Filters: Prodi Filter Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 border-b border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
+                      Program Studi:
+                    </span>
+                    <div className="flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle flex-wrap">
+                      {[
+                        { key: 'all', label: 'Semua Prodi', icon: '🌐' },
+                        { key: 'kedokteran', label: 'Kedokteran', icon: '🩺' },
+                        { key: 'farmasi', label: 'Farmasi', icon: '💊' },
+                        { key: 'kebidanan', label: 'Kebidanan', icon: '👶' },
+                      ].map((item) => {
+                        const isSelected = (leaderboardProdiFilter || 'all') === item.key;
+                        const isMyProdi = userProdi && userProdi.toLowerCase() === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => setLeaderboardProdiFilter && setLeaderboardProdiFilter(item.key)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            <span>{item.icon}</span>
+                            <span>{item.label}</span>
+                            {isMyProdi && (
+                              <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider ${
+                                isSelected ? 'bg-white/25 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
+                              }`}>
+                                Saya
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-          <div className="max-h-[500px] overflow-y-auto pr-1 space-y-4">
-            <div className="space-y-4">
-                    {/* Leaderboard Type Toggles */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex rounded-lg liquid-glass-subtle dark:bg-slate-800/60 p-1 dark:border-slate-700 backdrop-blur-md">
-                        <button
-                          onClick={() => setLeaderboardType('global')}
-                          className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
-                            leaderboardType === 'global'
-                              ? 'bg-indigo-600 text-white'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
+                  <span className="self-end sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
+                  </span>
+                </div>
+
+                {/* Filters Row: Angkatan & Time Filter */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
+                  {/* Left: Info Angkatan (User) / Dropdown Pilih Angkatan (Admin Super) / Badge Angkatan (Admin Angkatan) */}
+                  {isSuperAdmin ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 p-1 rounded-xl liquid-glass-subtle">
+                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-2">
+                          Pilih Angkatan (Super Admin):
+                        </span>
+                        <select
+                          value={adminAngkatanFilter || 'all'}
+                          onChange={(e) => setAdminAngkatanFilter && setAdminAngkatanFilter(e.target.value as any)}
+                          className="px-3 py-1.5 rounded-lg liquid-glass-input text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
                         >
-                          Global (Total Soal)
-                        </button>
+                          <option value="all" className="dark:bg-slate-900">🌐 Semua Angkatan (Seluruh User)</option>
+                          <option value="23" className="dark:bg-slate-900">Angkatan 2023 (Seluruh User)</option>
+                          <option value="24" className="dark:bg-slate-900">Angkatan 2024 (Seluruh User)</option>
+                          <option value="25" className="dark:bg-slate-900">Angkatan 2025 (Seluruh User)</option>
+                          <option value="26" className="dark:bg-slate-900">Angkatan 2026 (Seluruh User)</option>
+                        </select>
+                      </div>
+                    </div>
+                  ) : isAdminAngkatan ? (
+                    <div className="flex items-center gap-2">
+                      <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5 shadow-sm">
+                        <span>🛡️</span>
+                        <span>Admin Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'} — Seluruh Mahasiswa</span>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-max">
+                      <button
+                        type="button"
+                        onClick={() => setLeaderboardScope && setLeaderboardScope('my')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          leaderboardScope === 'my'
+                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <span>🎓</span>
+                        <span>Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLeaderboardScope && setLeaderboardScope('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          leaderboardScope === 'all'
+                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <span>🌐</span>
+                        <span>Lintas Angkatan</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Time Filter Tabs */}
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-max">
+                    {[
+                      { key: 'all', label: 'Semua Waktu' },
+                      { key: '1', label: 'Hari Ini' },
+                      { key: '7', label: 'Minggu Ini' },
+                      { key: '30', label: 'Bulan Ini' }
+                    ].map((filter) => {
+                      const isActive = leaderboardType === 'global'
+                        ? globalTimeFilter === filter.key
+                        : fileTimeFilter === filter.key;
+                      return (
                         <button
+                          key={filter.key}
                           onClick={() => {
-                            setLeaderboardType('file');
-                            if (!selectedLeaderboardFile && Object.keys(questionDatabase).length > 0) {
-                              const firstFile = Object.keys(questionDatabase)[0];
-                              setSelectedLeaderboardFile(firstFile);
-                              fetchFileLeaderboard(firstFile);
+                            if (leaderboardType === 'global') {
+                               setGlobalTimeFilter(filter.key as any);
+                            } else {
+                               setFileTimeFilter(filter.key as any);
                             }
                           }}
-                          className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
-                            leaderboardType === 'file'
-                              ? 'bg-indigo-600 text-white'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                            isActive
+                              ? 'bg-indigo-600 text-white shadow-sm'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                           }`}
                         >
-                          Per File Soal
+                          {filter.label}
                         </button>
-                      </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                      {leaderboardType === 'file' && Object.keys(questionDatabase).length > 0 && (
-                        <div className="w-full sm:w-64">
-                          <select
-                            value={selectedLeaderboardFile}
-                            onChange={(e) => setSelectedLeaderboardFile(e.target.value)}
-                            className={`w-full px-3 py-2 rounded-xl border text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                              theme === 'dark'
-                                ? 'bg-slate-800 border-slate-700 text-slate-200'
-                                : 'bg-white border-slate-200 text-slate-800'
-                            }`}
-                          >
-                            {Object.keys(questionDatabase).map((name) => (
-                              <option key={name} value={name}>
-                                {name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
+                {/* Aura Prestige Legend */}
+                <div className="flex items-center gap-2 flex-wrap px-1 text-[10px]">
+                  <span className="font-bold text-slate-450 uppercase tracking-wider text-[9px]">Efek Aura:</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-xs border border-yellow-200 flex items-center gap-1">
+                    <span>👑</span>
+                    <span>Level 95+ (Aura Sultan)</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/35 flex items-center gap-1">
+                    <span>💀</span>
+                    <span>Streak 20+ Sudden Death (Aura Survivor)</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-300 border border-teal-500/35 flex items-center gap-1">
+                    <span>⚡</span>
+                    <span>3000+ Soal (Aura Veteran)</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/35 flex items-center gap-1">
+                    <span>🔥</span>
+                    <span>500 Soal Hari Ini (Aura Maraton)</span>
+                  </span>
+                </div>
 
-                    {/* Filters: Prodi Filter Row */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 border-b border-slate-200/40 dark:border-slate-800/40">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
-                          Program Studi:
-                        </span>
-                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 flex-wrap">
-                          {[
-                            { key: 'all', label: 'Semua Prodi', icon: '🌐' },
-                            { key: 'kedokteran', label: 'Kedokteran', icon: '🩺' },
-                            { key: 'farmasi', label: 'Farmasi', icon: '💊' },
-                            { key: 'kebidanan', label: 'Kebidanan', icon: '👶' },
-                          ].map((item) => {
-                            const isSelected = (leaderboardProdiFilter || 'all') === item.key;
-                            const isMyProdi = userProdi && userProdi.toLowerCase() === item.key;
-                            return (
-                              <button
-                                key={item.key}
-                                type="button"
-                                onClick={() => setLeaderboardProdiFilter && setLeaderboardProdiFilter(item.key)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                                  isSelected
-                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
-                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                                }`}
-                              >
-                                <span>{item.icon}</span>
-                                <span>{item.label}</span>
-                                {isMyProdi && (
-                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase tracking-wider ${
-                                    isSelected ? 'bg-white/25 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
-                                  }`}>
-                                    Saya
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <span className="self-end sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                        {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
-                      </span>
-                    </div>
-
-                    {/* Filters Row: Angkatan & Time Filter */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
-                      {/* Left: Info Angkatan (User) / Dropdown Pilih Angkatan (Admin Super) / Badge Angkatan (Admin Angkatan) */}
-                      {isSuperAdmin ? (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20">
-                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-2">
-                              Pilih Angkatan (Super Admin):
-                            </span>
-                            <select
-                              value={adminAngkatanFilter || 'all'}
-                              onChange={(e) => setAdminAngkatanFilter && setAdminAngkatanFilter(e.target.value as any)}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer border ${
-                                theme === 'dark'
-                                  ? 'bg-slate-900 border-slate-700 text-slate-200'
-                                  : 'bg-white border-slate-200 text-slate-800'
-                              }`}
-                            >
-                              <option value="all">🌐 Semua Angkatan (Seluruh User)</option>
-                              <option value="23">Angkatan 2023 (Seluruh User)</option>
-                              <option value="24">Angkatan 2024 (Seluruh User)</option>
-                              <option value="25">Angkatan 2025 (Seluruh User)</option>
-                              <option value="26">Angkatan 2026 (Seluruh User)</option>
-                            </select>
-                          </div>
-                        </div>
-                      ) : isAdminAngkatan ? (
-                        <div className="flex items-center gap-2">
-                          <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5 shadow-sm">
-                            <span>🛡️</span>
-                            <span>Admin Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'} — Seluruh Mahasiswa</span>
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
-                          <button
-                            type="button"
-                            onClick={() => setLeaderboardScope && setLeaderboardScope('my')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                              leaderboardScope === 'my'
-                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                          >
-                            <span>🎓</span>
-                            <span>Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setLeaderboardScope && setLeaderboardScope('all')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                              leaderboardScope === 'all'
-                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                          >
-                            <span>🌐</span>
-                            <span>Lintas Angkatan</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Time Filter Tabs */}
-                      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/35 border border-slate-200/40 dark:border-slate-700/20 w-max">
-                        {[
-                          { key: 'all', label: 'Semua Waktu' },
-                          { key: '1', label: 'Hari Ini' },
-                          { key: '7', label: 'Minggu Ini' },
-                          { key: '30', label: 'Bulan Ini' }
-                        ].map((filter) => {
-                          const isActive = leaderboardType === 'global'
-                            ? globalTimeFilter === filter.key
-                            : fileTimeFilter === filter.key;
-                          return (
-                            <button
-                              key={filter.key}
-                              onClick={() => {
-                                if (leaderboardType === 'global') {
-                                   setGlobalTimeFilter(filter.key as any);
-                                } else {
-                                   setFileTimeFilter(filter.key as any);
-                                }
-                              }}
-                              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                                isActive
-                                  ? 'bg-indigo-500 text-white shadow-sm'
-                                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                              }`}
-                            >
-                              {filter.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Aura Prestige Legend */}
-                    <div className="flex items-center gap-2 flex-wrap px-1 text-[10px]">
-                      <span className="font-bold text-slate-450 uppercase tracking-wider text-[9px]">Efek Aura:</span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-slate-950 shadow-sm border border-yellow-200 flex items-center gap-1">
-                        <span>👑</span>
-                        <span>Level 95+ (Aura Sultan)</span>
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/35 flex items-center gap-1">
-                        <span>💀</span>
-                        <span>Streak 20+ Sudden Death (Aura Survivor)</span>
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-300 border border-teal-500/35 flex items-center gap-1">
-                        <span>⚡</span>
-                        <span>3000+ Soal (Aura Veteran)</span>
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/35 flex items-center gap-1">
-                        <span>🔥</span>
-                        <span>500 Soal Hari Ini (Aura Maraton)</span>
-                      </span>
-                    </div>
-
-                    {/* Active Aura Status for Current User */}
-                    {(currentFrame.auraClass || userBestSuddenDeath >= 20) && (
-                      <div className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all animate-fade-in ${
+                {/* Active Aura Status for Current User */}
+                {(currentFrame.auraClass || userBestSuddenDeath >= 20) && (
+                  <div className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all animate-fade-in ${
+                    currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
+                      ? 'bg-black/90 border-red-600/90 text-red-400 shadow-md shadow-red-950/80 ring-1 ring-red-500/50'
+                      : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300 shadow-sm shadow-rose-500/10'
+                      : currentFrame.id === 'caduceus_mythic'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 shadow-sm shadow-amber-500/10'
+                      : currentFrame.id === 'veteran_3000'
+                      ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-300 shadow-sm shadow-teal-500/10'
+                      : 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-300 shadow-sm shadow-purple-500/10'
+                  }`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                         currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
-                          ? 'bg-black/90 border-red-600/90 text-red-400 shadow-md shadow-red-950/80 ring-1 ring-red-500/50'
+                          ? 'p-[2px] bg-gradient-to-tr from-black via-zinc-950 to-red-600 border border-red-500 shadow-md shadow-red-900/60'
                           : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
-                          ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300 shadow-sm shadow-rose-500/10'
-                          : currentFrame.id === 'caduceus_mythic'
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 shadow-sm shadow-amber-500/10'
-                          : currentFrame.id === 'veteran_3000'
-                          ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-300 shadow-sm shadow-teal-500/10'
-                          : 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-300 shadow-sm shadow-purple-500/10'
+                          ? 'p-[2px] bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 border border-rose-300 shadow-md shadow-rose-500/40'
+                          : currentFrame.ringClass
                       }`}>
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                            currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
-                              ? 'p-[2px] bg-gradient-to-tr from-black via-zinc-950 to-red-600 border border-red-500 shadow-md shadow-red-900/60'
-                              : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
-                              ? 'p-[2px] bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 border border-rose-300 shadow-md shadow-rose-500/40'
-                              : currentFrame.ringClass
-                          }`}>
-                            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-xs">
-                              {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? '👹' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? '💀' : currentFrame.badge}
-                            </div>
-                          </div>
-                          <div>
-                            <span className="font-extrabold block">
-                              Aura Aktif Anda: {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? 'Raja Iblis (Demon Lord)' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? 'Tengkorak Emas (Survivor)' : currentFrame.name}
-                            </span>
-                            <span className="text-[10px] opacity-85 block">
-                              Efek animasi bercahaya aktif di kartu profil dan baris peringkat Anda pada tabel di bawah.
-                            </span>
-                          </div>
+                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-xs">
+                          {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? '👹' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? '💀' : currentFrame.badge}
                         </div>
-                        <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-current/10 border border-current/30 shrink-0 flex items-center gap-1 animate-pulse">
-                          <span>✨</span>
-                          <span>AURA AKTIF</span>
+                      </div>
+                      <div>
+                        <span className="font-extrabold block">
+                          Aura Aktif Anda: {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? 'Raja Iblis (Demon Lord)' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? 'Tengkorak Emas (Survivor)' : currentFrame.name}
+                        </span>
+                        <span className="text-[10px] opacity-85 block">
+                          Efek animasi bercahaya aktif di kartu profil dan baris peringkat Anda pada tabel di bawah.
                         </span>
                       </div>
-                    )}
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-current/10 border border-current/30 shrink-0 flex items-center gap-1 animate-pulse">
+                      <span>✨</span>
+                      <span>AURA AKTIF</span>
+                    </span>
+                  </div>
+                )}
 
-                    <div className={`overflow-hidden rounded-xl border ${
-                        theme === 'dark' ? 'bg-white/[0.04] border-white/10' : 'liquid-glass-subtle'
-                      }`}>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className={`border-b text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 ${
-                                theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-                              }`}>
-                                <th className="py-3 px-4 w-16 text-center">Rank</th>
-                                <th className="py-3 px-4">Peserta</th>
+                <div className="overflow-hidden rounded-xl liquid-glass-subtle">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse tabular-nums">
+                      <thead>
+                        <tr className="border-b border-slate-200/60 dark:border-white/10 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-white/[0.04]">
+                          <th className="py-3 px-4 w-16 text-center">Rank</th>
+                          <th className="py-3 px-4">Peserta</th>
                                 {leaderboardType === 'global' ? (
                                   <th className="py-3 px-4 text-center">Total Soal Terjawab</th>
                                 ) : (
@@ -1007,8 +960,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                     } else if (hasQuestAura) {
                                       rowClasses += "aura-quest-row " + (
                                         theme === 'dark'
-                                          ? 'bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-500/20 border-purple-400/80 shadow-[0_0_18px_rgba(168,85,247,0.3)]'
-                                          : 'bg-gradient-to-r from-purple-50/95 via-indigo-50/70 to-purple-50/95 border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.2)]'
+                                          ? 'bg-amber-500/15 border-amber-400/80 shadow-[0_0_18px_rgba(245,158,11,0.25)]'
+                                          : 'bg-amber-50/90 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.18)]'
                                       );
                                     } else if (isCurrent) {
                                       rowClasses += (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200');
@@ -1065,15 +1018,15 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                         <span className={
                                           hasDemonKingAura
                                             ? (theme === 'dark'
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-red-500 font-black drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]'
+                                                ? 'text-red-300 font-black drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]'
                                                 : 'text-red-950 font-black')
                                             : hasSuddenDeathAura
                                             ? (theme === 'dark'
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-red-300 to-amber-300 font-black drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                                                ? 'text-rose-200 font-black drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]'
                                                 : 'text-rose-950 font-black')
                                             : hasSultanAura
                                             ? (theme === 'dark' 
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-400 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                                ? 'text-amber-300 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                                                 : 'text-amber-950 font-black')
                                             : hasVeteranAura
                                             ? (theme === 'dark' ? 'text-teal-200 font-black' : 'text-teal-900 font-black')
@@ -1275,8 +1228,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                     } else if (hasQuestAura) {
                                       rowClasses += "aura-quest-row " + (
                                         theme === 'dark'
-                                          ? 'bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-500/20 border-purple-400/80 shadow-[0_0_18px_rgba(168,85,247,0.3)]'
-                                          : 'bg-gradient-to-r from-purple-50/95 via-indigo-50/70 to-purple-50/95 border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.2)]'
+                                          ? 'bg-amber-500/15 border-amber-400/80 shadow-[0_0_18px_rgba(245,158,11,0.25)]'
+                                          : 'bg-amber-50/90 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.18)]'
                                       );
                                     } else if (isCurrent) {
                                       rowClasses += (theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200');
@@ -1333,15 +1286,15 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                         <span className={
                                           hasDemonKingAura
                                             ? (theme === 'dark'
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-red-500 font-black drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]'
+                                                ? 'text-red-300 font-black drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]'
                                                 : 'text-red-950 font-black')
                                             : hasSuddenDeathAura
                                             ? (theme === 'dark'
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-red-300 to-amber-300 font-black drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                                                ? 'text-rose-200 font-black drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]'
                                                 : 'text-rose-950 font-black')
                                             : hasSultanAura
                                             ? (theme === 'dark' 
-                                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-400 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                                ? 'text-amber-300 font-black drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                                                 : 'text-amber-950 font-black')
                                             : hasVeteranAura
                                             ? (theme === 'dark' ? 'text-teal-200 font-black' : 'text-teal-900 font-black')

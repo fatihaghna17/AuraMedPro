@@ -31,50 +31,40 @@ export default function ReportQuestionModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className={`relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${
-              theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
-            }`}
+            className="relative w-full max-w-md overflow-hidden rounded-2xl shadow-2xl liquid-glass-card text-slate-900 dark:text-white"
           >
             <div className="p-6">
-              <h3 className={`text-lg font-black flex items-center gap-2 mb-6 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+              <h3 className="text-lg font-black flex items-center gap-2 mb-6 text-slate-900 dark:text-white">
                 <Flag className="w-5 h-5 text-rose-500" /> Laporkan Soal
               </h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <label className="block text-xs font-bold mb-2 text-slate-700 dark:text-slate-300">
                     Jenis Masalah
                   </label>
                   <select
                     value={issueType}
                     onChange={(e) => onIssueTypeChange(e.target.value)}
-                    className={`w-full p-3 rounded-xl border text-sm font-medium ${
-                      theme === 'dark' 
-                        ? 'bg-slate-800 border-slate-700 text-white' 
-                        : 'bg-slate-50 border-slate-200 text-slate-800'
-                    }`}
+                    className="w-full p-3 rounded-xl text-sm font-medium outline-none liquid-glass-input text-slate-900 dark:text-white"
                   >
-                    <option value="Jawaban Salah">Kunci Jawaban Salah</option>
-                    <option value="Typo">Ada Typo/Kesalahan Ketik</option>
-                    <option value="Tidak Jelas">Soal Tidak Jelas/Ambigu</option>
-                    <option value="Tidak Pantas">Konten Tidak Pantas</option>
-                    <option value="Lainnya">Lainnya</option>
+                    <option value="Jawaban Salah" className="bg-white dark:bg-slate-900">Kunci Jawaban Salah</option>
+                    <option value="Typo" className="bg-white dark:bg-slate-900">Ada Typo/Kesalahan Ketik</option>
+                    <option value="Tidak Jelas" className="bg-white dark:bg-slate-900">Soal Tidak Jelas/Ambigu</option>
+                    <option value="Tidak Pantas" className="bg-white dark:bg-slate-900">Konten Tidak Pantas</option>
+                    <option value="Lainnya" className="bg-white dark:bg-slate-900">Lainnya</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className={`block text-xs font-bold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <label className="block text-xs font-bold mb-2 text-slate-700 dark:text-slate-300">
                     Keterangan (Opsional)
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => onDescriptionChange(e.target.value)}
                     placeholder="Jelaskan masalahnya..."
-                    className={`w-full p-3 rounded-xl border text-sm resize-none h-24 ${
-                      theme === 'dark' 
-                        ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-                    }`}
+                    className="w-full p-3 rounded-xl text-sm resize-none h-24 outline-none liquid-glass-input text-slate-900 dark:text-white placeholder-slate-400"
                   />
                 </div>
               </div>
@@ -82,17 +72,13 @@ export default function ReportQuestionModal({
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={onClose}
-                  className={`flex-1 py-3 rounded-xl text-sm font-bold border transition-colors ${
-                    theme === 'dark'
-                      ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={onSubmit}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer"
                 >
                   Kirim Laporan
                 </button>

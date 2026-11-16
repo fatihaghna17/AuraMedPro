@@ -7,29 +7,23 @@ interface ConfirmModalProps {
   onClose: () => void;
 }
 
-export default function ConfirmModal({ isOpen, theme, title, description, onConfirm, onClose }: ConfirmModalProps) {
+export default function ConfirmModal({ isOpen, title, description, onConfirm, onClose }: ConfirmModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-      <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl animate-pop-up ${
-        theme === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
-      }`}>
-        <h3 className="text-base sm:text-lg font-extrabold">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md p-6 rounded-2xl liquid-glass-card animate-scale-in text-slate-900 dark:text-white">
+        <h3 className="text-base sm:text-lg font-extrabold tracking-tight">
           {title}
         </h3>
-        <p className={`mt-2 text-xs sm:text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           {description}
         </p>
 
-        <div className="flex gap-2 justify-end mt-6">
+        <div className="flex gap-2.5 justify-end mt-6">
           <button
             onClick={onClose}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer ${
-              theme === 'dark'
-                ? 'bg-slate-800 hover:bg-slate-750 text-slate-300'
-                : 'bg-slate-100 hover:bg-slate-150 text-slate-600'
-            }`}
+            className="px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             Batal
           </button>
@@ -38,7 +32,7 @@ export default function ConfirmModal({ isOpen, theme, title, description, onConf
               onClose();
               if (onConfirm) onConfirm();
             }}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/10 transition-all duration-200 active:scale-105 active:translate-y-0 hover:scale-[1.02] hover:-translate-y-0.5 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer active:scale-95"
           >
             Lanjutkan
           </button>
@@ -47,3 +41,4 @@ export default function ConfirmModal({ isOpen, theme, title, description, onConf
     </div>
   );
 }
+

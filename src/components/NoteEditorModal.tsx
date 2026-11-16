@@ -20,10 +20,10 @@ export default function NoteEditorModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
-      <div className={`relative w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-scale-up ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-          <X className="w-5 h-5" />
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-scale-up liquid-glass-card text-slate-900 dark:text-white">
+        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+          <X className="w-4 h-4" />
         </button>
         
         <h3 className="text-lg font-black mb-4">{editingNote ? 'Edit Catatan' : 'Buat Catatan Baru'}</h3>
@@ -55,15 +55,15 @@ export default function NoteEditorModal({
           }
         }} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">Judul</label>
-            <input name="title" defaultValue={editingNote?.title || ''} required className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Contoh: Klasifikasi Gagal Jantung" />
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Judul</label>
+            <input name="title" defaultValue={editingNote?.title || ''} required className="w-full px-3.5 py-2.5 rounded-xl outline-none liquid-glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400" placeholder="Contoh: Klasifikasi Gagal Jantung" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">Catatan</label>
-            <textarea name="content" defaultValue={editingNote?.content || ''} required rows={4} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Ketik catatan di sini..." />
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan</label>
+            <textarea name="content" defaultValue={editingNote?.content || ''} required rows={4} className="w-full px-3.5 py-2.5 rounded-xl outline-none liquid-glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400" placeholder="Ketik catatan di sini..." />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">Warna</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Warna</label>
             <div className="flex gap-2">
               {['indigo', 'emerald', 'amber', 'rose', 'purple'].map(color => (
                 <label key={color} className="relative cursor-pointer">
@@ -74,15 +74,15 @@ export default function NoteEditorModal({
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">Tags (Pisahkan dengan koma)</label>
-            <input name="tags" defaultValue={editingNote?.tags?.join(', ') || ''} className="w-full px-3 py-2 rounded-lg border bg-transparent outline-none focus:border-indigo-500 dark:border-slate-700" placeholder="Kardiologi, EKG, dll" />
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Tags (Pisahkan dengan koma)</label>
+            <input name="tags" defaultValue={editingNote?.tags?.join(', ') || ''} className="w-full px-3.5 py-2.5 rounded-xl outline-none liquid-glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400" placeholder="Kardiologi, EKG, dll" />
           </div>
           
           <div className="pt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 transition cursor-pointer">
               Batal
             </button>
-            <button type="submit" className="px-4 py-2 rounded-lg font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20">
+            <button type="submit" className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20 cursor-pointer">
               Simpan Catatan
             </button>
           </div>

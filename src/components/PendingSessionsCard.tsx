@@ -17,16 +17,14 @@ interface PendingSessionsCardProps {
   onDiscardAll?: () => void;
 }
 
-export default function PendingSessionsCard({ theme, sessions, onResume, onDiscard, onDiscardAll }: PendingSessionsCardProps) {
+export default function PendingSessionsCard({ sessions, onResume, onDiscard, onDiscardAll }: PendingSessionsCardProps) {
   if (sessions.length === 0) return null;
 
   return (
-    <div className={`p-5 rounded-xl border backdrop-blur-xl ${
-      theme === 'dark' ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl' : 'liquid-glass-card'
-    }`}>
-      <div className="flex items-center justify-between gap-2 mb-3">
+    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card">
+      <div className="flex items-center justify-between gap-2 mb-3.5">
         <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-          Sesi Kuis Tertunda <span className="font-semibold text-slate-500 dark:text-slate-400">({sessions.length})</span>
+          Sesi Kuis Tertunda <span className="font-semibold text-slate-500 dark:text-slate-400 tabular-nums">({sessions.length})</span>
         </h3>
         {onDiscardAll && sessions.length > 1 && (
           <button
@@ -46,13 +44,11 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
           return (
             <div
               key={session.id}
-              className={`p-3.5 rounded-lg border flex flex-col justify-between gap-3 transition-colors backdrop-blur-md ${
-                theme === 'dark' ? 'bg-white/[0.06] border-white/10' : 'liquid-glass-subtle'
-              }`}
+              className="p-3.5 rounded-xl liquid-glass-subtle flex flex-col justify-between gap-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                     {session.quiz_mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -62,9 +58,9 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
                     })}
                   </span>
                 </div>
-                <h4 className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">{session.title}</h4>
+                <h4 className="text-xs font-bold truncate text-slate-900 dark:text-slate-100">{session.title}</h4>
                 <div className="mt-2.5">
-                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1 tabular-nums">
                     <span>Progres: {answered}/{totalQ} Soal</span>
                     <span>{pct}%</span>
                   </div>
@@ -76,7 +72,7 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
               <div className="flex items-center justify-end gap-2 mt-1">
                 <button
                   onClick={() => onResume(session)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors duration-150 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors duration-150 cursor-pointer shadow-xs"
                 >
                   Lanjutkan
                 </button>
@@ -94,3 +90,4 @@ export default function PendingSessionsCard({ theme, sessions, onResume, onDisca
     </div>
   );
 }
+

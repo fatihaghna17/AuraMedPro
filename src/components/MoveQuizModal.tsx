@@ -30,21 +30,19 @@ export default function MoveQuizModal({ theme, quizModal, folders, onMove, onClo
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] rounded-t-3xl shadow-2xl overflow-hidden ${
-              theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'
-            }`}
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] rounded-t-3xl shadow-2xl overflow-hidden liquid-glass-card border-b-0"
           >
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className={`w-10 h-1 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`} />
+              <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
             </div>
           
             {/* Header */}
-            <div className={`px-5 pb-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
-              <h3 className={`text-sm font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+            <div className="px-5 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">
                 Pindah: {quizModal.quizName}
               </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5">Pilih folder tujuan</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Pilih folder tujuan</p>
             </div>
           
             {/* Folder list */}
@@ -55,11 +53,7 @@ export default function MoveQuizModal({ theme, quizModal, folders, onMove, onClo
                   onMove(quizModal.quizKey, 'root');
                   onClose();
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-                  theme === 'dark' 
-                    ? 'hover:bg-slate-800 text-slate-300' 
-                    : 'hover:bg-slate-100 text-slate-700'
-                }`}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200"
               >
                 <FileText className="w-4 h-4 text-slate-400" />
                 <span>File Lepas (Root)</span>
@@ -73,13 +67,9 @@ export default function MoveQuizModal({ theme, quizModal, folders, onMove, onClo
                     onMove(quizModal.quizKey, folder);
                     onClose();
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-                    theme === 'dark' 
-                      ? 'hover:bg-slate-800 text-slate-300' 
-                      : 'hover:bg-slate-100 text-slate-700'
-                  }`}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200"
                 >
-                  <Folder className="w-4 h-4 text-indigo-400" />
+                  <Folder className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   <span>{folder}</span>
                 </button>
               ))}

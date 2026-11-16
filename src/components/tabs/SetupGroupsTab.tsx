@@ -93,46 +93,49 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
 
   if (selectedGroup) {
     return (
-      <div className={`p-4 md:p-8 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-        <button onClick={() => setSelectedGroup(null)} className={`mb-6 flex items-center gap-2 text-sm font-semibold transition ${isDark ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'}`}>
+      <div className={`animate-fade-in space-y-6 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+        <button
+          onClick={() => setSelectedGroup(null)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl liquid-glass-subtle-interactive text-xs font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer"
+        >
           &larr; Kembali ke Daftar Grup
         </button>
         
         {/* HEADER GRUP */}
-        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm mb-6`}>
+        <div className="p-6 rounded-2xl liquid-glass-card">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center gap-2.5 mb-2">
-                <h2 className="text-3xl font-black">{selectedGroup.name}</h2>
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100">{selectedGroup.name}</h2>
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25">
                   Grup Belajar
                 </span>
               </div>
-              <p className={`text-base ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{selectedGroup.description || 'Tidak ada deskripsi.'}</p>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{selectedGroup.description || 'Tidak ada deskripsi.'}</p>
             </div>
             
-            <div className={`flex flex-col items-end gap-2 p-4 rounded-2xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-              <div className="text-sm font-bold opacity-70">Kode Undangan</div>
-              <div className="text-2xl font-mono font-black text-indigo-500 tracking-widest bg-indigo-500/10 px-3 py-1 rounded-lg">
+            <div className="flex flex-col items-end gap-2 p-4 rounded-xl liquid-glass-subtle">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kode Undangan</div>
+              <div className="text-xl font-mono font-extrabold text-indigo-600 dark:text-indigo-400 tracking-widest bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
                 {selectedGroup.invite_code}
               </div>
               <button 
                 onClick={() => handleInviteWA(selectedGroup.invite_code)}
-                className="mt-2 flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-600 transition hover:scale-105 active:scale-95 text-xs shadow-md shadow-green-500/20"
+                className="mt-1 flex items-center gap-2 bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 text-xs shadow-sm shadow-emerald-600/20 cursor-pointer"
               >
-                <LinkIcon className="w-4 h-4" /> Undang via WhatsApp
+                <LinkIcon className="w-3.5 h-3.5" /> Undang via WhatsApp
               </button>
             </div>
           </div>
 
           {/* TAB SWITCHER DI DALAM GRUP */}
-          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-700/80">
+          <div className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-slate-200/60 dark:border-white/10">
             <button
               onClick={() => setActiveGroupViewTab('radiology')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                 activeGroupViewTab === 'radiology'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                  : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-700/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                  : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
               }`}
             >
               <Stethoscope className="w-4 h-4" />
@@ -141,10 +144,10 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
 
             <button
               onClick={() => setActiveGroupViewTab('regular')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer tabular-nums ${
                 activeGroupViewTab === 'regular'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                  : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-700/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                  : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
               }`}
             >
               <Folder className="w-4 h-4" />
@@ -170,34 +173,34 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
         {/* TAB CONTENT 2: BANK SOAL REGULER & ANGGOTA */}
         {activeGroupViewTab === 'regular' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-            <div className={`lg:col-span-1 p-6 rounded-2xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
-              <div className="flex items-center gap-3 mb-4">
-                <Users className="w-6 h-6 text-indigo-500" />
-                <h3 className="font-black text-xl">Anggota ({groupMembers.length})</h3>
+            <div className="lg:col-span-1 p-6 rounded-2xl liquid-glass-card">
+              <div className="flex items-center gap-2.5 mb-4">
+                <Users className="w-5 h-5 text-indigo-500" />
+                <h3 className="font-bold text-base tabular-nums text-slate-900 dark:text-slate-100">Anggota ({groupMembers.length})</h3>
               </div>
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {groupMembers.map(m => (
-                  <li key={m.user_id} className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                  <li key={m.user_id} className="flex items-center gap-3 p-3 rounded-xl liquid-glass-subtle">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
                       {(m.username || 'U')[0].toUpperCase()}
                     </div>
-                    <span className="font-semibold">{m.username || 'Tanpa Nama'}</span>
+                    <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">{m.username || 'Tanpa Nama'}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className={`lg:col-span-2 p-6 rounded-2xl border flex flex-col items-center justify-center text-center ${isDark ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'} shadow-sm`}>
-              <div className="w-16 h-16 bg-indigo-500/20 text-indigo-500 rounded-2xl flex items-center justify-center mb-4">
-                <Users className="w-8 h-8" />
+            <div className="lg:col-span-2 p-6 rounded-2xl liquid-glass-card flex flex-col items-center justify-center text-center">
+              <div className="w-14 h-14 bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-4">
+                <Users className="w-7 h-7" />
               </div>
-              <h3 className="font-black text-2xl mb-2">Folder Soal Khusus Grup</h3>
-              <p className={`mb-6 max-w-md ${isDark ? 'text-indigo-200/70' : 'text-indigo-800/70'}`}>
+              <h3 className="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-slate-100 mb-2">Folder Soal Khusus Grup</h3>
+              <p className="text-xs sm:text-sm mb-6 max-w-md text-slate-500 dark:text-slate-400 leading-relaxed">
                 Soal yang diunggah ke grup ini terpisah dari Bank Soal utama dan hanya bisa diakses oleh sesama anggota grup.
               </p>
               <button 
-                 onClick={() => onJoinGroup && onJoinGroup(selectedGroup.id, selectedGroup.name)}
-                 className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/30"
+                onClick={() => onJoinGroup && onJoinGroup(selectedGroup.id, selectedGroup.name)}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-md shadow-indigo-600/25 cursor-pointer"
               >
                 Buka Bank Soal Grup
               </button>
@@ -208,59 +211,56 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
     );
   }
 
-
   return (
-    <div className={`p-4 md:p-8 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className={`space-y-6 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+      <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black">Grup Belajar</h2>
-          <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Berkumpul, berbagi soal, dan belajar bersama-sama.</p>
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100">Grup Belajar</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Berkumpul, berbagi soal klinis, dan latihan radiologi bersama sejawat.</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition"
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition cursor-pointer shrink-0"
         >
-          <PlusCircle className="w-5 h-5" /> Buat Grup Baru
+          <PlusCircle className="w-4 h-4" /> Buat Grup Baru
         </button>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3].map(i => (
-            <div key={i} className={`h-40 rounded-2xl animate-pulse ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
+            <div key={i} className="h-36 rounded-2xl liquid-glass-card animate-pulse" />
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className={`text-center py-20 rounded-3xl border-2 border-dashed ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-300 bg-slate-50'}`}>
-          <div className="w-20 h-20 mx-auto bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-10 h-10" />
+        <div className="text-center py-16 px-6 rounded-2xl liquid-glass-card">
+          <div className="w-16 h-16 mx-auto bg-indigo-500/15 border border-indigo-500/25 text-indigo-500 rounded-2xl flex items-center justify-center mb-4">
+            <Users className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold mb-2">Belum ada grup</h3>
-          <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Anda belum bergabung dengan grup apapun. Buat sekarang atau minta kode undangan ke teman Anda!</p>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1.5">Belum ada grup belajar</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">Anda belum bergabung dengan grup apa pun. Buat grup baru sekarang atau minta tautan undangan ke teman sejawat Anda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {groups.map(group => (
             <div 
               key={group.id} 
-              className={`p-6 rounded-2xl border cursor-pointer transition hover:-translate-y-1 hover:shadow-xl ${
-                isDark 
-                  ? 'bg-slate-800 border-slate-700 hover:border-indigo-500/50 shadow-slate-900/50' 
-                  : 'bg-white border-slate-200 hover:border-indigo-400 shadow-slate-200/50'
-              }`}
+              className="p-5 sm:p-6 rounded-2xl liquid-glass-interactive cursor-pointer flex flex-col justify-between"
               onClick={() => loadGroupDetails(group)}
             >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-black line-clamp-1">{group.name}</h3>
-                <div className={`p-2 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
-                  <Users className="w-4 h-4 text-indigo-500" />
+              <div>
+                <div className="flex justify-between items-start gap-3 mb-3">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 line-clamp-1">{group.name}</h3>
+                  <div className="p-2 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <Users className="w-4 h-4" />
+                  </div>
                 </div>
+                <p className="text-xs line-clamp-2 mb-4 min-h-[2.25rem] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {group.description || 'Tidak ada deskripsi'}
+                </p>
               </div>
-              <p className={`text-sm line-clamp-2 mb-4 h-10 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                {group.description || 'Tidak ada deskripsi'}
-              </p>
-              <div className={`text-xs font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Dibuat oleh <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>{group.creator_name}</span>
+              <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-200/50 dark:border-white/10">
+                Dibuat oleh <span className="font-bold text-slate-700 dark:text-slate-300">{group.creator_name}</span>
               </div>
             </div>
           ))}
@@ -268,29 +268,25 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white text-slate-900'}`}>
-            <div className={`flex justify-between items-center p-6 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-              <h3 className="text-xl font-black">Buat Grup Belajar</h3>
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl liquid-glass-card overflow-hidden">
+            <div className="flex justify-between items-center p-5 border-b border-slate-200/60 dark:border-white/10">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Buat Grup Belajar</h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
-                className={`p-2 rounded-full transition ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                className="p-1.5 rounded-lg liquid-glass-subtle-interactive text-slate-500 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
             
-            <form onSubmit={handleCreateGroup} className="p-6">
-              <div className="space-y-5">
+            <form onSubmit={handleCreateGroup} className="p-5 sm:p-6">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold mb-2">Nama Grup</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Nama Grup</label>
                   <input 
                     type="text" 
-                    className={`w-full border rounded-xl p-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
-                      isDark 
-                        ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-indigo-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-400'
-                    }`}
+                    className="w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold liquid-glass-input text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
                     placeholder="Contoh: Pejuang Medis 2026"
                     value={newGroupName} 
                     onChange={e => setNewGroupName(e.target.value)}
@@ -299,13 +295,9 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold mb-2">Deskripsi <span className="opacity-60 font-normal">(opsional)</span></label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Deskripsi <span className="opacity-60 font-normal normal-case">(opsional)</span></label>
                   <textarea 
-                    className={`w-full border rounded-xl p-3 font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[100px] resize-none ${
-                      isDark 
-                        ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-indigo-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-400'
-                    }`}
+                    className="w-full rounded-xl p-3.5 text-xs font-medium liquid-glass-input text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none min-h-[96px] resize-none"
                     placeholder="Deskripsikan tujuan grup ini..."
                     value={newGroupDesc} 
                     onChange={e => setNewGroupDesc(e.target.value)}
@@ -313,20 +305,18 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
                 </div>
               </div>
               
-              <div className="flex justify-end gap-3 mt-8">
+              <div className="flex justify-end gap-2.5 mt-6">
                 <button 
                   type="button" 
                   onClick={() => setShowCreateModal(false)} 
-                  className={`px-5 py-2.5 rounded-xl font-bold transition ${
-                    isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button 
                   type="submit" 
                   disabled={!newGroupName.trim()}
-                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none disabled:transform-none"
+                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   Buat Grup
                 </button>
@@ -338,3 +328,4 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
     </div>
   );
 };
+

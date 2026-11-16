@@ -34,26 +34,20 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
   };
 
   return (
-    <div
-      className={`p-6 sm:p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between ${
-        theme === 'dark'
-          ? 'bg-slate-900/50 border-white/[0.08] shadow-2xl backdrop-blur-xl'
-          : 'bg-white/85 border-slate-200/80 shadow-md backdrop-blur-xl'
-      }`}
-    >
+    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
       {/* Header Bar */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
-              <Sparkles className="w-5 h-5 text-amber-200" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Pusat Prompt AI & Format Soal
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
                   AI Ready
                 </span>
               </div>
@@ -64,13 +58,13 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 self-start sm:self-center">
+          <div className="flex items-center gap-1 p-1 rounded-xl liquid-glass-subtle self-start sm:self-center">
             <button
               type="button"
               onClick={() => setActiveTab('skill')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'skill'
-                  ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -81,9 +75,9 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
             <button
               type="button"
               onClick={() => setActiveTab('prompt')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'prompt'
-                  ? 'bg-indigo-600 text-white font-black shadow-sm'
+                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -94,9 +88,9 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
             <button
               type="button"
               onClick={() => setActiveTab('format')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'format'
-                  ? 'bg-teal-600 text-white font-black shadow-sm'
+                  ? 'bg-teal-600 text-white font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >

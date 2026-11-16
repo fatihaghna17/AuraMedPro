@@ -64,22 +64,16 @@ export default function CreateFolderModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl animate-pop-up ${
-          theme === 'dark'
-            ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-white border-slate-200 text-slate-900'
-        }`}
-      >
+      <div className="w-full max-w-md p-6 rounded-2xl shadow-2xl animate-pop-up liquid-glass-card text-slate-900 dark:text-white">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/20">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center border border-indigo-500/20">
               <FolderPlus className="w-5 h-5" />
             </div>
             <div>
@@ -92,7 +86,7 @@ export default function CreateFolderModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,12 +108,8 @@ export default function CreateFolderModal({
               }}
               placeholder="Contoh: UKMPPD 2026, Parasitologi..."
               maxLength={50}
-              className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
-                error
-                  ? 'border-rose-500 bg-rose-50/10 focus:border-rose-500'
-                  : theme === 'dark'
-                  ? 'bg-slate-800/70 border-slate-700 text-white placeholder-slate-500 focus:border-indigo-500'
-                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+              className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all outline-none liquid-glass-input text-slate-900 dark:text-white placeholder-slate-400 ${
+                error ? 'border-rose-500 bg-rose-50/10' : ''
               }`}
             />
             {error && (
@@ -140,12 +130,10 @@ export default function CreateFolderModal({
                 <button
                   type="button"
                   onClick={() => setIsGlobal(true)}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-xl text-left transition-all cursor-pointer ${
                     isGlobal
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 ring-2 ring-indigo-500/20'
-                      : theme === 'dark'
-                      ? 'border-slate-800 bg-slate-800/50 text-slate-400 hover:bg-slate-800'
-                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      ? 'border border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 ring-2 ring-indigo-500/20'
+                      : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-bold text-xs">
@@ -160,12 +148,10 @@ export default function CreateFolderModal({
                 <button
                   type="button"
                   onClick={() => setIsGlobal(false)}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-xl text-left transition-all cursor-pointer ${
                     !isGlobal
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 ring-2 ring-indigo-500/20'
-                      : theme === 'dark'
-                      ? 'border-slate-800 bg-slate-800/50 text-slate-400 hover:bg-slate-800'
-                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      ? 'border border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 ring-2 ring-indigo-500/20'
+                      : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-bold text-xs">
@@ -179,9 +165,7 @@ export default function CreateFolderModal({
               </div>
             </div>
           ) : (
-            <div className={`p-3 rounded-xl text-xs flex items-center gap-2.5 ${
-              theme === 'dark' ? 'bg-slate-800/60 text-slate-400' : 'bg-slate-100 text-slate-600'
-            }`}>
+            <div className="p-3 rounded-xl text-xs flex items-center gap-2.5 liquid-glass-subtle text-slate-600 dark:text-slate-300">
               <User className="w-4 h-4 text-indigo-500 flex-shrink-0" />
               <span>Folder personal ini hanya akan tersimpan untuk Anda.</span>
             </div>
@@ -192,11 +176,7 @@ export default function CreateFolderModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                theme === 'dark'
-                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-              }`}
+              className="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300"
             >
               Batal
             </button>

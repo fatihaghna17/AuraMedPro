@@ -73,22 +73,16 @@ export default function ParentFolderModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className={`w-full max-w-lg p-6 rounded-3xl border shadow-2xl animate-pop-up transition-all ${
-          theme === 'dark'
-            ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-white border-slate-200 text-slate-900'
-        }`}
-      >
+      <div className="w-full max-w-lg p-6 rounded-2xl shadow-2xl animate-pop-up transition-all liquid-glass-card text-slate-900 dark:text-white">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-500 flex items-center justify-center border border-amber-500/30">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-500 flex items-center justify-center border border-amber-500/30">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -107,7 +101,7 @@ export default function ParentFolderModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl liquid-glass-subtle-interactive text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -117,7 +111,7 @@ export default function ParentFolderModal({
         {currentMode === 'create' && (
           <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                 Nama Folder Besar
               </label>
               <input
@@ -129,11 +123,7 @@ export default function ParentFolderModal({
                   setError(null);
                 }}
                 placeholder="Contoh: UKMPPD 2026, Stase Klinis, Semester 5..."
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all ${
-                  theme === 'dark'
-                    ? 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-600'
-                    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
-                }`}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none transition-all liquid-glass-input text-slate-900 dark:text-slate-100 placeholder-slate-400"
               />
               {error && <p className="text-xs text-rose-500 font-bold mt-1.5">{error}</p>}
             </div>
@@ -141,10 +131,10 @@ export default function ParentFolderModal({
             {/* Folder selection checklist */}
             {allKanbanFolders.length > 0 && (
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 tabular-nums">
                   Pilih Folder yang Ingin Dimasukkan ({selectedChildFolders.length})
                 </label>
-                <div className="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30">
+                <div className="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-2xl liquid-glass-subtle">
                   {allKanbanFolders.map((folder) => {
                     const isSelected = selectedChildFolders.includes(folder);
                     const currentParent = folderParentMap[folder];
