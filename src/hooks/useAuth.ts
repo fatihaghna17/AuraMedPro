@@ -138,7 +138,8 @@ export function useAuth({
         setUserProdi(profile.prodi || 'kedokteran');
         
         const isJidan = (profile.username || '').toLowerCase() === 'jidan';
-        const isLifetime = profile.subscription_status === 'lifetime' || isJidan;
+        const isFaza = (profile.username || '').toLowerCase() === 'faza';
+        const isLifetime = profile.subscription_status === 'lifetime' || isJidan || isFaza;
         const resolvedSubStatus = isLifetime ? 'lifetime' : (profile.subscription_status || 'trial');
         setSubscriptionStatus(resolvedSubStatus);
         
@@ -734,17 +735,19 @@ export function useAuth({
     if (!currentUser) return;
     try {
       const isJidan = (profileUsername || currentUser?.username || '').toLowerCase() === 'jidan';
+      const isFaza = (profileUsername || currentUser?.username || '').toLowerCase() === 'faza';
       const isNao = (profileUsername || currentUser?.username || '').toLowerCase() === 'nao';
       const statusInfo = await authClient.getSubscriptionStatus(currentUser.id);
-      if (statusInfo || isJidan || isNao) {
-        const finalStatus = (statusInfo?.status === 'lifetime' || isJidan) ? 'lifetime' : (statusInfo?.status || 'active');
-        const finalCanAccess = isJidan || isNao || Boolean(statusInfo?.canAccess);
+      if (statusInfo || isJidan || isFaza || isNao) {
+        const isLifetime = statusInfo?.status === 'lifetime' || isJidan || isFaza;
+        const finalStatus = isLifetime ? 'lifetime' : (statusInfo?.status || 'active');
+        const finalCanAccess = isLifetime || isNao || Boolean(statusInfo?.canAccess);
         setSubscriptionStatus(finalStatus);
         setCanAccess(finalCanAccess);
-        setTrialEndsAt(isJidan ? null : (statusInfo?.trialEndsAt || null));
-        setSubscriptionExpiresAt(isJidan ? null : (statusInfo?.subscriptionExpiresAt || null));
+        setTrialEndsAt(isLifetime ? null : (statusInfo?.trialEndsAt || null));
+        setSubscriptionExpiresAt(isLifetime ? null : (statusInfo?.subscriptionExpiresAt || null));
         if (finalCanAccess) {
-          triggerToast(isJidan ? 'Akun Lifetime Aktif Selamanya!' : 'Status langganan aktif!', '🎉');
+          triggerToast(isLifetime ? 'Akun Lifetime Aktif Selamanya!' : 'Status langganan aktif!', '🎉');
         }
       }
     } catch (e) {

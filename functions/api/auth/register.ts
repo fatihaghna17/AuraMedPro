@@ -102,12 +102,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       '25': '2026-09-17T05:00:00Z',
       '26': null,
     };
-    const trialEndsAt = String(angkatan) === '26' ? null : (trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z');
+    const isLifetimeUser = ['jidan', 'faza'].includes(finalUsername.toLowerCase());
+    const initialStatus = isLifetimeUser ? 'lifetime' : 'trial';
+    const initialQuestions = isLifetimeUser ? 11000 : 0;
+    const initialTrialEnd = isLifetimeUser ? null : trialEndsAt;
 
     await env.DB.prepare(`
       INSERT INTO profiles (id, username, email, password_hash, is_guest, role, xp, streak, level, total_questions_answered, created_at, last_active, angkatan, prodi, subscription_status, trial_ends_at)
-      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, 0, ?, ?, ?, ?, 'trial', ?)
-    `).bind(userId, finalUsername, email, passwordHash, now, now, String(angkatan), prodi, trialEndsAt).run();
+      VALUES (?, ?, ?, ?, 0, 'user', 0, 0, 1, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(userId, finalUsername, email, passwordHash, initialQuestions, now, now, String(angkatan), prodi, initialStatus, initialTrialEnd).run();
 
     const jwtSecret = env.AUTH_JWT_SECRET || 'auramedpro-jwt-secret-dev-2026-key-fixed-fallback';
     const jwt = await signJwt({ sub: userId, guest: false }, jwtSecret);
@@ -117,8 +120,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       username: finalUsername,
       prodi: prodi,
       angkatan: String(angkatan),
-      subscription_status: 'trial',
-      trial_ends_at: trialEndsAt
+      subscription_status: initialStatus,
+      trial_ends_at: initialTrialEnd
     };
     const subStatus = checkSubscriptionStatus(profileForCheck);
 

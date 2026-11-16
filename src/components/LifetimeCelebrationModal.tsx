@@ -13,7 +13,7 @@ interface LifetimeCelebrationModalProps {
 export const LifetimeCelebrationModal: React.FC<LifetimeCelebrationModalProps> = ({
   isOpen,
   onClose,
-  username = 'Jidan',
+  username = 'Member',
   theme,
 }) => {
   const isDark = theme === 'dark';

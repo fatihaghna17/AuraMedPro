@@ -230,8 +230,8 @@ export function checkSubscriptionStatus(profile: any): { canAccess: boolean, sta
     return { canAccess: true, status: 'active', expiresAt: null };
   }
 
-  // Khusus Akun Lifetime (termasuk Jidan - reward 11.000 soal pertama)
-  if (profile.subscription_status === 'lifetime' || username === 'jidan') {
+  // Khusus Akun Lifetime (termasuk Jidan & Faza - reward 11.000 soal pertama)
+  if (profile.subscription_status === 'lifetime' || username === 'jidan' || username === 'faza') {
     return { canAccess: true, status: 'lifetime', expiresAt: null };
   }
 

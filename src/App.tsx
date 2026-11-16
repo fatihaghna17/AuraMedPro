@@ -847,9 +847,10 @@ export default function App() {
     ).toLowerCase();
 
     const isJidan = username === 'jidan';
-    const isLifetime = isJidan || subscriptionStatus === 'lifetime';
+    const isFaza = username === 'faza';
+    const isLifetime = isJidan || isFaza || subscriptionStatus === 'lifetime';
 
-    if (isJidan || isLifetime) {
+    if (isJidan || isFaza || isLifetime) {
       const popupKey = `auramed_lifetime_popup_seen_${currentUser.id || username}`;
       const hasSeenPopup = localStorage.getItem(popupKey);
       if (!hasSeenPopup) {
@@ -5423,11 +5424,11 @@ export default function App() {
       onDismiss={() => setLevelUpCelebration({ show: false, level: 0 })}
     />
 
-    {/* Popup Selamat Akun Lifetime (Khusus Jidan / 11.000 Soal Pertama) */}
+    {/* Popup Selamat Akun Lifetime (Khusus Jidan & Faza / 11.000 Soal Pertama) */}
     <LifetimeCelebrationModal
       isOpen={lifetimeModalOpen}
       onClose={() => setLifetimeModalOpen(false)}
-      username={profileUsername || 'Jidan'}
+      username={profileUsername || currentUser?.user_metadata?.username || currentUser?.username || 'Member'}
       theme={theme}
     />
 

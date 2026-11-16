@@ -51,7 +51,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'collector' || username === 'admin' || username === 'fatih17') {
       status = 'active';
       canAccess = true;
-    } else if (profile.subscription_status === 'lifetime' || username === 'jidan') {
+    } else if (profile.subscription_status === 'lifetime' || username === 'jidan' || username === 'faza') {
       status = 'lifetime';
       canAccess = true;
       subscriptionExpiresAt = null;

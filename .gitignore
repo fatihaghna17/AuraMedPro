@@ -11,3 +11,5 @@ export/
 .wrangler/
 _worker.bundle
 no-slop-ui-master/
+.gemini/
+.agent/

@@ -79,9 +79,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }
     }
 
-    // Auto-sync khusus untuk akun 'jidan' (lifetime)
+    // Auto-sync khusus untuk akun 'jidan' & 'faza' (lifetime)
     const isJidan = cleanUsername.toLowerCase() === 'jidan' || identifier.toLowerCase() === 'jidan@ai.online';
-    if (isJidan && profile) {
+    const isFaza = cleanUsername.toLowerCase() === 'faza' || identifier.toLowerCase() === 'faza@ai.online';
+    if ((isJidan || isFaza) && profile) {
       if (profile.subscription_status !== 'lifetime' || (profile.total_questions_answered || 0) < 11000) {
         await env.DB.prepare(`
           UPDATE profiles 
