@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Activity, Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Flame, LogOut
-, Gamepad2, Users } from 'lucide-react';
+, Gamepad2, Users, Layers } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
   CultivatorAvatar,
@@ -64,6 +64,7 @@ export default function SidebarNav({
   const items: NavItem[] = [
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
+    { id: 'flashcard', label: 'Flashcard 3D', icon: Layers },
     { id: 'groups', label: 'Grup Belajar', icon: Users },
     { id: 'new', label: 'Baru', icon: PlusCircle },
     { id: 'srs', label: 'Spaced Repetition', icon: Brain },

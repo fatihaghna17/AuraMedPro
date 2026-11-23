@@ -1,0 +1,39 @@
+{
+  "type": "flashcard3d",
+  "title": "Kunci Latihan Soal — Contoh UKMPPD",
+  "cards": [
+    {
+      "front": {
+        "text": "ACL tear pada atlet sepak bola. Apa tujuan utama rehabilitasi pada kasus tersebut?",
+        "image": null
+      },
+      "back": {
+        "text": "**Mengembalikan stabilitas fungsional lutut & mencegah cedera ulang.**\n\n- Mengontrol nyeri dan bengkak fase akut\n- Memulihkan *range of motion* (ROM) ekstensi penuh\n- Penguatan otot quadriceps & hamstring serta latihan propriosepsi",
+        "image": null
+      },
+      "tags": ["Muskuloskeletal"]
+    },
+    {
+      "front": {
+        "text": "Apusan darah tepi menunjukkan gametosit berbentuk pisang (*crescent-shaped*). Spesies parasit apakah ini?",
+        "image": null
+      },
+      "back": {
+        "text": "**Plasmodium falciparum**\n\nPenyebab malaria tropika. Terapi lini pertama: DHP 3 hari + Primakuin dosis tunggal hari ke-1.",
+        "image": null
+      },
+      "tags": ["Infeksi Tropis"]
+    },
+    {
+      "front": {
+        "text": "Elevasi ST pada sadapan **II, III, dan aVF**. Lokasi infark & arteri koroner tersering?",
+        "image": null
+      },
+      "back": {
+        "text": "**STEMI Inferior — Right Coronary Artery (RCA)**\n\nPeriksa sadapan V3R–V4R untuk menyingkirkan infark ventrikel kanan sebelum memberi nitrat.",
+        "image": null
+      },
+      "tags": ["Kardiovaskular"]
+    }
+  ]
+}

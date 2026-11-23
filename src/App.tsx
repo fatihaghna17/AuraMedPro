@@ -118,6 +118,7 @@ import { SetupProfileTab } from './components/tabs/SetupProfileTab';
 import { SetupSRSTab } from './components/tabs/SetupSRSTab';
 import { SetupNotesTab } from './components/tabs/SetupNotesTab';
 import { SetupGroupsTab } from './components/tabs/SetupGroupsTab';
+import { SetupFlashcardTab } from './components/tabs/SetupFlashcardTab';
 
 // Helper for dynamic imports with auto-reload on stale deployment chunk
 const lazyWithRetry = <T extends React.ComponentType<any>>(
@@ -1022,7 +1023,7 @@ export default function App() {
 // extracted answerNotes state
 
   // Overhaul Tab States
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'groups'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'flashcard' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'groups'>('home');
   const [adminReports, setAdminReports] = useState<any[]>([]);
 
   useEffect(() => {
@@ -4885,6 +4886,15 @@ export default function App() {
             {dashboardTab === 'profile' && <SetupProfileTab theme={theme} currentUser={currentUser} profileUsername={profileUsername} userXP={userXP} currentStreak={currentStreak} longestStreak={longestStreak} totalQuestionsAnswered={totalQuestionsAnswered} streakFreezeLeft={streakFreezeLeft} lastActiveDate={lastActiveDate} exportData={exportData} importData={importData} triggerToast={triggerToast} achievementFilter={achievementFilter} setAchievementFilter={setAchievementFilter} achievements={achievements} userAngkatan={userAngkatan} userProdi={userProdi} quizHistory={quizHistory} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} subscriptionExpiresAt={subscriptionExpiresAt} />}
 
             {/* Box 3: History & Leaderboard (Beranda) */}
+
+            {/* Flashcard 3D */}
+            {dashboardTab === 'flashcard' && (
+              <SetupFlashcardTab
+                theme={theme}
+                triggerToast={triggerToast}
+                setLightboxImage={setLightboxImage}
+              />
+            )}
 
             {/* Box: SRS Dashboard */}
             {dashboardTab === 'srs' && <SetupSRSTab theme={theme} srs={srs} triggerToast={triggerToast} srsAnswerRevealed={srsAnswerRevealed} setSrsAnswerRevealed={setSrsAnswerRevealed} srsPendingRating={srsPendingRating} setSrsPendingRating={setSrsPendingRating} />}

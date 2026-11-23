@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Users, MoreHorizontal, X } from 'lucide-react';
+import { Home, BookOpen, PlusCircle, Brain, StickyNote, BarChart2, User, AlertCircle, Users, Layers, MoreHorizontal, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -22,11 +22,12 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
   const primaryItems: NavItem[] = [
     { id: 'home', label: 'Beranda', icon: Home },
     { id: 'banks', label: 'Bank Soal', icon: BookOpen },
+    { id: 'flashcard', label: 'Flashcard', icon: Layers },
     { id: 'new', label: 'Mulai Kuis', icon: PlusCircle },
-    { id: 'srs', label: 'SRS', icon: Brain },
   ];
 
   const secondaryItems: NavItem[] = [
+    { id: 'srs', label: 'Spaced Repetition', icon: Brain },
     { id: 'notes', label: 'Study Room & Catatan', icon: StickyNote },
     { id: 'groups', label: 'Grup Belajar', icon: Users },
     { id: 'analysis', label: 'Analisis Performa', icon: BarChart2 },
@@ -69,14 +70,25 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
                       onTabChange(item.id);
                       setMoreOpen(false);
                     }}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 ${
+                    className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 ${
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
                         : 'text-slate-700 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10'
                     }`}
                   >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </span>
+                    {item.id === 'srs' && srsDueCount > 0 && (
+                      <span
+                        className={`text-[10px] font-bold tabular-nums rounded-md min-w-[18px] h-4 px-1 flex items-center justify-center shrink-0 ${
+                          isActive ? 'bg-white text-indigo-600' : 'bg-rose-600 text-white'
+                        }`}
+                      >
+                        {srsDueCount > 99 ? '99+' : srsDueCount}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -105,11 +117,6 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
             >
               <Icon className="w-4 h-4" />
               <span className="text-[10px] font-semibold truncate max-w-[64px]">{item.label}</span>
-              {item.id === 'srs' && srsDueCount > 0 && (
-                <span className="absolute top-1 right-2.5 bg-rose-600 text-white text-[9px] font-bold tabular-nums rounded-md min-w-[16px] h-4 px-1 flex items-center justify-center">
-                  {srsDueCount > 9 ? '9+' : srsDueCount}
-                </span>
-              )}
             </button>
           );
         })}
@@ -127,6 +134,11 @@ export default function BottomNav({ theme, activeTab, srsDueCount, isAdmin, onTa
           <span className="text-[10px] font-semibold truncate max-w-[64px]">
             {activeSecondary ? activeSecondary.label.split(' ')[0] : 'Lainnya'}
           </span>
+          {srsDueCount > 0 && (
+            <span className="absolute top-1 right-2.5 bg-rose-600 text-white text-[9px] font-bold tabular-nums rounded-md min-w-[16px] h-4 px-1 flex items-center justify-center">
+              {srsDueCount > 9 ? '9+' : srsDueCount}
+            </span>
+          )}
         </button>
       </nav>
     </>
