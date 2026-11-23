@@ -40,6 +40,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     let status = 'expired';
     let canAccess = false;
     const trialEndsMap: Record<string, string | null> = {
+      '23': '2026-09-14T05:00:00Z',
       '24': '2026-09-14T05:00:00Z',
       '25': '2026-09-17T05:00:00Z',
       '26': null,

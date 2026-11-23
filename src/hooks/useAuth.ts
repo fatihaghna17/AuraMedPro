@@ -138,10 +138,25 @@ export function useAuth({
         setUserAngkatan(profile.angkatan || null);
         setUserProdi(profile.prodi || 'kedokteran');
         
-        const isJidan = (profile.username || '').toLowerCase() === 'jidan';
-        const isFaza = (profile.username || '').toLowerCase() === 'faza';
+        const lowerUsername = (profile.username || '').toLowerCase();
+        const isJidan = lowerUsername === 'jidan';
+        const isFaza = lowerUsername === 'faza';
+        const isNao = lowerUsername === 'nao';
+        const isAdminRole =
+          profile.role === 'admin' ||
+          profile.role === 'super_admin' ||
+          profile.role === 'collector' ||
+          lowerUsername === 'admin' ||
+          lowerUsername === 'fatih17';
         const isLifetime = profile.subscription_status === 'lifetime' || isJidan || isFaza;
-        const resolvedSubStatus = isLifetime ? 'lifetime' : (profile.subscription_status || 'trial');
+        const hasActivePaidSub =
+          profile.subscription_status === 'active' &&
+          (!profile.subscription_expires_at || new Date(profile.subscription_expires_at) > new Date());
+        const resolvedSubStatus = isLifetime
+          ? 'lifetime'
+          : hasActivePaidSub || isAdminRole || isNao
+          ? 'active'
+          : (profile.subscription_status || 'trial');
         setSubscriptionStatus(resolvedSubStatus);
         
         const trialEndsMap: Record<string, string | null> = {
@@ -150,18 +165,24 @@ export function useAuth({
           '25': '2026-09-17T05:00:00Z',
           '26': null,
         };
-        const effectiveTrialEnd = (profile.angkatan === '26' || isLifetime)
+        const effectiveTrialEnd = (String(profile.angkatan) === '26' || isLifetime)
           ? null 
           : (profile.trial_ends_at || (profile.angkatan ? trialEndsMap[profile.angkatan] : '2026-09-14T05:00:00Z'));
         setTrialEndsAt(effectiveTrialEnd);
         setSubscriptionExpiresAt(isLifetime ? null : (profile.subscription_expires_at || null));
 
-        // Validasi akses langganan / trial:
-        const isNao = (profile.username || '').toLowerCase() === 'nao';
-        let accessAllowed = (profile.angkatan === '26' || isLifetime || isNao) ? true : (user.user_metadata?.canAccess ?? true);
+        // Validasi akses langganan / trial berdasarkan data profil D1 terbaru:
+        let accessAllowed =
+          String(profile.angkatan) === '26' ||
+          isLifetime ||
+          isNao ||
+          isAdminRole ||
+          hasActivePaidSub
+            ? true
+            : (user.user_metadata?.canAccess ?? true);
         
-        // Coba validasi jika backend gagal mengirimkan canAccess
-        if (user.user_metadata?.canAccess === undefined && !isLifetime) {
+        // Coba validasi ke endpoint subscription jika tidak aktif di metadata
+        if (!accessAllowed && !isLifetime) {
            try {
               const subInfo = await authClient.getSubscriptionStatus(userId);
               if (subInfo) {
@@ -577,6 +598,7 @@ export function useAuth({
           setQuestionDatabase({});
           setSelectedDatabases([]);
           setProfileUsername('user');
+          setCanAccess(true);
           isProfileSyncedRef.current = false;
           setAuthLoading(false);
         }
@@ -650,7 +672,6 @@ export function useAuth({
       } else {
         triggerToast('Username atau password salah', '❌');
       }
-    } finally {
       setAuthLoading(false);
     }
   };

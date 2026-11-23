@@ -102,6 +102,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       '25': '2026-09-17T05:00:00Z',
       '26': null,
     };
+    const trialEndsAt = String(angkatan) === '26' ? null : (trialEndsMap[String(angkatan)] || '2026-09-14T05:00:00Z');
     const isLifetimeUser = ['jidan', 'faza'].includes(finalUsername.toLowerCase());
     const initialStatus = isLifetimeUser ? 'lifetime' : 'trial';
     const initialQuestions = isLifetimeUser ? 11000 : 0;
@@ -133,8 +134,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         is_guest: false,
         angkatan: String(angkatan),
         prodi,
-        subscription_status: 'trial',
-        trial_ends_at: trialEndsAt,
+        subscription_status: initialStatus,
+        trial_ends_at: initialTrialEnd,
         canAccess: subStatus.canAccess,
       },
       is_anonymous: false,
