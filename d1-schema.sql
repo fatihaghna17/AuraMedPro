@@ -29,7 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_prodi ON profiles(prodi);
 -- 2. Tabel Bank Soal (Hanya menyimpan metadata & R2 link, 0 egress!)
 CREATE TABLE IF NOT EXISTS question_banks (
     id TEXT PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     user_id TEXT NOT NULL,
     r2_key TEXT,
     r2_url TEXT,
@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS question_banks (
     angkatan TEXT DEFAULT 'all', -- '23', '24', '25', '26', atau 'all' (bersama)
     prodi TEXT DEFAULT 'all', -- 'all', 'kedokteran', 'farmasi', 'kebidanan'
     study_group_id TEXT, -- referensi ke study_groups
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, name)
 );
 
 CREATE INDEX IF NOT EXISTS idx_question_banks_user ON question_banks(user_id);
@@ -56,6 +57,26 @@ CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- 4b. Tabel Pengaturan Personal Per Pengguna (Sinkronisasi Folder & Preferensi Lintas Perangkat)
+CREATE TABLE IF NOT EXISTS user_settings (
+    user_id TEXT PRIMARY KEY,
+    settings_json TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 4c. Tabel Riwayat Kuis Lengkap Per Pengguna (Sinkronisasi Riwayat & Pembahasan Lintas Perangkat)
+CREATE TABLE IF NOT EXISTS user_quiz_history (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    entry_id INTEGER NOT NULL,
+    entry_json TEXT NOT NULL,
+    is_deleted INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, entry_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_quiz_history_user ON user_quiz_history(user_id, entry_id DESC);
 
 -- 5. Tabel Riwayat Kuis Selesai (Untuk Filter Leaderboard Harian, Mingguan, Bulanan)
 CREATE TABLE IF NOT EXISTS quiz_history_logs (

@@ -131,8 +131,10 @@ export const cloudflareApi = {
     return !res.error;
   },
 
-  async deleteQuestionBank(name: string): Promise<boolean> {
-    const res = await fetchJson(`${API_BASE}/question-banks?name=${encodeURIComponent(name)}`, {
+  async deleteQuestionBank(name: string, userId?: string): Promise<boolean> {
+    const params = new URLSearchParams({ name });
+    if (userId) params.append('user_id', userId);
+    const res = await fetchJson(`${API_BASE}/question-banks?${params.toString()}`, {
       method: 'DELETE',
     });
     return !res.error;
@@ -218,6 +220,28 @@ export const cloudflareApi = {
     const res = await fetchJson(`${API_BASE}/app-settings`, {
       method: 'POST',
       body: JSON.stringify({ key, value }),
+    });
+    return !res.error;
+  },
+
+  // User Personal Sync (Personal Folders, Preferences, Quiz History)
+  async getUserSync(userId: string): Promise<{ settings: any; history: any[]; deletedHistoryIds: number[] } | null> {
+    const res = await fetchJson<{ settings: any; history: any[]; deletedHistoryIds: number[] }>(
+      `${API_BASE}/user-sync?user_id=${encodeURIComponent(userId)}`
+    );
+    return res.data || null;
+  },
+
+  async saveUserSync(payload: {
+    user_id: string;
+    settings?: any;
+    history?: any[];
+    action?: 'delete_history_item' | 'clear_history';
+    entry_id?: number;
+  }): Promise<boolean> {
+    const res = await fetchJson(`${API_BASE}/user-sync`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
     return !res.error;
   },

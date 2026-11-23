@@ -3,6 +3,7 @@ import { Question } from '../types';
 import { parseRawFileToQuestions, mapUnifiedQuestion } from '../utils/quizUtils';
 import { SAMPLE_BANKS } from '../data/sampleBanks';
 import { getCachedQuestions, setCachedQuestions, getLocalUserBanks, deleteLocalUserBank, cleanupLegacyLocalBanks } from '../utils/questionCache';
+import { uploadQuestionsToR2 } from '../r2Storage';
 import { cloudflareApi } from '../services/cloudflareApi';
 import { authClient } from '../lib/authClient';
 
@@ -346,6 +347,13 @@ export function useAuth({
       const groups: Record<string, string> = {};
 
       if (data) {
+        // Urutkan agar bank soal milik sendiri (b.user_id === userId) diproses terakhir sehingga selalu menang jika ada nama serupa
+        data.sort((a: any, b: any) => {
+          const aMine = a.user_id === userId ? 1 : 0;
+          const bMine = b.user_id === userId ? 1 : 0;
+          return aMine - bMine;
+        });
+
         data.forEach((b: any) => {
           angkatans[b.name] = b.angkatan || 'all';
           prodis[b.name] = b.prodi || 'all';
@@ -408,7 +416,7 @@ export function useAuth({
         results.forEach(({ row, questions }) => {
           if (questions && Array.isArray(questions)) {
             mappedData[row.name] = questions;
-          } else {
+          } else if (!mappedData[row.name]) {
             mappedData[row.name] = []; // Fallback aman
           }
           
@@ -431,16 +439,52 @@ export function useAuth({
       cleanupLegacyLocalBanks();
 
       // Muat juga bank soal kustom lokal jika belum ada di mappedData (diisolasi per akun)
+      // + Auto-Rescue Sync: otomatis unggah bank soal lokal yang belum tersimpan di server agar muncul di perangkat lain (HP/iPad)
       try {
         const localBanks = getLocalUserBanks(userId);
+        const banksToRescue: Array<[string, Question[]]> = [];
+
         Object.entries(localBanks).forEach(([bName, bQuestions]) => {
-          if (!mappedData[bName] || mappedData[bName].length === 0) {
+          if ((!mappedData[bName] || mappedData[bName].length === 0) && Array.isArray(bQuestions) && bQuestions.length > 0) {
             mappedData[bName] = bQuestions;
             if (!uploaders[bName]) {
               uploaders[bName] = username;
             }
+            if (!angkatans[bName]) {
+              angkatans[bName] = angkatan || 'all';
+            }
+            if (!prodis[bName]) {
+              prodis[bName] = prodi || 'all';
+            }
+            banksToRescue.push([bName, bQuestions]);
           }
         });
+
+        if (banksToRescue.length > 0 && userId) {
+          (async () => {
+            for (const [bName, bQuestions] of banksToRescue) {
+              try {
+                const r2Res = await uploadQuestionsToR2(bName, bQuestions, userId);
+                if (r2Res?.r2_key) {
+                  setCachedQuestions(r2Res.r2_key, bQuestions);
+                }
+                await cloudflareApi.saveQuestionBank({
+                  name: bName,
+                  user_id: userId,
+                  r2_key: r2Res?.r2_key,
+                  r2_url: r2Res?.r2_url,
+                  questions_json: r2Res ? undefined : bQuestions,
+                  angkatan: angkatan || 'all',
+                  prodi: prodi || 'all',
+                  study_group_id: null,
+                });
+                console.log(`[AutoRescue] Berhasil menyinkronkan bank soal lokal "${bName}" ke server.`);
+              } catch (rescueErr) {
+                console.warn(`[AutoRescue] Gagal menyinkronkan bank soal lokal "${bName}":`, rescueErr);
+              }
+            }
+          })();
+        }
       } catch (e) {
         console.warn('Gagal memuat bank soal lokal:', e);
       }
@@ -698,8 +742,8 @@ export function useAuth({
     e.stopPropagation();
     (async () => {
       try {
-        // 1. Hapus dari Cloudflare D1 & R2
-        await cloudflareApi.deleteQuestionBank(name);
+        // 1. Hapus dari Cloudflare D1 & R2 (hanya milik user atau oleh admin)
+        await cloudflareApi.deleteQuestionBank(name, currentUser?.id);
         // 2. Hapus dari storage browser lokal
         deleteLocalUserBank(name, currentUser?.id);
         deleteLocalUserBank(name); // fallback un-scoped

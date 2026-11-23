@@ -1,12 +1,12 @@
 // r2Storage.ts - Helper functions for Cloudflare R2 via Pages Functions
 
-export async function uploadQuestionsToR2(filename: string, questions: any[]): Promise<{ r2_url: string; r2_key: string } | null> {
+export async function uploadQuestionsToR2(filename: string, questions: any[], userId?: string): Promise<{ r2_url: string; r2_key: string } | null> {
   try {
     // Kirim content langsung ke Cloudflare Worker (R2 binding)
     const res = await fetch('/api/upload-question', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename, content: questions }),
+      body: JSON.stringify({ filename, content: questions, user_id: userId }),
     });
 
     if (!res.ok) {

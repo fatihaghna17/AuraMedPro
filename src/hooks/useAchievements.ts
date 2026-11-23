@@ -1,6 +1,7 @@
 // src/hooks/useAchievements.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Achievement, AchievementStats, checkNewAchievements, ACHIEVEMENTS } from '../utils/achievements';
+import { saveSuddenDeathStreak } from '../utils/avatarFrames';
 import { cloudflareApi } from '../services/cloudflareApi';
 
 export function useAchievements(userId: string | null, onXPReward?: (xp: number) => void) {
@@ -13,6 +14,9 @@ export function useAchievements(userId: string | null, onXPReward?: (xp: number)
     try {
       const cfIds = await cloudflareApi.getAchievements(userId);
       setUnlockedIds(cfIds || []);
+      if (cfIds && cfIds.includes('raja_iblis')) {
+        saveSuddenDeathStreak(100);
+      }
     } catch (err) {
       console.error('Failed to fetch achievements from D1:', err);
     }

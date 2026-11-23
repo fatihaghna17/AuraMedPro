@@ -12,7 +12,7 @@ import { cloudflareApi } from './services/cloudflareApi';
 import { authClient } from './lib/authClient';
 import { setCachedQuestions, saveLocalUserBank } from './utils/questionCache';
 import { playCorrectSound, playWrongSound, playGameOverSound } from './utils/audioEffects';
-import { saveSuddenDeathStreak, incrementTodayQuestionsAnswered, getSuddenDeathBestStreak } from './utils/avatarFrames';
+import { saveSuddenDeathStreak, incrementTodayQuestionsAnswered, getSuddenDeathBestStreak, getSavedAvatarFrame, setSavedAvatarFrame } from './utils/avatarFrames';
 import {
   CheckCircle2,
   XCircle,
@@ -423,6 +423,8 @@ export default function App() {
   }, [folderParentMap]);
 
   const [activeParentFilter, setActiveParentFilter] = useState<string>('all');
+  const [activeStudyGroupId, setActiveStudyGroupId] = useState<string | null>(null);
+  const [activeStudyGroupName, setActiveStudyGroupName] = useState<string | null>(null);
 
   const [parentFolderModal, setParentFolderModal] = useState<{
     isOpen: boolean;
@@ -440,6 +442,34 @@ export default function App() {
   const [selectedHistoryDetail, setSelectedHistoryDetail] = useState<HistoryEntry | null>(null);
   const [openHistoryReviewIndices, setOpenHistoryReviewIndices] = useState<Record<number, boolean>>({});
   const [isRecoveringHistoryQuestions, setIsRecoveringHistoryQuestions] = useState(false);
+  const isUserSyncLoadedRef = useRef<string | null>(null);
+  const suppressNextFolderPushRef = useRef<boolean>(false);
+
+  const prepareHistoryEntryForCloud = useCallback((entry: HistoryEntry) => {
+    const questionSnapshots =
+      entry.questions && Array.isArray(entry.questions) && entry.questions.length > 0
+        ? entry.questions.map((q) => ({
+            p: (q.pertanyaan || '').slice(0, 100),
+            o: q.pilihan,
+            a: q.jawaban_benar,
+          }))
+        : (entry as any).questionSnapshots;
+    return {
+      id: entry.id,
+      date: entry.date,
+      score: entry.score,
+      correct: entry.correct,
+      wrong: entry.wrong,
+      empty: entry.empty,
+      total: entry.total,
+      files: entry.files || [],
+      mode: entry.mode,
+      userAnswers: entry.userAnswers || [],
+      questionHighlights: entry.questionHighlights,
+      strikethroughOptions: entry.strikethroughOptions,
+      questionSnapshots,
+    };
+  }, []);
 
   // 1. Sinkronisasi & pemulihan riwayat kuis lengkap dari IndexedDB saat aplikasi dimuat
   useEffect(() => {
@@ -484,6 +514,337 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  // 1b. Sinkronisasi Lintas Perangkat (Laptop <-> HP/iPad) untuk Susunan Folder Personal, Preferensi, dan Riwayat Kuis
+  useEffect(() => {
+    const userId = currentUser?.id;
+    const isGuest = currentUser?.is_anonymous || currentUser?.user_metadata?.is_guest;
+    if (!userId || isGuest) {
+      isUserSyncLoadedRef.current = null;
+      return;
+    }
+
+    let active = true;
+
+    (async () => {
+      try {
+        const [syncData, idbList] = await Promise.all([
+          cloudflareApi.getUserSync(userId),
+          getAllHistoryFromIndexedDB().catch(() => [] as HistoryEntry[]),
+        ]);
+        if (!active) return;
+
+        const lastSyncedUser = localStorage.getItem('cbt_last_synced_user_id');
+        const isDifferentUser = Boolean(lastSyncedUser && lastSyncedUser !== userId);
+        const alreadySyncedSettingsKey = `cbt_user_settings_synced_${userId}`;
+        const hasSyncedSettingsBefore = localStorage.getItem(alreadySyncedSettingsKey) === '1';
+
+        // --- A. SINKRONISASI SUSUNAN FOLDER PERSONAL & PREFERENSI ---
+        const localCustom = isDifferentUser ? [] : customFolders;
+        const localQuizMap = isDifferentUser ? {} : quizFolderMap;
+        const localParents = isDifferentUser ? [] : parentFolders;
+        const localParentMap = isDifferentUser ? {} : folderParentMap;
+        const localMinimized = isDifferentUser ? {} : minimizedFolders;
+
+        const hasLocalCustomizations =
+          localCustom.length > 0 ||
+          Object.keys(localQuizMap).length > 0 ||
+          localParents.length > 0 ||
+          Object.keys(localParentMap).length > 0;
+
+        const remoteSettings = syncData?.settings;
+        let shouldPushMergedSettings = false;
+        let finalCustomFolders = localCustom;
+        let finalQuizFolderMap = localQuizMap;
+        let finalParentFolders = localParents;
+        let finalFolderParentMap = localParentMap;
+        let finalMinimizedFolders = localMinimized;
+
+        if (remoteSettings && typeof remoteSettings === 'object') {
+          const remCustom = Array.isArray(remoteSettings.customFolders) ? remoteSettings.customFolders : [];
+          const remQuizMap =
+            remoteSettings.quizFolderMap && typeof remoteSettings.quizFolderMap === 'object'
+              ? remoteSettings.quizFolderMap
+              : {};
+          const remParents = Array.isArray(remoteSettings.parentFolders) ? remoteSettings.parentFolders : [];
+          const remParentMap =
+            remoteSettings.folderParentMap && typeof remoteSettings.folderParentMap === 'object'
+              ? remoteSettings.folderParentMap
+              : {};
+          const remMinimized =
+            remoteSettings.minimizedFolders && typeof remoteSettings.minimizedFolders === 'object'
+              ? remoteSettings.minimizedFolders
+              : {};
+
+          if ((!hasSyncedSettingsBefore || remoteSettings.isSeededDefault) && hasLocalCustomizations) {
+            // Perangkat ini (misal laptop) sudah punya susunan folder lokal yang belum pernah diunggah ke server: gabungkan!
+            finalCustomFolders = [...new Set([...remCustom, ...localCustom])];
+            finalQuizFolderMap = { ...remQuizMap, ...localQuizMap };
+            finalParentFolders = [...new Set([...remParents, ...localParents])];
+            finalFolderParentMap = { ...remParentMap, ...localParentMap };
+            finalMinimizedFolders = { ...remMinimized, ...localMinimized };
+            shouldPushMergedSettings = true;
+          } else {
+            // Perangkat baru (misal iPad/HP) atau sudah tersinkron: gunakan state terbaru dari server
+            finalCustomFolders = remCustom;
+            finalQuizFolderMap = remQuizMap;
+            finalParentFolders = remParents;
+            finalFolderParentMap = remParentMap;
+            finalMinimizedFolders = remMinimized;
+          }
+
+          // Sinkronkan juga gelar Sudden Death & bingkai avatar
+          const remoteSDBest = Number(remoteSettings.suddenDeathBest) || 0;
+          if (remoteSDBest > getSuddenDeathBestStreak()) {
+            saveSuddenDeathStreak(remoteSDBest);
+          }
+          if (
+            remoteSettings.avatarFrame &&
+            remoteSettings.avatarFrame !== 'default' &&
+            getSavedAvatarFrame() === 'default'
+          ) {
+            setSavedAvatarFrame(remoteSettings.avatarFrame);
+          }
+        } else if (hasLocalCustomizations) {
+          shouldPushMergedSettings = true;
+        }
+
+        suppressNextFolderPushRef.current = true;
+        setCustomFolders(finalCustomFolders);
+        setQuizFolderMap(finalQuizFolderMap);
+        setParentFolders(finalParentFolders);
+        setFolderParentMap(finalFolderParentMap);
+        setMinimizedFolders(finalMinimizedFolders);
+
+        localStorage.setItem(alreadySyncedSettingsKey, '1');
+        localStorage.setItem('cbt_last_synced_user_id', userId);
+
+        if (shouldPushMergedSettings) {
+          cloudflareApi
+            .saveUserSync({
+              user_id: userId,
+              settings: {
+                customFolders: finalCustomFolders,
+                quizFolderMap: finalQuizFolderMap,
+                parentFolders: finalParentFolders,
+                folderParentMap: finalFolderParentMap,
+                minimizedFolders: finalMinimizedFolders,
+                avatarFrame: getSavedAvatarFrame(),
+                suddenDeathBest: getSuddenDeathBestStreak(),
+              },
+            })
+            .catch(() => {});
+        }
+
+        // --- B. SINKRONISASI RIWAYAT KUIS LINTAS PERANGKAT ---
+        const deletedSet = new Set<number>(syncData?.deletedHistoryIds || []);
+        const clearedAtMs = remoteSettings?.historyClearedAt
+          ? new Date(remoteSettings.historyClearedAt).getTime()
+          : 0;
+
+        const idbMap = new Map<number, HistoryEntry>();
+        (idbList || []).forEach((e) => {
+          if (e && e.id) idbMap.set(e.id, e);
+        });
+
+        const baseLocal = isDifferentUser ? [] : loadHistoryFromLocalStorage();
+        const localPoolMap = new Map<number, HistoryEntry>();
+        [...baseLocal, ...(isDifferentUser ? [] : idbList || [])].forEach((entry) => {
+          if (!entry || !entry.id) return;
+          if (deletedSet.has(Number(entry.id))) return;
+          const entryTime = entry.date ? new Date(entry.date).getTime() : Number(entry.id);
+          if (clearedAtMs && entryTime <= clearedAtMs) return;
+
+          const existing = localPoolMap.get(entry.id);
+          const fromIdb = idbMap.get(entry.id);
+          const richQuestions =
+            (entry.questions && entry.questions.length > 0 ? entry.questions : null) ||
+            (fromIdb?.questions && fromIdb.questions.length > 0 ? fromIdb.questions : null) ||
+            (existing?.questions && existing.questions.length > 0 ? existing.questions : []);
+
+          localPoolMap.set(entry.id, {
+            ...(existing || {}),
+            ...entry,
+            questions: richQuestions,
+            userAnswers:
+              entry.userAnswers && entry.userAnswers.length > 0
+                ? entry.userAnswers
+                : fromIdb?.userAnswers || existing?.userAnswers || [],
+          });
+        });
+
+        const mergedList: HistoryEntry[] = Array.from(localPoolMap.values());
+        const remoteHistory: any[] = syncData?.history || [];
+        const remoteExactIds = new Set<number>();
+
+        for (const rem of remoteHistory) {
+          if (!rem || !rem.id) continue;
+          const remId = Number(rem.id);
+          if (deletedSet.has(remId)) continue;
+          if (!rem.fromServerLog) {
+            remoteExactIds.add(remId);
+          }
+
+          const remTime = rem.date ? new Date(rem.date).getTime() : remId;
+          if (clearedAtMs && remTime <= clearedAtMs) continue;
+
+          // 1. Cek kecocokan ID persis
+          const exactIdx = mergedList.findIndex((m) => Number(m.id) === remId);
+          if (exactIdx !== -1) {
+            const cur = mergedList[exactIdx];
+            mergedList[exactIdx] = {
+              ...rem,
+              ...cur,
+              questions: cur.questions && cur.questions.length > 0 ? cur.questions : rem.questions || [],
+              userAnswers:
+                cur.userAnswers && cur.userAnswers.length > 0 ? cur.userAnswers : rem.userAnswers || [],
+              questionHighlights: cur.questionHighlights || rem.questionHighlights,
+              strikethroughOptions: cur.strikethroughOptions || rem.strikethroughOptions,
+              questionSnapshots: (cur as any).questionSnapshots || rem.questionSnapshots,
+            };
+            continue;
+          }
+
+          // 2. Cek kecocokan fuzzy dengan entri backfill log server (±180 detik & skor sama)
+          const fuzzyIdx = mergedList.findIndex((m) => {
+            const mTime = m.date ? new Date(m.date).getTime() : Number(m.id);
+            const timeDiff = Math.abs(mTime - remTime);
+            return (
+              timeDiff <= 180_000 &&
+              Math.round(Number(m.score) || 0) === Math.round(Number(rem.score) || 0) &&
+              ((rem as any).fromServerLog || (m as any).fromServerLog)
+            );
+          });
+
+          if (fuzzyIdx !== -1) {
+            const cur = mergedList[fuzzyIdx];
+            if ((cur as any).fromServerLog && !(rem as any).fromServerLog) {
+              mergedList[fuzzyIdx] = {
+                ...rem,
+                questions: rem.questions || [],
+                userAnswers: rem.userAnswers || [],
+              };
+            }
+            continue;
+          }
+
+          // 3. Entri baru dari server (atau perangkat lain)
+          mergedList.push({
+            ...rem,
+            questions: rem.questions || [],
+            userAnswers: rem.userAnswers || [],
+          });
+        }
+
+        mergedList.sort((a, b) => {
+          const tA = a.date ? new Date(a.date).getTime() : Number(a.id) || 0;
+          const tB = b.date ? new Date(b.date).getTime() : Number(b.id) || 0;
+          return tB - tA;
+        });
+
+        const finalHistory = mergedList.slice(0, 50);
+        saveHistoryToLocalStorage(finalHistory, setQuizHistory);
+
+        // Unggah entri riwayat lokal yang belum tercatat secara lengkap di user_quiz_history
+        const entriesToPush = finalHistory
+          .filter((e) => !(e as any).fromServerLog && !remoteExactIds.has(Number(e.id)))
+          .map(prepareHistoryEntryForCloud);
+
+        if (entriesToPush.length > 0) {
+          cloudflareApi
+            .saveUserSync({
+              user_id: userId,
+              history: entriesToPush,
+            })
+            .catch(() => {});
+        }
+
+        isUserSyncLoadedRef.current = userId;
+      } catch (err) {
+        console.warn('[UserSync] Gagal menyinkronkan data lintas perangkat:', err);
+        isUserSyncLoadedRef.current = userId;
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [currentUser?.id, prepareHistoryEntryForCloud]);
+
+  // 1c. Simpan otomatis setiap perubahan folder personal & Folder Besar ke cloud
+  useEffect(() => {
+    const userId = currentUser?.id;
+    const isGuest = currentUser?.is_anonymous || currentUser?.user_metadata?.is_guest;
+    if (!userId || isGuest || isUserSyncLoadedRef.current !== userId) return;
+    if (activeStudyGroupId) return;
+
+    if (suppressNextFolderPushRef.current) {
+      suppressNextFolderPushRef.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      cloudflareApi
+        .saveUserSync({
+          user_id: userId,
+          settings: {
+            customFolders,
+            quizFolderMap,
+            parentFolders,
+            folderParentMap,
+            minimizedFolders,
+            avatarFrame: getSavedAvatarFrame(),
+            suddenDeathBest: getSuddenDeathBestStreak(),
+          },
+        })
+        .catch((err) => console.warn('[UserSync] Gagal menyimpan pengaturan folder:', err));
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [
+    currentUser?.id,
+    activeStudyGroupId,
+    customFolders,
+    quizFolderMap,
+    parentFolders,
+    folderParentMap,
+    minimizedFolders,
+  ]);
+
+  // 1d. Sinkronkan juga saat pengguna mengganti bingkai avatar (misal Raja Iblis)
+  useEffect(() => {
+    const userId = currentUser?.id;
+    const isGuest = currentUser?.is_anonymous || currentUser?.user_metadata?.is_guest;
+    if (!userId || isGuest) return;
+
+    const handleFrameChanged = () => {
+      if (isUserSyncLoadedRef.current !== userId) return;
+      cloudflareApi
+        .saveUserSync({
+          user_id: userId,
+          settings: {
+            customFolders,
+            quizFolderMap,
+            parentFolders,
+            folderParentMap,
+            minimizedFolders,
+            avatarFrame: getSavedAvatarFrame(),
+            suddenDeathBest: getSuddenDeathBestStreak(),
+          },
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener('auramedpro_frame_changed', handleFrameChanged);
+    return () => window.removeEventListener('auramedpro_frame_changed', handleFrameChanged);
+  }, [
+    currentUser?.id,
+    customFolders,
+    quizFolderMap,
+    parentFolders,
+    folderParentMap,
+    minimizedFolders,
+  ]);
+
   // 2. Otomatis pulihkan detail soal & pembahasan jika entri yang dibuka kehilangan payload questions
   useEffect(() => {
     if (!selectedHistoryDetail) {
@@ -508,13 +869,13 @@ export default function App() {
           setSelectedHistoryDetail((prev) => prev && prev.id === selectedHistoryDetail.id ? {
             ...prev,
             questions: fromIdb.questions,
-            userAnswers: prev.userAnswers || fromIdb.userAnswers
+            userAnswers: prev.userAnswers && prev.userAnswers.length > 0 ? prev.userAnswers : fromIdb.userAnswers
           } : prev);
           setIsRecoveringHistoryQuestions(false);
           return;
         }
 
-        // B. Rekonstruksi dari questionDatabase berdasarkan files bank soal
+        // B. Rekonstruksi dari questionDatabase berdasarkan files bank soal (+ questionSnapshots jika soal/opsi diacak)
         if (selectedHistoryDetail.files && selectedHistoryDetail.files.length > 0) {
           const matchingQuestions: Question[] = [];
           for (const f of selectedHistoryDetail.files) {
@@ -526,9 +887,36 @@ export default function App() {
 
           if (!active) return;
           if (matchingQuestions.length > 0) {
+            const snapshots = (selectedHistoryDetail as any).questionSnapshots as
+              | Array<{ p?: string; o?: string[]; a?: string }>
+              | undefined;
+            let reconstructed: Question[];
+            if (snapshots && Array.isArray(snapshots) && snapshots.length > 0) {
+              reconstructed = snapshots.map((snap, idx) => {
+                const found =
+                  matchingQuestions.find((mq) => (mq.pertanyaan || '').slice(0, 100) === snap.p) ||
+                  matchingQuestions[idx];
+                if (!found) {
+                  return {
+                    pertanyaan: snap.p || `Soal #${idx + 1}`,
+                    pilihan: snap.o || [],
+                    jawaban_benar: snap.a || 'A',
+                    pembahasan: '',
+                  } as Question;
+                }
+                return {
+                  ...found,
+                  pilihan: snap.o && snap.o.length > 0 ? snap.o : found.pilihan,
+                  jawaban_benar: snap.a || found.jawaban_benar,
+                };
+              });
+            } else {
+              reconstructed = matchingQuestions.slice(0, selectedHistoryDetail.total || matchingQuestions.length);
+            }
+
             setSelectedHistoryDetail((prev) => prev && prev.id === selectedHistoryDetail.id ? {
               ...prev,
-              questions: matchingQuestions.slice(0, prev.total || matchingQuestions.length),
+              questions: reconstructed,
               userAnswers: prev.userAnswers || []
             } : prev);
             setIsRecoveringHistoryQuestions(false);
@@ -635,8 +1023,6 @@ export default function App() {
 
   // Overhaul Tab States
   const [dashboardTab, setDashboardTab] = useState<'home' | 'banks' | 'new' | 'srs' | 'notes' | 'analysis' | 'profile' | 'reports' | 'groups'>('home');
-  const [activeStudyGroupId, setActiveStudyGroupId] = useState<string | null>(null);
-  const [activeStudyGroupName, setActiveStudyGroupName] = useState<string | null>(null);
   const [adminReports, setAdminReports] = useState<any[]>([]);
 
   useEffect(() => {
@@ -1951,8 +2337,8 @@ export default function App() {
             // 1. Simpan ke storage lokal browser terlebih dahulu sebagai jaminan offline
             saveLocalUserBank(file.name, finalQuestions, currentUser?.id);
 
-            // 2. Upload ke Cloudflare R2 (0 Egress)
-            const r2Res = await uploadQuestionsToR2(file.name, finalQuestions);
+            // 2. Upload ke Cloudflare R2 (0 Egress, scoped per user_id)
+            const r2Res = await uploadQuestionsToR2(file.name, finalQuestions, currentUser?.id);
             if (r2Res?.r2_key) {
               setCachedQuestions(r2Res.r2_key, finalQuestions);
             }
@@ -1960,9 +2346,10 @@ export default function App() {
             // 3. Simpan metadata ke Cloudflare D1
             const targetAngkatan = getEffectiveUploadAngkatan();
             const targetProdi = getEffectiveUploadProdi();
+            let savedToCloud = false;
             if (currentUser) {
               if (r2Res) {
-                await cloudflareApi.saveQuestionBank({
+                savedToCloud = await cloudflareApi.saveQuestionBank({
                   name: file.name,
                   user_id: currentUser.id,
                   r2_key: r2Res.r2_key,
@@ -1972,7 +2359,7 @@ export default function App() {
                   study_group_id: activeStudyGroupId || null,
                 });
               } else {
-                await cloudflareApi.saveQuestionBank({
+                savedToCloud = await cloudflareApi.saveQuestionBank({
                   name: file.name,
                   user_id: currentUser.id,
                   questions_json: finalQuestions,
@@ -1996,10 +2383,14 @@ export default function App() {
             const updated = { ...questionDatabase, [file.name]: finalQuestions };
             setQuestionDatabase(updated);
             setSelectedDatabases((prev) => [...new Set([...prev, file.name])]);
-            triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal dari "${file.name}"`, '✅');
+            if (!currentUser || savedToCloud) {
+              triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal dari "${file.name}"`, '✅');
+            } else {
+              triggerToast(`Tersimpan lokal di perangkat ini (${finalQuestions.length} soal) — akan disinkronkan saat online`, '⚠️');
+            }
           } catch (err) {
             console.error(err);
-            saveLocalUserBank(file.name, finalQuestions);
+            saveLocalUserBank(file.name, finalQuestions, currentUser?.id);
             if (activeStudyGroupId) {
               setBankGroupMap((prev) => ({ ...prev, [file.name]: activeStudyGroupId }));
             }
@@ -2073,7 +2464,7 @@ export default function App() {
           saveLocalUserBank(name, questions, currentUser?.id);
 
           try {
-            const r2Res = await uploadQuestionsToR2(name, questions);
+            const r2Res = await uploadQuestionsToR2(name, questions, currentUser?.id);
             if (r2Res?.r2_key) {
               setCachedQuestions(r2Res.r2_key, questions);
             }
@@ -2177,7 +2568,7 @@ export default function App() {
       if (currentUser) {
         try {
           // 2. Upload ke Cloudflare R2
-          const r2Res = await uploadQuestionsToR2(name, finalQuestions);
+          const r2Res = await uploadQuestionsToR2(name, finalQuestions, currentUser.id);
           if (r2Res?.r2_key) {
             setCachedQuestions(r2Res.r2_key, finalQuestions);
           }
@@ -2185,8 +2576,9 @@ export default function App() {
           // 3. Simpan ke Cloudflare D1
           const targetAngkatan = getEffectiveUploadAngkatan();
           const targetProdi = getEffectiveUploadProdi();
+          let savedToCloud = false;
           if (r2Res) {
-            await cloudflareApi.saveQuestionBank({
+            savedToCloud = await cloudflareApi.saveQuestionBank({
               name,
               user_id: currentUser.id,
               r2_key: r2Res.r2_key,
@@ -2196,7 +2588,7 @@ export default function App() {
               study_group_id: activeStudyGroupId || null,
             });
           } else {
-            await cloudflareApi.saveQuestionBank({
+            savedToCloud = await cloudflareApi.saveQuestionBank({
               name,
               user_id: currentUser.id,
               questions_json: finalQuestions,
@@ -2216,7 +2608,11 @@ export default function App() {
             setUploaderMap((prev) => ({ ...prev, [name]: profileUsername || 'admin' }));
           }
 
-          triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
+          if (savedToCloud) {
+            triggerToast(`Berhasil menyimpan ${finalQuestions.length} soal sebagai "${name}"`, '✅');
+          } else {
+            triggerToast(`Tersimpan lokal (${finalQuestions.length} soal) — akan disinkronkan saat online`, '⚠️');
+          }
         } catch (err) {
           console.warn('Gagal upload ke cloud, tersimpan di browser lokal:', err);
           if (activeStudyGroupId) {
@@ -2404,6 +2800,15 @@ export default function App() {
     const updated = quizHistory.filter((item) => item.id !== id);
     saveHistoryToLocalStorage(updated, setQuizHistory);
     deleteHistoryItemFromIndexedDB(id).catch(() => {});
+    if (currentUser?.id && !currentUser.is_anonymous && !currentUser.user_metadata?.is_guest) {
+      cloudflareApi
+        .saveUserSync({
+          user_id: currentUser.id,
+          action: 'delete_history_item',
+          entry_id: id,
+        })
+        .catch(() => {});
+    }
     triggerToast('Satu riwayat kuis dihapus', '🗑');
   };
 
@@ -2413,6 +2818,14 @@ export default function App() {
     setModalAction(() => () => {
       saveHistoryToLocalStorage([], setQuizHistory);
       clearHistoryFromIndexedDB().catch(() => {});
+      if (currentUser?.id && !currentUser.is_anonymous && !currentUser.user_metadata?.is_guest) {
+        cloudflareApi
+          .saveUserSync({
+            user_id: currentUser.id,
+            action: 'clear_history',
+          })
+          .catch(() => {});
+      }
       triggerToast('Riwayat percobaan berhasil dikosongkan', '🗑');
     });
     setModalOpen(true);
@@ -3086,6 +3499,16 @@ export default function App() {
     const historySaved = saveHistoryToLocalStorage(updatedHistory, setQuizHistory);
     if (!historySaved) {
       triggerToast('Penyimpanan perangkat penuh — riwayat kuis gagal disimpan!', '⚠️');
+    }
+
+    // Sinkronkan riwayat kuis ke cloud agar muncul di perangkat lain (HP/iPad/Laptop)
+    if (currentUser?.id && !currentUser.is_anonymous && !currentUser.user_metadata?.is_guest) {
+      cloudflareApi
+        .saveUserSync({
+          user_id: currentUser.id,
+          history: [prepareHistoryEntryForCloud(newEntry)],
+        })
+        .catch((err) => console.warn('[UserSync] Gagal menyinkronkan riwayat kuis baru:', err));
     }
 
     // Auto-add wrong answers to Spaced Repetition
