@@ -20,6 +20,13 @@ export interface Flashcard3DDeck {
   createdAt: number;
   updatedAt: number;
   lastOpenedAt?: number | null;
+  /** Cloud sync & publikasi global */
+  userId?: string;
+  uploaderUsername?: string;
+  isPublic?: boolean;
+  angkatan?: string; // 'all' atau '2024', '2025', '2026'
+  prodi?: string;    // 'all' atau 'kedokteran', 'farmasi', 'kebidanan'
+  synced?: boolean;  // true jika tersimpan di D1/R2
 }
 
 /** cardId -> true (Hafal) | false (Belum hafal). Kartu yang belum dinilai tidak ada di map. */

@@ -4891,6 +4891,10 @@ export default function App() {
             {dashboardTab === 'flashcard' && (
               <SetupFlashcardTab
                 theme={theme}
+                currentUser={currentUser}
+                isAdmin={isSuperAdmin || isCollector}
+                userAngkatan={userAngkatan}
+                userProdi={userProdi}
                 triggerToast={triggerToast}
                 setLightboxImage={setLightboxImage}
               />

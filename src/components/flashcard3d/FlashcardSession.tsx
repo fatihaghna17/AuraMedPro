@@ -25,6 +25,7 @@ import { SessionSummary } from './SessionSummary';
 interface FlashcardSessionProps {
   deck: Flashcard3DDeck;
   progress: Flashcard3DProgress;
+  canEdit?: boolean;
   onRateCard: (cardId: string, known: boolean | undefined) => void;
   onResetProgress: () => void;
   onEditDeck: () => void;
@@ -52,6 +53,7 @@ function shuffleIds(ids: string[]): string[] {
 export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
   deck,
   progress,
+  canEdit = true,
   onRateCard,
   onResetProgress,
   onEditDeck,
@@ -316,17 +318,19 @@ export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
                 </span>
                 {shuffled && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onEditDeck();
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit kartu
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEditDeck();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit kartu
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleExportDeck}

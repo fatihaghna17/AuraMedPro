@@ -5,8 +5,10 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Globe,
   ImagePlus,
   Link2,
+  Lock,
   Maximize2,
   Plus,
   Save,
@@ -18,6 +20,7 @@ import { compressImageFile, makeId } from '../../utils/flashcard3dStorage';
 
 interface DeckEditorProps {
   initialDeck?: Flashcard3DDeck | null;
+  isAdmin?: boolean;
   onSave: (deck: Flashcard3DDeck) => Promise<void>;
   onCancel: () => void;
   onZoomImage: (src: string) => void;
@@ -30,12 +33,18 @@ function emptyCard(): Flashcard3DCard {
 
 export const DeckEditor: React.FC<DeckEditorProps> = ({
   initialDeck,
+  isAdmin = false,
   onSave,
   onCancel,
   onZoomImage,
   onToast,
 }) => {
   const [title, setTitle] = useState(initialDeck?.title || '');
+  const [isPublic, setIsPublic] = useState(
+    initialDeck ? Boolean(initialDeck.isPublic) : isAdmin
+  );
+  const [prodi, setProdi] = useState(initialDeck?.prodi || 'all');
+  const [angkatan, setAngkatan] = useState(initialDeck?.angkatan || 'all');
   const [cards, setCards] = useState<Flashcard3DCard[]>(() =>
     initialDeck?.cards.length
       ? initialDeck.cards.map((c) => ({ ...c, front: { ...c.front }, back: { ...c.back } }))
@@ -130,6 +139,11 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
         createdAt: initialDeck?.createdAt || now,
         updatedAt: now,
         lastOpenedAt: initialDeck?.lastOpenedAt ?? null,
+        userId: initialDeck?.userId,
+        isPublic: isAdmin ? isPublic : false,
+        prodi: isAdmin && isPublic ? prodi : 'all',
+        angkatan: isAdmin && isPublic ? angkatan : 'all',
+        synced: initialDeck?.synced,
       };
       await onSave(deck);
     } catch {
@@ -283,21 +297,81 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
       )}
 
       {/* Judul deck */}
-      <div className="mb-6">
-        <label htmlFor="fc3d-deck-title" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Judul deck
-        </label>
-        <input
-          id="fc3d-deck-title"
-          type="text"
-          value={title}
-          onChange={(e) => {
-            setError(null);
-            setTitle(e.target.value);
-          }}
-          placeholder="Mis. Kunci Latihan Soal 2018 atau Farmakologi Kardiovaskular"
-          className="w-full px-4 py-3 rounded-2xl text-sm sm:text-base font-semibold liquid-glass-input text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
-        />
+      <div className="mb-6 space-y-4">
+        <div>
+          <label htmlFor="fc3d-deck-title" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+            Judul deck
+          </label>
+          <input
+            id="fc3d-deck-title"
+            type="text"
+            value={title}
+            onChange={(e) => {
+              setError(null);
+              setTitle(e.target.value);
+            }}
+            placeholder="Mis. Kunci Latihan Soal 2018 atau Farmakologi Kardiovaskular"
+            className="w-full px-4 py-3 rounded-2xl text-sm sm:text-base font-semibold liquid-glass-input text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
+          />
+        </div>
+
+        {isAdmin && (
+          <div className="fc3d-panel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="inline-flex p-1 rounded-xl fc3d-segment w-fit">
+              <button
+                type="button"
+                onClick={() => setIsPublic(true)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  isPublic
+                    ? 'fc3d-segment-pill text-slate-950 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                Publik (Semua User)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPublic(false)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  !isPublic
+                    ? 'fc3d-segment-pill text-slate-950 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Pribadi
+              </button>
+            </div>
+
+            {isPublic && (
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label="Target Prodi"
+                  value={prodi}
+                  onChange={(e) => setProdi(e.target.value)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
+                >
+                  <option value="all">Semua Prodi</option>
+                  <option value="kedokteran">Kedokteran</option>
+                  <option value="farmasi">Farmasi</option>
+                  <option value="kebidanan">Kebidanan</option>
+                </select>
+                <select
+                  aria-label="Target Angkatan"
+                  value={angkatan}
+                  onChange={(e) => setAngkatan(e.target.value)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
+                >
+                  <option value="all">Semua Angkatan</option>
+                  <option value="2024">Angkatan 2024</option>
+                  <option value="2025">Angkatan 2025</option>
+                  <option value="2026">Angkatan 2026</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Daftar kartu */}

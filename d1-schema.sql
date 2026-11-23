@@ -251,3 +251,30 @@ CREATE TABLE IF NOT EXISTS radiology_submissions (
 CREATE INDEX IF NOT EXISTS idx_radiology_packets_group ON radiology_packets(group_id);
 CREATE INDEX IF NOT EXISTS idx_radiology_submissions_packet ON radiology_submissions(packet_id);
 CREATE INDEX IF NOT EXISTS idx_radiology_submissions_user ON radiology_submissions(user_id);
+
+-- 13. Tabel Flashcard 3D (Deck Publik Admin & Pribadi + Progres Per User)
+CREATE TABLE IF NOT EXISTS flashcard3d_decks (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    uploader_username TEXT,
+    is_public INTEGER DEFAULT 0,
+    angkatan TEXT DEFAULT 'all',
+    prodi TEXT DEFAULT 'all',
+    cards_count INTEGER DEFAULT 0,
+    cards_json TEXT,
+    r2_key TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_fc3d_decks_public ON flashcard3d_decks(is_public, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fc3d_decks_user ON flashcard3d_decks(user_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS flashcard3d_progress (
+    user_id TEXT NOT NULL,
+    deck_id TEXT NOT NULL,
+    progress_json TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, deck_id)
+);
