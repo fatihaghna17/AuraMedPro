@@ -186,6 +186,12 @@ export default function App() {
     const saved = localStorage.getItem('cbt_theme');
     return saved === 'dark' ? 'dark' : 'light';
   });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('cbt_sidebar_collapsed') === 'true';
+  });
+  useEffect(() => {
+    localStorage.setItem('cbt_sidebar_collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
 
   const [userXP, setUserXP] = useState(0);
@@ -3873,6 +3879,9 @@ export default function App() {
                 username={profileUsername || ''}
                 userLevel={getLevelInfo(userXP).level}
                 isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
+                collapsed={sidebarCollapsed}
+                onCollapsedChange={setSidebarCollapsed}
+                onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
                 onTabChange={(tab) => {
                   if (tab === 'banks' || tab === 'groups' || tab === 'home') {
                     // Only clear context if they are explicitly navigating away from group context 
@@ -3908,11 +3917,19 @@ export default function App() {
           )}
 
           {/* MAIN WRAPPER CONTAINER */}
-          <div className={`flex flex-col min-h-screen flex-1 w-full max-w-full min-w-0 overflow-x-hidden transition-all ${screen === 'setup' ? 'lg:pl-64' : ''}`}>
+          <div
+            className={`flex flex-col min-h-screen flex-1 w-full max-w-full min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              screen === 'setup'
+                ? sidebarCollapsed
+                  ? 'lg:pl-[92px]'
+                  : 'lg:pl-[316px]'
+                : ''
+            }`}
+          >
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
-              <header className="sticky top-0 z-20 transition-colors liquid-glass-card rounded-none border-t-0 border-x-0 text-slate-900 dark:text-slate-50">
+              <header className="sticky top-0 lg:top-3 z-20 transition-colors liquid-glass-card rounded-none lg:rounded-2xl border-t-0 border-x-0 lg:border lg:mx-6 text-slate-900 dark:text-slate-50">
                 <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between max-w-[1440px] mx-auto w-full">
                   <div className="lg:hidden flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/30">
