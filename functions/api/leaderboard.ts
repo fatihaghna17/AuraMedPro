@@ -6,7 +6,26 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
 };
+
+let userSettingsTableReady = false;
+
+async function ensureUserSettingsTable(db: D1Database) {
+  if (userSettingsTableReady) return;
+  try {
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS user_settings (
+        user_id TEXT PRIMARY KEY,
+        settings_json TEXT NOT NULL,
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    userSettingsTableReady = true;
+  } catch {
+    // Ignore if already exists or read-only
+  }
+}
 
 export const onRequestOptions: PagesFunction = async () => {
   return new Response(null, { headers: corsHeaders });
@@ -28,32 +47,44 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     });
   }
 
+  await ensureUserSettingsTable(env.DB);
+
   try {
     if (type === 'global') {
       if (filter === 'all') {
         let query = `
-          SELECT id, username, total_questions_answered, level, angkatan, prodi
-          FROM profiles
-          WHERE total_questions_answered > 0
+          SELECT
+            p.id,
+            p.username,
+            p.total_questions_answered,
+            p.total_questions_answered AS lifetime_questions_answered,
+            p.level,
+            p.angkatan,
+            p.prodi,
+            CASE WHEN json_valid(us.settings_json) THEN json_extract(us.settings_json, '$.avatarFrame') ELSE NULL END AS avatar_frame,
+            CASE WHEN json_valid(us.settings_json) THEN COALESCE(CAST(json_extract(us.settings_json, '$.suddenDeathBest') AS INTEGER), 0) ELSE 0 END AS sudden_death_best
+          FROM profiles p
+          LEFT JOIN user_settings us ON p.id = us.user_id
+          WHERE p.total_questions_answered > 0
         `;
         const binds: any[] = [];
         
         if (angkatan && angkatan !== 'all') {
-          query += ` AND angkatan = ?`;
+          query += ` AND p.angkatan = ?`;
           binds.push(angkatan);
         }
 
         if (prodi && prodi !== 'all') {
           if (prodi === 'kedokteran') {
-            query += ` AND (prodi = ? OR prodi IS NULL OR prodi = '')`;
+            query += ` AND (p.prodi = ? OR p.prodi IS NULL OR p.prodi = '')`;
             binds.push(prodi);
           } else {
-            query += ` AND prodi = ?`;
+            query += ` AND p.prodi = ?`;
             binds.push(prodi);
           }
         }
         
-        query += ` ORDER BY total_questions_answered DESC LIMIT 1000`;
+        query += ` ORDER BY p.total_questions_answered DESC LIMIT 1000`;
         
         const { results } = await env.DB.prepare(query).bind(...binds).all();
         return new Response(JSON.stringify({ data: results || [] }), {
@@ -87,9 +118,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             p.level, 
             p.angkatan,
             p.prodi,
-            SUM(qhl.correct_count) as total_questions_answered
+            p.total_questions_answered AS lifetime_questions_answered,
+            SUM(qhl.correct_count) as total_questions_answered,
+            MAX(CASE WHEN json_valid(us.settings_json) THEN json_extract(us.settings_json, '$.avatarFrame') ELSE NULL END) AS avatar_frame,
+            MAX(CASE WHEN json_valid(us.settings_json) THEN COALESCE(CAST(json_extract(us.settings_json, '$.suddenDeathBest') AS INTEGER), 0) ELSE 0 END) AS sudden_death_best
           FROM quiz_history_logs qhl
           JOIN profiles p ON qhl.user_id = p.id
+          LEFT JOIN user_settings us ON p.id = us.user_id
           WHERE qhl.created_at >= ?
         `;
         const binds: any[] = [cutoffIso];
@@ -110,7 +145,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         }
 
         query += `
-          GROUP BY p.id, p.username, p.level, p.angkatan, p.prodi
+          GROUP BY p.id, p.username, p.level, p.angkatan, p.prodi, p.total_questions_answered
           ORDER BY total_questions_answered DESC
           LIMIT 1000
         `;
@@ -144,9 +179,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
           p.level,
           p.angkatan,
           p.prodi,
-          p.total_questions_answered
+          p.total_questions_answered,
+          p.total_questions_answered AS lifetime_questions_answered,
+          CASE WHEN json_valid(us.settings_json) THEN json_extract(us.settings_json, '$.avatarFrame') ELSE NULL END AS avatar_frame,
+          CASE WHEN json_valid(us.settings_json) THEN COALESCE(CAST(json_extract(us.settings_json, '$.suddenDeathBest') AS INTEGER), 0) ELSE 0 END AS sudden_death_best
         FROM leaderboard l
         JOIN profiles p ON l.user_id = p.id
+        LEFT JOIN user_settings us ON p.id = us.user_id
         WHERE l.file_name = ?
       `;
       const binds: any[] = [fileName];

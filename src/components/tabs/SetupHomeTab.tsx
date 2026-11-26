@@ -151,6 +151,59 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
   const userBestSuddenDeath = getSuddenDeathBestStreak();
   const streakFlame = getStreakFlameStyle(currentStreak);
 
+  const resolveRowAura = (row: any, isCurrent: boolean) => {
+    const userLvl = Number(row.level) || 1;
+    const userQuestions = Number(row.total_questions_answered) || 0;
+    const lifetimeQuestions = Number(row.lifetime_questions_answered ?? row.total_questions_answered) || 0;
+    const isLevel95 = userLvl >= 95;
+    const isOver3000 = !isLevel95 && lifetimeQuestions >= 3000;
+
+    const rawFrameId = isCurrent ? currentFrame.id : (row.avatar_frame || 'default');
+    const rowFrame = AVATAR_FRAMES.find(f => f.id === rawFrameId) || AVATAR_FRAMES[0];
+    const rowBestSuddenDeath = isCurrent
+      ? Math.max(userBestSuddenDeath, Number(row.sudden_death_best) || 0)
+      : (Number(row.sudden_death_best) || 0);
+
+    const explicitAuraIds: AvatarFrameId[] = [
+      'demon_king_100',
+      'sudden_death_master',
+      'caduceus_mythic',
+      'veteran_3000',
+      'quest_500_today',
+    ];
+    const hasExplicitAura = explicitAuraIds.includes(rowFrame.id);
+    const hasExplicitNonAuraFrame = rowFrame.id !== 'default' && !hasExplicitAura;
+
+    const hasDemonKingAura = hasExplicitAura
+      ? rowFrame.id === 'demon_king_100'
+      : !hasExplicitNonAuraFrame && rowBestSuddenDeath >= 100;
+
+    const hasSuddenDeathAura = hasExplicitAura
+      ? rowFrame.id === 'sudden_death_master'
+      : !hasExplicitNonAuraFrame && !hasDemonKingAura && rowBestSuddenDeath >= 20;
+
+    const hasSultanAura = hasExplicitAura
+      ? rowFrame.id === 'caduceus_mythic'
+      : !hasExplicitNonAuraFrame && !hasDemonKingAura && !hasSuddenDeathAura && isLevel95;
+
+    const hasVeteranAura = hasExplicitAura
+      ? rowFrame.id === 'veteran_3000'
+      : !hasExplicitNonAuraFrame && !hasDemonKingAura && !hasSuddenDeathAura && !hasSultanAura && isOver3000;
+
+    const hasQuestAura = rowFrame.id === 'quest_500_today';
+
+    return {
+      userLvl,
+      userQuestions,
+      rowFrame,
+      hasDemonKingAura,
+      hasSuddenDeathAura,
+      hasSultanAura,
+      hasVeteranAura,
+      hasQuestAura,
+    };
+  };
+
   // 7-day activity data calculation for Bento Panel 1
   const activityData = useMemo(() => {
     const daily: Record<string, number> = {};
@@ -779,11 +832,14 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 </div>
 
                 {/* Active Aura Status for Current User */}
-                {(currentFrame.auraClass || userBestSuddenDeath >= 20) && (
+                {(currentFrame.auraClass || (currentFrame.id === 'default' && userBestSuddenDeath >= 20)) && (() => {
+                  const bannerIsDemonKing = currentFrame.id === 'demon_king_100' || (currentFrame.id === 'default' && userBestSuddenDeath >= 100);
+                  const bannerIsSuddenDeath = currentFrame.id === 'sudden_death_master' || (currentFrame.id === 'default' && !bannerIsDemonKing && userBestSuddenDeath >= 20);
+                  return (
                   <div className={`flex items-center justify-between flex-wrap sm:flex-nowrap gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all animate-fade-in ${
-                    currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
+                    bannerIsDemonKing
                       ? 'bg-black/90 border-red-600/90 text-red-400 shadow-md shadow-red-950/80 ring-1 ring-red-500/50'
-                      : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
+                      : bannerIsSuddenDeath
                       ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300 shadow-sm shadow-rose-500/10'
                       : currentFrame.id === 'caduceus_mythic'
                       ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 shadow-sm shadow-amber-500/10'
@@ -793,19 +849,19 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                   }`}>
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                        currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
+                        bannerIsDemonKing
                           ? 'p-[2px] bg-gradient-to-tr from-black via-zinc-950 to-red-600 border border-red-500 shadow-md shadow-red-900/60'
-                          : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
+                          : bannerIsSuddenDeath
                           ? 'p-[2px] bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 border border-rose-300 shadow-md shadow-rose-500/40'
                           : currentFrame.ringClass
                       }`}>
                         <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-xs">
-                          {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? '👹' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? '💀' : currentFrame.badge}
+                          {bannerIsDemonKing ? '👹' : bannerIsSuddenDeath ? '💀' : currentFrame.badge}
                         </div>
                       </div>
                       <div className="min-w-0">
                         <span className="font-extrabold block">
-                          Aura Aktif Anda: {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? 'Raja Iblis (Demon Lord)' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? 'Tengkorak Emas (Survivor)' : currentFrame.name}
+                          Aura Aktif Anda: {bannerIsDemonKing ? 'Raja Iblis (Demon Lord)' : bannerIsSuddenDeath ? 'Tengkorak Emas (Survivor)' : currentFrame.name}
                         </span>
                         <span className="text-[10px] opacity-85 block">
                           Efek animasi bercahaya aktif di kartu profil dan baris peringkat Anda pada tabel di bawah.
@@ -817,7 +873,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       <span>AURA AKTIF</span>
                     </span>
                   </div>
-                )}
+                  );
+                })()}
 
                 <div className="overflow-hidden rounded-xl liquid-glass-subtle">
                   <div className="overflow-x-auto max-h-[420px] overflow-y-auto lg:max-h-none">
@@ -907,32 +964,16 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                       ))
                                     );
                                     const rankNum = row.isCurrentUserOutOfTop10 ? row.actualRank : index + 1;
-                                    const userLvl = Number(row.level) || 1;
-                                    const userQuestions = Number(row.total_questions_answered) || 0;
-                                    const isLevel95 = userLvl >= 95;
-                                    const isOver3000 = !isLevel95 && userQuestions >= 3000;
-
-                                    const hasDemonKingAura = isCurrent && (
-                                      currentFrame.id === 'demon_king_100' ||
-                                      savedFrameId === 'demon_king_100' ||
-                                      userBestSuddenDeath >= 100
-                                    );
-
-                                    const hasSuddenDeathAura = isCurrent && !hasDemonKingAura && (
-                                      currentFrame.id === 'sudden_death_master' ||
-                                      savedFrameId === 'sudden_death_master' ||
-                                      userBestSuddenDeath >= 20
-                                    );
-
-                                    const hasSultanAura = isCurrent
-                                      ? (!hasDemonKingAura && !hasSuddenDeathAura && (currentFrame.id === 'caduceus_mythic' || (isLevel95 && currentFrame.id !== 'veteran_3000' && currentFrame.id !== 'quest_500_today')))
-                                      : isLevel95;
-
-                                    const hasVeteranAura = isCurrent
-                                      ? (!hasDemonKingAura && !hasSuddenDeathAura && (currentFrame.id === 'veteran_3000' || (isOver3000 && currentFrame.id !== 'caduceus_mythic' && currentFrame.id !== 'quest_500_today')))
-                                      : isOver3000;
-
-                                    const hasQuestAura = isCurrent && !hasDemonKingAura && !hasSuddenDeathAura && currentFrame.id === 'quest_500_today';
+                                    const {
+                                      userLvl,
+                                      userQuestions,
+                                      rowFrame,
+                                      hasDemonKingAura,
+                                      hasSuddenDeathAura,
+                                      hasSultanAura,
+                                      hasVeteranAura,
+                                      hasQuestAura,
+                                    } = resolveRowAura(row, isCurrent);
 
                                     let rowClasses = "border-b last:border-0 transition-all duration-300 relative ";
                                     if (hasDemonKingAura) {
@@ -1003,6 +1044,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? 'p-[1.5px] bg-gradient-to-tr from-teal-400 to-cyan-500 border border-teal-200 shadow-sm shadow-teal-500/40'
                                             : hasQuestAura
                                             ? 'p-[1.5px] bg-gradient-to-tr from-purple-500 to-indigo-500 border border-purple-200 shadow-sm shadow-purple-500/40'
+                                            : rowFrame.id !== 'default'
+                                            ? rowFrame.ringClass
                                             : isCurrent
                                             ? currentFrame.ringClass
                                             : 'p-[1px] bg-slate-200 dark:bg-slate-700'
@@ -1014,7 +1057,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             uid={`lb1_${index}_${row.username}`}
                                           />
                                           <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow">
-                                            {hasDemonKingAura ? '👹' : hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? currentFrame.badge : '🩺'}
+                                            {hasDemonKingAura ? '👹' : hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : rowFrame.badge}
                                           </span>
                                         </div>
                                         <span className={
@@ -1036,7 +1079,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? (theme === 'dark' ? 'text-purple-200 font-black' : 'text-purple-900 font-black')
                                             : (isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')
                                         }>
-                                          {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
+                                          {(isCurrent || rowFrame.id !== 'default') && <span className="mr-1">{rowFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
                                         {/* Prodi Badge */}
@@ -1175,32 +1218,15 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                       ))
                                     );
                                     const rankNum = row.isCurrentUserOutOfTop10 ? row.actualRank : index + 1;
-                                    const userLvl = Number(row.level) || 1;
-                                    const userQuestions = Number(row.total_questions_answered) || 0;
-                                    const isLevel95 = userLvl >= 95;
-                                    const isOver3000 = !isLevel95 && userQuestions >= 3000;
-
-                                    const hasDemonKingAura = isCurrent && (
-                                      currentFrame.id === 'demon_king_100' ||
-                                      savedFrameId === 'demon_king_100' ||
-                                      userBestSuddenDeath >= 100
-                                    );
-
-                                    const hasSuddenDeathAura = isCurrent && !hasDemonKingAura && (
-                                      currentFrame.id === 'sudden_death_master' ||
-                                      savedFrameId === 'sudden_death_master' ||
-                                      userBestSuddenDeath >= 20
-                                    );
-
-                                    const hasSultanAura = isCurrent
-                                      ? (!hasDemonKingAura && !hasSuddenDeathAura && (currentFrame.id === 'caduceus_mythic' || (isLevel95 && currentFrame.id !== 'veteran_3000' && currentFrame.id !== 'quest_500_today')))
-                                      : isLevel95;
-
-                                    const hasVeteranAura = isCurrent
-                                      ? (!hasDemonKingAura && !hasSuddenDeathAura && (currentFrame.id === 'veteran_3000' || (isOver3000 && currentFrame.id !== 'caduceus_mythic' && currentFrame.id !== 'quest_500_today')))
-                                      : isOver3000;
-
-                                    const hasQuestAura = isCurrent && !hasDemonKingAura && !hasSuddenDeathAura && currentFrame.id === 'quest_500_today';
+                                    const {
+                                      userLvl,
+                                      rowFrame,
+                                      hasDemonKingAura,
+                                      hasSuddenDeathAura,
+                                      hasSultanAura,
+                                      hasVeteranAura,
+                                      hasQuestAura,
+                                    } = resolveRowAura(row, isCurrent);
 
                                     let rowClasses = "border-b last:border-0 transition-all duration-300 relative ";
                                     if (hasDemonKingAura) {
@@ -1271,6 +1297,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? 'p-[1.5px] bg-gradient-to-tr from-teal-400 to-cyan-500 border border-teal-200 shadow-sm shadow-teal-500/40'
                                             : hasQuestAura
                                             ? 'p-[1.5px] bg-gradient-to-tr from-purple-500 to-indigo-500 border border-purple-200 shadow-sm shadow-purple-500/40'
+                                            : rowFrame.id !== 'default'
+                                            ? rowFrame.ringClass
                                             : isCurrent
                                             ? currentFrame.ringClass
                                             : 'p-[1px] bg-slate-200 dark:bg-slate-700'
@@ -1282,7 +1310,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             uid={`lb2_${index}_${row.username}`}
                                           />
                                           <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow">
-                                            {hasDemonKingAura ? '👹' : hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : isCurrent ? currentFrame.badge : '🩺'}
+                                            {hasDemonKingAura ? '👹' : hasSuddenDeathAura ? '💀' : hasSultanAura ? '👑' : hasVeteranAura ? '⚡' : hasQuestAura ? '🔥' : rowFrame.badge}
                                           </span>
                                         </div>
                                         <span className={
@@ -1304,7 +1332,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                             ? (theme === 'dark' ? 'text-purple-200 font-black' : 'text-purple-900 font-black')
                                             : (isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')
                                         }>
-                                          {isCurrent && <span className="mr-1">{currentFrame.badge}</span>}
+                                          {(isCurrent || rowFrame.id !== 'default') && <span className="mr-1">{rowFrame.badge}</span>}
                                           {row.username} {isCurrent && '(Anda)'}
                                         </span>
                                         {/* Prodi Badge */}

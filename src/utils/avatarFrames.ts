@@ -182,6 +182,9 @@ export function saveSuddenDeathStreak(streak: number): boolean {
     const currentBest = getSuddenDeathBestStreak();
     if (streak > currentBest) {
       localStorage.setItem(SUDDEN_DEATH_BEST_KEY, streak.toString());
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auramedpro_suddendeath_changed', { detail: streak }));
+      }
       return true; // New record!
     }
   } catch (e) {

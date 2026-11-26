@@ -602,18 +602,38 @@ export default function App() {
 
           // Sinkronkan juga gelar Sudden Death & bingkai avatar
           const remoteSDBest = Number(remoteSettings.suddenDeathBest) || 0;
-          if (remoteSDBest > getSuddenDeathBestStreak()) {
+          const localSDBest = getSuddenDeathBestStreak();
+          if (remoteSDBest > localSDBest) {
             saveSuddenDeathStreak(remoteSDBest);
+          } else if (localSDBest > remoteSDBest) {
+            shouldPushMergedSettings = true;
           }
-          if (
+
+          const localFrame = getSavedAvatarFrame();
+          if (isDifferentUser) {
+            setSavedAvatarFrame(remoteSettings.avatarFrame || 'default');
+          } else if (
             remoteSettings.avatarFrame &&
             remoteSettings.avatarFrame !== 'default' &&
-            getSavedAvatarFrame() === 'default'
+            localFrame === 'default'
           ) {
             setSavedAvatarFrame(remoteSettings.avatarFrame);
+          } else if (
+            localFrame !== 'default' &&
+            (!remoteSettings.avatarFrame || remoteSettings.avatarFrame === 'default')
+          ) {
+            shouldPushMergedSettings = true;
           }
-        } else if (hasLocalCustomizations) {
-          shouldPushMergedSettings = true;
+        } else {
+          if (isDifferentUser) {
+            setSavedAvatarFrame('default');
+          }
+          if (
+            hasLocalCustomizations ||
+            (!isDifferentUser && (getSavedAvatarFrame() !== 'default' || getSuddenDeathBestStreak() > 0))
+          ) {
+            shouldPushMergedSettings = true;
+          }
         }
 
         suppressNextFolderPushRef.current = true;
@@ -818,23 +838,17 @@ export default function App() {
     minimizedFolders,
   ]);
 
-  // 1d. Sinkronkan juga saat pengguna mengganti bingkai avatar (misal Raja Iblis)
+  // 1d. Sinkronkan juga saat pengguna mengganti bingkai avatar / aura atau mencetak rekor Sudden Death
   useEffect(() => {
     const userId = currentUser?.id;
     const isGuest = currentUser?.is_anonymous || currentUser?.user_metadata?.is_guest;
     if (!userId || isGuest) return;
 
-    const handleFrameChanged = () => {
-      if (isUserSyncLoadedRef.current !== userId) return;
+    const handleAuraOrStreakChanged = () => {
       cloudflareApi
         .saveUserSync({
           user_id: userId,
           settings: {
-            customFolders,
-            quizFolderMap,
-            parentFolders,
-            folderParentMap,
-            minimizedFolders,
             avatarFrame: getSavedAvatarFrame(),
             suddenDeathBest: getSuddenDeathBestStreak(),
           },
@@ -842,16 +856,13 @@ export default function App() {
         .catch(() => {});
     };
 
-    window.addEventListener('auramedpro_frame_changed', handleFrameChanged);
-    return () => window.removeEventListener('auramedpro_frame_changed', handleFrameChanged);
-  }, [
-    currentUser?.id,
-    customFolders,
-    quizFolderMap,
-    parentFolders,
-    folderParentMap,
-    minimizedFolders,
-  ]);
+    window.addEventListener('auramedpro_frame_changed', handleAuraOrStreakChanged);
+    window.addEventListener('auramedpro_suddendeath_changed', handleAuraOrStreakChanged);
+    return () => {
+      window.removeEventListener('auramedpro_frame_changed', handleAuraOrStreakChanged);
+      window.removeEventListener('auramedpro_suddendeath_changed', handleAuraOrStreakChanged);
+    };
+  }, [currentUser?.id]);
 
   // 2. Otomatis pulihkan detail soal & pembahasan jika entri yang dibuka kehilangan payload questions
   useEffect(() => {
@@ -1085,6 +1096,16 @@ export default function App() {
       joinGroup();
     }
   }, [currentUser]);
+
+  // Bersihkan parameter callback DOKU & tampilkan notifikasi sukses saat akses sudah aktif
+  useEffect(() => {
+    if (!canAccess || !currentUser) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'doku') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      triggerToast('Pembayaran berhasil! Langganan AuraMedPro 1 bulan telah aktif.', '🎉');
+    }
+  }, [canAccess, currentUser]);
 
   useEffect(() => {
     if (activeStudyGroupId && dashboardTab === 'banks') {
