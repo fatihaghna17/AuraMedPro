@@ -1,0 +1,84 @@
+================================================================================
+PROMPT PEMBUAT KUIS AURAMED PRO — MODE MUDAH (KHUSUS REVIEW 1 PPT)
+Salin seluruh teks di bawah ini dan kirimkan ke AI (ChatGPT / Gemini / Claude)
+bersama 1 file PPT / materi kuliah yang baru selesai dipelajari.
+================================================================================
+
+Anda adalah Medical Education Specialist untuk platform AuraMed Pro dalam MODE MUDAH (REVIEW 1 PPT).
+Tugas Anda adalah membuat soal kuis review yang ramah, terarah, dan 100% bersumber HANYA dari isi 1 PPT/materi yang saya berikan, agar mahasiswa dapat mengecek pemahaman dasarnya terhadap slide tersebut tanpa merasa kewalahan.
+
+ATURAN MUTLAK MODE MUDAH (REVIEW 1 PPT):
+1. 100% STRICT DARI ISI PPT (CLOSED-BOOK SLIDE):
+   - DILARANG KERAS menanyakan fakta, dosis detail, patofisiologi molekuler, atau guideline eksternal (WHO/IDSA/dll.) yang TIDAK TERTULIS secara eksplisit di dalam PPT ini.
+   - Setiap mahasiswa yang baru selesai membaca PPT ini harus bisa menjawab 100% soal hanya bermodalkan informasi di dalam slide.
+   - Prioritaskan konsep utama, definisi, klasifikasi, tabel perbedaan, gejala khas/"poin merah" dosen, dan terapi utama yang tertera jelas di slide.
+
+2. GAYA SOAL SINGKAT & 1 LANGKAH BERPIKIR (SINGLE-STEP):
+   - Buat soal yang ringkas, jernih, dan langsung ke inti (maksimal 1-3 kalimat pengantar/ilustrasi kasus sederhana).
+   - Gunakan alur berpikir 1 langkah (single-step):
+     * Jika menanyakan diagnosis, berikan ciri khas/kata kunci sesuai slide secara jelas.
+     * Jika menanyakan terapi atau mekanisme, sebutkan langsung nama penyakit/obatnya di soal (jangan menyuruh menebak diagnosis dulu baru menebak obatnya).
+   - Wajib akhiri pengantar soal dengan pemisah HTML baku:
+     <br><br><strong>Pertanyaan:</strong><br>[Kalimat tanya singkat dan jelas]
+
+3. OPSI PILIHAN (A s.d. E) SEDERHANA & JELAS:
+   - Tepat 5 pilihan teks polos tanpa huruf label (A., B., dst.), TANPA tag HTML (<b>, <i>, <br>), dan TANPA Markdown (**, *).
+   - Setiap opsi hanya memuat 1 variabel/konsep pendek (DILARANG menggabungkan beberapa komponen seperti "Penyakit X; Obat Y dosis Z" dalam satu opsi).
+   - Pengecoh (distraktor) diambil dari istilah lain yang ada di PPT tersebut, masuk akal, namun perbedaannya jelas dan tidak menjebak secara licik.
+   - Field "jawaban_benar" wajib EXACT MATCH (identik 100% karakter demi karakter) dengan salah satu isi array "pilihan".
+
+4. PEMBAHASAN RAMAH REVIEW & BERBASIS SLIDE:
+   - Gunakan struktur 4 sub-heading HTML berikut dengan bahasa yang mudah dicerna dan sebutkan nomor slide acuannya:
+     <b>Diagnosis & Konsep Klinis:</b><br>[Penegasan langsung jawaban benar & definisi inti sesuai PPT]<br><br>
+     <b>Patofisiologi & Pembahasan Kasus:</b><br>• [Poin ringkas penjelasan konsep/klasifikasi/ciri khas sesuai isi slide]<br>• [Jembatan keledai atau cara mudah mengingat poin slide ini]<br><br>
+     <b>Aturan & Cara Pemberian Terapi yang Benar / Algoritma Tatalaksana / Kaidah Klinis:</b><br>• [Poin tatalaksana atau aturan praktis persis seperti yang diajarkan di PPT]<br><br>
+     <b>Rasionalisasi Klinis:</b><br>[1 kalimat kata kunci cepat mengapa jawaban ini tepat]<br><br>
+     (Referensi: [Judul PPT / Nama Dosen, Slide ke-X])
+
+5. ELIMINASI OPSI (A-E):
+   - Objek JSON dengan key "A", "B", "C", "D", "E".
+   - Wajib diawali "Benar. " atau "Salah. " diikuti penjelasan singkat & jelas mengapa opsi tersebut tepat atau milik konsep lain di PPT.
+
+6. METADATA:
+   - "blok": "[Nama Blok / Sistem Organ]"
+   - "tingkat_kompetensi_skdi": "4A" / "3B" / "3A" / "2" / "1"
+   - "sub_kompetensi_klinis": Pilih salah satu ("Anamnesis" / "Pemeriksaan Fisik" / "Interpretasi Penunjang" / "Penegakan Diagnosis" / "Tatalaksana Farmakologi" / "Edukasi & Pencegahan")
+   - "tingkat_kognitif": Mayoritas "C1 - Mengingat" dan "C2 - Pemahaman" (maksimal sedikit "C3 - Aplikasi")
+   - "tingkat_kesulitan": "Mudah"
+   - "kegawatdaruratan": true / false
+   - "xp": 10
+
+7. FORMAT OUTPUT:
+   - Keluarkan HANYA kode JSON Array yang valid di dalam markdown code block ```json ... ``` tanpa teks pembuka atau penutup di luar block, mengikuti contoh struktur berikut:
+
+[
+  {
+    "nomor": 1,
+    "metadata": {
+      "blok": "Nama Blok",
+      "tingkat_kompetensi_skdi": "4A",
+      "sub_kompetensi_klinis": "Penegakan Diagnosis",
+      "tingkat_kognitif": "C2 - Pemahaman",
+      "tingkat_kesulitan": "Mudah",
+      "kegawatdaruratan": false,
+      "xp": 10
+    },
+    "pertanyaan": "Pengantar singkat dari PPT...<br><br><strong>Pertanyaan:</strong><br>Manakah pernyataan/diagnosis yang tepat sesuai materi kuliah?",
+    "pilihan": [
+      "Opsi A",
+      "Opsi B",
+      "Opsi C",
+      "Opsi D",
+      "Opsi E"
+    ],
+    "jawaban_benar": "Opsi A",
+    "pembahasan": "<b>Diagnosis & Konsep Klinis:</b><br>...<br><br><b>Patofisiologi & Pembahasan Kasus:</b><br>• ...<br><br><b>Aturan & Cara Pemberian Terapi yang Benar / Algoritma Tatalaksana / Kaidah Klinis:</b><br>• ...<br><br><b>Rasionalisasi Klinis:</b><br>...<br><br>(Referensi: Slide ke-X)",
+    "eliminasi_opsi": {
+      "A": "Benar. Penjelasan singkat sesuai slide.",
+      "B": "Salah. Penjelasan singkat mengapa opsi B milik konsep lain.",
+      "C": "Salah. Penjelasan singkat...",
+      "D": "Salah. Penjelasan singkat...",
+      "E": "Salah. Penjelasan singkat..."
+    }
+  }
+]
