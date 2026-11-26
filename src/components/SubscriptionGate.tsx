@@ -41,6 +41,9 @@ export default function SubscriptionGate({
   const [copied, setCopied] = useState(false);
   const [checking, setChecking] = useState(false);
   const [refreshSuccess, setRefreshSuccess] = useState(false);
+  const [dokuLoading, setDokuLoading] = useState(false);
+  const [dokuError, setDokuError] = useState<string | null>(null);
+  const [dokuNotice, setDokuNotice] = useState<string | null>(null);
 
   // Otomatis daftarkan transaksi pending ke DB agar langsung muncul di dashboard admin
   useEffect(() => {
@@ -49,11 +52,76 @@ export default function SubscriptionGate({
     }
   }, [userId]);
 
+  // Verifikasi otomatis saat user kembali dari halaman DOKU Checkout (?payment=doku&invoice=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentParam = params.get('payment');
+    const invoiceParam = params.get('invoice') || undefined;
+
+    if (paymentParam === 'doku_cancel') {
+      setDokuError('Pembayaran dibatalkan. Silakan klik Bayar Otomatis untuk mencoba kembali.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (paymentParam !== 'doku') return;
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 6;
+    setDokuNotice('Memverifikasi pembayaran otomatis dari DOKU...');
+
+    const pollStatus = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      const statusRes = await authClient.checkDokuPaymentStatus(invoiceParam);
+      if (cancelled) return;
+
+      if (statusRes?.paid || statusRes?.status === 'SUCCESS') {
+        setDokuNotice('Pembayaran terkonfirmasi! Mengaktifkan akun Anda...');
+        await onRefreshStatus();
+        return;
+      }
+
+      if (statusRes?.status === 'FAILED' || statusRes?.status === 'EXPIRED') {
+        setDokuNotice(null);
+        setDokuError('Tagihan pembayaran kedaluwarsa atau gagal. Silakan buat pembayaran baru.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      await onRefreshStatus();
+      if (!cancelled && attempts < maxAttempts) {
+        setTimeout(pollStatus, 3000);
+      } else if (!cancelled) {
+        setDokuNotice('Menunggu konfirmasi bank/e-wallet. Klik "Sudah Bayar? Cek Status Langganan" bila sudah membayar.');
+      }
+    };
+
+    pollStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   const handleCreatePayment = async () => {
     setLoading(true);
     const info = await authClient.createPayment(userId);
     setPaymentInfo(info);
     setLoading(false);
+  };
+
+  const handlePayWithDoku = async () => {
+    setDokuError(null);
+    setDokuNotice(null);
+    setDokuLoading(true);
+    const res = await authClient.createDokuPayment();
+    if ('error' in res) {
+      setDokuError(res.error);
+      setDokuLoading(false);
+      return;
+    }
+    window.location.href = res.paymentUrl;
   };
 
   const handleCopy = (text: string) => {
@@ -64,6 +132,8 @@ export default function SubscriptionGate({
 
   const handleRefresh = async () => {
     setChecking(true);
+    setDokuError(null);
+    await authClient.checkDokuPaymentStatus();
     await onRefreshStatus();
     setRefreshSuccess(true);
     setTimeout(() => {
@@ -206,97 +276,61 @@ export default function SubscriptionGate({
             </div>
           </div>
 
-          {/* QRIS Display Container */}
-          <div className={`rounded-2xl p-4 sm:p-5 mb-5 border space-y-4 max-lg-liquid-subtle ${
-            isDark ? 'bg-slate-800/80 border-slate-700/80' : 'bg-slate-50/90 border-slate-200/80'
+          {/* DOKU Automatic Checkout (Primary) */}
+          <div className={`rounded-2xl p-4 sm:p-5 mb-4 border space-y-3.5 max-lg-liquid-subtle ${
+            isDark ? 'bg-slate-800/80 border-indigo-500/30' : 'bg-white/90 border-indigo-200/80 shadow-sm'
           }`}>
             <div className="flex items-center justify-between flex-wrap gap-1.5">
-              <span className={`text-xs font-black uppercase tracking-wider ${
-                isDark ? 'text-teal-400' : 'text-teal-600'
+              <span className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                isDark ? 'text-teal-300' : 'text-teal-700'
               }`}>
-                📱 Pembayaran Instan via QRIS
-              </span>
-              <span className="text-[10px] font-semibold text-slate-400">
-                Semua Bank & E-Wallet
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200/80">
-                <img 
-                  src="/qris.jpg" 
-                  alt="QRIS AuraMedPro" 
-                  className="w-44 h-44 sm:w-52 sm:h-52 rounded-xl object-cover" 
-                />
-              </div>
-              <p className={`text-[11px] font-medium text-center mt-3 max-w-xs ${
-                isDark ? 'text-slate-300' : 'text-slate-600'
-              }`}>
-                Buka aplikasi m-Banking (BCA, Mandiri, BRI, BNI) atau E-Wallet (GoPay, OVO, ShopeePay, DANA) lalu scan kode QR di atas.
-              </p>
-            </div>
-
-            {/* Nominal Box with One-Click Copy */}
-            <div className={`rounded-xl p-3.5 flex items-center justify-between gap-2 border max-lg-liquid-subtle ${
-              isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-slate-200'
-            }`}>
-              <div>
-                <span className={`block text-[10px] font-black uppercase tracking-wider ${
-                  isDark ? 'text-slate-400' : 'text-slate-500'
-                }`}>
-                  Nominal Transfer
-                </span>
-                <span className="text-lg sm:text-xl font-black">
-                  {formattedNominal}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(nominal.toString())}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shrink-0 ${
-                  copied
-                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                    : (isDark
-                      ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200'
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700') + ' max-lg-liquid-interactive'
-                }`}
-                title="Salin nominal transfer"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'Tersalin!' : 'Salin'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons: WhatsApp & Refresh */}
-          <div className="space-y-2.5">
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full px-4 py-3.5 sm:py-4 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider text-center text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="w-4 h-4 shrink-0" />
-              <span>Kirim Bukti Pembayaran ke WhatsApp</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />
-            </a>
-
-            {mayarPaymentUrl && (
-              <a
-                href={mayarPaymentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`w-full px-4 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 border max-lg-liquid-interactive ${
-                  isDark
-                    ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white'
-                    : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm'
-                }`}
-              >
                 <CreditCard className="w-4 h-4 shrink-0" />
-                <span>Bayar via Mayar / Kartu Kredit</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-70 shrink-0" />
-              </a>
+                Pembayaran Otomatis (DOKU)
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/25'
+              }`}>
+                ⚡ Aktivasi Instan 24 Jam
+              </span>
+            </div>
+
+            <p className={`text-[11px] font-medium leading-relaxed ${
+              isDark ? 'text-slate-300' : 'text-slate-600'
+            }`}>
+              Mendukung <strong>QRIS Otomatis</strong>, <strong>Virtual Account</strong> (BCA, Mandiri, BNI, BRI, Permata), serta <strong>E-Wallet</strong> (OVO, DANA, ShopeePay). Akun langsung aktif otomatis begitu pembayaran berhasil.
+            </p>
+
+            {dokuNotice && (
+              <div className={`rounded-xl px-3.5 py-2.5 text-[11px] font-semibold flex items-center gap-2 border ${
+                isDark
+                  ? 'bg-teal-500/15 border-teal-500/30 text-teal-200'
+                  : 'bg-teal-50 border-teal-200 text-teal-800'
+              }`}>
+                <RefreshCw className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                <span>{dokuNotice}</span>
+              </div>
             )}
+
+            {dokuError && (
+              <div className={`rounded-xl px-3.5 py-2.5 text-[11px] font-semibold border ${
+                isDark
+                  ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                  : 'bg-rose-50 border-rose-200 text-rose-700'
+              }`}>
+                {dokuError}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handlePayWithDoku}
+              disabled={dokuLoading}
+              className="w-full px-4 py-3.5 sm:py-4 rounded-full font-black text-xs uppercase tracking-wider text-center text-white bg-gradient-to-r from-indigo-500 via-teal-500 to-indigo-600 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 shadow-lg shadow-indigo-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <CreditCard className="w-4 h-4 shrink-0" />
+              <span>{dokuLoading ? 'Menyiapkan Halaman DOKU...' : `Bayar Otomatis ${formattedNominal}`}</span>
+              {!dokuLoading && <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />}
+            </button>
 
             <button
               type="button"
@@ -313,12 +347,92 @@ export default function SubscriptionGate({
             </button>
           </div>
 
-          {/* Footer Note */}
-          <p className={`text-[10px] text-center mt-4 leading-relaxed ${
-            isDark ? 'text-slate-400' : 'text-slate-500'
+          {/* Collapsible Manual QRIS + WhatsApp Fallback */}
+          <details className={`group rounded-2xl border transition-all max-lg-liquid-subtle ${
+            isDark ? 'bg-slate-900/50 border-white/10' : 'bg-slate-50/80 border-slate-200/80'
           }`}>
-            Setelah mengirim bukti pembayaran ke Admin WhatsApp, akun Anda akan diaktifkan segera.
-          </p>
+            <summary className={`px-4 py-3 text-[11px] font-bold cursor-pointer list-none flex items-center justify-between gap-2 ${
+              isDark ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}>
+              <span>Alternatif: Transfer QRIS Manual & Konfirmasi Admin WhatsApp</span>
+              <span className="text-xs transition-transform group-open:rotate-180">▾</span>
+            </summary>
+
+            <div className="px-4 pb-4 pt-1 space-y-4 border-t border-slate-200/50 dark:border-white/10">
+              <div className="flex flex-col items-center pt-2">
+                <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200/80">
+                  <img 
+                    src="/qris.jpg" 
+                    alt="QRIS AuraMedPro" 
+                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl object-cover" 
+                  />
+                </div>
+                <p className={`text-[11px] font-medium text-center mt-2.5 max-w-xs ${
+                  isDark ? 'text-slate-300' : 'text-slate-600'
+                }`}>
+                  Scan QRIS manual di atas lalu kirim bukti pembayaran ke WhatsApp Admin untuk aktivasi manual.
+                </p>
+              </div>
+
+              <div className={`rounded-xl p-3 flex items-center justify-between gap-2 border max-lg-liquid-subtle ${
+                isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-slate-200'
+              }`}>
+                <div>
+                  <span className={`block text-[10px] font-black uppercase tracking-wider ${
+                    isDark ? 'text-slate-400' : 'text-slate-500'
+                  }`}>
+                    Nominal Transfer
+                  </span>
+                  <span className="text-base sm:text-lg font-black">
+                    {formattedNominal}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(nominal.toString())}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shrink-0 ${
+                    copied
+                      ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                      : (isDark
+                        ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200'
+                        : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700') + ' max-lg-liquid-interactive'
+                  }`}
+                  title="Salin nominal transfer"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? 'Tersalin!' : 'Salin'}</span>
+                </button>
+              </div>
+
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full px-4 py-3.5 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider text-center text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4 shrink-0" />
+                <span>Kirim Bukti Pembayaran ke WhatsApp</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />
+              </a>
+
+              {mayarPaymentUrl && (
+                <a
+                  href={mayarPaymentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 border max-lg-liquid-interactive ${
+                    isDark
+                      ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white'
+                      : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm'
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4 shrink-0" />
+                  <span>Bayar via Mayar / Kartu Kredit</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                </a>
+              )}
+            </div>
+          </details>
         </div>
       </main>
 

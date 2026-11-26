@@ -16,7 +16,10 @@ database_id = "be74e469-34a0-45bb-8117-098f801a9c9c"
 # Environment Variables
 [vars]
 R2_PUBLIC_URL = "https://pub-f0707ec9f2b24a6e8ffc24ef68b6c995.r2.dev"
+# Opsional: set DOKU_BASE_URL di Cloudflare Dashboard bila ingin mengunci environment
+# ("https://api.doku.com" untuk Live atau "https://api-sandbox.doku.com" untuk Sandbox).
+# Bila dikosongkan, sistem otomatis mencoba Production lalu fallback ke Sandbox bila Client-Id Sandbox.
 
-# Secret environment variables (set via CLI, bukan di file ini)
-# GEMINI_API_KEY, R2_SECRET_TOKEN, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
-# Set dengan: wrangler secret put GEMINI_API_KEY
+# Secret environment variables (set di Cloudflare Dashboard > Pages > Settings > Environment variables):
+# GEMINI_API_KEY, R2_SECRET_TOKEN, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
+# DOKU_CLIENT_ID (format BRN-...), DOKU_SECRET_KEY (format SK-...)

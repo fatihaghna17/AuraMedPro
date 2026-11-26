@@ -311,6 +311,48 @@ class AuthClient {
   }
 
   /**
+   * Buat invoice DOKU Checkout. Mengembalikan URL halaman pembayaran DOKU.
+   */
+  async createDokuPayment(): Promise<{ paymentUrl: string; invoiceNumber: string } | { error: string }> {
+    try {
+      const res = await fetch('/api/payment/doku-create', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const body = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok || !body.data?.paymentUrl) {
+        return { error: body.error || 'Gagal membuat tagihan pembayaran DOKU.' };
+      }
+      return {
+        paymentUrl: body.data.paymentUrl,
+        invoiceNumber: body.data.invoiceNumber,
+      };
+    } catch {
+      return { error: 'Koneksi bermasalah. Coba lagi.' };
+    }
+  }
+
+  /**
+   * Verifikasi status invoice DOKU terbaru / spesifik langsung ke server & DOKU Order Status API.
+   */
+  async checkDokuPaymentStatus(
+    invoiceNumber?: string
+  ): Promise<{ status: string; paid: boolean; invoiceNumber: string | null } | null> {
+    try {
+      const qs = invoiceNumber ? `?invoice=${encodeURIComponent(invoiceNumber)}` : '';
+      const res = await fetch(`/api/payment/doku-status${qs}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) return null;
+      const body = (await res.json().catch(() => ({}))) as any;
+      return body.data || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Listener perubahan status auth (kompatibel dengan Supabase onAuthStateChange)
    */
   onAuthStateChange(callback: AuthStateListener): { data: { subscription: { unsubscribe: () => void } } } {
