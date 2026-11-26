@@ -972,7 +972,7 @@ export const SetupBanksTab: React.FC<SetupBanksTabProps> = ({
               Gunakan <strong>Speedrun UB Tutor</strong> untuk menyaring ratusan slide materi kuliah menjadi kuis berkualitas tinggi dalam sekejap.
             </p>
             <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-400">
-              <span>AuraMed Pro CBT Engine</span>
+              <span>AuraMed CBT Engine</span>
               <span className="text-amber-400">Versi 2.0 Ready</span>
             </div>
           </div>

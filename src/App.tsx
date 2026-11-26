@@ -143,6 +143,7 @@ import ConfirmModal from './components/ConfirmModal';
 import BottomNav from './components/BottomNav';
 import PomodoroWidget from './components/PomodoroWidget';
 import SidebarNav from './components/SidebarNav';
+import { BrandLogo } from './components/BrandLogo';
 import { ScenicBackground } from './components/ScenicBackground';
 import LoginForm from './components/LoginForm';
 import AngkatanSelectModal from './components/AngkatanSelectModal';
@@ -1731,19 +1732,26 @@ export default function App() {
     localStorage.setItem('cbt_theme', theme);
     const root = document.documentElement;
     const metaThemeColor = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+    const metaColorScheme = document.getElementById('color-scheme-meta') || document.querySelector('meta[name="color-scheme"]');
 
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
       root.style.backgroundColor = '#1e1e2e';
+      root.style.colorScheme = 'dark';
       document.body.style.backgroundColor = '#1e1e2e';
+      document.body.style.colorScheme = 'dark';
       if (metaThemeColor) metaThemeColor.setAttribute('content', '#1e1e2e');
+      if (metaColorScheme) metaColorScheme.setAttribute('content', 'dark');
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
       root.style.backgroundColor = '#e6e9ef';
+      root.style.colorScheme = 'dark';
       document.body.style.backgroundColor = '#e6e9ef';
+      document.body.style.colorScheme = 'dark';
       if (metaThemeColor) metaThemeColor.setAttribute('content', '#e6e9ef');
+      if (metaColorScheme) metaColorScheme.setAttribute('content', 'dark');
     }
   }, [theme]);
 
@@ -3932,9 +3940,7 @@ export default function App() {
               <header className="sticky top-0 lg:top-3 z-20 transition-colors liquid-glass-card rounded-none lg:rounded-2xl border-t-0 border-x-0 lg:border lg:mx-6 text-slate-900 dark:text-slate-50">
                 <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between max-w-[1440px] mx-auto w-full">
                   <div className="lg:hidden flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/30">
-                      <Activity className="w-4 h-4 text-white" />
-                    </div>
+                    <BrandLogo theme={theme} variant="auto" className="w-8 h-8 shrink-0 drop-shadow-sm" />
                     <span className="font-bold text-base tracking-tight">AuraMed</span>
                   </div>
 

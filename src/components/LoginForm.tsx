@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { authClient } from '../lib/authClient';
 import { ScenicBackground } from './ScenicBackground';
+import { BrandLogo } from './BrandLogo';
 
 interface LoginFormProps {
   theme: 'light' | 'dark';
@@ -155,15 +156,10 @@ export default function LoginForm({
       <header className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/25">
-            <Activity className="w-5 h-5 text-white" />
-          </div>
+          <BrandLogo theme={theme} variant="auto" className="w-10 h-10 shrink-0 drop-shadow-md" />
           <div className="flex items-center gap-1.5">
             <span className={`text-lg sm:text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               AuraMed
-            </span>
-            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold tracking-wider liquid-glass-subtle text-indigo-600 dark:text-indigo-300">
-              PRO
             </span>
           </div>
         </div>
@@ -606,7 +602,7 @@ export default function LoginForm({
       {/* ========================================================================= */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 gap-2">
         <div className="flex items-center gap-2">
-          <span>&copy; {new Date().getFullYear()} AuraMedPro CBT. Platform Pembahasan Soal Kedokteran & Farmasi.</span>
+          <span>&copy; {new Date().getFullYear()} AuraMed CBT. Platform Pembahasan Soal Kedokteran & Farmasi.</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">

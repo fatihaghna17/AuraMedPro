@@ -4,6 +4,7 @@ import {
   Trash2, RefreshCw, Sparkles, Sun, Moon, ArrowLeft, Database, Key, X, Check
 } from 'lucide-react';
 import { ScenicBackground } from './ScenicBackground';
+import { BrandLogo } from './BrandLogo';
 
 interface Payment {
   id: string;
@@ -391,12 +392,10 @@ export default function AdminScreen() {
       <header className="relative z-20 w-full px-6 sm:px-10 py-6 flex items-center justify-between">
         {/* Brand Logo & Admin Badge */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-black shadow-lg shadow-teal-500/20">
-            <Activity className="w-5 h-5 text-white animate-pulse" />
-          </div>
+          <BrandLogo theme={isDark ? 'dark' : 'light'} variant="auto" className="w-10 h-10 shrink-0 drop-shadow-md" />
           <div className="flex items-center gap-2">
             <span className={`text-lg sm:text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              AURAMED<span className="text-teal-400 font-extrabold">PRO</span>
+              AuraMed
             </span>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" />
@@ -1084,7 +1083,7 @@ export default function AdminScreen() {
       {/* FOOTER */}
       <footer className="relative z-20 w-full px-6 sm:px-10 py-6 text-center">
         <p className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-          © 2026 AuraMedPro CBT. Panel Pengelolaan Akun & Konfirmasi Pembayaran Admin.
+          © 2026 AuraMed CBT. Panel Pengelolaan Akun & Konfirmasi Pembayaran Admin.
         </p>
       </footer>
     </div>

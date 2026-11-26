@@ -31,7 +31,7 @@ export default function IosInstallModal({ isOpen, theme, onClose }: IosInstallMo
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-          Akses AuraMed PRO secara instan langsung dari Home Screen perangkat iOS Anda. Ikuti petunjuk sederhana ini menggunakan browser **Safari**:
+          Akses AuraMed secara instan langsung dari Home Screen perangkat iOS Anda. Ikuti petunjuk sederhana ini menggunakan browser **Safari**:
         </p>
 
         <div className="space-y-4">

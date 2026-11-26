@@ -17,7 +17,7 @@ export default function IosInstallBanner({ theme, onInstallClick }: IosInstallBa
           <Smartphone className="w-5 h-5 text-indigo-500" />
         </div>
         <div>
-          <h3 className="text-xs font-black text-indigo-500 uppercase tracking-wider flex items-center gap-1.5">📲 AuraMed PRO untuk iPhone & iPad</h3>
+          <h3 className="text-xs font-black text-indigo-500 uppercase tracking-wider flex items-center gap-1.5">📲 AuraMed untuk iPhone & iPad</h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
             Jadikan aplikasi ini sebagai PWA di perangkat iOS Anda untuk akses instan langsung dari Home Screen.
           </p>

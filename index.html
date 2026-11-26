@@ -3,13 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>AuraMed PRO</title>
+    <title>AuraMed</title>
     
     <!-- PWA / iOS Support -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AuraMed" />
+    <meta name="darkreader-lock" />
+    <meta name="color-scheme" content="dark" id="color-scheme-meta" />
     <meta name="theme-color" content="#1e1e2e" id="theme-color-meta" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
 
@@ -19,6 +21,7 @@
           var saved = localStorage.getItem('cbt_theme');
           var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
           var root = document.documentElement;
+          root.style.colorScheme = 'dark';
           if (isDark) {
             root.classList.add('dark');
             root.style.backgroundColor = '#1e1e2e';

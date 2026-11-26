@@ -8,7 +8,6 @@ import {
   type MotionValue,
 } from 'motion/react';
 import {
-  Activity,
   Home,
   BookOpen,
   PlusCircle,
@@ -39,6 +38,7 @@ import {
 } from '../utils/cultivatorAvatars';
 import { AVATAR_FRAMES, getSavedAvatarFrame, AvatarFrameId } from '../utils/avatarFrames';
 import { getStreakFlameStyle } from '../utils/appHelpers';
+import { BrandLogo } from './BrandLogo';
 
 interface PrimaryNavItem {
   id: string;
@@ -180,7 +180,7 @@ const DockOrb: React.FC<DockOrbProps> = ({
       className={`relative rounded-full flex items-center justify-center shrink-0 cursor-pointer group hover:scale-100 hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-sky-400 ${
         isActive
           ? isDark
-            ? 'bg-white text-[#0f172a] shadow-[0_8px_22px_-4px_rgba(255,255,255,0.45)]'
+            ? 'bg-gradient-to-b from-[#2f4578] to-[#1e2d54] text-[#7dd3fc] border border-[#7dd3fc]/55 shadow-[0_8px_22px_-4px_rgba(56,189,248,0.38),inset_0_1px_1px_rgba(255,255,255,0.32)]'
             : 'bg-white text-[#1d4ed8] ring-1 ring-[#3b82f6]/25 shadow-[0_8px_20px_-4px_rgba(29,78,216,0.26)]'
           : isDark
           ? 'bg-white/[0.10] hover:bg-white/[0.18] text-white/90 hover:text-white border border-white/[0.16] shadow-[inset_0_1px_1px_rgba(255,255,255,0.28)]'
@@ -467,14 +467,14 @@ export default function SidebarNav({
 
   // True dual-world optical liquid glass shell:
   // - Dark mode: Sapphire-to-midnight cosmic glass
-  // - Light mode: Luminous sky-ice frosted pearl glass with crisp contrast for the #ffffff liquid rail
+  // - Light mode: Crystal-clear bright translucent white liquid glass
   const shellBackground = isDark
     ? 'linear-gradient(180deg, rgba(72, 130, 226, 0.62) 0%, rgba(34, 60, 118, 0.78) 28%, rgba(15, 23, 46, 0.90) 64%, rgba(9, 13, 26, 0.96) 100%)'
-    : 'linear-gradient(165deg, rgba(214, 232, 255, 0.78) 0%, rgba(192, 216, 248, 0.66) 46%, rgba(206, 225, 252, 0.76) 100%)';
+    : 'linear-gradient(145deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0.46) 100%)';
 
   const shellShadow = isDark
     ? 'inset 0 1.5px 1px rgba(255, 255, 255, 0.42), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 24px 54px -12px rgba(2, 6, 23, 0.72), 0 6px 18px -4px rgba(2, 6, 23, 0.45)'
-    : 'inset 0 1.5px 1.5px rgba(255, 255, 255, 0.96), inset 0 -1px 1px rgba(255, 255, 255, 0.55), 0 20px 46px -10px rgba(30, 58, 118, 0.14), 0 4px 14px -2px rgba(30, 58, 118, 0.07)';
+    : 'inset 0 1.5px 1.5px rgba(255, 255, 255, 0.98), inset 0 -1px 1px rgba(255, 255, 255, 0.55), 0 18px 42px -10px rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.05)';
 
   return (
     <motion.aside
@@ -489,10 +489,10 @@ export default function SidebarNav({
         background: shellBackground,
         backdropFilter: isDark
           ? 'blur(32px) saturate(190%)'
-          : 'blur(32px) saturate(190%) brightness(103%)',
+          : 'blur(24px) saturate(190%) brightness(106%)',
         WebkitBackdropFilter: isDark
           ? 'blur(32px) saturate(190%)'
-          : 'blur(32px) saturate(190%) brightness(103%)',
+          : 'blur(24px) saturate(190%) brightness(106%)',
         boxShadow: shellShadow,
       }}
       className={`fixed top-3 bottom-3 left-3 z-30 hidden lg:flex overflow-hidden border select-none transition-colors duration-300 ${
@@ -530,13 +530,9 @@ export default function SidebarNav({
                 mouseY={dockMouseY}
                 isDark={isDark}
                 onClick={() => setCollapsed(false)}
-                label="Perluas Menu AuraMed PRO"
+                label="Perluas Menu AuraMed"
               >
-                <Activity
-                  className={`w-4.5 h-4.5 ${
-                    isDark ? 'text-white drop-shadow-xs' : 'text-[#1d4ed8]'
-                  }`}
-                />
+                <BrandLogo theme={theme} variant="mark" className="w-6 h-6" />
               </DockOrb>
 
               <DockOrb
@@ -713,7 +709,7 @@ export default function SidebarNav({
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full h-full flex"
           >
-            {/* Unified Porcelain-White Liquid Rail + Active Tab Bridge */}
+            {/* Unified Liquid Rail + Active Tab Bridge (Smoked Sapphire in Dark, Porcelain White in Light) */}
             <svg
               aria-hidden="true"
               width={EXPANDED_WIDTH}
@@ -722,11 +718,28 @@ export default function SidebarNav({
               className="pointer-events-none absolute inset-0 z-0"
               style={{
                 filter: isDark
-                  ? 'drop-shadow(-4px 6px 18px rgba(6, 12, 30, 0.24))'
+                  ? 'drop-shadow(-4px 6px 20px rgba(2, 6, 23, 0.58))'
                   : 'drop-shadow(-3px 5px 14px rgba(20, 48, 105, 0.13))',
               }}
             >
-              <motion.path d={railPath} fill="#ffffff" />
+              <defs>
+                <linearGradient id="sidebarDarkRailFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2a3d6b" stopOpacity="0.96" />
+                  <stop offset="48%" stopColor="#1e2c52" stopOpacity="0.96" />
+                  <stop offset="100%" stopColor="#16213e" stopOpacity="0.98" />
+                </linearGradient>
+                <linearGradient id="sidebarDarkRailStroke" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.45" />
+                  <stop offset="50%" stopColor="#818cf8" stopOpacity="0.30" />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.28" />
+                </linearGradient>
+              </defs>
+              <motion.path
+                d={railPath}
+                fill={isDark ? 'url(#sidebarDarkRailFill)' : '#ffffff'}
+                stroke={isDark ? 'url(#sidebarDarkRailStroke)' : 'none'}
+                strokeWidth={isDark ? 1.15 : 0}
+              />
             </svg>
 
             {/* LEFT COLUMN: Header, Search, Nav Pills, Workspace, Streak & Profile */}
@@ -742,16 +755,12 @@ export default function SidebarNav({
                       type="button"
                       onClick={() => onTabChange('home')}
                       title="Ke Beranda"
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer border ${
-                        isDark
-                          ? 'bg-gradient-to-b from-white/30 to-white/10 border-white/35 shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.55),0_6px_16px_rgba(8,15,35,0.25)]'
-                          : 'bg-gradient-to-b from-white/95 to-white/65 border-white shadow-[inset_0_1.5px_1px_#ffffff,0_6px_14px_rgba(29,78,216,0.14)]'
-                      }`}
+                      className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
                     >
-                      <Activity
-                        className={`w-4.5 h-4.5 ${
-                          isDark ? 'text-white drop-shadow-xs' : 'text-[#1d4ed8]'
-                        }`}
+                      <BrandLogo
+                        theme={theme}
+                        variant="auto"
+                        className="w-10 h-10 drop-shadow-[0_6px_14px_rgba(15,23,42,0.22)]"
                       />
                     </button>
                     <div className="min-w-0">
@@ -762,15 +771,6 @@ export default function SidebarNav({
                           }`}
                         >
                           AuraMed
-                        </span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider leading-none border ${
-                            isDark
-                              ? 'bg-white/18 border-white/25 text-sky-100'
-                              : 'bg-[#1d4ed8]/10 border-[#1d4ed8]/20 text-[#1d4ed8]'
-                          }`}
-                        >
-                          PRO
                         </span>
                       </div>
                       <p
@@ -881,9 +881,11 @@ export default function SidebarNav({
                           aria-current={isActive ? 'page' : undefined}
                           className={`w-full h-[40px] px-3.5 rounded-full flex items-center justify-between text-[12.5px] tracking-tight cursor-pointer relative overflow-hidden group hover:scale-100 hover:translate-y-0 active:scale-[0.99] transition-colors duration-150 ${
                             isActive
-                              ? 'text-[#0f172a] font-bold bg-transparent border border-transparent'
+                              ? isDark
+                                ? 'text-white font-bold bg-transparent border border-transparent'
+                                : 'text-[#0f172a] font-bold bg-transparent border border-transparent'
                               : isDark
-                              ? 'text-white/95 font-semibold bg-white/[0.09] hover:bg-white/[0.15] border border-white/[0.14] hover:border-white/[0.26] shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.22)]'
+                              ? 'text-white/90 font-semibold bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] hover:border-white/[0.24] shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.20)]'
                               : 'text-[#1e293b] hover:text-[#0f172a] font-semibold bg-white/44 hover:bg-white/68 border border-white/75 hover:border-white/95 shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.90),0_2px_6px_rgba(15,35,75,0.04)]'
                           }`}
                         >
@@ -903,10 +905,10 @@ export default function SidebarNav({
                               className={`w-4 h-4 shrink-0 transition-colors ${
                                 isActive
                                   ? isDark
-                                    ? 'text-[#0f172a] stroke-[2.25]'
+                                    ? 'text-[#7dd3fc] stroke-[2.25]'
                                     : 'text-[#1d4ed8] stroke-[2.25]'
                                   : isDark
-                                  ? 'text-white/90'
+                                  ? 'text-white/85'
                                   : 'text-[#2c4670]'
                               }`}
                             />
@@ -917,7 +919,7 @@ export default function SidebarNav({
                               className={`relative z-10 min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-extrabold tabular-nums flex items-center justify-center ${
                                 isActive
                                   ? isDark
-                                    ? 'bg-[#0f172a] text-white'
+                                    ? 'bg-[#38bdf8] text-[#0b1226]'
                                     : 'bg-[#1d4ed8] text-white'
                                   : 'bg-[#fbbf24] text-[#0f172a] shadow-xs'
                               }`}
@@ -972,7 +974,9 @@ export default function SidebarNav({
                             aria-current={isActive ? 'page' : undefined}
                             className={`w-full h-[36px] px-3 rounded-full flex items-center justify-between text-xs cursor-pointer hover:scale-100 hover:translate-y-0 active:scale-[0.99] transition-colors duration-150 ${
                               isActive
-                                ? 'text-[#0f172a] font-bold bg-transparent'
+                                ? isDark
+                                  ? 'text-white font-bold bg-transparent'
+                                  : 'text-[#0f172a] font-bold bg-transparent'
                                 : isDark
                                 ? 'text-white/90 hover:text-white font-medium bg-white/[0.04] hover:bg-white/[0.10] border border-white/[0.06] hover:border-white/[0.14]'
                                 : 'text-[#1e293b] hover:text-[#0f172a] font-medium bg-white/30 hover:bg-white/58 border border-white/55 hover:border-white/85'
@@ -982,7 +986,9 @@ export default function SidebarNav({
                               <span
                                 className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
                                   isActive
-                                    ? 'bg-[#0f172a]/[0.07]'
+                                    ? isDark
+                                      ? 'bg-white/[0.12]'
+                                      : 'bg-[#0f172a]/[0.07]'
                                     : isDark
                                     ? 'bg-white/[0.06]'
                                     : 'bg-white/65'
@@ -1002,7 +1008,7 @@ export default function SidebarNav({
                               className={`w-3.5 h-3.5 shrink-0 ${
                                 isActive
                                   ? isDark
-                                    ? 'text-[#334155]'
+                                    ? 'text-[#7dd3fc]'
                                     : 'text-[#1d4ed8]'
                                   : isDark
                                   ? 'text-white/60'
@@ -1171,10 +1177,12 @@ export default function SidebarNav({
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Porcelain-White Rail Quick Actions & Vertical Label */}
+            {/* RIGHT COLUMN: Liquid Rail Quick Actions & Vertical Label */}
             <div
               style={{ width: RAIL_WIDTH, marginRight: RAIL_PAD }}
-              className="relative z-10 h-full py-3.5 flex flex-col items-center justify-between text-[#1e293b] shrink-0"
+              className={`relative z-10 h-full py-3.5 flex flex-col items-center justify-between shrink-0 ${
+                isDark ? 'text-white' : 'text-[#1e293b]'
+              }`}
             >
               <div className="flex flex-col items-center gap-2 pt-0.5">
                 <button
@@ -1183,10 +1191,13 @@ export default function SidebarNav({
                   title={activeTab === 'new' ? 'Pilih Bank Soal' : 'Mulai Latihan Kuis'}
                   aria-label={activeTab === 'new' ? 'Pilih Bank Soal' : 'Mulai Latihan Kuis'}
                   style={{
-                    background: 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
+                    background: isDark
+                      ? 'linear-gradient(180deg, #38bdf8 0%, #6366f1 100%)'
+                      : 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
                     color: '#ffffff',
-                    boxShadow:
-                      '0 6px 14px -2px rgba(29, 78, 216, 0.48), inset 0 1px 1px rgba(255, 255, 255, 0.42)',
+                    boxShadow: isDark
+                      ? '0 6px 16px -2px rgba(56, 189, 248, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.45)'
+                      : '0 6px 14px -2px rgba(29, 78, 216, 0.48), inset 0 1px 1px rgba(255, 255, 255, 0.42)',
                   }}
                   className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
                 >
@@ -1203,7 +1214,11 @@ export default function SidebarNav({
                     onClick={() => onTabChange('banks')}
                     title="Tambah / Kelola Bank Soal"
                     aria-label="Tambah atau Kelola Bank Soal"
-                    className="w-8 h-8 rounded-full bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a] flex items-center justify-center cursor-pointer transition-colors"
+                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                      isDark
+                        ? 'bg-white/[0.08] hover:bg-white/[0.16] text-[#cbd5e1] hover:text-white border border-white/[0.10]'
+                        : 'bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a]'
+                    }`}
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.25]" />
                   </button>
@@ -1219,7 +1234,11 @@ export default function SidebarNav({
                       onClick={() => onTabChange(railContextSecondary.id)}
                       title={railContextSecondary.label}
                       aria-label={railContextSecondary.label}
-                      className="w-8 h-8 rounded-full bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a] flex items-center justify-center cursor-pointer transition-colors"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                        isDark
+                          ? 'bg-white/[0.08] hover:bg-white/[0.16] text-[#cbd5e1] hover:text-white border border-white/[0.10]'
+                          : 'bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a]'
+                      }`}
                     >
                       <SecondaryContextIcon className="w-3.5 h-3.5" />
                     </motion.button>
@@ -1235,7 +1254,11 @@ export default function SidebarNav({
                       aria-label={
                         isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'
                       }
-                      className="w-8 h-8 rounded-full bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a] flex items-center justify-center cursor-pointer transition-colors"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                        isDark
+                          ? 'bg-white/[0.08] hover:bg-white/[0.16] text-[#fde68a] hover:text-white border border-white/[0.10]'
+                          : 'bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a]'
+                      }`}
                     >
                       {isDark ? (
                         <Sun className="w-3.5 h-3.5" />
@@ -1249,7 +1272,11 @@ export default function SidebarNav({
                       onClick={() => onTabChange('analysis')}
                       title="Analisis Performa"
                       aria-label="Analisis Performa"
-                      className="w-8 h-8 rounded-full bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a] flex items-center justify-center cursor-pointer transition-colors"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                        isDark
+                          ? 'bg-white/[0.08] hover:bg-white/[0.16] text-[#cbd5e1] hover:text-white border border-white/[0.10]'
+                          : 'bg-[#0f172a]/[0.05] hover:bg-[#0f172a]/[0.11] text-[#475569] hover:text-[#0f172a]'
+                      }`}
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                     </button>
@@ -1269,7 +1296,9 @@ export default function SidebarNav({
                       writingMode: 'vertical-rl',
                       transform: 'rotate(180deg)',
                     }}
-                    className="text-[9px] font-extrabold tracking-[0.24em] text-[#64748b] uppercase whitespace-nowrap"
+                    className={`text-[9px] font-extrabold tracking-[0.24em] uppercase whitespace-nowrap ${
+                      isDark ? 'text-[#93c5fd]/75' : 'text-[#64748b]'
+                    }`}
                   >
                     {activeVerticalLabel}
                   </motion.span>

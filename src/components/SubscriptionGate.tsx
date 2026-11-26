@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { authClient, PaymentInfo } from '../lib/authClient';
 import { ScenicBackground } from './ScenicBackground';
+import { BrandLogo } from './BrandLogo';
 
 interface SubscriptionGateProps {
   theme: 'light' | 'dark';
@@ -92,12 +93,10 @@ export default function SubscriptionGate({
       <header className="relative z-20 w-full px-6 sm:px-10 py-6 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-indigo-650 text-white flex items-center justify-center font-black shadow-lg shadow-teal-500/20">
-            <Activity className="w-5 h-5 text-white animate-pulse" />
-          </div>
+          <BrandLogo theme={theme} variant="auto" className="w-10 h-10 shrink-0 drop-shadow-md" />
           <div className="flex items-center gap-1.5">
             <span className={`text-lg sm:text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              AURAMED<span className="text-teal-400 font-extrabold">PRO</span>
+              AuraMed
             </span>
             <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping inline-block" />
           </div>
@@ -326,7 +325,7 @@ export default function SubscriptionGate({
       {/* FOOTER */}
       <footer className="relative z-20 w-full px-6 sm:px-10 py-6 text-center">
         <p className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-          © 2026 AuraMedPro CBT. Platform Belajar & Simulasi UKMPPD / CBT Medis Terpadu.
+          © 2026 AuraMed CBT. Platform Belajar & Simulasi UKMPPD / CBT Medis Terpadu.
         </p>
       </footer>
     </div>
