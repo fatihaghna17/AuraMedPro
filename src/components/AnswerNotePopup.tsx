@@ -30,20 +30,20 @@ export default function AnswerNotePopup({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       <div
-        className="relative w-full max-w-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 liquid-glass-card text-slate-900 dark:text-white"
+        className="relative w-full sm:max-w-lg max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl shadow-2xl p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 flex flex-col gap-3.5 sm:gap-4 animate-in fade-in zoom-in-95 duration-200 liquid-glass-card text-slate-900 dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: data.isCorrect ? 'rgb(34 197 94 / 0.15)' : 'rgb(245 158 11 / 0.15)' }}
             >
               <StickyNote
@@ -57,29 +57,29 @@ export default function AnswerNotePopup({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400"
+            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400 shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Question Context */}
-        <div className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3 liquid-glass-subtle text-slate-600 dark:text-slate-300">
+        <div className="rounded-xl p-3 text-xs leading-relaxed line-clamp-3 liquid-glass-subtle text-slate-600 dark:text-slate-300 break-words">
           <span className="font-semibold text-slate-800 dark:text-slate-100">Soal:</span>{' '}
           {truncated}
         </div>
 
         {!data.isCorrect && (
-          <div className="flex gap-2">
-            <div className="flex-1 rounded-xl p-3 text-xs bg-rose-500/10 border border-rose-500/20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="rounded-xl p-3 text-xs bg-rose-500/10 border border-rose-500/20 min-w-0">
               <span className="font-semibold text-rose-500">Jawabanmu:</span>
-              <p className="mt-1 text-rose-700 dark:text-rose-300">
+              <p className="mt-1 text-rose-700 dark:text-rose-300 break-words line-clamp-3">
                 {data.userAnswer || '-'}
               </p>
             </div>
-            <div className="flex-1 rounded-xl p-3 text-xs bg-emerald-500/10 border border-emerald-500/20">
+            <div className="rounded-xl p-3 text-xs bg-emerald-500/10 border border-emerald-500/20 min-w-0">
               <span className="font-semibold text-emerald-500">Jawaban Benar:</span>
-              <p className="mt-1 text-emerald-700 dark:text-emerald-300">
+              <p className="mt-1 text-emerald-700 dark:text-emerald-300 break-words line-clamp-3">
                 {data.correctAnswer || '-'}
               </p>
             </div>
@@ -91,13 +91,13 @@ export default function AnswerNotePopup({
           value={noteInput}
           onChange={(e) => onNoteInputChange(e.target.value)}
           placeholder="Tulis catatan belajar di sini... (misal: konsep yang perlu diingat, tips mnemonik, referensi halaman buku, dll)"
-          rows={5}
-          className="w-full rounded-xl p-4 text-sm leading-relaxed resize-none outline-none transition-all liquid-glass-input text-slate-800 dark:text-slate-100 placeholder-slate-400"
+          rows={4}
+          className="w-full rounded-xl p-3.5 sm:p-4 text-sm leading-relaxed resize-none outline-none transition-all liquid-glass-input text-slate-800 dark:text-slate-100 placeholder-slate-400"
           autoFocus
         />
 
         {/* Footer Buttons */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           {existingNote ? (
             <button
               onClick={() => onDelete(data.questionText)}
@@ -109,7 +109,7 @@ export default function AnswerNotePopup({
           ) : (
             <div />
           )}
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-auto">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300"

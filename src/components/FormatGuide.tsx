@@ -34,20 +34,20 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
+    <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between min-w-0">
       {/* Header Bar */}
-      <div>
+      <div className="min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center flex-wrap gap-2">
                 <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Pusat Prompt AI & Format Soal
                 </h3>
-                <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
                   AI Ready
                 </span>
               </div>
@@ -58,43 +58,43 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex items-center gap-1 p-1 rounded-xl liquid-glass-subtle self-start sm:self-center">
+          <div className="flex items-center gap-1 p-1 rounded-xl liquid-glass-subtle w-full sm:w-auto max-w-full overflow-x-auto scrollbar-none self-start sm:self-center">
             <button
               type="button"
               onClick={() => setActiveTab('skill')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'skill'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5 shrink-0" />
               <span>Speedrun UB (SKILL.md)</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('prompt')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'prompt'
                   ? 'bg-indigo-600 text-white font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5 shrink-0" />
               <span>Prompt AI (.txt)</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('format')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'format'
                   ? 'bg-teal-600 text-white font-bold shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Code2 className="w-3.5 h-3.5" />
+              <Code2 className="w-3.5 h-3.5 shrink-0" />
               <span>Format CBT</span>
             </button>
           </div>
@@ -103,7 +103,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
         {/* Tab 1: Speedrun UB Tutor (SKILL.md) */}
         {activeTab === 'skill' && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div className={`p-4 rounded-2xl border transition-all ${
+            <div className={`p-3.5 sm:p-4 rounded-2xl border transition-all max-lg-liquid-subtle ${
               theme === 'dark'
                 ? 'bg-gradient-to-br from-amber-500/10 via-purple-500/10 to-indigo-500/10 border-amber-500/25'
                 : 'bg-gradient-to-br from-amber-50/90 via-indigo-50/60 to-purple-50/90 border-amber-200'
@@ -111,8 +111,8 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    Speedrun UB Tutor — Master PPT & Slide Synthesizer
+                    <Zap className="w-4 h-4 fill-amber-500 text-amber-500 shrink-0" />
+                    <span>Speedrun UB Tutor — Master PPT & Slide Synthesizer</span>
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium leading-relaxed">
                     Mau belajar materi kuliah dari slide PPT hanya dalam 15 menit tanpa melewatkan detail klinis?
@@ -120,37 +120,37 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full md:w-auto shrink-0">
                   <a
                     href="/speedrun_ub_skill.md"
                     download="SKILL.md"
-                    className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md bg-amber-500 hover:bg-amber-400 text-slate-950 active:scale-95"
+                    className="justify-center px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-md bg-amber-500 hover:bg-amber-400 text-slate-950 active:scale-95"
                     title="Download SKILL.md untuk Speedrun PPT"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Unduh SKILL.md</span>
+                    <Download className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Unduh SKILL.md</span>
                   </a>
 
                   <button
                     type="button"
                     onClick={handleCopySkill}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer border active:scale-95 ${
+                    className={`justify-center px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 sm:gap-2 cursor-pointer border active:scale-95 ${
                       copied === 'skill'
                         ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/40'
-                        : theme === 'dark'
-                        ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                        : (theme === 'dark'
+                          ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200') + ' max-lg-liquid-interactive'
                     }`}
                   >
                     {copied === 'skill' ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-500">Tersalin!</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="text-emerald-500 truncate">Tersalin!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Salin Prompt</span>
+                        <Copy className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Salin Prompt</span>
                       </>
                     )}
                   </button>
@@ -158,7 +158,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
               </div>
 
               {/* Code Preview Box */}
-              <div className="relative rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-slate-950/80 text-slate-300 text-[11px] font-mono p-4 max-h-[160px] overflow-y-auto">
+              <div className="relative rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-slate-950/80 text-slate-300 text-[11px] font-mono p-3.5 sm:p-4 max-h-[160px] overflow-y-auto">
                 <p className="text-amber-400 font-bold mb-1"># Instruksi Utama Skill:</p>
                 <p className="leading-relaxed opacity-90">
                   Kamu adalah Master Tutor & Knowledge Synthesizer yang ahli mengekstrak, merangkum, dan mengajarkan materi dari file PowerPoint (PPT) akademik maupun profesional. Tugasmu adalah mengubah slide yang padat menjadi pemahaman mendalam, catatan Obsidian terstruktur, dan sesi tanya-jawab interaktif yang perlahan dan teliti tanpa melupakan detail kecil yang ada di materi...
@@ -175,7 +175,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
         {/* Tab 2: Panduan Memori AI (.txt) */}
         {activeTab === 'prompt' && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div className={`p-4 rounded-2xl border transition-all ${
+            <div className={`p-3.5 sm:p-4 rounded-2xl border transition-all max-lg-liquid-subtle ${
               theme === 'dark'
                 ? 'bg-gradient-to-br from-indigo-500/10 via-teal-500/10 to-slate-900/50 border-indigo-500/25'
                 : 'bg-gradient-to-br from-indigo-50/90 via-teal-50/60 to-slate-50 border-indigo-200'
@@ -183,45 +183,45 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-indigo-500" />
-                    Panduan Memori Prompt AI — Pembuat Kuis AuraMed Pro
+                    <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <span>Panduan Memori Prompt AI — Pembuat Kuis AuraMed Pro</span>
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium leading-relaxed">
                     Salin teks memori ini di awal percakapan dengan AI (ChatGPT / Claude / Gemini) agar AI otomatis menghasilkan format JSON/YAML valid yang langsung siap diimpor ke AuraMed Pro.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full md:w-auto shrink-0">
                   <a
                     href="/panduan_prompt_ai.txt"
                     download="panduan_prompt_ai.txt"
-                    className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95"
+                    className="justify-center px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-md bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95"
                     title="Unduh file panduan_prompt_ai.txt"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Unduh .txt</span>
+                    <Download className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Unduh .txt</span>
                   </a>
 
                   <button
                     type="button"
                     onClick={handleCopyPrompt}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer border active:scale-95 ${
+                    className={`justify-center px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 sm:gap-2 cursor-pointer border active:scale-95 ${
                       copied === 'prompt'
                         ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/40'
-                        : theme === 'dark'
-                        ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                        : (theme === 'dark'
+                          ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200') + ' max-lg-liquid-interactive'
                     }`}
                   >
                     {copied === 'prompt' ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-500">Tersalin!</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="text-emerald-500 truncate">Tersalin!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Salin Teks</span>
+                        <Copy className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Salin Teks</span>
                       </>
                     )}
                   </button>
@@ -229,9 +229,9 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
               </div>
 
               {/* Code Preview Box */}
-              <div className="relative rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-slate-950/80 text-slate-300 text-[11px] font-mono p-4 max-h-[160px] overflow-y-auto">
+              <div className="relative rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-slate-950/80 text-slate-300 text-[11px] font-mono p-3.5 sm:p-4 max-h-[160px] overflow-y-auto">
                 <p className="text-indigo-400 font-bold mb-1">// Aturan Memori Terstruktur:</p>
-                <p className="leading-relaxed opacity-90">
+                <p className="leading-relaxed opacity-90 break-words">
                   MEMORI #1 (Instruksi Utama): Saat user bilang "buat kuis", tentukan format: PG, Flashcard, atau Campuran. Wajib kode JSON valid tanpa teks pembuka/penutup.<br />
                   MEMORI #3 (Metadata PG): &#123;"blok": "...", "sub_kompetensi_klinis": "Penegakan Diagnosis", "tingkat_kesulitan": "Sulit", "xp": 30&#125;<br />
                   MEMORI #4 (Soal & Opsi): &#123;"nomor": 1, "pertanyaan": "Vignet klinis...", "pilihan": [...], "jawaban_benar": "...", "pembahasan": "..."&#125;<br />
@@ -245,21 +245,21 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
         {/* Tab 3: Format Soal CBT */}
         {activeTab === 'format' && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div className={`p-4 rounded-2xl border transition-all ${
+            <div className={`p-3.5 sm:p-4 rounded-2xl border transition-all max-lg-liquid-subtle ${
               theme === 'dark'
                 ? 'bg-gradient-to-br from-teal-500/10 via-indigo-500/10 to-slate-900/50 border-teal-500/25'
                 : 'bg-gradient-to-br from-teal-50/90 via-indigo-50/60 to-slate-50 border-teal-200'
             }`}>
               <h4 className="text-xs font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5 mb-2">
-                <Code2 className="w-4 h-4 text-teal-500" />
-                Format Data Soal JSON & YAML
+                <Code2 className="w-4 h-4 text-teal-500 shrink-0" />
+                <span>Format Data Soal JSON & YAML</span>
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-3">
                 Platform CBT AuraMed mendukung tipe soal Pilihan Ganda (MCQ) & Isian Singkat (Flashcard) dalam format tunggal maupun berkas gabungan (Campuran).
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div className={`p-3 rounded-xl border ${
+                <div className={`p-3 rounded-xl border max-lg-liquid-subtle ${
                   theme === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'
                 }`}>
                   <div className="flex items-center gap-2 font-black text-indigo-500 mb-1">
@@ -271,7 +271,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
                   </p>
                 </div>
 
-                <div className={`p-3 rounded-xl border ${
+                <div className={`p-3 rounded-xl border max-lg-liquid-subtle ${
                   theme === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'
                 }`}>
                   <div className="flex items-center gap-2 font-black text-teal-500 mb-1">
@@ -283,7 +283,7 @@ export default function FormatGuide({ theme }: FormatGuideProps) {
                   </p>
                 </div>
 
-                <div className={`p-3 rounded-xl border ${
+                <div className={`p-3 rounded-xl border max-lg-liquid-subtle ${
                   theme === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'
                 }`}>
                   <div className="flex items-center gap-2 font-black text-amber-500 mb-1">

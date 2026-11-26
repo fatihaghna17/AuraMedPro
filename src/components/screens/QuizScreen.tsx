@@ -250,7 +250,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
   return (
     <>
-          <div className="relative min-h-screen pb-24">
+          <div className="relative min-h-screen pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-24 min-w-0">
 
 
             <QuizHeader
@@ -271,36 +271,61 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
             {/* Split View Content Layout - Memoized to prevent timer tick re-renders */}
             {useMemo(() => (
-              <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="max-w-[1400px] mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
                 
                 {/* Left Side: Active Question Card Panel */}
-                <div className="lg:col-span-8 space-y-6 w-full max-w-[820px] mx-auto">
+                <div className="lg:col-span-8 space-y-3.5 sm:space-y-6 w-full max-w-[820px] mx-auto min-w-0">
+
+                  {/* Mobile Live Status Strip (LV, XP, Combo, Terjawab) */}
+                  <div className="flex lg:hidden items-center justify-between gap-2 px-3 py-2 rounded-2xl liquid-glass-subtle tabular-nums text-[11px] font-bold">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 shrink-0">
+                        LV {getLevelInfo(userXP).level}
+                      </span>
+                      <span className="text-slate-600 dark:text-slate-300 truncate">
+                        {userXP} XP
+                      </span>
+                      {currentCombo > 0 && (
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border shrink-0 ${comboFlame.badgeClass}`}>
+                          <Flame className={`w-3 h-3 fill-current ${comboFlame.flameColor}`} />
+                          <span className={comboFlame.textColor}>{currentCombo}x</span>
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileQuizNavOpen(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0 cursor-pointer"
+                    >
+                      <span>{userAnswers.filter(a => a !== null && a !== undefined && a !== '').length}/{currentQuiz.length} Terjawab</span>
+                    </button>
+                  </div>
                   
                   {/* Main Question Card with Liquid Glass */}
-                  <div className="p-5 sm:p-7 rounded-2xl liquid-glass-card quiz-card">
+                  <div className="p-4 sm:p-7 rounded-2xl liquid-glass-card quiz-card">
                     
                     {/* Sub-kompetensi & Kesulitan tag */}
-                    <div className="flex items-center justify-between gap-3 mb-5 pb-3.5 border-b border-slate-200/60 dark:border-white/10 flex-wrap">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center justify-between gap-2.5 sm:gap-3 mb-4 sm:mb-5 pb-3.5 border-b border-slate-200/60 dark:border-white/10 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 min-w-0 flex-1">
                         <span className="truncate font-bold text-slate-800 dark:text-slate-100">
                           {currentQuiz[currentIndex].metadata?.sub_kompetensi_klinis || 'Sains Medis'}
                         </span>
-                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                        <span className="text-slate-300 dark:text-slate-700 shrink-0">•</span>
                         {quizMode === 'rmo' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 tabular-nums">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 tabular-nums shrink-0">
                             RMO (+4 / -1 / 0)
                           </span>
                         ) : quizMode === 'blok' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
                             Ujian Blok
                           </span>
                         ) : quizMode === 'suddendeath' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30 shrink-0">
                             Sudden Death (1 Nyawa)
                           </span>
                         ) : (
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold border ${
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold border shrink-0 ${
                             currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sukar' || currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'sulit'
                               ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
                               : currentQuiz[currentIndex].metadata?.tingkat_kesulitan?.toLowerCase() === 'mudah'
@@ -331,7 +356,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               );
                               openGeminiTutor(prompt, triggerToast);
                             }}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 transition-colors cursor-pointer"
+                            className="min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 transition-colors cursor-pointer"
                             title="Salin konteks soal & buka Gemini AI"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
@@ -342,7 +367,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         <button
                           type="button"
                           onClick={handleToggleOrApplyHighlighter}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                          className={`min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                             isHighlighterMode
                               ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50'
                               : currentHighlights.length > 0
@@ -363,7 +388,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                           <button
                             type="button"
                             onClick={clearCurrentHighlights}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border border-rose-500/25 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                            className="min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border border-rose-500/25 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
                             title="Bersihkan stabilo pada soal ini"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -373,7 +398,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         <button
                           type="button"
                           onClick={() => setVignetteFontSize(prev => prev === 'normal' ? 'large' : 'normal')}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                          className={`min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
                             vignetteFontSize === 'large'
                               ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border-indigo-500/40'
                               : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
@@ -384,7 +409,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         </button>
                         <button
                           onClick={copyQuestionToClipboard}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 cursor-pointer"
+                          className="min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 cursor-pointer"
                           title="Salin Soal & Opsi ke Clipboard"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -400,7 +425,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
                               }
                             }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                            className={`min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                               studyRoom.isBookmarked(currentQuiz[currentIndex]) 
                                 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/35' 
                                 : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
@@ -413,7 +438,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                         )}
                         <button
                           onClick={handleCycleSoundPack}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                          className={`min-h-[34px] lg:min-h-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                             soundPack === 'mute'
                               ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                               : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
@@ -428,9 +453,9 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     {/* Highlighter Mode Helper Bar */}
                     {isHighlighterMode && (
-                      <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200 animate-fade-in">
-                        <div className="flex items-center gap-2">
-                          <Highlighter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-start sm:items-center justify-between gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200 animate-fade-in">
+                        <div className="flex items-start sm:items-center gap-2 min-w-0">
+                          <Highlighter className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
                           <span>
                             <strong>Mode Stabilo Aktif:</strong> Blok kalimat atau ketuk kata penting pada soal untuk menstabilo. Klik stabilo untuk menghapus.
                           </span>
@@ -447,15 +472,15 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
                     {/* Sudden Death Tension Banner */}
                     {quizMode === 'suddendeath' && (
-                      <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-lg">💀</span>
-                          <div>
+                      <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between gap-3">
+                        <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                          <span className="text-lg shrink-0">💀</span>
+                          <div className="min-w-0">
                             <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">Mode Sudden Death (1 Nyawa)</span>
                             <span className="text-[11px] text-slate-500 dark:text-slate-400">1 kali salah = Langsung Gugur! Presisi klinis tanpa kompromi.</span>
                           </div>
                         </div>
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border tabular-nums ${comboFlame.badgeClass}`} title={`Streak: ${currentCombo} Soal • ${comboFlame.tierName}`}>
+                        <div className={`shrink-0 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg border tabular-nums ${comboFlame.badgeClass}`} title={`Streak: ${currentCombo} Soal • ${comboFlame.tierName}`}>
                           <span className="text-xs font-bold">Streak:</span>
                           <span className={`text-sm font-bold flex items-center gap-1 ${comboFlame.textColor}`}>
                             {currentCombo}
@@ -568,12 +593,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                   }
                                   selectAnswer(opt);
                                 }}
-                                className="flex-1 flex items-start gap-3.5 p-3.5 sm:p-4 text-left text-xs sm:text-sm font-semibold cursor-pointer active:scale-[0.99]"
+                                className="flex-1 min-w-0 flex items-start gap-3 sm:gap-3.5 p-3.5 sm:p-4 text-left text-xs sm:text-sm font-semibold cursor-pointer active:scale-[0.99]"
                               >
                                 <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-extrabold text-xs flex-shrink-0 transition-all ${bubbleClass}`}>
                                   {letters[i]}
                                 </div>
-                                <div className={`flex-1 mt-0.5 text-xs sm:text-sm font-semibold leading-relaxed ${
+                                <div className={`flex-1 min-w-0 break-words mt-0.5 text-xs sm:text-sm font-semibold leading-relaxed ${
                                   isStruck ? 'line-through decoration-2 decoration-rose-500/70' : ''
                                 }`}>
                                   {renderHtmlText(opt)}
@@ -589,7 +614,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                     toggleOptionStrikethrough(i, opt);
                                   }}
                                   title={isStruck ? 'Batal coret opsi ini' : 'Coret / eliminasi opsi ini (atau klik kanan)'}
-                                  className={`p-2 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                                  className={`w-9 h-9 lg:w-auto lg:h-auto p-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer shrink-0 ${
                                     isStruck
                                       ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30 hover:bg-rose-500/25'
                                       : 'text-slate-400 hover:text-rose-500 hover:bg-rose-500/10'
@@ -823,13 +848,13 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               </span>
                             </div>
 
-                            <div className="p-5 space-y-4">
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
-                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <div className="p-4 sm:p-5 space-y-4">
+                              <div className="inline-flex items-start sm:items-center flex-wrap gap-1.5 px-3 py-1.5 sm:py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 break-words max-w-full">
+                                <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0 mt-0.5 sm:mt-0" />
                                 {currentQuiz[currentIndex].pilihan && currentQuiz[currentIndex].pilihan.length > 0 ? (
-                                  <span>Kunci Jawaban: {correctLetter}. {correctOptionText}</span>
+                                  <span className="break-words min-w-0">Kunci Jawaban: {correctLetter}. {correctOptionText}</span>
                                 ) : (
-                                  <span>Kunci Jawaban: {currentQuiz[currentIndex].jawaban_benar}</span>
+                                  <span className="break-words min-w-0">Kunci Jawaban: {currentQuiz[currentIndex].jawaban_benar}</span>
                                 )}
                               </div>
 
@@ -837,9 +862,9 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                                   Pembahasan Detail
                                 </h4>
-                                <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                                <div data-quiz-html className="text-sm leading-relaxed text-slate-800 dark:text-slate-200 break-words overflow-x-auto">
                                   {currentQuiz[currentIndex].pembahasan ? renderHtmlText(currentQuiz[currentIndex].pembahasan) : 'Tidak ada uraian penjelasan untuk soal ini.'}
-                                </p>
+                                </div>
                               </div>
 
                               {currentQuiz[currentIndex].eliminasi_opsi && Object.keys(currentQuiz[currentIndex].eliminasi_opsi!).length > 0 && (
@@ -873,11 +898,11 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                                             </span>
                                             <div className="flex-1 min-w-0">
                                               {optText && (
-                                                <div className="font-bold text-xs text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                                                <div className="font-bold text-xs text-slate-900 dark:text-slate-100 mb-1 leading-snug break-words">
                                                   {renderHtmlText(optText)}
                                                 </div>
                                               )}
-                                              <div className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                                              <div className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed break-words">
                                                 {renderHtmlText(desc)}
                                               </div>
                                             </div>
@@ -891,7 +916,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               {/* Shortcut AI Tutor (Gemini) */}
                               {Boolean(isRevealed[currentIndex] && userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== '') && (
                                 <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-white/10">
-                                  <div className="p-4 rounded-xl liquid-glass-subtle">
+                                  <div className="p-3.5 sm:p-4 rounded-xl liquid-glass-subtle">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                       <div className="flex items-start gap-3 min-w-0">
                                         <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
@@ -938,7 +963,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                               <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 flex justify-end">
                                 <button
                                   onClick={handleNextQuestion}
-                                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer"
+                                  className="w-full sm:w-auto justify-center flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer"
                                 >
                                   {currentIndex < currentQuiz.length - 1 ? 'Lanjut ke Soal Berikutnya →' : 'Selesai & Kirim'}
                                 </button>
@@ -1104,19 +1129,23 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               currentIndex={currentIndex}
               onNavigate={(idx) => { setCurrentIndex(idx); setMobileQuizNavOpen(false); }}
               onClose={() => setMobileQuizNavOpen(false)}
+              onFinishQuiz={openFinishModal || finishQuiz}
             />
 
             <MobileBottomActionBar
               theme={theme}
               currentIndex={currentIndex}
               totalQuestions={currentQuiz.length}
+              isLastQuestion={isAdaptiveMode ? currentIndex >= 29 : currentIndex === currentQuiz.length - 1}
               isDoubt={doubtStatus[currentIndex]}
               isRevealed={isRevealed[currentIndex]}
-              hasAnswer={userAnswers[currentIndex] !== null}
+              hasAnswer={userAnswers[currentIndex] !== null && userAnswers[currentIndex] !== undefined && userAnswers[currentIndex] !== ''}
               hideCheckAnswer={quizMode === 'rmo' || quizMode === 'blok'}
+              showClearAnswer={quizMode === 'rmo'}
+              onClearAnswer={() => setUserAnswers((prev: any) => { const next = [...prev]; next[currentIndex] = null; return next; })}
               onDoubtToggle={() => setDoubtStatus(prev => { const u = [...prev]; u[currentIndex] = !u[currentIndex]; return u; })}
               onPrev={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-              onNext={() => setCurrentIndex(prev => Math.min(currentQuiz.length - 1, prev + 1))}
+              onNext={handleNextQuestion}
               onCheck={() => checkAnswerNow({} as any)}
               onFinish={() => {
                 if (openFinishModal) {

@@ -11,7 +11,7 @@ export default function HistoryAnalyticsPanel({
   theme, analytics, expandedCompetencies, onToggleExpand,
 }: HistoryAnalyticsPanelProps) {
   return (
-    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card">
+    <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card">
       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-3">Analisis Sub-Kompetensi</h3>
       <div className={`divide-y ${
         theme === 'dark' ? 'divide-white/10' : 'divide-slate-200/60'

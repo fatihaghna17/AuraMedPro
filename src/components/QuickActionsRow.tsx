@@ -13,11 +13,11 @@ interface QuickActionsRowProps {
 export default function QuickActionsRow({
   pendingCount, pendingProgress, onNewQuiz, onResumeOrBanks, onBanks,
 }: QuickActionsRowProps) {
-  const cardClass = "group flex items-center justify-between p-4 sm:p-5 rounded-2xl liquid-glass-interactive cursor-pointer";
+  const cardClass = "group flex items-center justify-between p-3.5 sm:p-5 rounded-2xl liquid-glass-interactive cursor-pointer";
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
         
         {/* Card 1: Try-Out Baru */}
         <div onClick={onNewQuiz} className={cardClass}>

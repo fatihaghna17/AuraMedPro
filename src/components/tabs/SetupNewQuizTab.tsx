@@ -30,8 +30,8 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
   regularTimerEnabled = true, setRegularTimerEnabled
 }) => {
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
-      <div className="p-6 sm:p-7 rounded-2xl liquid-glass-card space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-2xl mx-auto animate-fade-in">
+      <div className="p-4 sm:p-7 rounded-2xl liquid-glass-card space-y-5 sm:space-y-6">
         <div>
           <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             Konfigurasi Kuis CBT Baru
@@ -42,12 +42,12 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
         </div>
 
         {selectedDatabases.length === 0 ? (
-          <div className="text-center py-10 rounded-xl liquid-glass-subtle">
+          <div className="text-center py-10 px-4 rounded-xl liquid-glass-subtle">
             <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
             <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Anda belum memilih bank soal untuk diujikan.</p>
             <button
               onClick={() => setDashboardTab('banks')}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl mt-4 cursor-pointer shadow-sm shadow-indigo-600/20 transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl mt-4 cursor-pointer shadow-sm shadow-indigo-600/20 transition-colors"
             >
               Pilih Bank Soal Terlebih Dahulu
             </button>
@@ -63,12 +63,12 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                 {selectedDatabases.map((key) => (
                   <span 
                     key={key} 
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20 flex items-center gap-2"
+                    className="max-w-full min-w-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20 flex items-center gap-2"
                   >
-                    <span>{key.split('/').pop()}</span>
+                    <span className="truncate min-w-0">{key.split('/').pop()}</span>
                     <button 
                       onClick={() => setSelectedDatabases((prev: string[]) => prev.filter(d => d !== key))}
-                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold shrink-0 cursor-pointer"
                       title="Hapus dari seleksi"
                     >
                       ×
@@ -87,7 +87,7 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                             setSelectedDatabases((prev: string[]) => prev.filter(d => d !== key));
                           }
                         }}
-                        className="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                        className="text-slate-400 hover:text-rose-500 transition-colors shrink-0 cursor-pointer"
                         title="Hapus bank soal secara permanen"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -107,15 +107,15 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setQuizMode('utuh')}
-                  className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`flex flex-col items-start p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     quizMode === 'utuh'
                       ? 'bg-indigo-500/15 border-indigo-500/50 text-indigo-600 dark:text-indigo-300 ring-1 ring-indigo-500/25 shadow-xs'
                       : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-between gap-2 w-full">
                     <span className="text-xs font-extrabold uppercase tracking-wide">Sequential (Standar)</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-500/10 font-bold">Bebas</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-500/10 font-bold shrink-0">Bebas</span>
                   </div>
                   <span className="text-[11px] opacity-80 mt-1.5 leading-relaxed">
                     Latihan fleksibel dengan pembahasan langsung per nomor & urutan asli file.
@@ -126,15 +126,15 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setQuizMode('simulasi')}
-                    className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`flex flex-col items-start p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                       quizMode === 'simulasi'
                         ? 'bg-indigo-500/15 border-indigo-500/50 text-indigo-600 dark:text-indigo-300 ring-1 ring-indigo-500/25 shadow-xs'
                         : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between gap-2 w-full">
                       <span className="text-xs font-extrabold uppercase tracking-wide">Simulasi Acak</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-500 font-bold">Campuran</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-500 font-bold shrink-0">Campuran</span>
                     </div>
                     <span className="text-[11px] opacity-80 mt-1.5 leading-relaxed">
                       Gabung seluruh bank soal terpilih & acak merata dengan fitur cek jawaban.
@@ -148,17 +148,17 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                     setQuizMode('rmo');
                     setIsAdaptiveMode(false);
                   }}
-                  className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`flex flex-col items-start p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     quizMode === 'rmo'
                       ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500/25 shadow-xs'
                       : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-between gap-2 w-full">
                     <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
                       🏆 Simulasi RMO
                     </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold tabular-nums">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold tabular-nums shrink-0">
                       +4 / -1 / 0
                     </span>
                   </div>
@@ -173,17 +173,17 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                     setQuizMode('blok');
                     setIsAdaptiveMode(false);
                   }}
-                  className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`flex flex-col items-start p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     quizMode === 'blok'
                       ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/25 shadow-xs'
                       : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-between gap-2 w-full">
                     <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
                       📝 Simulasi Ujian Blok
                     </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold tabular-nums">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold tabular-nums shrink-0">
                       Maks 100 Soal
                     </span>
                   </div>
@@ -198,17 +198,17 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
                     setQuizMode('suddendeath');
                     setIsAdaptiveMode(false);
                   }}
-                  className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`flex flex-col items-start p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     quizMode === 'suddendeath'
                       ? 'bg-rose-500/15 border-rose-500/50 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500/30 shadow-xs'
                       : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-between gap-2 w-full">
                     <span className="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
                       💀 Sudden Death
                     </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-700 dark:text-rose-300 font-extrabold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-700 dark:text-rose-300 font-extrabold shrink-0">
                       1 Nyawa
                     </span>
                   </div>
@@ -252,17 +252,17 @@ export const SetupNewQuizTab: React.FC<SetupNewQuizTabProps> = ({
 
             {/* Checkbox configs */}
             <div className="flex flex-col gap-3 pt-2">
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 max-lg-liquid-subtle max-lg:p-3 max-lg:rounded-xl">
                 <input
                   type="checkbox"
                   checked={shuffleQuestions}
                   onChange={(e) => setShuffleQuestions(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 shrink-0"
                 />
                 <span>Acak urutan kemunculan soal</span>
               </label>
 
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="hidden lg:flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={keyboardNavEnabled}

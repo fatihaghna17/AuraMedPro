@@ -25,7 +25,7 @@ export const SessionSummary: React.FC<SessionSummaryProps> = ({
   const allMastered = unknownCount === 0 && totalCards > 0;
 
   return (
-    <div className="w-full max-w-[520px] mx-auto fc3d-panel rounded-[28px] p-7 sm:p-9 text-center animate-fade-in-up">
+    <div className="w-full max-w-[520px] mx-auto fc3d-panel rounded-[28px] p-5 sm:p-9 text-center animate-fade-in-up">
       <div className="w-12 h-12 mx-auto rounded-2xl fc3d-chip flex items-center justify-center text-emerald-600 dark:text-emerald-400">
         <CheckCircle2 className="w-6 h-6" />
       </div>
@@ -36,8 +36,8 @@ export const SessionSummary: React.FC<SessionSummaryProps> = ({
       <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300 truncate">{deckTitle}</p>
 
       {/* Progress visual ringkas */}
-      <div className="mt-7 space-y-2.5 text-left">
-        <div className="flex items-baseline justify-between text-xs font-semibold tabular-nums">
+      <div className="mt-6 sm:mt-7 space-y-2.5 text-left">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs font-semibold tabular-nums">
           <span className="text-emerald-700 dark:text-emerald-300">Hafal {knownCount}</span>
           <span className="text-slate-500 dark:text-slate-400">{pct}% dari {totalCards} kartu</span>
           <span className="text-rose-700 dark:text-rose-300">Belum {unknownCount}</span>

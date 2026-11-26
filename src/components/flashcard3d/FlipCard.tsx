@@ -140,7 +140,7 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
         style={{ opacity: knownOpacity }}
         className="pointer-events-none absolute inset-0 rounded-[inherit] fc3d-tint-known"
       >
-        <span className="absolute top-5 left-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-tight fc3d-stamp-known">
+        <span className="absolute top-11 sm:top-5 left-4 sm:left-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-tight fc3d-stamp-known">
           <Check className="w-3.5 h-3.5" strokeWidth={3} /> Hafal
         </span>
       </motion.div>
@@ -149,7 +149,7 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
         style={{ opacity: unknownOpacity }}
         className="pointer-events-none absolute inset-0 rounded-[inherit] fc3d-tint-unknown"
       >
-        <span className="absolute top-5 right-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-tight fc3d-stamp-unknown">
+        <span className="absolute top-11 sm:top-5 right-4 sm:right-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-tight fc3d-stamp-unknown">
           <X className="w-3.5 h-3.5" strokeWidth={3} /> Belum hafal
         </span>
       </motion.div>
@@ -279,13 +279,13 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
             aria-hidden={flipped}
           >
             {surfaceFx}
-            <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-1">
+            <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-1">
               <span className="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
                 No. {number}
               </span>
               {statusDot}
             </div>
-            <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center gap-4 px-6 sm:px-9 py-4 text-center overflow-y-auto overscroll-contain fc3d-scroll">
+            <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center gap-4 px-4 sm:px-9 py-4 text-center overflow-y-auto overscroll-contain fc3d-scroll">
               {card.front.image && renderImage(card.front.image, 'Gambar pertanyaan', !!card.front.text)}
               {card.front.text && (
                 <div
@@ -294,7 +294,7 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
                 />
               )}
             </div>
-            <div className="relative z-10 pb-5 pt-1 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <div className="relative z-10 pb-4 sm:pb-5 pt-1 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
               <RotateCcw className="w-3 h-3 opacity-80" />
               <span>Ketuk kartu untuk melihat jawaban</span>
             </div>
@@ -310,7 +310,7 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
             aria-hidden={!flipped}
           >
             {surfaceFx}
-            <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-1">
+            <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-1">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                 Jawaban
@@ -319,7 +319,7 @@ export const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(function FlipC
                 No. {number}
               </span>
             </div>
-            <div className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain fc3d-scroll fc3d-scroll-mask px-6 sm:px-9 py-4 flex flex-col gap-4 select-text">
+            <div className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain fc3d-scroll fc3d-scroll-mask px-4 sm:px-9 py-4 flex flex-col gap-4 select-text">
               <div className="my-auto flex flex-col gap-4">
                 {card.back.image && renderImage(card.back.image, 'Gambar keterangan', !!card.back.text)}
                 {card.back.text && (

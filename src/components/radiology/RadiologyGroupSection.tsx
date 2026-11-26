@@ -119,19 +119,19 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* HEADER SECTION */}
-      <div className={`p-6 rounded-3xl border ${
+      <div className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border max-lg-liquid-card ${
         isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white border-slate-200'
       } shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-teal-400 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-500/20 shrink-0">
-            <BookOpen className="w-6 h-6" />
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-teal-400 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-500/20 shrink-0">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-black">Latihan CBT Radiologi (Essay)</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/25">
+          <div className="min-w-0">
+            <div className="flex items-center flex-wrap gap-2">
+              <h3 className="text-lg sm:text-xl font-black">Latihan CBT Radiologi (Essay)</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/25 shrink-0">
                 Koreksi Manual Admin
               </span>
             </div>
@@ -143,9 +143,9 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
 
         <button
           onClick={() => setShowImportModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition text-sm whitespace-nowrap"
+          className="w-full md:w-auto justify-center flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition text-xs sm:text-sm whitespace-nowrap cursor-pointer"
         >
-          <PlusCircle className="w-4 h-4" /> Buat / Upload Paket Soal
+          <PlusCircle className="w-4 h-4 shrink-0" /> Buat / Upload Paket Soal
         </button>
       </div>
 
@@ -157,7 +157,7 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
           ))}
         </div>
       ) : packets.length === 0 ? (
-        <div className={`p-10 text-center rounded-3xl border-2 border-dashed ${
+        <div className={`p-8 sm:p-10 text-center rounded-2xl sm:rounded-3xl border-2 border-dashed max-lg-liquid-subtle ${
           isDark ? 'border-slate-700 bg-slate-800/40 text-slate-400' : 'border-slate-300 bg-slate-50 text-slate-500'
         }`}>
           <BookOpen className="w-12 h-12 mx-auto text-indigo-500 mb-3 opacity-60" />
@@ -167,13 +167,13 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
           </p>
           <button
             onClick={() => setShowImportModal(true)}
-            className="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition cursor-pointer"
           >
             Tambah Paket Contoh Sekarang
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {packets.map(packet => {
             const mySubmission = submissions.find(
               s => s.packet_id === packet.id && s.user_id === currentUser?.id
@@ -185,7 +185,7 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
             return (
               <div
                 key={packet.id}
-                className={`p-6 rounded-3xl border transition flex flex-col justify-between ${
+                className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition flex flex-col justify-between max-lg-liquid-card ${
                   isDark
                     ? 'bg-slate-800/90 border-slate-700 shadow-xl shadow-slate-950/30'
                     : 'bg-white border-slate-200 shadow-md shadow-slate-200/50'
@@ -194,8 +194,8 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                 <div>
                   {/* TOP CARD BAR */}
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <h4 className="text-lg font-black line-clamp-1">{packet.title}</h4>
+                    <div className="min-w-0">
+                      <h4 className="text-base sm:text-lg font-black line-clamp-1">{packet.title}</h4>
                       <p className={`text-xs line-clamp-2 mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         {packet.description}
                       </p>
@@ -204,7 +204,7 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                     {isAssignedAdmin && (
                       <button
                         onClick={() => handleDeletePacket(packet.id)}
-                        className={`p-1.5 rounded-lg text-slate-400 hover:text-red-500 transition ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+                        className={`p-2 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-500 transition shrink-0 cursor-pointer ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
                         title="Hapus Paket"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -217,11 +217,11 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                     <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-500">
                       {packet.questions?.length || 0} Soal Essay
                     </span>
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 max-lg-liquid-subtle ${
                       isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'
                     }`}>
-                      <User className="w-3.5 h-3.5 text-indigo-500" />
-                      Korektor: <strong className="text-indigo-600 dark:text-indigo-400">{packet.admin_name}</strong>
+                      <User className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span>Korektor: <strong className="text-indigo-600 dark:text-indigo-400">{packet.admin_name}</strong></span>
                     </span>
 
                     {/* STATUS PENGERJAAN USER */}
@@ -244,13 +244,13 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                 </div>
 
                 {/* BOTTOM ACTION BUTTONS */}
-                <div className={`pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3 ${
+                <div className={`pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 ${
                   isDark ? 'border-slate-700/80' : 'border-slate-100'
                 }`}>
                   {/* TOMBOL KERJAKAN BAGI PESERTA */}
                   <button
                     onClick={() => setActiveExamPacket(packet)}
-                    className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+                    className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                       mySubmission?.status === 'graded'
                         ? 'bg-green-600 text-white hover:bg-green-700 shadow-md shadow-green-600/20'
                         : mySubmission?.status === 'pending'
@@ -270,12 +270,12 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                   {isAssignedAdmin && (
                     <button
                       onClick={() => setShowSubmissionsListModal(packet)}
-                      className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 border ${
+                      className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 border cursor-pointer ${
                         pendingCount > 0
                           ? 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25'
-                          : isDark
-                          ? 'border-slate-700 text-slate-300 hover:bg-slate-700'
-                          : 'border-slate-200 text-slate-700 hover:bg-slate-100'
+                          : (isDark
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-700'
+                            : 'border-slate-200 text-slate-700 hover:bg-slate-100') + ' max-lg-liquid-interactive'
                       }`}
                     >
                       <span>Ruang Koreksi Admin</span>
@@ -309,26 +309,32 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
 
       {/* MODAL RUANG KOREKSI ADMIN (DAFTAR SUBMISSION MAHASISWA) */}
       {showSubmissionsListModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
-          <div className={`w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden border ${
-            isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-          }`}>
-            <div className={`p-5 flex items-center justify-between border-b ${
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-in fade-in duration-200"
+          onClick={() => setShowSubmissionsListModal(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full sm:max-w-3xl max-h-[90dvh] flex flex-col rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden border max-lg-liquid-card ${
+              isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className={`p-4 sm:p-5 flex items-center justify-between gap-3 border-b max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div>
-                <h3 className="font-black text-lg">Daftar Pengumpulan Ujian</h3>
-                <p className="text-xs opacity-70">{showSubmissionsListModal.title}</p>
+              <div className="min-w-0">
+                <h3 className="font-black text-base sm:text-lg">Daftar Pengumpulan Ujian</h3>
+                <p className="text-xs opacity-70 truncate">{showSubmissionsListModal.title}</p>
               </div>
               <button
                 onClick={() => setShowSubmissionsListModal(null)}
-                className={`p-2 rounded-xl transition ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'}`}
+                className={`p-2 rounded-xl transition shrink-0 cursor-pointer max-lg-liquid-interactive ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'}`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-3">
               {(() => {
                 const subs = submissions.filter(s => s.packet_id === showSubmissionsListModal.id);
                 if (subs.length === 0) {
@@ -343,13 +349,13 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                 return subs.map(sub => (
                   <div
                     key={sub.id}
-                    className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition ${
+                    className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition max-lg-liquid-subtle ${
                       isDark ? 'bg-slate-800/70 border-slate-700' : 'bg-white border-slate-200'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-sm">{sub.username}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center flex-wrap gap-2">
+                        <span className="font-black text-sm truncate">{sub.username}</span>
                         {sub.status === 'graded' ? (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-green-500/15 text-green-600 dark:text-green-400">
                             Dinilai ({sub.score}/100)
@@ -370,7 +376,7 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                         setGradingModalData({ packet: showSubmissionsListModal, submission: sub });
                         setShowSubmissionsListModal(null);
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20 whitespace-nowrap"
+                      className="w-full sm:w-auto text-center justify-center px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20 whitespace-nowrap cursor-pointer"
                     >
                       {sub.status === 'graded' ? 'Ubah Penilaian' : 'Koreksi Lembar Jawaban'}
                     </button>
@@ -398,26 +404,32 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
 
       {/* MODAL IMPORT PAKET SOAL RADIOLOGI */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in zoom-in-95 duration-200">
-          <div className={`w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden border ${
-            isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-          }`}>
-            <div className={`p-5 flex items-center justify-between border-b ${
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 animate-in fade-in zoom-in-95 duration-200"
+          onClick={() => setShowImportModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full sm:max-w-2xl max-h-[92dvh] flex flex-col rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden border max-lg-liquid-card ${
+              isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className={`p-4 sm:p-5 flex items-center justify-between gap-2.5 border-b max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="flex items-center gap-2.5">
-                <UploadCloud className="w-5 h-5 text-indigo-500" />
-                <h3 className="font-black text-lg">Buat / Import Paket Soal Radiologi</h3>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <UploadCloud className="w-5 h-5 text-indigo-500 shrink-0" />
+                <h3 className="font-black text-base sm:text-lg truncate">Buat / Import Paket Soal Radiologi</h3>
               </div>
               <button
                 onClick={() => setShowImportModal(false)}
-                className={`p-2 rounded-xl transition ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'}`}
+                className={`p-2 rounded-xl transition shrink-0 cursor-pointer max-lg-liquid-interactive ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'}`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
               {/* PILIH ADMIN KOREKTOR UNTUK PAKET INI */}
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider mb-1.5 opacity-80">
@@ -426,7 +438,7 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
                 <select
                   value={importAdminId}
                   onChange={(e) => setImportAdminId(e.target.value)}
-                  className={`w-full p-3 rounded-xl text-sm font-semibold border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
+                  className={`w-full p-3 rounded-xl text-sm font-semibold border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 max-lg-liquid-input ${
                     isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                   }`}
                 >
@@ -449,49 +461,49 @@ export const RadiologyGroupSection: React.FC<RadiologyGroupSectionProps> = ({
 
               {/* INPUT JSON */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                   <label className="text-xs font-black uppercase tracking-wider opacity-80">
                     Paste Kode JSON Soal Radiologi:
                   </label>
                   <button
                     type="button"
                     onClick={() => setImportJson(JSON.stringify(DEFAULT_SAMPLE_RADIOLOGY_PACKET, null, 2))}
-                    className="text-xs font-bold text-indigo-500 hover:underline flex items-center gap-1"
+                    className="text-xs font-bold text-indigo-500 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" /> Pakai Template Kasus Default
                   </button>
                 </div>
 
                 <textarea
-                  rows={9}
+                  rows={8}
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
                   placeholder={`Tempelkan format JSON hasil generator AI di sini...\nAtau klik tombol "Pakai Template Kasus Default" di atas untuk membuat paket simulasi otomatis.`}
-                  className={`w-full p-3 font-mono text-xs rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
+                  className={`w-full p-3 font-mono text-xs rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 max-lg-liquid-input ${
                     isDark ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
                   }`}
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                💡 <strong>Tips:</strong> Anda bisa menyalin prompt generator di <strong>public/panduan_soal_radiologi.txt</strong> lalu memintanya di ChatGPT / Gemini untuk membuat ragam kasus lain (misal: Efusi Pleura, TB Milier, Pneumoperitoneum, dsb).
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-600 dark:text-indigo-400 break-words">
+                💡 <strong>Tips:</strong> Anda bisa menyalin prompt generator di <strong className="break-all">public/panduan_soal_radiologi.txt</strong> lalu memintanya di ChatGPT / Gemini untuk membuat ragam kasus lain (misal: Efusi Pleura, TB Milier, Pneumoperitoneum, dsb).
               </div>
             </div>
 
-            <div className={`p-4 sm:p-5 flex justify-end gap-3 border-t ${
+            <div className={`p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 flex justify-end gap-2.5 sm:gap-3 border-t max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
             }`}>
               <button
                 type="button"
                 onClick={() => setShowImportModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 max-lg-liquid-interactive transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={handleImportPacket}
-                className="px-6 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition"
+                className="px-5 sm:px-6 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition cursor-pointer"
               >
                 Simpan & Rilis Paket Soal
               </button>

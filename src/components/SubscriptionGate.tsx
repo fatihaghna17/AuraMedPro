@@ -90,25 +90,25 @@ export default function SubscriptionGate({
       <ScenicBackground theme={theme} fixed={false} />
 
       {/* TOP BAR / HEADER */}
-      <header className="relative z-20 w-full px-6 sm:px-10 py-6 flex items-center justify-between">
+      <header className="relative z-20 w-full px-4 sm:px-10 pt-[max(1rem,env(safe-area-inset-top))] pb-4 sm:py-6 flex items-center justify-between gap-2">
         {/* Brand Logo */}
-        <div className="flex items-center gap-3">
-          <BrandLogo theme={theme} variant="auto" className="w-10 h-10 shrink-0 drop-shadow-md" />
-          <div className="flex items-center gap-1.5">
-            <span className={`text-lg sm:text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <BrandLogo theme={theme} variant="auto" className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 drop-shadow-md" />
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className={`text-base sm:text-xl font-black tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
               AuraMed
             </span>
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping inline-block" />
+            <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping inline-block shrink-0" />
           </div>
         </div>
 
         {/* Right Actions: Theme Toggle & Logout / Switch Account */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {onToggleTheme && (
             <button
               type="button"
               onClick={onToggleTheme}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border max-lg-liquid-interactive ${
                 isDark 
                   ? 'bg-white/10 hover:bg-white/20 border-white/15 text-amber-300' 
                   : 'bg-white/60 hover:bg-white border-white/40 text-indigo-600 shadow-sm'
@@ -123,7 +123,7 @@ export default function SubscriptionGate({
             <button
               type="button"
               onClick={onLogout}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 max-lg-liquid-interactive ${
                 isDark
                   ? 'bg-white/10 hover:bg-white/20 border-white/15 text-slate-200 hover:text-white'
                   : 'bg-white/60 hover:bg-white border-white/40 text-slate-700 hover:text-slate-900 shadow-sm'
@@ -138,18 +138,18 @@ export default function SubscriptionGate({
       </header>
 
       {/* CENTER MAIN: Glassmorphic Payment Card */}
-      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-4 py-8">
-        <div className={`w-full max-w-lg mx-auto rounded-[32px] p-6 sm:p-8 transition-all backdrop-blur-2xl border shadow-2xl ${
+      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-3.5 sm:px-4 py-4 sm:py-8">
+        <div className={`w-full max-w-lg mx-auto rounded-[28px] sm:rounded-[32px] p-4 sm:p-8 transition-all backdrop-blur-2xl border shadow-2xl max-lg-liquid-card ${
           isDark
             ? 'bg-slate-900/80 border-white/15 text-white shadow-black/40'
             : 'bg-white/80 border-white/80 text-slate-900 shadow-slate-200/50'
         }`}>
           {/* Header Icon & Title */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-5 sm:mb-6">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-teal-500 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-xl shadow-teal-500/20 mb-4 animate-pulse">
               <Sparkles className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-3xl font-black tracking-tight">
               Masa Akses Berakhir
             </h1>
             <p className={`text-xs mt-2 font-medium leading-relaxed max-w-sm mx-auto ${
@@ -160,16 +160,16 @@ export default function SubscriptionGate({
           </div>
 
           {/* Pricing Banner with Features */}
-          <div className={`rounded-2xl p-4 sm:p-5 mb-6 border relative overflow-hidden backdrop-blur-md ${
+          <div className={`rounded-2xl p-4 sm:p-5 mb-5 sm:mb-6 border relative overflow-hidden backdrop-blur-md max-lg-liquid-subtle ${
             isDark
               ? 'bg-white/[0.05] border-white/10 text-white'
               : 'bg-gradient-to-b from-teal-50/80 to-indigo-50/80 border-teal-100/80 text-slate-900'
           }`}>
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                 isDark ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-teal-500/15 text-teal-700 border border-teal-500/25'
               }`}>
-                <ShieldCheck className="w-3.5 h-3.5" />
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                 Paket Unlimited CBT
               </span>
               <span className={`text-[10px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -207,10 +207,10 @@ export default function SubscriptionGate({
           </div>
 
           {/* QRIS Display Container */}
-          <div className={`rounded-2xl p-5 mb-5 border space-y-4 ${
+          <div className={`rounded-2xl p-4 sm:p-5 mb-5 border space-y-4 max-lg-liquid-subtle ${
             isDark ? 'bg-slate-800/80 border-slate-700/80' : 'bg-slate-50/90 border-slate-200/80'
           }`}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-1.5">
               <span className={`text-xs font-black uppercase tracking-wider ${
                 isDark ? 'text-teal-400' : 'text-teal-600'
               }`}>
@@ -226,7 +226,7 @@ export default function SubscriptionGate({
                 <img 
                   src="/qris.jpg" 
                   alt="QRIS AuraMedPro" 
-                  className="w-48 h-48 sm:w-52 sm:h-52 rounded-xl object-cover" 
+                  className="w-44 h-44 sm:w-52 sm:h-52 rounded-xl object-cover" 
                 />
               </div>
               <p className={`text-[11px] font-medium text-center mt-3 max-w-xs ${
@@ -237,7 +237,7 @@ export default function SubscriptionGate({
             </div>
 
             {/* Nominal Box with One-Click Copy */}
-            <div className={`rounded-xl p-3.5 flex items-center justify-between border ${
+            <div className={`rounded-xl p-3.5 flex items-center justify-between gap-2 border max-lg-liquid-subtle ${
               isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-slate-200'
             }`}>
               <div>
@@ -246,19 +246,19 @@ export default function SubscriptionGate({
                 }`}>
                   Nominal Transfer
                 </span>
-                <span className="text-xl font-black">
+                <span className="text-lg sm:text-xl font-black">
                   {formattedNominal}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => handleCopy(nominal.toString())}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shrink-0 ${
                   copied
                     ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                    : isDark
+                    : (isDark
                       ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200'
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                      : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700') + ' max-lg-liquid-interactive'
                 }`}
                 title="Salin nominal transfer"
               >
@@ -274,11 +274,11 @@ export default function SubscriptionGate({
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 rounded-full font-black text-xs uppercase tracking-wider text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full px-4 py-3.5 sm:py-4 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider text-center text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-4 h-4 shrink-0" />
               <span>Kirim Bukti Pembayaran ke WhatsApp</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />
             </a>
 
             {mayarPaymentUrl && (
@@ -286,15 +286,15 @@ export default function SubscriptionGate({
                 href={mayarPaymentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                className={`w-full px-4 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 border max-lg-liquid-interactive ${
                   isDark
                     ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white'
                     : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm'
                 }`}
               >
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-4 h-4 shrink-0" />
                 <span>Bayar via Mayar / Kartu Kredit</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                <ExternalLink className="w-3.5 h-3.5 opacity-70 shrink-0" />
               </a>
             )}
 
@@ -302,13 +302,13 @@ export default function SubscriptionGate({
               type="button"
               onClick={handleRefresh}
               disabled={checking}
-              className={`w-full py-3 rounded-full font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+              className={`w-full px-4 py-3 rounded-full font-bold text-xs text-center transition-all cursor-pointer flex items-center justify-center gap-2 border max-lg-liquid-interactive ${
                 isDark
                   ? 'bg-white/[0.05] hover:bg-white/10 border-white/10 text-slate-300'
                   : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
               }`}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${checking ? 'animate-spin text-teal-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${checking ? 'animate-spin text-teal-400' : ''}`} />
               <span>{checking ? 'Memeriksa status...' : refreshSuccess ? '✅ Status Diperbarui!' : 'Sudah Bayar? Cek Status Langganan'}</span>
             </button>
           </div>
@@ -323,7 +323,7 @@ export default function SubscriptionGate({
       </main>
 
       {/* FOOTER */}
-      <footer className="relative z-20 w-full px-6 sm:px-10 py-6 text-center">
+      <footer className="relative z-20 w-full px-4 sm:px-10 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:py-6 text-center">
         <p className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
           © 2026 AuraMed CBT. Platform Belajar & Simulasi UKMPPD / CBT Medis Terpadu.
         </p>

@@ -64,12 +64,12 @@ export default function CreateFolderModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md p-6 rounded-2xl shadow-2xl animate-pop-up liquid-glass-card text-slate-900 dark:text-white">
+      <div className="w-full sm:max-w-md max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 rounded-t-[28px] sm:rounded-2xl shadow-2xl animate-pop-up liquid-glass-card text-slate-900 dark:text-white">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
           <div className="flex items-center gap-3">

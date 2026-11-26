@@ -11,7 +11,7 @@ interface DailyChallengeCardProps {
 export default function DailyChallengeCard({ onStart, startDailyChallenge }: DailyChallengeCardProps) {
   const handleStart = onStart || startDailyChallenge;
   return (
-    <div className="p-5 rounded-2xl liquid-glass-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="p-4 sm:p-5 rounded-2xl liquid-glass-card flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
       <div className="flex items-start gap-3.5">
         <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-xs">
           <Flame className="w-5 h-5 text-amber-500" />

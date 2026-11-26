@@ -61,7 +61,7 @@ export default function PomodoroWidget({
   const currentMeta = modeThemes[mode] || modeThemes.focus;
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
+    <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-3.5">
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export default function PomodoroWidget({
 
       {/* Mode Selector Tabs */}
       {onSelectMode && (
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl liquid-glass-subtle mb-4">
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 rounded-xl liquid-glass-subtle mb-4">
           {(['focus', 'break', 'long_break'] as PomodoroMode[]).map((m) => {
             const isSelected = mode === m;
             const meta = modeThemes[m];
@@ -89,14 +89,21 @@ export default function PomodoroWidget({
                 key={m}
                 type="button"
                 onClick={() => onSelectMode(m)}
-                className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer truncate ${
+                className={`py-1.5 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer truncate ${
                   isSelected
                     ? meta.activeBadge + ' shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/10'
                 }`}
               >
-                <span>{meta.icon}</span>
-                <span className="truncate">{meta.label}</span>
+                <span className="shrink-0">{meta.icon}</span>
+                {m === 'long_break' ? (
+                  <>
+                    <span className="truncate sm:hidden">Panjang</span>
+                    <span className="truncate hidden sm:inline">{meta.label}</span>
+                  </>
+                ) : (
+                  <span className="truncate">{meta.label}</span>
+                )}
               </button>
             );
           })}

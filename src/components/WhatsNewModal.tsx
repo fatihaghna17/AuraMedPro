@@ -7,12 +7,18 @@ interface WhatsNewModalProps {
 
 export const WhatsNewModal: React.FC<WhatsNewModalProps> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="p-6 relative">
+    <div
+      className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-slate-900 max-lg-liquid-card w-full sm:max-w-sm max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800"
+      >
+        <div className="p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 relative">
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 max-lg-liquid-interactive text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -56,7 +62,7 @@ export const WhatsNewModal: React.FC<WhatsNewModalProps> = ({ onClose }) => {
 
           <button 
             onClick={onClose}
-            className="w-full mt-8 py-3.5 rounded-xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all"
+            className="w-full mt-7 sm:mt-8 py-3.5 rounded-xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all cursor-pointer"
           >
             Sip, Mengerti!
           </button>

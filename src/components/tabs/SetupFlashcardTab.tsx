@@ -350,9 +350,9 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
 
   // --- SUB-VIEW: DAFTAR DECK ---
   return (
-    <div className="w-full max-w-5xl mx-auto pb-24 lg:pb-10 animate-fade-in">
+    <div className="w-full max-w-5xl mx-auto pb-4 lg:pb-10 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5 sm:mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
             Flashcard 3D
@@ -365,31 +365,31 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
         </div>
 
         {decks.length > 0 && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto shrink-0">
             <button
               type="button"
               onClick={() => refreshFromCloud()}
               disabled={syncing}
               aria-label="Muat ulang deck dari server"
               title="Muat ulang dari server"
-              className="w-10 h-10 rounded-xl liquid-glass-subtle-interactive flex items-center justify-center text-slate-700 dark:text-slate-200 disabled:opacity-50 cursor-pointer"
+              className="w-10 h-10 rounded-xl liquid-glass-subtle-interactive flex items-center justify-center text-slate-700 dark:text-slate-200 disabled:opacity-50 shrink-0 cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             </button>
             <button
               type="button"
               onClick={() => setImportOpen(true)}
-              className="px-3.5 py-2.5 rounded-xl liquid-glass-subtle-interactive text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 inline-flex items-center gap-2 cursor-pointer"
+              className="flex-1 sm:flex-none justify-center px-3.5 py-2.5 rounded-xl liquid-glass-subtle-interactive text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 inline-flex items-center gap-2 cursor-pointer"
             >
-              <FileUp className="w-4 h-4" />
+              <FileUp className="w-4 h-4 shrink-0" />
               <span>Import JSON</span>
             </button>
             <button
               type="button"
               onClick={() => setView({ kind: 'editor' })}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              className="flex-1 sm:flex-none justify-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 shrink-0" />
               <span>Buat Deck</span>
             </button>
           </div>
@@ -420,7 +420,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
             type="button"
             disabled={publishingAll}
             onClick={handlePublishAllLocal}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-55 text-white text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0 inline-flex items-center justify-center gap-1.5"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-55 text-white text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0 inline-flex items-center justify-center gap-1.5"
           >
             <CloudUpload className="w-3.5 h-3.5" />
             {publishingAll
@@ -451,7 +451,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
         </div>
       ) : decks.length === 0 ? (
         /* Empty state dengan kartu 3D hidup */
-        <div className="fc3d-panel rounded-[28px] px-6 py-10 sm:py-12 text-center">
+        <div className="fc3d-panel rounded-[28px] px-4 sm:px-6 py-8 sm:py-12 text-center">
           <PreviewMiniCard />
 
           <h2 className="mt-8 text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
@@ -533,7 +533,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
                         openSession(deck.id);
                       }
                     }}
-                    className="fc3d-deck-tile group relative rounded-[22px] p-5 flex flex-col justify-between min-h-[164px] text-left cursor-pointer"
+                    className="fc3d-deck-tile group relative rounded-[22px] p-4 sm:p-5 flex flex-col justify-between min-h-[156px] sm:min-h-[164px] text-left cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -587,7 +587,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
                       </div>
 
                       {editable && (
-                        <div className="flex items-center gap-0.5 shrink-0 opacity-85 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 lg:gap-0.5 shrink-0 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
                           <button
                             type="button"
                             aria-label={`Edit ${deck.title}`}
@@ -595,7 +595,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
                               e.stopPropagation();
                               setView({ kind: 'editor', deckId: deck.id });
                             }}
-                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            className="p-2 lg:p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -619,7 +619,7 @@ export const SetupFlashcardTab: React.FC<SetupFlashcardTabProps> = ({
                                 }
                               );
                             }}
-                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            className="p-2 lg:p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>

@@ -222,45 +222,45 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className={`w-full max-w-7xl max-h-[96vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden border ${
+    <div className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className={`w-full max-w-7xl h-[100dvh] sm:h-auto sm:max-h-[96vh] flex flex-col rounded-none sm:rounded-3xl shadow-2xl overflow-hidden border max-lg-liquid-card ${
         isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
       }`}>
         {/* TOP BAR */}
-        <div className={`p-4 sm:p-5 flex items-center justify-between border-b shrink-0 ${
+        <div className={`px-3.5 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:py-5 flex flex-wrap items-center justify-between gap-2.5 border-b shrink-0 max-lg-liquid-subtle ${
           isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-slate-50 border-slate-200'
         }`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20 shrink-0">
               <Award className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black">Ruang Koreksi Manual Admin</h2>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+            <div className="min-w-0">
+              <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-lg font-black">Ruang Koreksi Manual Admin</h2>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 shrink-0">
                   Rubrik Terintegrasi
                 </span>
               </div>
-              <p className="text-xs font-semibold opacity-70">
+              <p className="text-xs font-semibold opacity-70 truncate">
                 Peserta: <strong className="text-indigo-500">{submission.username}</strong> • Paket: {packet.title}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
             {/* REAL-TIME SCORE DISPLAY */}
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-600 dark:text-green-400 font-black text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-600 dark:text-green-400 font-black text-xs sm:text-sm tabular-nums">
               <span className="opacity-75 hidden sm:inline">Skor Soal #{activeQuestionIdx + 1}:</span>
-              <span className="text-sm sm:text-base text-green-400 font-extrabold">{currentQScore} pts</span>
+              <span className="text-xs sm:text-base text-green-400 font-extrabold">{currentQScore} pts</span>
               <span className="opacity-30">|</span>
-              <span className="opacity-75">Total Nilai:</span>
-              <span className="text-base sm:text-lg">{calculatedScore}</span>
+              <span className="opacity-75">Total:</span>
+              <span className="text-sm sm:text-lg">{calculatedScore}</span>
               <span className="text-xs font-normal opacity-70">/ 100</span>
             </div>
 
             <button
               onClick={onClose}
-              className={`p-2 rounded-xl transition ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+              className={`p-2 rounded-xl transition cursor-pointer shrink-0 max-lg-liquid-interactive ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
               title="Tutup"
             >
               <X className="w-5 h-5" />
@@ -270,17 +270,17 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
 
         {/* SELECTOR SOAL JIKA LEBIH DARI 1 */}
         {questions.length > 1 && (
-          <div className={`px-5 py-2.5 flex items-center gap-2 border-b text-xs font-bold shrink-0 overflow-x-auto ${
+          <div className={`px-3.5 sm:px-5 py-2.5 flex items-center gap-2 border-b text-xs font-bold shrink-0 overflow-x-auto scrollbar-none ${
             isDark ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-100/70 border-slate-200'
           }`}>
-            <span className="opacity-70 shrink-0">Pilih Soal yang Dinilai:</span>
+            <span className="opacity-70 shrink-0">Pilih Soal:</span>
             {questions.map((q, idx) => {
               const qScore = calculateScoreForQuestion(q.id, q.region);
               return (
                 <button
                   key={q.id}
                   onClick={() => setActiveQuestionIdx(idx)}
-                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeQuestionIdx === idx
                       ? 'bg-indigo-600 text-white font-black shadow-md'
                       : isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
@@ -302,15 +302,15 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             KOLOM 1: SOAL, GAMBAR, JAWABAN PESERTA & KOLOM FEEDBACK
             KOLOM 2: DUAL CHECKLIST (KIRI THORAX, KANAN ABDOMEN) 
         */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6">
           
           {/* SISI KIRI (XL: 5 COLUMNS): DETAIL SOAL & JAWABAN MAHASISWA & FEEDBACK */}
-          <div className="xl:col-span-5 space-y-5">
+          <div className="xl:col-span-5 space-y-4 sm:space-y-5 min-w-0">
             {/* IDENTITAS SOAL & VIGNETTE */}
-            <div className={`p-4 rounded-2xl border ${
+            <div className={`p-4 rounded-2xl border max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between flex-wrap gap-1.5 mb-2">
                 <span className="text-xs font-black uppercase text-indigo-500">
                   Kasus Soal #{activeQuestionIdx + 1} ({currentQ?.region.toUpperCase()})
                 </span>
@@ -320,14 +320,14 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm font-medium leading-relaxed break-words">
                 {currentQ?.vignette}
               </p>
             </div>
 
             {/* GAMBAR RONTGEN */}
             {adminImage && (
-              <div className={`p-3 rounded-2xl border ${
+              <div className={`p-3 rounded-2xl border max-lg-liquid-subtle ${
                 isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'
               }`}>
                 <div className="flex justify-between items-center mb-2">
@@ -336,7 +336,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                   </span>
                   <button
                     onClick={() => setLightboxImg(adminImage)}
-                    className="flex items-center gap-1 text-[11px] font-bold text-indigo-500 hover:underline"
+                    className="flex items-center gap-1 text-[11px] font-bold text-indigo-500 hover:underline cursor-pointer"
                   >
                     <Maximize2 className="w-3 h-3" /> Zoom Foto
                   </button>
@@ -358,18 +358,18 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             )}
 
             {/* JAWABAN ESSAY MAHASISWA */}
-            <div className={`p-5 rounded-2xl border ${
+            <div className={`p-4 sm:p-5 rounded-2xl border max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800 border-indigo-500/30' : 'bg-white border-indigo-200'
             } shadow-sm`}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between flex-wrap gap-1.5 mb-2">
                 <span className="text-xs font-black uppercase tracking-wider text-indigo-500 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" /> Jawaban Peserta ({submission.username})
+                  <FileText className="w-4 h-4 shrink-0" /> Jawaban Peserta ({submission.username})
                 </span>
                 <span className="text-[11px] font-semibold opacity-60">
                   {submission.created_at ? new Date(submission.created_at).toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}
                 </span>
               </div>
-              <div className={`p-3.5 rounded-xl text-sm font-medium leading-relaxed whitespace-pre-line min-h-[120px] max-h-[260px] overflow-y-auto ${
+              <div className={`p-3.5 rounded-xl text-sm font-medium leading-relaxed whitespace-pre-line break-words min-h-[120px] max-h-[260px] overflow-y-auto ${
                 isDark ? 'bg-slate-900/90 text-slate-100 border border-slate-700' : 'bg-slate-50 text-slate-800 border border-slate-200'
               }`}>
                 {submission.answers?.[currentQ?.id] ? (
@@ -381,18 +381,18 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             </div>
 
             {/* KOLOM FEEDBACK UNTUK KOREKTOR (DI BAWAH SOAL/JAWABAN) */}
-            <div className={`p-5 rounded-2xl border ${
+            <div className={`p-4 sm:p-5 rounded-2xl border max-lg-liquid-subtle ${
               isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
             } shadow-sm`}>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-indigo-500" /> Kolom Feedback untuk Korektor
+                <MessageSquare className="w-4 h-4 text-indigo-500 shrink-0" /> Kolom Feedback untuk Korektor
               </label>
               <textarea
                 rows={4}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Berikan catatan, evaluasi kekurangan, atau masukan bimbingan kepada peserta di sini... (Catatan ini akan langsung tampil di lembar hasil ujian peserta)."
-                className={`w-full p-3 rounded-xl text-sm font-medium leading-relaxed transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-y ${
+                className={`w-full p-3 rounded-xl text-sm font-medium leading-relaxed transition focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-y max-lg-liquid-input ${
                   isDark
                     ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
                     : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
@@ -402,8 +402,8 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
           </div>
 
           {/* SISI KANAN (XL: 7 COLUMNS): CHECKLIST DUAL (KIRI THORAX, KANAN ABDOMEN) */}
-          <div className="xl:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="xl:col-span-7 space-y-4 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wide">
                   Lembar Penilaian Checklist Interaktif
@@ -413,7 +413,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleFillPerfectCurrent}
@@ -436,17 +436,17 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
               {/* CHECKLIST 1: FOTO THORAX (SISI KIRI) */}
-              <div className={`p-4 rounded-2xl border flex flex-col justify-between ${
+              <div className={`p-4 rounded-2xl border flex flex-col justify-between max-lg-liquid-subtle ${
                 currentQ?.region === 'thorax' 
                   ? isDark ? 'bg-indigo-950/20 border-indigo-500/40' : 'bg-indigo-50/40 border-indigo-200'
                   : isDark ? 'bg-slate-800/60 border-slate-700 opacity-90' : 'bg-slate-50 border-slate-200 opacity-90'
               }`}>
                 <div>
-                  <div className="flex items-center justify-between pb-3 border-b mb-3">
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b mb-3">
                     <span className="font-black text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                       Checklist Foto Thorax (Kiri)
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 shrink-0">
                       FK UNS
                     </span>
                   </div>
@@ -473,7 +473,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => handleToggleThorax(item.id)}
-                                  className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                                  className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
                                 />
                                 <span className="flex-1 leading-snug">{item.label}</span>
                               </label>
@@ -487,17 +487,17 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
               </div>
 
               {/* CHECKLIST 2: FOTO ABDOMEN (SISI KANAN) */}
-              <div className={`p-4 rounded-2xl border flex flex-col justify-between ${
+              <div className={`p-4 rounded-2xl border flex flex-col justify-between max-lg-liquid-subtle ${
                 currentQ?.region === 'abdomen' 
                   ? isDark ? 'bg-teal-950/20 border-teal-500/40' : 'bg-teal-50/40 border-teal-200'
                   : isDark ? 'bg-slate-800/60 border-slate-700 opacity-90' : 'bg-slate-50 border-slate-200 opacity-90'
               }`}>
                 <div>
-                  <div className="flex items-center justify-between pb-3 border-b mb-3">
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b mb-3">
                     <span className="font-black text-xs uppercase tracking-wider text-teal-600 dark:text-teal-400">
                       Checklist Foto Abdomen (Kanan)
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-500/10 text-teal-500">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-500/10 text-teal-500 shrink-0">
                       BNO / 3 Posisi
                     </span>
                   </div>
@@ -524,7 +524,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => handleToggleAbdomen(item.id)}
-                                  className="mt-0.5 rounded text-teal-600 focus:ring-teal-500 w-4 h-4 cursor-pointer"
+                                  className="mt-0.5 rounded text-teal-600 focus:ring-teal-500 w-4 h-4 cursor-pointer shrink-0"
                                 />
                                 <span className="flex-1 leading-snug">{item.label}</span>
                               </label>
@@ -543,7 +543,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className={`p-4 sm:p-5 flex items-center justify-between border-t shrink-0 ${
+        <div className={`px-3.5 sm:px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t shrink-0 max-lg-liquid-subtle ${
           isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-slate-50 border-slate-200'
         }`}>
           <div className="flex items-center gap-2 text-xs font-semibold">
@@ -559,21 +559,21 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2.5 rounded-xl font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs sm:text-sm"
+              className="px-4 py-2.5 rounded-xl font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 max-lg-liquid-interactive transition text-xs sm:text-sm cursor-pointer"
             >
               Batal
             </button>
             <button
               onClick={handleSubmitGrade}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition text-xs sm:text-sm disabled:opacity-50"
+              className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition text-xs sm:text-sm disabled:opacity-50 cursor-pointer"
             >
-              <Save className="w-4 h-4" />
-              {saving ? 'Menyimpan...' : 'Submit Penilaian & Buka Pembahasan'}
+              <Save className="w-4 h-4 shrink-0" />
+              <span className="truncate">{saving ? 'Menyimpan...' : 'Submit Penilaian & Buka Pembahasan'}</span>
             </button>
           </div>
         </div>

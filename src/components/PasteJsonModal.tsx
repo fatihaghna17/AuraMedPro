@@ -1,4 +1,4 @@
-import { ClipboardList, AlertCircle } from 'lucide-react';
+import { ClipboardList, AlertCircle, X } from 'lucide-react';
 
 interface PasteJsonModalProps {
   theme: 'light' | 'dark';
@@ -48,12 +48,28 @@ export default function PasteJsonModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-2xl rounded-2xl shadow-2xl p-6 liquid-glass-card text-slate-900 dark:text-white">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-amber-500" />
-          Tempel Kode JSON / YAML
-        </h3>
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl shadow-2xl p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 liquid-glass-card text-slate-900 dark:text-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-amber-500 shrink-0" />
+            <span>Tempel Kode JSON / YAML</span>
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup"
+            className="p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
         
         <div className="space-y-4">
           {/* Target Distribusi Prodi & Angkatan Selector khusus Super Admin */}
@@ -129,7 +145,7 @@ export default function PasteJsonModal({
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               placeholder={'[\n  {\n    "pertanyaan": "...",\n    "pilihan": [...],\n    "jawaban_benar": "..."\n  }\n]'}
-              rows={10}
+              rows={8}
               className="w-full p-3 text-xs font-mono rounded-xl outline-none transition-all custom-scrollbar liquid-glass-input text-slate-700 dark:text-slate-200 placeholder-slate-400"
             />
           </div>
@@ -137,12 +153,12 @@ export default function PasteJsonModal({
           {error && (
             <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-2 text-rose-600 dark:text-rose-400">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              <p className="text-[11px] font-medium">{error}</p>
+              <p className="text-[11px] font-medium break-words">{error}</p>
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 justify-end mt-6">
+        <div className="flex gap-2 justify-end mt-5 sm:mt-6">
           <button
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl text-xs font-bold transition-colors liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 cursor-pointer"

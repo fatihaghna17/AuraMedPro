@@ -478,29 +478,33 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto"
+      onClick={onClose}
+    >
       {/* Hidden off-screen canvas for rendering HD 1080x1920 */}
       <canvas ref={canvasRef} className="hidden" />
 
       <div 
-        className={`w-full max-w-md sm:max-w-lg rounded-3xl border shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] ${
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full sm:max-w-lg rounded-t-[28px] sm:rounded-3xl border shadow-2xl overflow-hidden flex flex-col sm:my-auto max-h-[92dvh] max-lg-liquid-card ${
           theme === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-200/40 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center text-white text-xs font-black shadow-md">
+        <div className="flex items-center justify-between gap-2 p-3.5 sm:p-4 border-b border-slate-200/40 dark:border-slate-800 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center text-white text-xs font-black shadow-md shrink-0">
               📸
             </div>
-            <div>
-              <h3 className="text-sm font-black">Kartu Rapor Prestasi (Story 9:16)</h3>
-              <p className="text-[10px] text-slate-400">Pamerkan ke Instagram Story, status WA, atau grup</p>
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-black truncate">Kartu Rapor Prestasi (Story 9:16)</h3>
+              <p className="text-[10px] text-slate-400 truncate">Pamerkan ke Instagram Story, status WA, atau grup</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 max-lg-liquid-interactive transition cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -527,7 +531,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
           </div>
 
           {/* 🔥 Caption Sombong Medsos Box */}
-          <div className={`p-3.5 rounded-2xl border transition-all ${
+          <div className={`p-3.5 rounded-2xl border transition-all max-lg-liquid-subtle ${
             theme === 'dark' ? 'bg-slate-800/60 border-slate-750' : 'bg-indigo-50/70 border-indigo-200/80'
           }`}>
             <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
@@ -562,17 +566,17 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
               </div>
             </div>
 
-            <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line bg-black/10 dark:bg-black/30 p-2.5 rounded-xl font-medium select-all border border-black/5 dark:border-white/5">
+            <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line break-words bg-black/10 dark:bg-black/30 p-2.5 rounded-xl font-medium select-all border border-black/5 dark:border-white/5">
               {braggingCaption}
             </p>
           </div>
         </div>
 
         {/* Action Buttons (Footer: Pilihan Download vs Share) */}
-        <div className="p-3 sm:p-4 border-t border-slate-200/40 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+        <div className="p-3 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-slate-200/40 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 max-lg-liquid-subtle backdrop-blur flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
           <button
             onClick={handleDownload}
-            className="flex-1 py-3 px-4 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-98"
+            className="flex-1 py-3 px-4 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 max-lg-liquid-interactive text-slate-800 dark:text-white font-extrabold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-98"
           >
             <Download className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>Unduh Gambar (HD PNG)</span>

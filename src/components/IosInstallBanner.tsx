@@ -7,7 +7,7 @@ interface IosInstallBannerProps {
 
 export default function IosInstallBanner({ theme, onInstallClick }: IosInstallBannerProps) {
   return (
-    <div className={`p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 backdrop-blur-xl ${
+    <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 backdrop-blur-xl max-lg-liquid-card ${
       theme === 'dark'
         ? 'bg-gradient-to-b from-white/[0.08] via-slate-900/35 to-slate-900/45 border-white/15 shadow-xl'
         : 'liquid-glass-card'

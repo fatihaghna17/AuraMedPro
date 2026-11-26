@@ -24,7 +24,7 @@ export default function UploadZone({
   onSelectedProdiChange,
 }: UploadZoneProps) {
   const dashedCard =
-    "p-5 rounded-xl liquid-glass-subtle-interactive flex flex-col items-center justify-center text-center cursor-pointer group";
+    "p-3.5 sm:p-5 rounded-xl liquid-glass-subtle-interactive flex flex-row sm:flex-col items-center justify-start sm:justify-center text-left sm:text-center gap-3.5 sm:gap-0 cursor-pointer group";
 
   const prodiOptions = [
     { id: 'all', label: '🌐 Seluruh Prodi' },
@@ -49,7 +49,7 @@ export default function UploadZone({
   const currentOption = angkatanOptions.find(o => o.id === selectedAngkatan) || angkatanOptions[0];
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card space-y-5">
+    <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card space-y-4 sm:space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Impor Bank Soal Baru</h3>
@@ -59,7 +59,7 @@ export default function UploadZone({
 
       {/* Target Distribusi Prodi & Angkatan Selector khusus Super Admin */}
       {isSuperAdmin && (
-        <div className="p-4 rounded-xl liquid-glass-subtle space-y-4">
+        <div className="p-3.5 sm:p-4 rounded-xl liquid-glass-subtle space-y-4">
           {/* Target Prodi */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export default function UploadZone({
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     Target Distribusi Angkatan
                   </span>
@@ -140,17 +140,19 @@ export default function UploadZone({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
         {/* Upload Single File */}
         <div 
           onClick={() => fileInputRef.current?.click()}
           className={dashedCard}
         >
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mb-0 sm:mb-3 group-hover:scale-105 transition-transform">
             <UploadCloud className="w-5 h-5" />
           </div>
-          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Pilih File Soal</h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">JSON, YAML, atau YML (Maks. 5MB)</p>
+          <div className="min-w-0">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Pilih File Soal</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">JSON, YAML, atau YML (Maks. 5MB)</p>
+          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -165,11 +167,13 @@ export default function UploadZone({
           onClick={() => folderInputRef.current?.click()}
           className={dashedCard}
         >
-          <div className="w-10 h-10 rounded-xl bg-teal-500/15 border border-teal-500/25 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/15 border border-teal-500/25 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 mb-0 sm:mb-3 group-hover:scale-105 transition-transform">
             <FolderPlus className="w-5 h-5" />
           </div>
-          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Impor Folder Soal</h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Unggah direktori folder berisi berkas kuis</p>
+          <div className="min-w-0">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Impor Folder Soal</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">Unggah direktori folder berisi berkas kuis</p>
+          </div>
           <input
             type="file"
             ref={folderInputRef}
@@ -185,11 +189,13 @@ export default function UploadZone({
           onClick={onPasteClick}
           className={dashedCard}
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-0 sm:mb-3 group-hover:scale-105 transition-transform">
             <ClipboardList className="w-5 h-5" />
           </div>
-          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Tempel JSON</h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Salin dan tempel kode soal mentah</p>
+          <div className="min-w-0">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Tempel JSON</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">Salin dan tempel kode soal mentah</p>
+          </div>
         </div>
       </div>
     </div>

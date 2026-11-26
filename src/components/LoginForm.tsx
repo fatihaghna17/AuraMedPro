@@ -153,12 +153,12 @@ export default function LoginForm({
       {/* ========================================================================= */}
       {/* TOP BAR / HEADER */}
       {/* ========================================================================= */}
-      <header className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 flex items-center justify-between">
+      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-10 pt-[max(1rem,env(safe-area-inset-top))] pb-4 sm:py-6 flex items-center justify-between gap-2">
         {/* Brand Logo */}
-        <div className="flex items-center gap-3">
-          <BrandLogo theme={theme} variant="auto" className="w-10 h-10 shrink-0 drop-shadow-md" />
-          <div className="flex items-center gap-1.5">
-            <span className={`text-lg sm:text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <BrandLogo theme={theme} variant="auto" className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 drop-shadow-md" />
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className={`text-base sm:text-xl font-extrabold tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
               AuraMed
             </span>
           </div>
@@ -200,12 +200,12 @@ export default function LoginForm({
         </nav>
 
         {/* Right Actions: Tab Switchers & Theme Toggle */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <div className="flex items-center p-1 rounded-full liquid-glass-subtle">
             <button
               type="button"
               onClick={() => setActiveTab('login')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'login'
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
@@ -216,7 +216,7 @@ export default function LoginForm({
             <button
               type="button"
               onClick={() => setActiveTab('register')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'register'
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
@@ -229,7 +229,7 @@ export default function LoginForm({
           <button
             type="button"
             onClick={onToggleTheme}
-            className="w-9 h-9 rounded-full flex items-center justify-center liquid-glass-subtle-interactive text-amber-500 dark:text-indigo-300 cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center liquid-glass-subtle-interactive text-amber-500 dark:text-indigo-300 cursor-pointer shrink-0"
             title={`Ganti ke Mode ${isDark ? 'Terang' : 'Gelap'}`}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -240,11 +240,11 @@ export default function LoginForm({
       {/* ========================================================================= */}
       {/* CENTER HERO & AUTH FORM (Liquid Glass Card) */}
       {/* ========================================================================= */}
-      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-4 py-8">
+      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-3.5 sm:px-4 py-5 sm:py-8">
         {/* Registration Success Modal */}
         {newAccountData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md px-4 animate-fade-in">
-            <div className="w-full max-w-md rounded-3xl liquid-glass-card p-7 sm:p-8 text-slate-900 dark:text-white">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-md p-0 sm:px-4 animate-fade-in">
+            <div className="w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-3xl liquid-glass-card p-5 sm:p-8 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-8 text-slate-900 dark:text-white">
               <div className="text-center mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="w-7 h-7" />
@@ -258,14 +258,14 @@ export default function LoginForm({
               </div>
 
               <div className="rounded-2xl p-4 space-y-3 mb-5 liquid-glass-subtle">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Username / Nama Akun</span>
-                  <div className="flex items-center gap-1.5 font-bold text-sm">
-                    <span>{newAccountData.username}</span>
+                <div className="flex justify-between items-center gap-2 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 shrink-0">Username / Nama Akun</span>
+                  <div className="flex items-center gap-1.5 font-bold text-sm min-w-0">
+                    <span className="truncate">{newAccountData.username}</span>
                     <button
                       type="button"
                       onClick={handleCopyUsername}
-                      className="p-1 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer shrink-0"
                       title="Salin Username"
                     >
                       {copiedUsername ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -600,13 +600,13 @@ export default function LoginForm({
       {/* ========================================================================= */}
       {/* BOTTOM FOOTER (Subtle branding & copyright) */}
       {/* ========================================================================= */}
-      <footer className="relative z-20 w-full max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 gap-2">
-        <div className="flex items-center gap-2">
+      <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:py-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 gap-2 text-center sm:text-left">
+        <div className="flex items-center justify-center sm:justify-start gap-2">
           <span>&copy; {new Date().getFullYear()} AuraMed CBT. Platform Pembahasan Soal Kedokteran & Farmasi.</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             Cloudflare D1 & R2 High Speed
           </span>
         </div>

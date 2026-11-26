@@ -18,7 +18,7 @@ export default function ReportQuestionModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -28,13 +28,13 @@ export default function ReportQuestionModal({
           />
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl shadow-2xl liquid-glass-card text-slate-900 dark:text-white"
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            className="relative w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl shadow-2xl liquid-glass-card text-slate-900 dark:text-white"
           >
-            <div className="p-6">
-              <h3 className="text-lg font-black flex items-center gap-2 mb-6 text-slate-900 dark:text-white">
+            <div className="p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6">
+              <h3 className="text-lg font-black flex items-center gap-2 mb-5 sm:mb-6 text-slate-900 dark:text-white">
                 <Flag className="w-5 h-5 text-rose-500" /> Laporkan Soal
               </h3>
               
@@ -69,16 +69,16 @@ export default function ReportQuestionModal({
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-8">
+              <div className="flex gap-3 mt-6 sm:mt-8">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                  className="flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold liquid-glass-subtle-interactive text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={onSubmit}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer"
+                  className="flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer"
                 >
                   Kirim Laporan
                 </button>

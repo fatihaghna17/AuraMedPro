@@ -35,7 +35,7 @@ export const CardStack = forwardRef<FlipCardHandle, CardStackProps>(function Car
   const back2Opacity = useTransform(dragProgress, [0, 1], [0.48, 0.74]);
 
   return (
-    <div className="fc3d-stage relative w-full max-w-[560px] mx-auto h-[clamp(270px,43dvh,430px)] mb-6">
+    <div className="fc3d-stage relative w-full max-w-[560px] mx-auto h-[clamp(270px,43dvh,430px)] mb-4 sm:mb-6">
       {/* Lapisan ke-2 (menyembul lembut di bawah tepi bawah kartu, tidak memotong isi kaca depan) */}
       {remainingAfter >= 2 && (
         <motion.div

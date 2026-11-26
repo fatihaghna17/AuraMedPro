@@ -3910,7 +3910,15 @@ export default function App() {
                 theme={theme}
                 activeTab={dashboardTab}
                 srsDueCount={srs.stats.dueCount}
+                currentStreak={currentStreak}
+                streakFreezeLeft={streakFreezeLeft}
+                username={profileUsername || ''}
+                userLevel={getLevelInfo(userXP).level}
                 isAdmin={currentUser?.user_metadata?.username === 'admin' || isCollector}
+                onLogout={async () => {
+                  await authClient.signOut();
+                  triggerToast('Sampai jumpa lagi!', '👋');
+                }}
                 onTabChange={(tab) => {
                   if (tab === 'banks' || tab === 'groups' || tab === 'home') {
                     // Only clear context if they are explicitly navigating away from group context 
@@ -3937,11 +3945,11 @@ export default function App() {
             
             {/* Sticky Header (Compact) */}
             {screen === 'setup' && (
-              <header className="sticky top-0 lg:top-3 z-20 transition-colors liquid-glass-card rounded-none lg:rounded-2xl border-t-0 border-x-0 lg:border lg:mx-6 text-slate-900 dark:text-slate-50">
-                <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between max-w-[1440px] mx-auto w-full">
-                  <div className="lg:hidden flex items-center gap-2.5">
-                    <BrandLogo theme={theme} variant="auto" className="w-8 h-8 shrink-0 drop-shadow-sm" />
-                    <span className="font-bold text-base tracking-tight">AuraMed</span>
+              <header className="sticky top-[max(0.5rem,env(safe-area-inset-top))] lg:top-3 z-20 transition-colors liquid-glass-card mobile-glass-shell rounded-2xl mx-3 lg:mx-6 border text-slate-900 dark:text-slate-50">
+                <div className="px-3 sm:px-6 lg:px-8 h-13 lg:h-14 flex items-center justify-between gap-2 max-w-[1440px] mx-auto w-full">
+                  <div className="lg:hidden flex items-center gap-2 min-w-0">
+                    <BrandLogo theme={theme} variant="auto" className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 drop-shadow-sm" />
+                    <span className="font-extrabold text-[15px] sm:text-base tracking-tight truncate">AuraMed</span>
                   </div>
 
                   <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 tracking-wide">
@@ -3950,14 +3958,14 @@ export default function App() {
                   </div>
 
                   {/* Header actions (Pomodoro, XP, Theme, Bell) */}
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                     {/* Header Pomodoro Quick Pill */}
                     <div
                       onClick={() => {
                         if (screen !== 'setup') setScreen('setup');
                         if (dashboardTab !== 'home') setDashboardTab('home');
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none tabular-nums ${
+                      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all cursor-pointer select-none tabular-nums whitespace-nowrap ${
                         pomodoroActive
                           ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 shadow-sm'
                           : 'liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200'
@@ -3981,16 +3989,16 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border backdrop-blur-md tabular-nums bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400">
-                      <Flame className="w-3.5 h-3.5 fill-current text-amber-500" />
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold border backdrop-blur-md tabular-nums whitespace-nowrap bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400">
+                      <Flame className="w-3.5 h-3.5 fill-current text-amber-500 shrink-0" />
                       <span>LV {getLevelInfo(userXP).level}</span>
-                      <span className="opacity-30 font-normal">|</span>
-                      <span>{userXP} XP</span>
+                      <span className="hidden sm:inline opacity-30 font-normal">|</span>
+                      <span className="hidden sm:inline">{userXP} XP</span>
                     </div>
 
                     <button
                       onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-                      className="p-2 rounded-xl transition-all cursor-pointer liquid-glass-subtle-interactive text-amber-500 dark:text-indigo-400"
+                      className="p-2 rounded-xl transition-all cursor-pointer liquid-glass-subtle-interactive text-amber-500 dark:text-indigo-400 shrink-0"
                       title={theme === 'dark' ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
                     >
                       {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -4002,7 +4010,7 @@ export default function App() {
 
         {/* === SETUP SCREEN (DASHBOARD REDESIGN) === */}
         {screen === 'setup' && (
-          <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1440px] w-full mx-auto space-y-6 animate-fade-in pb-24 lg:pb-10">
+          <div className="px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1440px] w-full mx-auto space-y-4 sm:space-y-6 animate-fade-in pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-10">
             <React.Suspense fallback={
               <div className="flex items-center justify-center p-12 min-h-[300px]">
                 <div className="w-8 h-8 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
@@ -4013,10 +4021,10 @@ export default function App() {
 
             {/* 📚 TAB 2: BANK SOAL */}
             {dashboardTab === 'banks' && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-4 sm:space-y-6 animate-fade-in">
                 
                 {activeStudyGroupId && (
-                  <div className="p-5 rounded-2xl liquid-glass-card border-indigo-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="p-4 sm:p-5 rounded-2xl liquid-glass-card border-indigo-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex items-start gap-3">
                        <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                          <Users className="w-5 h-5" />
@@ -4026,7 +4034,7 @@ export default function App() {
                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Soal yang diupload di sini hanya akan terlihat oleh anggota grup ini.</p>
                        </div>
                     </div>
-                    <button onClick={() => { setActiveStudyGroupId(null); setActiveStudyGroupName(null); }} className="px-4 py-2 rounded-xl liquid-glass-subtle-interactive text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap cursor-pointer">Tutup Mode Grup</button>
+                    <button onClick={() => { setActiveStudyGroupId(null); setActiveStudyGroupName(null); }} className="w-full md:w-auto px-4 py-2 rounded-xl liquid-glass-subtle-interactive text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap cursor-pointer">Tutup Mode Grup</button>
                   </div>
                 )}
 
@@ -4038,7 +4046,7 @@ export default function App() {
                   onFilterChange={setBankFilter}
                 />
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <UploadZone
                     theme={theme}
                     fileInputRef={fileInputRef}
@@ -4057,7 +4065,7 @@ export default function App() {
                 </div>
 
                 {/* Databases Lists (Folders & Root Items) */}
-                <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card transition-colors">
+                <div className="p-3.5 sm:p-6 rounded-2xl liquid-glass-card transition-colors">
                   {isCollector && (
                     <div className="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
@@ -4184,24 +4192,24 @@ export default function App() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                      <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end sm:ml-auto">
                         <button
                           onClick={() => {
                             const allKeys = [...Object.keys(filteredDatabases.folders), 'root'];
                             toggleMinimizeAllFolders(allKeys);
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition-all liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200 cursor-pointer"
+                          className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition-all liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200 cursor-pointer"
                           title="Minimize atau Buka semua kolom kanban"
                         >
-                          <Minimize2 className="w-3.5 h-3.5" />
+                          <Minimize2 className="w-3.5 h-3.5 shrink-0" />
                           <span>{Object.values(minimizedFolders).filter(Boolean).length > 0 ? 'Buka Semua Kolom' : 'Minimize Semua'}</span>
                         </button>
                         <button
                           onClick={() => setParentFolderModal({ isOpen: true, mode: 'create' })}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 hover:scale-102 transition-all cursor-pointer"
+                          className="flex-1 sm:flex-none justify-center flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 hover:scale-102 transition-all cursor-pointer"
                           title="Buat Folder Besar baru"
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
                           <span>+ Folder Besar</span>
                         </button>
                       </div>
@@ -4209,7 +4217,7 @@ export default function App() {
                   )}
 
                   {Object.keys(questionDatabase).length === 0 ? (
-                    <div className="text-center p-12 rounded-2xl liquid-glass-subtle">
+                    <div className="text-center p-8 sm:p-12 rounded-2xl liquid-glass-subtle">
                       <BookOpen className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Tidak ada bank soal tersedia</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Unggah berkas soal JSON/YAML terlebih dahulu atau gunakan bank soal bawaan.</p>
@@ -4244,7 +4252,7 @@ export default function App() {
                           if (folderScrollRef.current.scrollLeft > 20) setShowSwipeHint(false);
                         }
                       }}
-                      className="flex gap-5 overflow-x-auto pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+                      className="flex gap-3.5 sm:gap-5 overflow-x-auto pb-4 sm:pb-6 items-start snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
                     >
                       {/* Swipe hint — mobile only */}
                       <AnimatePresence>
@@ -4254,7 +4262,7 @@ export default function App() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ delay: 0.8, duration: 0.4 }}
-                            className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 dark:bg-slate-100/90 backdrop-blur-md shadow-lg border border-slate-700/50 dark:border-slate-300/50"
+                            className="lg:hidden fixed bottom-[calc(5.35rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full mobile-glass-shell text-slate-900 dark:text-white"
                             onAnimationComplete={() => {
                               // Auto-hide setelah 4 detik
                               setTimeout(() => setShowSwipeHint(false), 4000);
@@ -4263,17 +4271,17 @@ export default function App() {
                             <motion.span
                               animate={{ x: [0, 8, 0, -8, 0] }}
                               transition={{ duration: 1.5, repeat: 2, ease: 'easeInOut' }}
-                              className="text-slate-300 dark:text-slate-700"
+                              className="text-indigo-500 dark:text-sky-300"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </motion.span>
-                            <span className="text-[11px] font-bold text-slate-200 dark:text-slate-800 whitespace-nowrap">
+                            <span className="text-[11px] font-bold whitespace-nowrap">
                               Geser untuk lihat folder lain
                             </span>
                             <motion.span
                               animate={{ x: [0, 8, 0, -8, 0] }}
                               transition={{ duration: 1.5, repeat: 2, ease: 'easeInOut', delay: 0.1 }}
-                              className="text-slate-300 dark:text-slate-700"
+                              className="text-indigo-500 dark:text-sky-300"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </motion.span>
@@ -4311,7 +4319,7 @@ export default function App() {
                                 if (quizKey) handleMoveQuiz(quizKey, folderPath);
                               }}
                               onClick={() => toggleMinimizeFolder(folderPath)}
-                              className={`w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-2xl snap-start transition-all duration-200 cursor-pointer select-none group h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] liquid-glass-subtle-interactive ${
+                              className={`w-14 sm:w-18 flex-shrink-0 flex flex-col items-center py-4 sm:py-5 px-2 rounded-2xl snap-start transition-all duration-200 cursor-pointer select-none group h-[500px] sm:h-[720px] max-h-[calc(100dvh-220px)] lg:max-h-[calc(100vh-220px)] min-h-[360px] lg:min-h-[480px] liquid-glass-subtle-interactive ${
                                 folderPath.startsWith('Terbaru') ? 'ring-1 ring-amber-500/40' : ''
                               }`}
                               title={`Buka kolom ${folderPath} (${totalQuestionsInFolder} soal)`}
@@ -4373,7 +4381,7 @@ export default function App() {
                               const quizKey = e.dataTransfer.getData('quizKey');
                               if (quizKey) handleMoveQuiz(quizKey, folderPath);
                             }}
-                            className={`w-80 sm:w-88 flex-shrink-0 flex flex-col rounded-2xl p-4 sm:p-5 snap-start h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] liquid-glass-subtle ${
+                            className={`w-[calc(100vw-4.25rem)] max-w-[304px] sm:max-w-none sm:w-88 flex-shrink-0 flex flex-col rounded-2xl p-3.5 sm:p-5 snap-start h-[500px] sm:h-[720px] max-h-[calc(100dvh-220px)] lg:max-h-[calc(100vh-220px)] min-h-[360px] lg:min-h-[480px] liquid-glass-subtle ${
                               folderPath.startsWith('Terbaru') ? 'ring-1 ring-amber-500/40' : ''
                             }`}
                           >
@@ -4439,7 +4447,7 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-3 scrollbar-thin">
+                            <div className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-3 scrollbar-thin">
                               {filesTyped.map(({ key, displayName, questions }) => {
                                 const isSelected = selectedDatabases.includes(key);
                                 const relatedHistory = quizHistory.filter((h) => h.files && h.files.includes(key));
@@ -4458,14 +4466,14 @@ export default function App() {
                                         prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]
                                       );
                                     }}
-                                    className={`relative group flex flex-col p-4 rounded-xl transition-all cursor-pointer overflow-hidden flex-shrink-0 liquid-glass-card ${
+                                    className={`relative group flex flex-col p-3.5 sm:p-4 rounded-xl transition-all cursor-pointer overflow-hidden flex-shrink-0 liquid-glass-card ${
                                       isSelected
                                         ? 'ring-2 ring-indigo-500 bg-indigo-500/10'
                                         : 'hover:border-indigo-500/30'
                                     }`}
                                   >
-                                    <div className="flex justify-between items-start mb-4 gap-3 relative z-10">
-                                      <h4 className="font-bold text-sm leading-snug flex-1 pr-2 break-words text-slate-800 dark:text-slate-100">
+                                    <div className="flex justify-between items-start mb-3 sm:mb-4 gap-3 relative z-10">
+                                      <h4 className="font-bold text-xs sm:text-sm leading-snug flex-1 pr-1 break-words text-slate-800 dark:text-slate-100">
                                         {displayName}
                                       </h4>
                                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -4488,7 +4496,7 @@ export default function App() {
                                       </div>
                                     </div>
                                     
-                                    <div className="flex items-end justify-between mt-auto relative z-10">
+                                    <div className="flex items-end justify-between gap-2 mt-auto relative z-10">
                                       <div className="flex items-center gap-1.5 flex-wrap">
                                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold tabular-nums liquid-glass-subtle text-slate-600 dark:text-slate-300">
                                           {questions.length} soal
@@ -4521,9 +4529,77 @@ export default function App() {
                                           </span>
                                         )}
                                       </div>
-                                      <span className="text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                                      <span className="text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                         Progres: {progressCount}/{questions.length}
                                       </span>
+                                    </div>
+
+                                    {/* Mobile touch action strip (replaces desktop hover-only overlay on < lg) */}
+                                    <div
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="lg:hidden mt-2.5 pt-2.5 border-t border-slate-200/50 dark:border-white/10 flex items-center justify-between gap-2 relative z-10"
+                                    >
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        max={questions.length}
+                                        placeholder="Batas soal"
+                                        value={questionLimits[key] || ''}
+                                        onChange={(e) => {
+                                          const val = parseInt(e.target.value);
+                                          setQuestionLimits((prev) => ({
+                                            ...prev,
+                                            [key]: isNaN(val) ? 0 : Math.min(val, questions.length)
+                                          }));
+                                        }}
+                                        className="w-22 px-2.5 py-1 rounded-lg text-[11px] font-bold tabular-nums liquid-glass-input text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                                      />
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                          }}
+                                          className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/25"
+                                          title="Pindah ke folder lain"
+                                        >
+                                          <FolderPlus className="w-3.5 h-3.5" />
+                                        </button>
+                                        {isSuperAdmin && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setChangeDistributionModal({
+                                                isOpen: true,
+                                                bankName: key,
+                                                currentAngkatan: bankAngkatanMap[key] || 'all',
+                                                currentProdi: bankProdiMap[key] || 'all',
+                                              });
+                                            }}
+                                            className="w-7 h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/25"
+                                            title="Ubah Target Distribusi"
+                                          >
+                                            <Users className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                        {!globalDatabases.includes(key) ? (
+                                          <button
+                                            onClick={(e) => removeDatabase(key, e)}
+                                            className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center border border-rose-500/25"
+                                            title="Hapus bank soal"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        ) : (profileUsername === 'admin' || isCollector) ? (
+                                          <button
+                                            onClick={(e) => removeGlobalDatabase(key, e)}
+                                            className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center border border-rose-500/25"
+                                            title="Hapus kuis global"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        ) : null}
+                                      </div>
                                     </div>
 
                                     {/* Progress Bar */}
@@ -4534,8 +4610,8 @@ export default function App() {
                                       />
                                     </div>
 
-                                    {/* Hover overlay for actions */}
-                                    <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-20">
+                                    {/* Hover overlay for actions (Desktop >= lg only) */}
+                                    <div className="hidden lg:flex absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-3 z-20">
                                       <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
                                         <input
                                           type="number"
@@ -4632,7 +4708,7 @@ export default function App() {
                               if (quizKey) handleMoveQuiz(quizKey, 'root');
                             }}
                             onClick={() => toggleMinimizeFolder('root')}
-                            className="w-16 sm:w-18 flex-shrink-0 flex flex-col items-center py-5 px-2 rounded-2xl snap-start transition-all duration-200 cursor-pointer select-none group h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] liquid-glass-subtle-interactive"
+                            className="w-14 sm:w-18 flex-shrink-0 flex flex-col items-center py-4 sm:py-5 px-2 rounded-2xl snap-start transition-all duration-200 cursor-pointer select-none group h-[500px] sm:h-[720px] max-h-[calc(100dvh-220px)] lg:max-h-[calc(100vh-220px)] min-h-[360px] lg:min-h-[480px] liquid-glass-subtle-interactive"
                             title={`Buka kolom Tanpa Folder (${filteredDatabases.rootItems.reduce((acc, f) => acc + (f.questions?.length || 0), 0)} soal)`}
                           >
                             <div className="flex flex-col items-center gap-2 mb-3 flex-shrink-0">
@@ -4672,7 +4748,7 @@ export default function App() {
                               const quizKey = e.dataTransfer.getData('quizKey');
                               if (quizKey) handleMoveQuiz(quizKey, 'root');
                             }}
-                            className="w-80 sm:w-88 flex-shrink-0 flex flex-col rounded-2xl p-4 sm:p-5 snap-start h-[640px] sm:h-[720px] max-h-[calc(100vh-220px)] min-h-[480px] liquid-glass-subtle"
+                            className="w-[calc(100vw-4.25rem)] max-w-[304px] sm:max-w-none sm:w-88 flex-shrink-0 flex flex-col rounded-2xl p-3.5 sm:p-5 snap-start h-[500px] sm:h-[720px] max-h-[calc(100dvh-220px)] lg:max-h-[calc(100vh-220px)] min-h-[360px] lg:min-h-[480px] liquid-glass-subtle"
                           >
                             <div className="flex items-center justify-between mb-3 px-1 flex-shrink-0">
                               <div className="flex items-center gap-2.5 min-w-0">
@@ -4695,7 +4771,7 @@ export default function App() {
                               </div>
                             </div>
 
-                          <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 flex flex-col gap-3 scrollbar-thin">
+                          <div className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-3 scrollbar-thin">
                             {filteredDatabases.rootItems.map(({ key, displayName, questions }) => {
                               const isSelected = selectedDatabases.includes(key);
                               const relatedHistory = quizHistory.filter((h) => h.files && h.files.includes(key));
@@ -4714,14 +4790,14 @@ export default function App() {
                                       prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]
                                     );
                                   }}
-                                  className={`relative group flex flex-col p-4 rounded-xl transition-all cursor-pointer overflow-hidden flex-shrink-0 liquid-glass-card ${
+                                  className={`relative group flex flex-col p-3.5 sm:p-4 rounded-xl transition-all cursor-pointer overflow-hidden flex-shrink-0 liquid-glass-card ${
                                     isSelected
                                       ? 'ring-2 ring-indigo-500 bg-indigo-500/10'
                                       : 'hover:border-indigo-500/30'
                                   }`}
                                 >
-                                  <div className="flex justify-between items-start mb-4 gap-3 relative z-10">
-                                    <h4 className="font-bold text-sm leading-snug flex-1 pr-2 break-words text-slate-800 dark:text-slate-100">
+                                  <div className="flex justify-between items-start mb-3 sm:mb-4 gap-3 relative z-10">
+                                    <h4 className="font-bold text-xs sm:text-sm leading-snug flex-1 pr-1 break-words text-slate-800 dark:text-slate-100">
                                       {displayName}
                                     </h4>
                                     <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -4744,7 +4820,7 @@ export default function App() {
                                     </div>
                                   </div>
                                   
-                                  <div className="flex items-end justify-between mt-auto relative z-10">
+                                  <div className="flex items-end justify-between gap-2 mt-auto relative z-10">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold tabular-nums liquid-glass-subtle text-slate-600 dark:text-slate-300">
                                         {questions.length} soal
@@ -4772,9 +4848,77 @@ export default function App() {
                                         </span>
                                       )}
                                     </div>
-                                    <span className="text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                                    <span className="text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                       Progres: {progressCount}/{questions.length}
                                     </span>
+                                  </div>
+
+                                  {/* Mobile touch action strip (replaces desktop hover-only overlay on < lg) */}
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="lg:hidden mt-2.5 pt-2.5 border-t border-slate-200/50 dark:border-white/10 flex items-center justify-between gap-2 relative z-10"
+                                  >
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max={questions.length}
+                                      placeholder="Batas soal"
+                                      value={questionLimits[key] || ''}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        setQuestionLimits((prev) => ({
+                                          ...prev,
+                                          [key]: isNaN(val) ? 0 : Math.min(val, questions.length)
+                                        }));
+                                      }}
+                                      className="w-22 px-2.5 py-1 rounded-lg text-[11px] font-bold tabular-nums liquid-glass-input text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
+                                    />
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMoveQuizModal({ quizKey: key, quizName: displayName });
+                                        }}
+                                        className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/25"
+                                        title="Pindah ke folder lain"
+                                      >
+                                        <FolderPlus className="w-3.5 h-3.5" />
+                                      </button>
+                                      {isSuperAdmin && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setChangeDistributionModal({
+                                              isOpen: true,
+                                              bankName: key,
+                                              currentAngkatan: bankAngkatanMap[key] || 'all',
+                                              currentProdi: bankProdiMap[key] || 'all',
+                                            });
+                                          }}
+                                          className="w-7 h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/25"
+                                          title="Ubah Target Distribusi"
+                                        >
+                                          <Users className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      {!globalDatabases.includes(key) ? (
+                                        <button
+                                          onClick={(e) => removeDatabase(key, e)}
+                                          className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center border border-rose-500/25"
+                                          title="Hapus bank soal"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      ) : (profileUsername === 'admin' || isCollector) ? (
+                                        <button
+                                          onClick={(e) => removeGlobalDatabase(key, e)}
+                                          className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center border border-rose-500/25"
+                                          title="Hapus kuis global"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      ) : null}
+                                    </div>
                                   </div>
 
                                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-slate-800/50 z-0">
@@ -4784,7 +4928,7 @@ export default function App() {
                                     />
                                   </div>
 
-                                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-20">
+                                  <div className="hidden lg:flex absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-3 z-20">
                                     <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
                                       <input
                                         type="number"
@@ -4874,13 +5018,13 @@ export default function App() {
                   )}
 
                   {selectedDatabases.length > 0 && (
-                    <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="fixed left-3.5 right-3.5 sm:left-auto bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-6 sm:right-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <button
                         onClick={() => setDashboardTab('new')}
-                        className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-xs font-black bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 border border-white/25 transition-all cursor-pointer hover:scale-105 active:scale-95 tabular-nums"
+                        className="w-full sm:w-auto justify-center flex items-center gap-2 px-5 sm:px-6 py-3.5 rounded-2xl text-xs font-black bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 border border-white/25 transition-all cursor-pointer hover:scale-105 active:scale-95 tabular-nums"
                       >
-                        <span>Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih)</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <span className="truncate">Lanjutkan ke Pengaturan Kuis ({selectedDatabases.length} Terpilih)</span>
+                        <ChevronRight className="w-4 h-4 shrink-0" />
                       </button>
                     </div>
                   )}
@@ -4944,18 +5088,18 @@ export default function App() {
 
             {/* === LAPORAN (ADMIN ONLY) === */}
             {dashboardTab === 'reports' && (
-              <div className="lg:col-span-12 p-6 rounded-2xl transition-all duration-300 liquid-glass-card">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center border border-rose-500/20">
+              <div className="lg:col-span-12 p-4 sm:p-6 rounded-2xl transition-all duration-300 liquid-glass-card">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center border border-rose-500/20 shrink-0">
                     <AlertCircle className="w-5 h-5 text-rose-500" />
                   </div>
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Laporan Pengguna</h2>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white">Laporan Pengguna</h2>
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Tinjau laporan terkait soal dari pengguna</p>
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl liquid-glass-subtle">
+                <div className="p-3.5 sm:p-6 rounded-2xl liquid-glass-subtle">
                   {adminReports.length === 0 ? (
                     <div className="text-center py-8">
                       <AlertCircle className="w-8 h-8 mx-auto mb-3 opacity-30 text-slate-400" />
@@ -4964,8 +5108,8 @@ export default function App() {
                   ) : (
                     <div className="space-y-4">
                       {adminReports.map((report) => (
-                        <div key={report.id} className="p-4 rounded-xl liquid-glass-card">
-                          <div className="flex justify-between items-start mb-2">
+                        <div key={report.id} className="p-3.5 sm:p-4 rounded-xl liquid-glass-card">
+                          <div className="flex justify-between items-start flex-wrap gap-2 mb-2">
                             <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                               {report.issue_type}
                             </span>
@@ -4974,13 +5118,13 @@ export default function App() {
                             </span>
                           </div>
                           <div className="mb-2">
-                            <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Bank Soal: {report.question_bank_name}</h4>
+                            <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 break-words">Bank Soal: {report.question_bank_name}</h4>
                             <p className="text-sm font-bold line-clamp-2 text-slate-900 dark:text-white">
                               {report.question_text}
                             </p>
                           </div>
                           {report.description && (
-                            <div className="mt-3 p-3 rounded-lg liquid-glass-subtle text-xs text-slate-700 dark:text-slate-300">
+                            <div className="mt-3 p-3 rounded-lg liquid-glass-subtle text-xs text-slate-700 dark:text-slate-300 break-words">
                               <span className="font-bold">Keterangan:</span> {report.description}
                             </div>
                           )}
@@ -4994,7 +5138,7 @@ export default function App() {
 
             {/* Box 4: Analysis Dashboard */}
             {dashboardTab === 'analysis' && (
-              <div className="lg:col-span-12 p-6 rounded-2xl transition-all duration-300 liquid-glass-card">
+              <div className="lg:col-span-12 p-4 sm:p-6 rounded-2xl transition-all duration-300 liquid-glass-card">
                 <div className="flex items-center justify-between gap-4 mb-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
                   <h2 className="text-sm font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                     📊 Analisis Performa Belajar
@@ -5030,8 +5174,8 @@ export default function App() {
 
       {/* Dynamic Toast alerts */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full px-4 animate-slide-up">
-          <div className="liquid-glass-card text-slate-900 dark:text-white rounded-full px-5 py-3 shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+        <div className="fixed bottom-[calc(5.35rem+env(safe-area-inset-bottom))] lg:bottom-6 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full px-4 animate-slide-up">
+          <div className="liquid-glass-card mobile-glass-shell text-slate-900 dark:text-white rounded-full px-5 py-3 shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
             <span className="text-base flex-shrink-0">{toastMessage.icon}</span>
             <p className="flex-1 text-slate-800 dark:text-slate-100">{toastMessage.text}</p>
           </div>
@@ -5050,12 +5194,18 @@ export default function App() {
 
       {/* Detail Riwayat Modal overlay */}
       {selectedHistoryDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-4xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl animate-pop-up overflow-hidden liquid-glass-card text-slate-900 dark:text-white">
+        <div
+          onClick={() => setSelectedHistoryDetail(null)}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-4xl max-h-[90dvh] lg:max-h-[85vh] flex flex-col rounded-t-[28px] sm:rounded-2xl shadow-2xl animate-pop-up overflow-hidden liquid-glass-card text-slate-900 dark:text-white"
+          >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-slate-200/50 dark:border-slate-800/50 flex-shrink-0">
-              <div>
-                <h3 className="text-sm sm:text-base font-extrabold flex items-center gap-2">
+            <div className="flex items-start sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-200/50 dark:border-slate-800/50 flex-shrink-0">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-extrabold flex items-center flex-wrap gap-2">
                   <span>🏆 Detail Evaluasi Kuis</span>
                   <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${
                     selectedHistoryDetail.mode === 'rmo'
@@ -5079,16 +5229,16 @@ export default function App() {
               </div>
               <button
                 onClick={() => setSelectedHistoryDetail(null)}
-                className="p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400 cursor-pointer"
+                className="p-1.5 rounded-xl liquid-glass-subtle-interactive text-slate-500 dark:text-slate-400 shrink-0 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Score & Accuracies Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-2xl liquid-glass-subtle">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-2xl liquid-glass-subtle">
                 {/* Score Circle */}
                 <div className="col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
                   <span className="text-3xl font-black tabular-nums text-indigo-600 dark:text-indigo-400">
@@ -5127,7 +5277,7 @@ export default function App() {
               </div>
 
               {/* Roasting Feedback */}
-              <div className="p-4 rounded-xl border flex items-start gap-3 bg-amber-500/10 border-amber-500/20">
+              <div className="p-3.5 sm:p-4 rounded-xl border flex items-start gap-3 bg-amber-500/10 border-amber-500/20">
                 <span className="text-xl flex-shrink-0">💬</span>
                 <div>
                   <h4 className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Evaluasi Akademis:</h4>
@@ -5139,7 +5289,7 @@ export default function App() {
 
               {/* Question list section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                   <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-indigo-500" />
                     Review Soal & Pembahasan Lengkap
@@ -5206,18 +5356,18 @@ export default function App() {
                       const isOpen = !!openHistoryReviewIndices[idx];
 
                       let statusBadge = (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold liquid-glass-subtle text-slate-500 dark:text-slate-400">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold liquid-glass-subtle text-slate-500 dark:text-slate-400 shrink-0">
                           {hasRecordedAnswers ? 'Tidak Dijawab' : 'Kunci & Pembahasan'}
                         </span>
                       );
 
                       if (userAns !== null && userAns !== undefined) {
                         statusBadge = isCorrect ? (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
                             Benar
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
                             Salah
                           </span>
                         );
@@ -5236,26 +5386,26 @@ export default function App() {
                                 [idx]: !prev[idx]
                               }));
                             }}
-                            className="flex items-center justify-between gap-4 p-4 cursor-pointer transition-colors hover:bg-white/30 dark:hover:bg-white/5"
+                            className="flex items-center justify-between gap-2.5 sm:gap-4 p-3 sm:p-4 cursor-pointer transition-colors hover:bg-white/30 dark:hover:bg-white/5"
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                               <span className="text-xs font-bold tabular-nums text-slate-400 flex-shrink-0">
                                 Soal {idx + 1}
                               </span>
                               {statusBadge}
-                              <p className="text-xs font-semibold truncate text-slate-700 dark:text-slate-300">
+                              <p className="text-xs font-semibold truncate text-slate-700 dark:text-slate-300 min-w-0">
                                 {q.pertanyaan.replace(/<[^>]*>/g, '').slice(0, 80)}...
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const prompt = formatQuestionForGemini(q, idx, userAns, true);
                                   openGeminiTutor(prompt, triggerToast);
                                 }}
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border-indigo-500/25"
+                                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border-indigo-500/25"
                                 title="Salin konteks soal & buka Gemini AI"
                               >
                                 <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -5270,8 +5420,8 @@ export default function App() {
 
                           {/* Accordion Body */}
                           {isOpen && (
-                            <div className="p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] space-y-4 animate-slide-down">
-                              <div className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100">
+                            <div className="p-3.5 sm:p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] max-lg-liquid-subtle space-y-4 animate-slide-down">
+                              <div className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100 break-words overflow-x-auto" data-quiz-html>
                                 {renderHighlightedHtmlText(q.pertanyaan, selectedHistoryDetail.questionHighlights?.[idx], false)}
                                 {renderQuestionImage(q, setLightboxImage, theme)}
                               </div>
@@ -5285,7 +5435,7 @@ export default function App() {
                                     const isUserSelected = opt === userAns;
                                     const isStruck = (selectedHistoryDetail.strikethroughOptions?.[idx] || []).includes(oIdx);
 
-                                    let optClass = theme === 'dark' ? 'bg-slate-900/10 border-slate-800/50 text-slate-400' : 'bg-slate-50/50 border-slate-200/60 text-slate-500';
+                                    let optClass = theme === 'dark' ? 'bg-slate-900/10 border-slate-800/50 text-slate-400 max-lg-liquid-subtle' : 'bg-slate-50/50 border-slate-200/60 text-slate-500 max-lg-liquid-subtle';
                                     let letterBadgeClass = theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500';
 
                                     if (isCorrectOption) {
@@ -5299,33 +5449,35 @@ export default function App() {
                                     return (
                                       <div
                                         key={oIdx}
-                                        className={`flex items-start gap-3 p-3 rounded-xl border text-xs ${optClass}`}
+                                        className={`flex items-start flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 p-3 rounded-xl border text-xs ${optClass}`}
                                       >
                                         <div className={`w-6 h-6 rounded-full border flex items-center justify-center font-black text-xs flex-shrink-0 ${letterBadgeClass}`}>
                                           {letters[oIdx]}
                                         </div>
-                                        <div className={`flex-1 mt-0.5 text-xs font-semibold leading-relaxed ${
+                                        <div className={`flex-1 min-w-0 mt-0.5 text-xs font-semibold leading-relaxed break-words ${
                                           isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-70' : ''
-                                        }`}>
+                                        }`} data-quiz-html>
                                           {renderHtmlText(opt)}
                                         </div>
-                                        {isStruck && (
-                                          <span className="text-[9px] font-black uppercase tracking-wider text-rose-500 border border-rose-500/20 px-1.5 py-0.5 rounded-full bg-rose-500/10 flex-shrink-0">
-                                            🚫 Dicoret
-                                          </span>
-                                        )}
-                                        {isCorrectOption && (
-                                          <span className="text-[9px] font-black uppercase tracking-wider text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded-full bg-emerald-500/5 flex-shrink-0">
-                                            Kunci
-                                          </span>
-                                        )}
-                                        {isUserSelected && (
-                                          <span className={`text-[9px] font-black uppercase tracking-wider border px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                                            isCorrect ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' : 'text-rose-500 border-rose-500/20 bg-rose-500/5'
-                                          }`}>
-                                            Pilihan Anda
-                                          </span>
-                                        )}
+                                        <div className="flex items-center gap-1.5 flex-wrap ml-8 sm:ml-0">
+                                          {isStruck && (
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-rose-500 border border-rose-500/20 px-1.5 py-0.5 rounded-full bg-rose-500/10 flex-shrink-0">
+                                              🚫 Dicoret
+                                            </span>
+                                          )}
+                                          {isCorrectOption && (
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded-full bg-emerald-500/5 flex-shrink-0">
+                                              Kunci
+                                            </span>
+                                          )}
+                                          {isUserSelected && (
+                                            <span className={`text-[9px] font-black uppercase tracking-wider border px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                                              isCorrect ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' : 'text-rose-500 border-rose-500/20 bg-rose-500/5'
+                                            }`}>
+                                              Pilihan Anda
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     );
                                   })}
@@ -5338,11 +5490,11 @@ export default function App() {
                                       : 'bg-rose-500/5 border-rose-500/20 text-rose-600 dark:text-rose-400'
                                   }`}>
                                     <span className="font-extrabold uppercase text-[10px] tracking-wider opacity-80">Jawaban Anda:</span>
-                                    <span className="font-semibold">{userAns || <span className="italic">Tidak menjawab</span>}</span>
+                                    <span className="font-semibold break-words">{userAns || <span className="italic">Tidak menjawab</span>}</span>
                                   </div>
                                   <div className="p-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.02] flex flex-col gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                                     <span className="font-extrabold uppercase text-[10px] tracking-wider opacity-80">Jawaban Benar:</span>
-                                    <span className="font-bold">{q.jawaban_benar}</span>
+                                    <span className="font-bold break-words">{q.jawaban_benar}</span>
                                   </div>
                                 </div>
                               )}
@@ -5352,9 +5504,9 @@ export default function App() {
                                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-500 mb-1.5 flex items-center gap-1">
                                   <span>💡 Pembahasan Lengkap:</span>
                                 </h4>
-                                <p className="text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                                <div className="text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300 break-words overflow-x-auto" data-quiz-html>
                                   {q.pembahasan ? renderHtmlText(q.pembahasan) : 'Tidak ada penjelasan khusus.'}
-                                </p>
+                                </div>
                               </div>
 
                               {/* Shortcut Bebas Kuota / Tanya Gemini */}
@@ -5364,8 +5516,8 @@ export default function App() {
                                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm shadow-indigo-500/30">
                                       <Sparkles className="w-4 h-4 text-white" />
                                     </div>
-                                    <div>
-                                      <div className="flex items-center gap-2">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center flex-wrap gap-2">
                                         <span className="text-xs font-black text-slate-800 dark:text-slate-100">
                                           Tanya Gemini AI
                                         </span>
@@ -5398,7 +5550,7 @@ export default function App() {
                               {/* Catatan yang sudah ada (inline) di riwayat */}
                               {answerNotes[generateQuestionFingerprint(q)] && (
                                 <div
-                                  className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer"
+                                  className="mt-3 rounded-xl p-3 text-xs leading-relaxed cursor-pointer break-words"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const correctLetter = getCorrectLetterForQuestion(q);
@@ -5423,7 +5575,7 @@ export default function App() {
                                     </div>
                                     <span className="text-[10px] opacity-75 underline">Edit</span>
                                   </div>
-                                  <p className="whitespace-pre-wrap">{answerNotes[generateQuestionFingerprint(q)]}</p>
+                                  <p className="whitespace-pre-wrap break-words">{answerNotes[generateQuestionFingerprint(q)]}</p>
                                 </div>
                               )}
 
@@ -5431,17 +5583,17 @@ export default function App() {
                               {q.metadata && (
                                 <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-850">
                                   {q.metadata.sub_kompetensi_klinis && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 max-lg-liquid-subtle">
                                       Topic: {q.metadata.sub_kompetensi_klinis}
                                     </span>
                                   )}
                                   {q.metadata.tingkat_kognitif && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 max-lg-liquid-subtle">
                                       Kognitif: {q.metadata.tingkat_kognitif}
                                     </span>
                                   )}
                                   {q.metadata.tingkat_kesulitan && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 max-lg-liquid-subtle">
                                       Kesulitan: {q.metadata.tingkat_kesulitan}
                                     </span>
                                   )}
@@ -5449,14 +5601,14 @@ export default function App() {
                               )}
 
                               {/* Action toolbar in History detail */}
-                              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex flex-wrap gap-2 justify-end mt-3 -mx-5 -mb-5 rounded-b-xl">
+                              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 max-lg-liquid-subtle border-t border-slate-200/50 dark:border-slate-700 grid grid-cols-1 sm:flex sm:flex-wrap gap-2 justify-end mt-3 -mx-3.5 sm:-mx-5 -mb-3.5 sm:-mb-5 rounded-b-xl">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const prompt = formatQuestionForGemini(q, idx, userAns, true);
                                     openGeminiTutor(prompt, triggerToast);
                                   }}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-indigo-300 dark:border-indigo-700/60 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                                  className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border border-indigo-300 dark:border-indigo-700/60 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
                                   title="Salin soal & pembahasan ke Gemini AI"
                                 >
                                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -5474,10 +5626,10 @@ export default function App() {
                                           studyRoom.addBookmark(q, selectedHistoryDetail.files?.[0] || 'Kuis');
                                         }
                                       }}
-                                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                                         studyRoom.isBookmarked(q)
                                           ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
-                                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                          : 'bg-white dark:bg-slate-800 max-lg-liquid-interactive text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                                       }`}
                                     >
                                       <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
@@ -5495,10 +5647,10 @@ export default function App() {
                                           isCorrect
                                         );
                                       }}
-                                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                      className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                                         answerNotes[generateQuestionFingerprint(q)]
                                           ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 max-lg-liquid-interactive text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                                       }`}
                                     >
                                       {answerNotes[generateQuestionFingerprint(q)] ? (
@@ -5527,10 +5679,10 @@ export default function App() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-5 border-t border-slate-200/50 dark:border-slate-800/50 flex justify-end flex-shrink-0 bg-slate-50 dark:bg-slate-900/50">
+            <div className="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-5 border-t border-slate-200/50 dark:border-slate-800/50 flex justify-end flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 max-lg-liquid-subtle">
               <button
                 onClick={() => setSelectedHistoryDetail(null)}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/10 hover:scale-[1.02] active:scale-95 cursor-pointer transition-all"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/10 hover:scale-[1.02] active:scale-95 cursor-pointer transition-all"
               >
                 Tutup Evaluasi
               </button>

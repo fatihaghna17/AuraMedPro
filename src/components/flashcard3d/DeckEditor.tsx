@@ -255,9 +255,9 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto pb-28 lg:pb-12 animate-fade-in">
+    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto pb-8 lg:pb-12 animate-fade-in">
       {/* Header sticky */}
-      <div className="sticky top-2 z-20 mb-6 px-4 py-3 rounded-2xl liquid-glass-card flex items-center justify-between gap-3">
+      <div className="sticky top-[4.25rem] lg:top-2 z-20 mb-5 sm:mb-6 px-3.5 sm:px-4 py-3 rounded-2xl liquid-glass-card flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
@@ -317,40 +317,40 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
 
         {isAdmin && (
           <div className="fc3d-panel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="inline-flex p-1 rounded-xl fc3d-segment w-fit">
+            <div className="grid grid-cols-2 sm:inline-flex p-1 rounded-xl fc3d-segment w-full sm:w-fit">
               <button
                 type="button"
                 onClick={() => setIsPublic(true)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`justify-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   isPublic
                     ? 'fc3d-segment-pill text-slate-950 dark:text-white'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" />
-                Publik (Semua User)
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Publik (Semua User)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsPublic(false)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`justify-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   !isPublic
                     ? 'fc3d-segment-pill text-slate-950 dark:text-white'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                <Lock className="w-3.5 h-3.5" />
-                Pribadi
+                <Lock className="w-3.5 h-3.5 shrink-0" />
+                <span>Pribadi</span>
               </button>
             </div>
 
             {isPublic && (
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
                 <select
                   aria-label="Target Prodi"
                   value={prodi}
                   onChange={(e) => setProdi(e.target.value)}
-                  className="px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
+                  className="min-w-0 px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
                 >
                   <option value="all">Semua Prodi</option>
                   <option value="kedokteran">Kedokteran</option>
@@ -361,7 +361,7 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
                   aria-label="Target Angkatan"
                   value={angkatan}
                   onChange={(e) => setAngkatan(e.target.value)}
-                  className="px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
+                  className="min-w-0 px-3 py-2 rounded-xl text-xs font-semibold liquid-glass-input text-slate-800 dark:text-slate-100"
                 >
                   <option value="all">Semua Angkatan</option>
                   <option value="2024">Angkatan 2024</option>
@@ -388,7 +388,7 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
                   onClick={() => moveCard(idx, -1)}
                   disabled={idx === 0}
                   aria-label="Geser kartu ke atas"
-                  className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                  className="p-2 lg:p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                 >
                   <ArrowUp className="w-3.5 h-3.5" />
                 </button>
@@ -397,7 +397,7 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
                   onClick={() => moveCard(idx, 1)}
                   disabled={idx === cards.length - 1}
                   aria-label="Geser kartu ke bawah"
-                  className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                  className="p-2 lg:p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                 >
                   <ArrowDown className="w-3.5 h-3.5" />
                 </button>
@@ -405,7 +405,7 @@ export const DeckEditor: React.FC<DeckEditorProps> = ({
                   type="button"
                   onClick={() => removeCard(card.id)}
                   aria-label="Hapus kartu"
-                  className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+                  className="p-2 lg:p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

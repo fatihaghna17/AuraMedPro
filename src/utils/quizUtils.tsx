@@ -614,7 +614,7 @@ export const renderQuestionImage = (q: Question, setLightbox: (url: string | nul
   // StableImage: aspect-ratio tercadang (cache per-URL) — mencegah layout collapse & flicker di iOS WebKit
   return (
     <div className="my-4 relative group max-w-xl mx-auto">
-      <div className={`overflow-hidden rounded-xl border shadow-sm flex justify-center items-center relative ${
+      <div className={`overflow-hidden rounded-xl border shadow-sm flex justify-center items-center relative max-lg-liquid-subtle ${
         theme === 'dark' ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-100'
       }`}>
         <StableImage

@@ -198,8 +198,8 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* TOP ROW: PAGE HEADER                                                     */}
       {/* ========================================================================= */}
-      <div className="w-full p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
+      <div className="w-full p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 min-w-0">
           <div 
             onClick={() => setDashboardTab('profile')}
             className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-105 ${currentFrame.ringClass}`}
@@ -219,22 +219,22 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
             <h1 className="text-lg sm:text-xl font-extrabold tracking-tight truncate text-slate-900 dark:text-slate-100">
               Halo, {profileUsername}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 tabular-nums">
+            <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-2.5 gap-y-1.5 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 tabular-nums">
               <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
                 <span>{CULTIVATOR_TIERS[cultivatorTier - 1]?.badge}</span>
                 <span>Tingkat {cultivatorTier}</span>
               </span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span className="flex items-center gap-1">
-                <Award className="w-3.5 h-3.5 text-indigo-500" />
+                <Award className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                 <span>Lv {getLevelInfo(userXP).level} • {userBestSuddenDeath >= 100 || savedFrameId === 'demon_king_100' ? 'Raja Iblis 👹' : getLevelInfo(userXP).rank}</span>
               </span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>{userXP} XP</span>
               </span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span 
                 className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold"
                 title={`Streak Belajar: ${currentStreak} Hari • ${streakFlame.tierName}`}
@@ -280,11 +280,11 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
       {/* ========================================================================= */}
       {/* DASHBOARD 2-COLUMN GRID: LEFT (POMODORO & ACTIVITY), RIGHT (HISTORY & RANKS) */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
         {/* ======================================================================= */}
         {/* COLUMN 1 (KIRI - lg:col-span-5): POMODORO TIMER AT TOP, ACTIVITY, ETC.   */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-5 space-y-5">
+        <div className="lg:col-span-5 space-y-4 sm:space-y-5 min-w-0">
           {/* 1. POMODORO TIMER (DI PALING ATAS, LANGSUNG KELIHATAN) */}
           <PomodoroWidget
             theme={theme as 'light' | 'dark'}
@@ -302,7 +302,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           />
 
           {/* 2. AKTIVITAS BELAJAR */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div>
@@ -318,7 +318,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
               {/* Mini stats row */}
               <div className="grid grid-cols-2 gap-3 mb-4 tabular-nums">
-                <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
+                <div className="p-3 sm:p-3.5 rounded-xl liquid-glass-subtle text-center">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Benar Minggu Ini
                   </span>
@@ -326,7 +326,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     {activityData.reduce((acc, curr) => acc + curr.JawabanBenar, 0)}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
+                <div className="p-3 sm:p-3.5 rounded-xl liquid-glass-subtle text-center">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Sesi Pomodoro
                   </span>
@@ -397,10 +397,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
         {/* ======================================================================= */}
         {/* COLUMN 2 (KANAN - lg:col-span-7): RIWAYAT KUIS & LEADERBOARD CBT        */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-7 space-y-5">
+        <div className="lg:col-span-7 space-y-4 sm:space-y-5 min-w-0">
           {/* 1. RIWAYAT PERCOBAAN KUIS (STANDALONE DEDICATED CARD) */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col">
-            <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-white/10 pb-3.5">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col">
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap border-b border-slate-200/60 dark:border-white/10 pb-3.5">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -424,10 +424,10 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               )}
             </div>
 
-            {/* Scrollable Container (Fixed height, internal scroll) */}
-            <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
+            {/* Scrollable Container (Single scroll on mobile, fixed height on desktop) */}
+            <div className="max-h-none lg:max-h-[380px] lg:overflow-y-auto lg:pr-1 space-y-4">
               {quizHistory.length === 0 ? (
-                <div className="text-center p-10">
+                <div className="text-center p-8 sm:p-10">
                   <Award className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2.5" />
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     Belum ada riwayat pengerjaan kuis
@@ -439,37 +439,37 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               ) : (
                 <div className="space-y-4">
                   {/* Top Stats Overview */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 tabular-nums">
-                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
-                      <div className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 tabular-nums">
+                    <div className="p-2.5 sm:p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-base sm:text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
                         {quizHistory.length}
                       </div>
-                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                         Jumlah Percobaan
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
-                      <div className="text-xl font-extrabold text-emerald-500">
+                    <div className="p-2.5 sm:p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-base sm:text-xl font-extrabold text-emerald-500">
                         {Math.round(quizHistory.reduce((acc, curr) => acc + curr.score, 0) / quizHistory.length)}
                       </div>
-                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                         Rata-rata Skor
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl liquid-glass-subtle text-center">
-                      <div className="text-xl font-extrabold text-amber-500">
+                    <div className="p-2.5 sm:p-3.5 rounded-xl liquid-glass-subtle text-center">
+                      <div className="text-base sm:text-xl font-extrabold text-amber-500">
                         {Math.max(...quizHistory.map((h) => h.score))}
                       </div>
-                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                         Skor Tertinggi
                       </div>
                     </div>
                   </div>
 
                   {/* Detailed List */}
-                  <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[340px] lg:max-h-[350px] overflow-y-auto pr-1">
                     {quizHistory.map((item) => {
                       const scoreColor = item.score >= 80 
                         ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
@@ -486,20 +486,20 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                             setSelectedHistoryDetail(item);
                             setOpenHistoryReviewIndices({});
                           }}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl liquid-glass-subtle-interactive gap-3 cursor-pointer group/history"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-3.5 rounded-xl liquid-glass-subtle-interactive gap-2.5 sm:gap-3 cursor-pointer group/history"
                           title="Klik untuk membuka detail soal & pembahasan"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className={`w-11 h-11 rounded-xl border flex flex-col items-center justify-center font-bold text-sm tabular-nums shrink-0 ${scoreColor}`}>
                               <span>{item.score}</span>
                               <span className="text-[8px] opacity-80">Skor</span>
                             </div>
 
-                            <div className="min-w-0">
-                              <div className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md text-slate-900 dark:text-slate-100 group-hover/history:text-indigo-600 dark:group-hover/history:text-indigo-400 transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-xs truncate lg:max-w-md text-slate-900 dark:text-slate-100 group-hover/history:text-indigo-600 dark:group-hover/history:text-indigo-400 transition-colors">
                                 {item.files.join(', ')}
                               </div>
-                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap tabular-nums">
+                              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap tabular-nums">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
                                   {new Date(item.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -514,31 +514,33 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/40 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
                             <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
                               Pembahasan →
                             </span>
 
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                              item.mode === 'rmo'
-                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                : item.mode === 'blok'
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                            }`}>
-                              {item.mode === 'rmo' ? 'RMO' : item.mode === 'blok' ? 'Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
-                            </span>
-                            
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteHistoryItem(item.id);
-                              }}
-                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
-                              title="Hapus riwayat"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                                item.mode === 'rmo'
+                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                  : item.mode === 'blok'
+                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                              }`}>
+                                {item.mode === 'rmo' ? 'RMO' : item.mode === 'blok' ? 'Ujian Blok' : item.mode === 'simulasi' ? 'Simulasi' : 'Sequential'}
+                              </span>
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteHistoryItem(item.id);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
+                                title="Hapus riwayat"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -550,7 +552,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
           </div>
 
           {/* 2. LEADERBOARD CBT (STANDALONE DEDICATED CARD) */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col min-w-0">
             <div className="flex items-center justify-between gap-4 mb-4 flex-wrap border-b border-slate-200/60 dark:border-white/10 pb-3.5">
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500" />
@@ -566,14 +568,14 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
               </div>
             </div>
 
-            <div className="max-h-[500px] overflow-y-auto pr-1 space-y-4">
+            <div className="max-h-none lg:max-h-[500px] lg:overflow-y-auto lg:pr-1 space-y-4">
               <div className="space-y-4">
                 {/* Leaderboard Type Toggles */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex rounded-xl liquid-glass-subtle p-1">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="grid grid-cols-2 sm:flex rounded-xl liquid-glass-subtle p-1 w-full sm:w-auto">
                     <button
                       onClick={() => setLeaderboardType('global')}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                      className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-center transition-all duration-150 cursor-pointer ${
                         leaderboardType === 'global'
                           ? 'bg-indigo-600 text-white shadow-sm'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -590,7 +592,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                           fetchFileLeaderboard(firstFile);
                         }
                       }}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                      className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-center transition-all duration-150 cursor-pointer ${
                         leaderboardType === 'file'
                           ? 'bg-indigo-600 text-white shadow-sm'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -618,12 +620,12 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 </div>
 
                 {/* Filters: Prodi Filter Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 border-b border-slate-200/40 dark:border-slate-800/40">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 border-b border-slate-200/40 dark:border-slate-800/40 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0 w-full sm:w-auto">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
                       Program Studi:
                     </span>
-                    <div className="flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle flex-wrap">
+                    <div className="flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle overflow-x-auto scrollbar-none sm:flex-wrap max-w-full">
                       {[
                         { key: 'all', label: 'Semua Prodi', icon: '🌐' },
                         { key: 'kedokteran', label: 'Kedokteran', icon: '🩺' },
@@ -637,7 +639,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                             key={item.key}
                             type="button"
                             onClick={() => setLeaderboardProdiFilter && setLeaderboardProdiFilter(item.key)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
                               isSelected
                                 ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -658,24 +660,24 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                     </div>
                   </div>
 
-                  <span className="self-end sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  <span className="self-end sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
                     {leaderboardType === 'global' ? globalLeaderboard.length : fileLeaderboard.length} Peserta
                   </span>
                 </div>
 
                 {/* Filters Row: Angkatan & Time Filter */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap min-w-0">
                   {/* Left: Info Angkatan (User) / Dropdown Pilih Angkatan (Admin Super) / Badge Angkatan (Admin Angkatan) */}
                   {isSuperAdmin ? (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 p-1 rounded-xl liquid-glass-subtle">
-                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-2">
+                    <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-1.5 sm:p-1 rounded-xl liquid-glass-subtle w-full sm:w-auto">
+                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1.5 sm:pl-2">
                           Pilih Angkatan (Super Admin):
                         </span>
                         <select
                           value={adminAngkatanFilter || 'all'}
                           onChange={(e) => setAdminAngkatanFilter && setAdminAngkatanFilter(e.target.value as any)}
-                          className="px-3 py-1.5 rounded-lg liquid-glass-input text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                          className="w-full sm:w-auto px-3 py-1.5 rounded-lg liquid-glass-input text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
                         >
                           <option value="all" className="dark:bg-slate-900">🌐 Semua Angkatan (Seluruh User)</option>
                           <option value="23" className="dark:bg-slate-900">Angkatan 2023 (Seluruh User)</option>
@@ -693,36 +695,36 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-max">
+                    <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-full sm:w-auto lg:w-max">
                       <button
                         type="button"
                         onClick={() => setLeaderboardScope && setLeaderboardScope('my')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                           leaderboardScope === 'my'
                             ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span>🎓</span>
-                        <span>Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'}</span>
+                        <span className="truncate">Angkatan {userAngkatan ? `20${userAngkatan}` : 'Saya'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setLeaderboardScope && setLeaderboardScope('all')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                           leaderboardScope === 'all'
                             ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span>🌐</span>
-                        <span>Lintas Angkatan</span>
+                        <span className="truncate">Lintas Angkatan</span>
                       </button>
                     </div>
                   )}
 
                   {/* Time Filter Tabs */}
-                  <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-max">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 p-1 rounded-xl liquid-glass-subtle w-full sm:w-auto lg:w-max">
                     {[
                       { key: 'all', label: 'Semua Waktu' },
                       { key: '1', label: 'Hari Ini' },
@@ -742,7 +744,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                setFileTimeFilter(filter.key as any);
                             }
                           }}
-                          className={`px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider text-center transition-all cursor-pointer ${
                             isActive
                               ? 'bg-indigo-600 text-white shadow-sm'
                               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -756,7 +758,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 </div>
 
                 {/* Aura Prestige Legend */}
-                <div className="flex items-center gap-2 flex-wrap px-1 text-[10px]">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap px-1 text-[10px]">
                   <span className="font-bold text-slate-450 uppercase tracking-wider text-[9px]">Efek Aura:</span>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-xs border border-yellow-200 flex items-center gap-1">
                     <span>👑</span>
@@ -778,7 +780,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
 
                 {/* Active Aura Status for Current User */}
                 {(currentFrame.auraClass || userBestSuddenDeath >= 20) && (
-                  <div className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all animate-fade-in ${
+                  <div className={`flex items-center justify-between flex-wrap sm:flex-nowrap gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all animate-fade-in ${
                     currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
                       ? 'bg-black/90 border-red-600/90 text-red-400 shadow-md shadow-red-950/80 ring-1 ring-red-500/50'
                       : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20
@@ -789,7 +791,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                       ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-300 shadow-sm shadow-teal-500/10'
                       : 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-300 shadow-sm shadow-purple-500/10'
                   }`}>
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                         currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100
                           ? 'p-[2px] bg-gradient-to-tr from-black via-zinc-950 to-red-600 border border-red-500 shadow-md shadow-red-900/60'
@@ -801,7 +803,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                           {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? '👹' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? '💀' : currentFrame.badge}
                         </div>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <span className="font-extrabold block">
                           Aura Aktif Anda: {currentFrame.id === 'demon_king_100' || userBestSuddenDeath >= 100 ? 'Raja Iblis (Demon Lord)' : currentFrame.id === 'sudden_death_master' || userBestSuddenDeath >= 20 ? 'Tengkorak Emas (Survivor)' : currentFrame.name}
                         </span>
@@ -818,7 +820,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                 )}
 
                 <div className="overflow-hidden rounded-xl liquid-glass-subtle">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-[420px] overflow-y-auto lg:max-h-none">
                     <table className="w-full text-left text-xs border-collapse tabular-nums">
                       <thead>
                         <tr className="border-b border-slate-200/60 dark:border-white/10 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-white/[0.04]">
@@ -988,7 +990,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                           {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
                                         </span>
                                       </td>
-                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2.5 flex-wrap">
+                                      <td className="py-3.5 px-3 sm:px-4 min-w-[185px] sm:min-w-0 font-extrabold flex items-center gap-2 sm:gap-2.5 flex-wrap">
                                         {/* Mini Cultivator Avatar with Frame Ring */}
                                         <div className={`relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                                           hasDemonKingAura
@@ -1256,7 +1258,7 @@ export const SetupHomeTab: React.FC<SetupHomeTabProps> = ({
                                           {rankNum === 1 ? '👑' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum}
                                         </span>
                                       </td>
-                                      <td className="py-3.5 px-4 font-extrabold flex items-center gap-2.5 flex-wrap">
+                                      <td className="py-3.5 px-3 sm:px-4 min-w-[185px] sm:min-w-0 font-extrabold flex items-center gap-2 sm:gap-2.5 flex-wrap">
                                         {/* Mini Cultivator Avatar with Frame Ring */}
                                         <div className={`relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                                           hasDemonKingAura

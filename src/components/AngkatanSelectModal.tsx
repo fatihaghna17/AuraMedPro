@@ -25,11 +25,11 @@ export default function AngkatanSelectModal({ theme, onSelect, loading, initialP
     : (['24', '25', '26'] as const);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div className={`w-full max-w-sm rounded-3xl shadow-2xl p-6 sm:p-8 transition-all duration-300 ${
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:px-4">
+      <div className={`w-full sm:max-w-sm max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-3xl shadow-2xl p-5 sm:p-8 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-8 transition-all duration-300 max-lg-liquid-card ${
         isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'
       }`}>
-        <div className="text-center mb-6">
+        <div className="text-center mb-5 sm:mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg mb-3">
             <GraduationCap className="w-7 h-7" />
           </div>
@@ -59,9 +59,9 @@ export default function AngkatanSelectModal({ theme, onSelect, loading, initialP
                   className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer border text-center ${
                     isSelected
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/40 scale-[1.02]'
-                      : isDark
-                      ? 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      : (isDark
+                        ? 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100') + ' max-lg-liquid-interactive'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -84,7 +84,7 @@ export default function AngkatanSelectModal({ theme, onSelect, loading, initialP
                 type="button"
                 onClick={() => !loading && onSelect(angkatan, selectedProdi)}
                 disabled={loading}
-                className={`w-full py-3.5 rounded-2xl font-black text-base transition-all cursor-pointer ${
+                className={`w-full py-3.5 rounded-2xl font-black text-base transition-all cursor-pointer max-lg-liquid-interactive ${
                   isDark
                     ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-indigo-500'
                     : 'bg-slate-50 hover:bg-indigo-50 text-slate-800 border border-slate-200 hover:border-indigo-400'

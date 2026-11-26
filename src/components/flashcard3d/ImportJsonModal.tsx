@@ -95,7 +95,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/55 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -103,7 +103,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
         aria-modal="true"
         aria-labelledby="fc3d-import-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[88dvh] overflow-y-auto fc3d-scroll rounded-[24px] liquid-glass-card p-5 sm:p-6 text-slate-900 dark:text-slate-100 animate-scale-in"
+        className="w-full sm:max-w-xl max-h-[90dvh] sm:max-h-[88dvh] overflow-y-auto fc3d-scroll rounded-t-[28px] sm:rounded-[24px] liquid-glass-card p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-slate-900 dark:text-slate-100 animate-scale-in"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

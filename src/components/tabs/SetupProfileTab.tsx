@@ -163,7 +163,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 w-full max-w-5xl mx-auto animate-fade-in pb-24 sm:pb-12">
+    <div className="space-y-5 sm:space-y-6 w-full max-w-5xl mx-auto animate-fade-in pb-4 sm:pb-12">
       {/* ⏱️ Top Trial Countdown Banner */}
       <TrialCountdownBanner
         theme={theme}
@@ -177,15 +177,15 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
       {/* ========================================================================= */}
       {/* DESKTOP 2-COLUMN / MOBILE 1-COLUMN RESPONSIVE LAYOUT                     */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
         
         {/* ----------------------------------------------------------------------- */}
         {/* LEFT COLUMN: IDENTITAS KULTIVATOR, STATS & KEAMANAN AKUN (lg:col-span-5) */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-5 sm:space-y-6 min-w-0">
           
           {/* Card 1: Identitas Kultivator & Statistik */}
-          <div className={`p-5 sm:p-6 rounded-2xl liquid-glass-card space-y-5 relative overflow-hidden ${getAuraCardClass(activeFrame.id)}`}>
+          <div className={`p-4 sm:p-6 rounded-2xl liquid-glass-card space-y-5 relative overflow-hidden ${getAuraCardClass(activeFrame.id)}`}>
             {/* Active Aura Prestige Badge */}
             {activeFrame.auraClass && (
               <div className="flex justify-center -mt-1 mb-1">
@@ -322,11 +322,11 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
 
             {/* Divide-y stats */}
             <div className="divide-y divide-slate-200/60 dark:divide-white/10 text-xs tabular-nums">
-              <div className="py-2.5 flex justify-between">
+              <div className="py-2.5 flex justify-between gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Total Soal Benar</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{currentUser?.total_questions_answered || 0} Soal</span>
               </div>
-              <div className="py-2.5 flex justify-between items-center">
+              <div className="py-2.5 flex justify-between items-center gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Streak Saat Ini</span>
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-bold transition-all duration-300 ${streakFlame.badgeClass}`} title={`${currentStreak} Hari • ${streakFlame.tierName}`}>
                   <Flame className={`w-3.5 h-3.5 fill-current ${streakFlame.flameColor} ${streakFlame.glowClass} ${streakFlame.iconAnimClass}`} />
@@ -334,7 +334,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                   <span className="opacity-75 font-medium text-[10px]">({streakFlame.tierName})</span>
                 </span>
               </div>
-              <div className="py-2.5 flex justify-between items-center">
+              <div className="py-2.5 flex justify-between items-center gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Streak Tertinggi</span>
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-bold transition-all duration-300 ${longestFlame.badgeClass}`} title={`Rekor: ${longestStreak} Hari • ${longestFlame.tierName}`}>
                   <Flame className={`w-3.5 h-3.5 fill-current ${longestFlame.flameColor} ${longestFlame.glowClass}`} />
@@ -342,11 +342,11 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                   <span className="opacity-75 font-medium text-[10px]">({longestFlame.tierName})</span>
                 </span>
               </div>
-              <div className="py-2.5 flex justify-between">
+              <div className="py-2.5 flex justify-between gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Streak Freeze (❄️)</span>
                 <span className="font-bold text-sky-600 dark:text-sky-400">{streakFreezeLeft} Tersisa</span>
               </div>
-              <div className="py-2.5 flex justify-between items-center">
+              <div className="py-2.5 flex justify-between items-center gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Tipe Akun</span>
                 <span className={`font-bold uppercase tracking-wider text-[10px] px-2 py-0.5 rounded-md border ${
                   subscriptionStatus === 'lifetime'
@@ -356,12 +356,12 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                   {subscriptionStatus === 'lifetime' ? '👑 Lifetime Pro' : 'Pro'}
                 </span>
               </div>
-              <div className="py-2.5 flex justify-between items-center">
+              <div className="py-2.5 flex justify-between items-center gap-2 flex-wrap">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">Masa Berlaku</span>
                 <span className={`font-bold text-[11px] flex items-center gap-1 ${
                   subscriptionStatus === 'lifetime' ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'
                 }`}>
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
                   {isSuperAdmin
                     ? 'Akses Permanen'
                     : subscriptionStatus === 'lifetime'
@@ -379,7 +379,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 2: Keamanan Akun & Logout */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card space-y-5">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card space-y-5">
             {/* Ganti Password Section */}
             <div>
               <h3 className="text-xs font-extrabold uppercase tracking-wider mb-3 text-slate-900 dark:text-slate-100">
@@ -392,12 +392,12 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
                   placeholder="3 Digit (Misal: 123)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="flex-1 px-3 py-2.5 rounded-xl liquid-glass-input text-center text-sm font-bold tracking-[0.35em] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl liquid-glass-input text-center text-sm font-bold tracking-[0.35em] placeholder:tracking-normal sm:placeholder:tracking-[0.35em] placeholder:text-xs sm:placeholder:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
                 />
                 <button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword || newPassword.length !== 3}
-                  className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm shadow-indigo-600/20"
+                  className="shrink-0 px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm shadow-indigo-600/20"
                 >
                   {isChangingPassword ? '...' : 'Simpan'}
                 </button>
@@ -450,16 +450,16 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
         {/* ----------------------------------------------------------------------- */}
         {/* RIGHT COLUMN: QUEST, SOUND PACK, ACHIEVEMENTS & DATA (lg:col-span-7)     */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-5 sm:space-y-6 min-w-0">
 
           {/* Card 3: Quest Harian Section */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card">
             <div className="flex items-start justify-between gap-2 mb-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-500 flex items-center justify-center text-lg border border-purple-500/25 shrink-0">
                   🔥
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                       Quest Harian: Maraton 500 Soal
@@ -512,8 +512,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 4: Sound Pack Selector */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card space-y-3.5">
-            <div className="flex items-center justify-between">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card space-y-3.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-indigo-500" />
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100">
@@ -574,8 +574,8 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 5: Achievements Section */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card">
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 Achievements 🏆
               </h3>
@@ -584,12 +584,12 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
               </span>
             </div>
             
-            <div className="flex gap-1.5 p-1 rounded-xl liquid-glass-subtle w-max mb-4 overflow-x-auto max-w-full">
+            <div className="grid grid-cols-4 sm:flex gap-1.5 p-1 rounded-xl liquid-glass-subtle w-full sm:w-auto lg:w-max mb-4 overflow-x-auto max-w-full scrollbar-none">
               {['all', 'quiz', 'streak', 'mastery'].map(filter => (
                 <button
                   key={filter}
                   onClick={() => setAchievementFilter(filter as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                  className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-center justify-center whitespace-nowrap transition cursor-pointer ${
                     achievementFilter === filter 
                       ? 'bg-indigo-600 text-white shadow-xs' 
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -633,7 +633,7 @@ export const SetupProfileTab: React.FC<SetupProfileTabProps> = ({
           </div>
 
           {/* Card 6: Data Management Section */}
-          <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card">
+          <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card">
             <h3 className="text-xs font-extrabold uppercase tracking-wider mb-1.5 flex items-center gap-2 text-slate-900 dark:text-slate-100">
               <Download className="w-4 h-4 text-indigo-500" /> Ekspor & Impor Data Cadangan
             </h3>

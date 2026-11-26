@@ -102,26 +102,26 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
         </button>
         
         {/* HEADER GRUP */}
-        <div className="p-6 rounded-2xl liquid-glass-card">
+        <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card">
           <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100">{selectedGroup.name}</h2>
-                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center flex-wrap gap-2 sm:gap-2.5 mb-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 break-words">{selectedGroup.name}</h2>
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 shrink-0">
                   Grup Belajar
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{selectedGroup.description || 'Tidak ada deskripsi.'}</p>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 break-words">{selectedGroup.description || 'Tidak ada deskripsi.'}</p>
             </div>
             
-            <div className="flex flex-col items-end gap-2 p-4 rounded-xl liquid-glass-subtle">
+            <div className="flex flex-col w-full sm:w-auto items-start sm:items-end gap-2 p-3.5 sm:p-4 rounded-xl liquid-glass-subtle">
               <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kode Undangan</div>
               <div className="text-xl font-mono font-extrabold text-indigo-600 dark:text-indigo-400 tracking-widest bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
                 {selectedGroup.invite_code}
               </div>
               <button 
                 onClick={() => handleInviteWA(selectedGroup.invite_code)}
-                className="mt-1 flex items-center gap-2 bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 text-xs shadow-sm shadow-emerald-600/20 cursor-pointer"
+                className="mt-1 w-full sm:w-auto justify-center flex items-center gap-2 bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 text-xs shadow-sm shadow-emerald-600/20 cursor-pointer"
               >
                 <LinkIcon className="w-3.5 h-3.5" /> Undang via WhatsApp
               </button>
@@ -129,28 +129,28 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
           </div>
 
           {/* TAB SWITCHER DI DALAM GRUP */}
-          <div className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-slate-200/60 dark:border-white/10">
+          <div className="flex flex-wrap items-center gap-2 mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-slate-200/60 dark:border-white/10">
             <button
               onClick={() => setActiveGroupViewTab('radiology')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+              className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                 activeGroupViewTab === 'radiology'
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                   : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
               }`}
             >
-              <Stethoscope className="w-4 h-4" />
+              <Stethoscope className="w-4 h-4 shrink-0" />
               <span>Latihan CBT Radiologi (Essay)</span>
             </button>
 
             <button
               onClick={() => setActiveGroupViewTab('regular')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer tabular-nums ${
+              className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer tabular-nums ${
                 activeGroupViewTab === 'regular'
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                   : 'liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300'
               }`}
             >
-              <Folder className="w-4 h-4" />
+              <Folder className="w-4 h-4 shrink-0" />
               <span>Bank Soal Reguler & Anggota ({groupMembers.length})</span>
             </button>
           </div>
@@ -172,8 +172,8 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
 
         {/* TAB CONTENT 2: BANK SOAL REGULER & ANGGOTA */}
         {activeGroupViewTab === 'regular' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-            <div className="lg:col-span-1 p-6 rounded-2xl liquid-glass-card">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 animate-fade-in">
+            <div className="lg:col-span-1 p-4 sm:p-6 rounded-2xl liquid-glass-card">
               <div className="flex items-center gap-2.5 mb-4">
                 <Users className="w-5 h-5 text-indigo-500" />
                 <h3 className="font-bold text-base tabular-nums text-slate-900 dark:text-slate-100">Anggota ({groupMembers.length})</h3>
@@ -181,16 +181,16 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
               <ul className="space-y-2.5">
                 {groupMembers.map(m => (
                   <li key={m.user_id} className="flex items-center gap-3 p-3 rounded-xl liquid-glass-subtle">
-                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                       {(m.username || 'U')[0].toUpperCase()}
                     </div>
-                    <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">{m.username || 'Tanpa Nama'}</span>
+                    <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">{m.username || 'Tanpa Nama'}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="lg:col-span-2 p-6 rounded-2xl liquid-glass-card flex flex-col items-center justify-center text-center">
+            <div className="lg:col-span-2 p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col items-center justify-center text-center">
               <div className="w-14 h-14 bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-4">
                 <Users className="w-7 h-7" />
               </div>
@@ -200,7 +200,7 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
               </p>
               <button 
                 onClick={() => onJoinGroup && onJoinGroup(selectedGroup.id, selectedGroup.name)}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-md shadow-indigo-600/25 cursor-pointer"
+                className="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-md shadow-indigo-600/25 cursor-pointer"
               >
                 Buka Bank Soal Grup
               </button>
@@ -212,28 +212,28 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
   }
 
   return (
-    <div className={`space-y-6 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-      <div className="p-5 sm:p-6 rounded-2xl liquid-glass-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className={`space-y-5 sm:space-y-6 animate-fade-in ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+      <div className="p-4 sm:p-6 rounded-2xl liquid-glass-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100">Grup Belajar</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Berkumpul, berbagi soal klinis, dan latihan radiologi bersama sejawat.</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition cursor-pointer shrink-0"
+          className="w-full sm:w-auto justify-center flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition cursor-pointer shrink-0"
         >
           <PlusCircle className="w-4 h-4" /> Buat Grup Baru
         </button>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-36 rounded-2xl liquid-glass-card animate-pulse" />
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className="text-center py-16 px-6 rounded-2xl liquid-glass-card">
+        <div className="text-center py-14 sm:py-16 px-4 sm:px-6 rounded-2xl liquid-glass-card">
           <div className="w-16 h-16 mx-auto bg-indigo-500/15 border border-indigo-500/25 text-indigo-500 rounded-2xl flex items-center justify-center mb-4">
             <Users className="w-8 h-8" />
           </div>
@@ -241,11 +241,11 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">Anda belum bergabung dengan grup apa pun. Buat grup baru sekarang atau minta tautan undangan ke teman sejawat Anda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {groups.map(group => (
             <div 
               key={group.id} 
-              className="p-5 sm:p-6 rounded-2xl liquid-glass-interactive cursor-pointer flex flex-col justify-between"
+              className="p-4 sm:p-6 rounded-2xl liquid-glass-interactive cursor-pointer flex flex-col justify-between"
               onClick={() => loadGroupDetails(group)}
             >
               <div>
@@ -268,9 +268,15 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl liquid-glass-card overflow-hidden">
-            <div className="flex justify-between items-center p-5 border-b border-slate-200/60 dark:border-white/10">
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl liquid-glass-card pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-200/60 dark:border-white/10">
               <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Buat Grup Belajar</h3>
               <button 
                 onClick={() => setShowCreateModal(false)}
@@ -280,7 +286,7 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
               </button>
             </div>
             
-            <form onSubmit={handleCreateGroup} className="p-5 sm:p-6">
+            <form onSubmit={handleCreateGroup} className="p-4 sm:p-6">
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Nama Grup</label>

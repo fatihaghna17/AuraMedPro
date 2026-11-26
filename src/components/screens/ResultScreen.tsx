@@ -92,10 +92,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
   return (
     <>
-      <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-7 animate-fade-in px-4 sm:px-6 pb-28 pt-6 min-w-0 overflow-x-hidden">
+      <div className="w-full max-w-3xl mx-auto space-y-5 sm:space-y-7 animate-fade-in px-3.5 sm:px-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-28 pt-5 sm:pt-6 min-w-0 overflow-x-hidden">
         
         {/* Main Score Ring card */}
-        <div className="w-full max-w-full min-w-0 overflow-hidden p-6 sm:p-8 rounded-2xl liquid-glass-card text-center relative">
+        <div className="w-full max-w-full min-w-0 overflow-hidden p-4 sm:p-8 rounded-2xl liquid-glass-card text-center relative">
               
               {/* Radial Animated Circular meter */}
               <div className="relative w-44 h-44 mx-auto mb-6 flex items-center justify-between flex-col animate-pop-in tabular-nums">
@@ -514,8 +514,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                       {/* Accordion Body */}
                       {isOpen && (
-                        <div className="p-3.5 sm:p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] space-y-4 animate-slide-down w-full max-w-full min-w-0 overflow-hidden">
-                          <div className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100 break-words">
+                        <div className="p-3.5 sm:p-5 border-t border-slate-200/50 dark:border-slate-850/60 bg-slate-500/[0.01] max-lg-liquid-subtle space-y-4 animate-slide-down w-full max-w-full min-w-0 overflow-hidden">
+                          <div data-quiz-html className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-100 break-words overflow-x-auto">
                             {renderHighlightedHtmlText(q.pertanyaan, questionHighlights?.[idx], false)}
                             {renderQuestionImage(q, setLightboxImage, theme)}
                           </div>
@@ -526,19 +526,19 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                               const correctOptionText = q.pilihan ? (q.pilihan[['A', 'B', 'C', 'D', 'E'].indexOf(correctLetter)] || q.jawaban_benar) : q.jawaban_benar;
 
                               return userAnswer === null ? (
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                <span className="px-3 py-1 rounded-xl sm:rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-700 max-lg-liquid-subtle break-words max-w-full">
                                   — Tidak Dijawab
                                 </span>
                               ) : isCorrect ? (
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                <span className="px-3 py-1 rounded-xl sm:rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 break-words max-w-full">
                                   ✔ Pilihan Anda: {userAnswer}
                                 </span>
                               ) : (
                                 <>
-                                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                  <span className="px-3 py-1 rounded-xl sm:rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 break-words max-w-full">
                                     ✘ Pilihan Anda: {userAnswer}
                                   </span>
-                                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                  <span className="px-3 py-1 rounded-xl sm:rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 break-words max-w-full">
                                     ✔ Kunci: {correctLetter}. {correctOptionText}
                                   </span>
                                 </>
@@ -574,13 +574,13 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                         ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
                                         : isUserSelected
                                           ? 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold'
-                                          : 'bg-slate-500/[0.02] border-slate-200/60 dark:border-slate-800/80 text-slate-500'
+                                          : 'bg-slate-500/[0.02] border-slate-200/60 dark:border-slate-800/80 text-slate-500 max-lg-liquid-subtle'
                                     }`}
                                   >
                                     <span className="w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] border border-current shrink-0">
                                       {letters[oIdx]}
                                     </span>
-                                    <span className={`flex-1 ${isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-60' : ''}`}>
+                                    <span className={`flex-1 min-w-0 break-words ${isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-60' : ''}`}>
                                       {renderHtmlText(opt)}
                                     </span>
                                     {isStruck && (
@@ -622,7 +622,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                 </div>
                                 <span className="text-[10px] opacity-75 underline">Edit</span>
                               </div>
-                              <p className="whitespace-pre-wrap">{answerNotes[generateQuestionFingerprint(q)]}</p>
+                              <p className="whitespace-pre-wrap break-words">{answerNotes[generateQuestionFingerprint(q)]}</p>
                             </div>
                           )}
 
@@ -630,9 +630,9 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                             <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-500 mb-1.5">
                               💡 Pembahasan:
                             </h4>
-                            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                            <div data-quiz-html className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 break-words overflow-x-auto">
                               {q.pembahasan ? renderHtmlText(q.pembahasan) : 'Tidak ada uraian penjelasan.'}
-                            </p>
+                            </div>
                           </div>
 
                           {q.eliminasi_opsi && Object.keys(q.eliminasi_opsi).length > 0 && (
@@ -655,7 +655,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                         className={`flex items-start gap-3 p-3 rounded-xl border text-xs leading-relaxed transition-all ${
                                           matchesKey
                                             ? 'bg-emerald-500/5 border-emerald-500/30 text-slate-800 dark:text-slate-200 ring-1 ring-emerald-500/10'
-                                            : 'bg-slate-500/[0.01] border-slate-200/60 dark:border-slate-800/80 text-slate-600 dark:text-slate-400'
+                                            : 'bg-slate-500/[0.01] border-slate-200/60 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 max-lg-liquid-subtle'
                                         }`}
                                       >
                                         <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] flex-shrink-0 mt-0.5 shadow-sm ${
@@ -666,7 +666,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                         <div className="flex-1 min-w-0">
                                           {optText && (
                                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                              <span className={`font-bold text-[11px] text-slate-800 dark:text-slate-200 leading-snug ${
+                                              <span className={`font-bold text-[11px] text-slate-800 dark:text-slate-200 leading-snug break-words ${
                                                 isStruck ? 'line-through decoration-2 decoration-rose-500/70 opacity-70' : ''
                                               }`}>
                                                 {renderHtmlText(optText)}
@@ -678,7 +678,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                               )}
                                             </div>
                                           )}
-                                          <div className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+                                          <div className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed break-words">
                                             {renderHtmlText(rationale)}
                                           </div>
                                         </div>
@@ -693,18 +693,18 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
                       {/* Bookmark & Notes Actions */}
                       {isOpen && (
-                        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200/50 dark:border-slate-700 flex flex-wrap gap-2 justify-end">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 max-lg-liquid-subtle border-t border-slate-200/50 dark:border-slate-700 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:justify-end">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               const prompt = formatQuestionForGemini(q, idx, userAnswer, true);
                               openGeminiTutor(prompt, triggerToast);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-indigo-300 dark:border-indigo-700/60 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border border-indigo-300 dark:border-indigo-700/60 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
                             title="Salin soal & pembahasan ke Gemini AI"
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                            Tanya Gemini
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="truncate">Tanya Gemini</span>
                           </button>
 
                           {currentUser && (
@@ -718,14 +718,14 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                     studyRoom.addBookmark(q, selectedDatabases[0] || 'Kuis');
                                   }
                                 }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                                   studyRoom.isBookmarked(q)
                                     ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 max-lg-liquid-interactive'
                                 }`}
                               >
-                                <Bookmark className={`w-3.5 h-3.5 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
-                                Bookmark Soal Ini
+                                <Bookmark className={`w-3.5 h-3.5 shrink-0 ${studyRoom.isBookmarked(q) ? 'fill-current' : ''}`} />
+                                <span className="truncate">Bookmark Soal Ini</span>
                               </button>
                               <button
                                 onClick={(e) => {
@@ -739,21 +739,21 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                     isCorrect
                                   );
                                 }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                                   answerNotes[generateQuestionFingerprint(q)]
                                     ? 'border-amber-300 dark:border-amber-700 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 max-lg-liquid-interactive'
                                 }`}
                               >
                                 {answerNotes[generateQuestionFingerprint(q)] ? (
                                   <>
-                                    <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-                                    <span>Edit Catatan</span>
+                                    <StickyNote className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 shrink-0" />
+                                    <span className="truncate">Edit Catatan</span>
                                   </>
                                 ) : (
                                   <>
-                                    <StickyNote className="w-3.5 h-3.5" />
-                                    <span>Buat Catatan</span>
+                                    <StickyNote className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">Buat Catatan</span>
                                   </>
                                 )}
                               </button>
@@ -762,10 +762,10 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
                                   e.stopPropagation();
                                   setReportModal({ isOpen: true, questionIndex: idx });
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer"
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 max-lg-liquid-interactive transition-colors cursor-pointer"
                               >
-                                <Flag className="w-3.5 h-3.5" />
-                                Laporkan
+                                <Flag className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">Laporkan</span>
                               </button>
                             </>
                           )}

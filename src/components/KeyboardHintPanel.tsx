@@ -4,7 +4,7 @@ interface KeyboardHintPanelProps {
 
 export default function KeyboardHintPanel({ theme }: KeyboardHintPanelProps) {
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-4 hidden sm:flex justify-center animate-fade-in">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-4 hidden lg:flex justify-center animate-fade-in">
       <div className={`text-[10px] sm:text-xs font-bold px-4 py-2 rounded-full border shadow-sm flex items-center gap-4 ${
         theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-500'
       }`}>

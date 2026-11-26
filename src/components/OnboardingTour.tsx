@@ -35,17 +35,17 @@ export function OnboardingTour({ onComplete, theme }: OnboardingTourProps) {
     {
       title: 'Pilih Bank Soal',
       desc: 'Pilih modul atau folder UKMPPD yang ingin kamu kerjakan di area ini. Kamu bisa mencampur beberapa bank soal sekaligus.',
-      position: 'absolute top-1/3 left-8 lg:left-72'
+      position: 'fixed lg:absolute bottom-[calc(5.75rem+env(safe-area-inset-bottom))] lg:bottom-auto lg:top-1/3 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-72'
     },
     {
       title: 'Mulai Belajar & Kuis',
       desc: 'Klik tombol "Mulai Kuis" untuk memulai sesi tryout, atau gunakan "Flashcard Mode" untuk hapalan cepat.',
-      position: 'absolute top-1/2 right-8 lg:right-1/4'
+      position: 'fixed lg:absolute bottom-[calc(5.75rem+env(safe-area-inset-bottom))] lg:bottom-auto lg:top-1/2 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto lg:right-1/4'
     },
     {
       title: 'Analisis & Progress',
       desc: 'Setelah kuis, cek tab Analisis untuk melihat kelemahanmu, atau gunakan SRS (Spaced Repetition) untuk me-review soal sulit.',
-      position: 'absolute bottom-24 left-1/2 -translate-x-1/2'
+      position: 'fixed lg:absolute bottom-[calc(5.75rem+env(safe-area-inset-bottom))] lg:bottom-24 left-1/2 -translate-x-1/2'
     }
   ];
 
@@ -53,7 +53,7 @@ export function OnboardingTour({ onComplete, theme }: OnboardingTourProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[300] pointer-events-none">
+      <div className="fixed inset-0 z-[1000] lg:z-[300] pointer-events-none">
         {/* Backdrop */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -69,9 +69,9 @@ export function OnboardingTour({ onComplete, theme }: OnboardingTourProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className={`${steps[step].position} w-[90%] max-w-sm pointer-events-auto z-10`}
+          className={`${steps[step].position} w-[calc(100vw-2rem)] sm:w-[90%] max-w-sm pointer-events-auto z-10`}
         >
-          <div className={`p-6 rounded-3xl shadow-2xl border-2 ${
+          <div className={`p-5 sm:p-6 rounded-3xl shadow-2xl border-2 max-lg-liquid-card ${
             theme === 'dark' 
               ? 'bg-slate-900 border-indigo-500/30 shadow-indigo-900/20 text-white' 
               : 'bg-white border-indigo-500/20 shadow-indigo-500/20 text-slate-800'

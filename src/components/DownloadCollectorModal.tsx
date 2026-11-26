@@ -119,21 +119,24 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+      onClick={() => !isExporting && onClose()}
+    >
       <div 
-        className={`w-full max-w-lg rounded-3xl p-6 shadow-2xl border transition-all ${
+        className={`w-full sm:max-w-lg max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border transition-all max-lg-liquid-card ${
           theme === 'dark' 
             ? 'bg-slate-900 border-white/[0.08] text-white' 
             : 'bg-white border-slate-200 text-slate-900'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+        <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
               <Download className="w-5 h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-base font-black">Unduh Soal Collector</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Fitur eksklusif Akun Collector AuraMedPro {userAngkatan ? `(Angkatan 20${userAngkatan})` : ''}
@@ -143,21 +146,21 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
           <button
             onClick={onClose}
             disabled={isExporting}
-            className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 max-lg-liquid-interactive text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {userAngkatan && (
-          <div className="mt-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <span>🎓</span>
+          <div className="mt-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-start sm:items-center gap-2">
+            <span className="shrink-0">🎓</span>
             <span>Daftar soal dibatasi khusus untuk <strong>Angkatan 20{userAngkatan}</strong> sesuai hak akses akun Anda.</span>
           </div>
         )}
 
         {/* Ringkasan Bank Soal */}
-        <div className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+        <div className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 max-lg-liquid-subtle">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Bank Soal</span>
@@ -169,7 +172,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
             </div>
           </div>
           {selectedKeys.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs">
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-1.5 text-xs">
               <span className="text-slate-500">Bank Terpilih saat ini:</span>
               <span className="font-bold text-amber-500">{selectedKeys.length} Bank ({selectedQuestionsCount} Soal)</span>
             </div>
@@ -191,7 +194,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
           <button
             onClick={() => executeDownload('bundle', false)}
             disabled={isExporting}
-            className={`w-full p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer ${
+            className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer max-lg-liquid-interactive ${
               theme === 'dark'
                 ? 'bg-slate-950/40 border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/5'
                 : 'bg-slate-50/70 border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50/50'
@@ -200,12 +203,12 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
             <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
               <Package className="w-5 h-5" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between flex-wrap gap-1.5">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-500 transition-colors">
                   1 Berkas Gabungan (.json)
                 </span>
-                <span className="px-2 py-0.5 text-[9px] font-extrabold bg-emerald-500/10 text-emerald-500 rounded-full">
+                <span className="px-2 py-0.5 text-[9px] font-extrabold bg-emerald-500/10 text-emerald-500 rounded-full shrink-0">
                   Direkomendasikan
                 </span>
               </div>
@@ -218,7 +221,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
           <button
             onClick={() => executeDownload('batch', false)}
             disabled={isExporting}
-            className={`w-full p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer ${
+            className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer max-lg-liquid-interactive ${
               theme === 'dark'
                 ? 'bg-slate-950/40 border-slate-800 hover:border-indigo-500/50 hover:bg-indigo-500/5'
                 : 'bg-slate-50/70 border-slate-200 hover:border-indigo-500/50 hover:bg-indigo-50/50'
@@ -227,7 +230,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
             <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
               <Files className="w-5 h-5" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-500 transition-colors">
                 Semua Berkas Terpisah (Batch .json)
               </span>
@@ -241,7 +244,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
             <button
               onClick={() => executeDownload('bundle', true)}
               disabled={isExporting}
-              className={`w-full p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer ${
+              className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group cursor-pointer max-lg-liquid-interactive ${
                 theme === 'dark'
                   ? 'bg-slate-950/40 border-slate-800 hover:border-amber-500/50 hover:bg-amber-500/5'
                   : 'bg-slate-50/70 border-slate-200 hover:border-amber-500/50 hover:bg-amber-50/50'
@@ -250,7 +253,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
               <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
                 <FileJson className="w-5 h-5" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-amber-500 transition-colors">
                   Hanya Bank Terpilih Saja ({selectedKeys.length} Bank)
                 </span>
@@ -266,7 +269,7 @@ export const DownloadCollectorModal: React.FC<DownloadCollectorModalProps> = ({
           <button
             onClick={onClose}
             disabled={isExporting}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer max-lg-liquid-interactive ${
               theme === 'dark'
                 ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'

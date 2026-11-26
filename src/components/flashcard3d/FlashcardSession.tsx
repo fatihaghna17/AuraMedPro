@@ -270,7 +270,7 @@ export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[680px] mx-auto px-1 sm:px-2 pb-24 lg:pb-10 animate-fade-in">
+    <div className="w-full max-w-[680px] mx-auto px-1 sm:px-2 pb-4 lg:pb-10 animate-fade-in">
       {/* Header ringkas */}
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -362,11 +362,11 @@ export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
       </div>
 
       {/* Filter segmented kaca */}
-      <div className="mt-3 mb-4 flex items-center justify-between gap-2">
+      <div className="mt-3 mb-4 flex items-center justify-between gap-2 min-w-0">
         <div
           role="tablist"
           aria-label="Filter kartu"
-          className="relative inline-flex p-1 rounded-2xl fc3d-segment"
+          className="relative inline-flex p-1 rounded-2xl fc3d-segment min-w-0 max-w-full overflow-x-auto scrollbar-none"
         >
           {(
             [
@@ -382,7 +382,7 @@ export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
                 type="button"
                 aria-selected={active}
                 onClick={() => startQueue(tab.id, shuffled)}
-                className={`relative z-10 px-3.5 py-1.5 rounded-xl text-xs font-semibold tabular-nums transition-colors cursor-pointer ${
+                className={`relative z-10 shrink-0 whitespace-nowrap px-2.5 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold tabular-nums transition-colors cursor-pointer ${
                   active ? 'text-slate-950 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
@@ -403,11 +403,11 @@ export const FlashcardSession: React.FC<FlashcardSessionProps> = ({
           <button
             type="button"
             onClick={handleUndo}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl liquid-glass-subtle-interactive text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl liquid-glass-subtle-interactive text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
             title="Urungkan penilaian terakhir (Z)"
           >
             <Undo2 className="w-3.5 h-3.5" />
-            <span>Urungkan</span>
+            <span className="hidden min-[380px]:inline">Urungkan</span>
           </button>
         )}
       </div>
