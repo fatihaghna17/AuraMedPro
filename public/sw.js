@@ -1,7 +1,7 @@
 // AuraMed PRO — Service Worker
 // Handles background notifications for PWA
 
-const CACHE_NAME = 'auramed-v11';
+const CACHE_NAME = 'auramed-v13';
 
 // Install: cache essential assets
 self.addEventListener('install', (event) => {
@@ -25,7 +25,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for HTML & API, cache-first for hashed static assets
+// Fetch: network-first for HTML, manifest, icons & API; cache-first for hashed static assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -34,8 +34,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML navigation: always network first so users always get the latest app build
-  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  const isManifestOrIcon =
+    url.pathname === '/manifest.json' ||
+    url.pathname.startsWith('/favicon') ||
+    url.pathname.startsWith('/icon-') ||
+    url.pathname === '/apple-touch-icon.png';
+
+  // HTML navigation & unhashed PWA/icon files: always network first so updates appear immediately
+  if (
+    event.request.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html') ||
+    isManifestOrIcon
+  ) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -92,8 +103,8 @@ self.addEventListener('message', (event) => {
     const { title, body, url } = event.data.payload;
     self.registration.showNotification(title, {
       body,
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
+      icon: '/icon-192.png?v=2',
+      badge: '/icon-192.png?v=2',
       data: { url: url || '/' },
       vibrate: [100, 50, 100],
       tag: 'auramed-notif',
@@ -115,8 +126,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
+      icon: '/icon-192.png?v=2',
+      badge: '/icon-192.png?v=2',
       data: { url: data.url },
       vibrate: [100, 50, 100],
       tag: 'auramed-notif',
