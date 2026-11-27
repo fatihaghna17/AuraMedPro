@@ -713,6 +713,15 @@ export interface CultivatorAvatarProps {
   uid?: string;
 }
 
+export function getCultivatorAvatarUrl(
+  tier: number,
+  gender: CultivatorGender = 'pria'
+): string {
+  const safeTier = Math.max(1, Math.min(10, Math.floor(tier || 1)));
+  const safeGender: CultivatorGender = gender === 'wanita' ? 'wanita' : 'pria';
+  return `/avatars/${safeGender}-${safeTier}.webp`;
+}
+
 export const CultivatorAvatar: React.FC<CultivatorAvatarProps> = ({
   tier,
   gender,
@@ -722,11 +731,19 @@ export const CultivatorAvatar: React.FC<CultivatorAvatarProps> = ({
   uid
 }) => {
   const effectiveGender = gender || getSavedCultivatorGender();
-  const effectiveTier = tier !== undefined 
+  const rawTier = tier !== undefined 
     ? tier 
     : userLevel !== undefined 
     ? getEffectiveCultivatorTier(userLevel) 
     : 1;
+  const effectiveTier = Math.max(1, Math.min(10, Math.floor(rawTier || 1)));
+
+  const imgSrc = getCultivatorAvatarUrl(effectiveTier, effectiveGender);
+  const [imgFailed, setImgFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    setImgFailed(false);
+  }, [imgSrc]);
 
   const style = size ? { width: size, height: size } : undefined;
   const uniqueId = uid || `${effectiveGender}_${effectiveTier}_${Math.random().toString(36).substring(2, 7)}`;
@@ -736,9 +753,21 @@ export const CultivatorAvatar: React.FC<CultivatorAvatarProps> = ({
       className={`relative inline-flex items-center justify-center rounded-full overflow-hidden select-none ${className}`}
       style={style}
     >
-      {effectiveGender === 'wanita'
-        ? renderFemaleCultivatorSvg(effectiveTier, uniqueId)
-        : renderMaleCultivatorSvg(effectiveTier, uniqueId)}
+      {!imgFailed ? (
+        <img
+          src={imgSrc}
+          alt={`Avatar ${effectiveGender} Tier ${effectiveTier}`}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          onError={() => setImgFailed(true)}
+        />
+      ) : effectiveGender === 'wanita' ? (
+        renderFemaleCultivatorSvg(effectiveTier, uniqueId)
+      ) : (
+        renderMaleCultivatorSvg(effectiveTier, uniqueId)
+      )}
     </div>
   );
 };
