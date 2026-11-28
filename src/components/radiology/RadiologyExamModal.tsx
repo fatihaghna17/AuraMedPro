@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, CheckCircle, Clock, AlertCircle, ArrowLeft, ArrowRight, 
   Send, Eye, FileText, Check, Award, MessageSquare, Maximize2, 
-  ShieldAlert, Minimize2, ZoomIn, ZoomOut, RefreshCw, Wand2, LogOut, 
+  ShieldAlert, Minimize2, ZoomIn, ZoomOut, RefreshCw, LogOut, 
   ChevronRight, Sparkles, ShieldCheck, Flame, Stethoscope, Play
 } from 'lucide-react';
 import { RadiologyPacket, RadiologyQuestion, RadiologySubmission, THORAX_CHECKLIST_ITEMS, ABDOMEN_CHECKLIST_ITEMS } from '../../types/radiology';
@@ -200,75 +200,6 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
     if (!currentQ || isReadOnly) return;
     setAnswers((prev) => {
       const next = { ...prev, [currentQ.id]: val };
-      persistDraft(next);
-      return next;
-    });
-  };
-
-  const handleInsertTemplate = (type: 'thorax' | 'abdomen') => {
-    if (!currentQ || isReadOnly) return;
-    const existing = answers[currentQ.id] || '';
-    if (existing.trim().length > 10) {
-      if (!confirm('Ganti jawaban saat ini dengan template sistematika pembacaan?')) return;
-    }
-
-    const thoraxTemplate = `1. DATA DEMOGRAFI PASIEN
-- Nama: ${currentQ.identitas_pasien?.nama || ''}
-- Tanggal Lahir / Usia: ${currentQ.identitas_pasien?.tanggal_lahir || ''}
-- Jenis Kelamin: ${currentQ.identitas_pasien?.jenis_kelamin || ''}
-- No RM: ${currentQ.identitas_pasien?.no_rm || ''}
-
-2. DETAIL & KUALITAS FOTO
-- Tanggal & Proyeksi: 
-- Keadekuatan (Area terpotong, Inspirasi, Simetrisitas, Eksposure): 
-
-3. INTERPRETASI FOTO SISTEMATIS
-- Jantung & Mediastinum (CTR): 
-- Paru: 
-- Sinus Kostofrenikus: 
-- Hemidiafragma: 
-- Trakhea: 
-- Tulang & Dinding Dada: 
-- Medical Devices: 
-
-4. ABNORMALITAS YANG DIDAPAT
-- Temuan Utama: 
-
-5. KESIMPULAN & DIAGNOSIS
-- Kesan Radiologis: 
-- Diagnosis Banding: `;
-
-    const abdomenTemplate = `1. DATA DEMOGRAFI PASIEN
-- Nama: ${currentQ.identitas_pasien?.nama || ''}
-- Tanggal Lahir / Usia: ${currentQ.identitas_pasien?.tanggal_lahir || ''}
-- Jenis Kelamin: ${currentQ.identitas_pasien?.jenis_kelamin || ''}
-- No RM: ${currentQ.identitas_pasien?.no_rm || ''}
-
-2. DETAIL & KUALITAS FOTO
-- Tanggal & Posisi/Proyeksi (Supine/Erect/LLD): 
-- Keadekuatan Foto (Diafragma s.d. Simfisis Pubis, Eksposure): 
-
-3. INTERPRETASI FOTO SISTEMATIS
-- Preperitoneal Fat Line: 
-- Psoas Line & Kontur Ginjal: 
-- Distribusi Udara Usus & Fecal Material: 
-- Udara Bebas Intraperitoneal (Pneumoperitoneum): 
-- Distensi Usus & Air-Fluid Level: 
-- Kalsifikasi / Bayangan Radiopak: 
-- Tulang / Skelet: 
-
-4. ABNORMALITAS YANG DIDAPAT
-- Temuan Utama: 
-
-5. KESIMPULAN & DIAGNOSIS
-- Kesan Radiologis: 
-- Diagnosis Banding: `;
-
-    setAnswers((prev) => {
-      const next = {
-        ...prev,
-        [currentQ.id]: type === 'thorax' ? thoraxTemplate : abdomenTemplate,
-      };
       persistDraft(next);
       return next;
     });
@@ -736,32 +667,15 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
         {/* SISI KANAN (LG: COL-SPAN-6): LEMBAR JAWABAN ESSAY & PEMBAHASAN */}
         <div className="lg:col-span-6 h-auto lg:h-full lg:overflow-y-auto p-3.5 sm:p-6 space-y-4">
           
-          {/* HEADER JAWABAN & TEMPLATE SHORTCUT */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h4 className="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
-                Lembar Jawaban Interpretasi Essay
-              </h4>
-              <p className="text-[11px] text-slate-400">
-                Tuliskan analisis interpretasi foto rontgen secara sistematis.
-              </p>
-            </div>
-
-            {/* TOMBOL TEMPLATE SISTEMATIS */}
-            {!isReadOnly && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleInsertTemplate(currentQ?.region === 'abdomen' ? 'abdomen' : 'thorax')}
-                  className="flex items-center gap-1 px-2.5 py-1.5 lg:py-1 rounded-lg text-xs font-bold bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition cursor-pointer"
-                  title="Sisipkan format pembacaan standar FK UNS"
-                >
-                  <Wand2 className="w-3 h-3 shrink-0" />
-                  <span>+ Template {currentQ?.region === 'abdomen' ? 'Abdomen' : 'Thorax'}</span>
-                </button>
-              </div>
-            )}
+          {/* HEADER JAWABAN */}
+          <div>
+            <h4 className="text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+              Lembar Jawaban Interpretasi Essay
+            </h4>
+            <p className="text-[11px] text-slate-400">
+              Tuliskan analisis interpretasi foto rontgen secara sistematis.
+            </p>
           </div>
 
           {/* TEXTAREA JAWABAN ESSAY */}

@@ -92,9 +92,10 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
   const [packetId, setPacketId] = useState<string>('');
   const [adminId, setAdminId] = useState<string>(currentUser?.id || groupCreatorId || '');
 
-  // JSON tab state
+  // JSON tab state (direct file upload utama + paste kode opsional)
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; content: string } | null>(null);
   const [rawJson, setRawJson] = useState('');
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [showRawPaste, setShowRawPaste] = useState(false);
   const [fileTitle, setFileTitle] = useState<string | undefined>(undefined);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -139,8 +140,9 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
             }))
           : [createEmptyQuestion(1)]
       );
+      setUploadedFile(null);
       setRawJson('');
-      setFileName(null);
+      setShowRawPaste(false);
       setFileTitle(undefined);
     } else {
       const newId = `rad-packet-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -150,8 +152,9 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
       setTitle('');
       setDescription('');
       setQuestions([createEmptyQuestion(1)]);
+      setUploadedFile(null);
       setRawJson('');
-      setFileName(null);
+      setShowRawPaste(false);
       setFileTitle(undefined);
     }
     setExpandedKeyIdx({});
@@ -165,17 +168,25 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
     if (fallback) setAdminId(fallback);
   }, [isOpen, adminId, currentUser?.id, groupCreatorId, groupMembers]);
 
+  const activeJsonSource = uploadedFile ? uploadedFile.content : rawJson;
+
   const jsonPreview = useMemo(() => {
-    if (!rawJson.trim()) return { status: 'empty' as const };
+    if (!activeJsonSource.trim()) return { status: 'empty' as const };
     try {
-      const parsed = parseRadiologyPacketJson(rawJson, fileTitle);
+      const parsed = parseRadiologyPacketJson(activeJsonSource, fileTitle);
       return { status: 'valid' as const, parsed };
     } catch (err: any) {
       return { status: 'error' as const, message: err?.message || 'Format JSON belum valid.' };
     }
-  }, [rawJson, fileTitle]);
+  }, [activeJsonSource, fileTitle]);
 
   if (!isOpen || typeof document === 'undefined') return null;
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
 
   const resolveAdminName = (targetId: string): string => {
     const member = groupMembers.find((m) => m.user_id === targetId);
@@ -193,12 +204,19 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
       setSubmitError('Pilih berkas berformat .json.');
       return;
     }
-    setFileName(file.name);
     const cleanedTitle = file.name.replace(/\.json$/i, '').replace(/[_-]+/g, ' ').trim();
     setFileTitle(cleanedTitle || undefined);
 
     const reader = new FileReader();
-    reader.onload = () => setRawJson(String(reader.result || ''));
+    reader.onload = () => {
+      setUploadedFile({
+        name: file.name,
+        size: file.size,
+        content: String(reader.result || ''),
+      });
+      setRawJson('');
+      setShowRawPaste(false);
+    };
     reader.onerror = () => setSubmitError('Gagal membaca file JSON. Pastikan file tidak rusak.');
     reader.readAsText(file);
   };
@@ -469,8 +487,8 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <FileJson className="w-4 h-4 shrink-0" />
-                <span>Upload File / Paste JSON</span>
+                <FileUp className="w-4 h-4 shrink-0" />
+                <span>Upload File JSON</span>
               </button>
               <button
                 type="button"
@@ -523,49 +541,97 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
           </div>
 
           {/* ================================================================ */}
-          {/* TAB 1: UPLOAD FILE .JSON / PASTE JSON                           */}
+          {/* TAB 1: UPLOAD FILE .JSON LANGSUNG (OPSIONAL PASTE KODE)          */}
           {/* ================================================================ */}
           {mode === 'json' && (
             <div className="space-y-4">
-              {/* DROPZONE FILE .JSON */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
+              <input
+                ref={jsonFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="sr-only"
+                onChange={(e) => {
+                  handleJsonFileSelect(e.target.files?.[0]);
+                  e.target.value = '';
                 }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  handleJsonFileSelect(e.dataTransfer.files?.[0]);
-                }}
-                onClick={() => jsonFileInputRef.current?.click()}
-                className={`p-5 sm:p-6 rounded-2xl border-2 border-dashed text-center transition cursor-pointer ${
-                  isDragging
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : isDark
-                    ? 'border-slate-700 bg-slate-800/40 hover:border-indigo-500/60 hover:bg-slate-800/70'
-                    : 'border-slate-300 bg-slate-50/80 hover:border-indigo-400 hover:bg-indigo-50/40'
-                }`}
-              >
-                <FileUp className="w-7 h-7 mx-auto text-indigo-500 mb-2" />
-                <p className="text-xs sm:text-sm font-bold">
-                  {fileName ? `File dipilih: ${fileName}` : 'Pilih atau seret file soal (.json) ke sini'}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Mendukung gambar URL maupun gambar base64 (otomatis dikompres & diunggah ke Cloudflare R2).
-                </p>
-                <input
-                  ref={jsonFileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  className="sr-only"
-                  onChange={(e) => {
-                    handleJsonFileSelect(e.target.files?.[0]);
-                    e.target.value = '';
+              />
+
+              {/* DROPZONE / SELECTED FILE CARD */}
+              {uploadedFile ? (
+                <div
+                  className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isDark ? 'bg-slate-800/70 border-indigo-500/40' : 'bg-indigo-50/50 border-indigo-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <FileJson className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-black truncate">{uploadedFile.name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                        Ukuran: {formatFileSize(uploadedFile.size)} • Siap diunggah ke cloud
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => jsonFileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive cursor-pointer"
+                    >
+                      Ganti File
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => {
+                        setUploadedFile(null);
+                        setFileTitle(undefined);
+                        setSubmitError(null);
+                      }}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                      title="Hapus file terpilih"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
                   }}
-                />
-              </div>
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    handleJsonFileSelect(e.dataTransfer.files?.[0]);
+                  }}
+                  onClick={() => jsonFileInputRef.current?.click()}
+                  className={`p-6 sm:p-8 rounded-2xl border-2 border-dashed text-center transition cursor-pointer ${
+                    isDragging
+                      ? 'border-indigo-500 bg-indigo-500/10'
+                      : isDark
+                      ? 'border-slate-700 bg-slate-800/40 hover:border-indigo-500/60 hover:bg-slate-800/70'
+                      : 'border-slate-300 bg-slate-50/80 hover:border-indigo-400 hover:bg-indigo-50/40'
+                  }`}
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-indigo-600/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <FileUp className="w-6 h-6" />
+                  </div>
+                  <p className="text-sm font-black">Pilih atau seret file soal (.json) ke sini</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                    Langsung unggah berkas <code className="font-mono">.json</code> tanpa perlu menyalin kode. Foto rontgen di dalam file otomatis dikompres & disimpan ke cloud R2.
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-sm shadow-indigo-600/25">
+                    <FileUp className="w-3.5 h-3.5" />
+                    Pilih File .json dari Perangkat
+                  </span>
+                </div>
+              )}
 
               {/* UTILITY BAR */}
               <div className="flex flex-wrap items-center gap-2">
@@ -592,19 +658,23 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setFileName(null);
-                    setFileTitle(DEFAULT_SAMPLE_RADIOLOGY_PACKET.title);
-                    setRawJson(
-                      JSON.stringify(
-                        {
-                          judul: DEFAULT_SAMPLE_RADIOLOGY_PACKET.title,
-                          deskripsi: DEFAULT_SAMPLE_RADIOLOGY_PACKET.description,
-                          daftar_soal: DEFAULT_SAMPLE_RADIOLOGY_PACKET.questions,
-                        },
-                        null,
-                        2
-                      )
+                    const sampleStr = JSON.stringify(
+                      {
+                        judul: DEFAULT_SAMPLE_RADIOLOGY_PACKET.title,
+                        deskripsi: DEFAULT_SAMPLE_RADIOLOGY_PACKET.description,
+                        daftar_soal: DEFAULT_SAMPLE_RADIOLOGY_PACKET.questions,
+                      },
+                      null,
+                      2
                     );
+                    setUploadedFile({
+                      name: 'paket_contoh_radiologi.json',
+                      size: new Blob([sampleStr]).size,
+                      content: sampleStr,
+                    });
+                    setFileTitle(DEFAULT_SAMPLE_RADIOLOGY_PACKET.title);
+                    setRawJson('');
+                    setShowRawPaste(false);
                     setSubmitError(null);
                   }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold liquid-glass-subtle-interactive text-indigo-600 dark:text-indigo-400 cursor-pointer"
@@ -614,27 +684,37 @@ export const RadiologyPacketModal: React.FC<RadiologyPacketModalProps> = ({
                 </button>
               </div>
 
-              {/* TEXTAREA PASTE JSON */}
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">
-                  Atau Tempel Kode JSON Soal di Sini
-                </label>
-                <textarea
-                  rows={7}
-                  value={rawJson}
-                  disabled={saving}
-                  onChange={(e) => {
-                    setSubmitError(null);
-                    setRawJson(e.target.value);
-                  }}
-                  placeholder={`Tempel JSON soal radiologi dari file atau hasil generate ChatGPT/Gemini...\nFormat markdown \`\`\`json ... \`\`\` otomatis dibersihkan.`}
-                  className={`w-full p-3 font-mono text-xs rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-y liquid-glass-input ${
-                    isDark
-                      ? 'bg-slate-800/80 border-slate-700 text-slate-100 placeholder-slate-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-              </div>
+              {/* OPSIONAL: TEMPEL KODE JSON MANUAL (COLLAPSIBLE) */}
+              {!uploadedFile && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowRawPaste((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer"
+                  >
+                    {showRawPaste ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    <span>Atau tempel kode JSON secara manual</span>
+                  </button>
+
+                  {showRawPaste && (
+                    <textarea
+                      rows={6}
+                      value={rawJson}
+                      disabled={saving}
+                      onChange={(e) => {
+                        setSubmitError(null);
+                        setRawJson(e.target.value);
+                      }}
+                      placeholder={`Tempel JSON soal radiologi dari hasil generate ChatGPT/Gemini...\nFormat markdown \`\`\`json ... \`\`\` otomatis dibersihkan.`}
+                      className={`mt-2 w-full p-3 font-mono text-xs rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-y liquid-glass-input ${
+                        isDark
+                          ? 'bg-slate-800/80 border-slate-700 text-slate-100 placeholder-slate-500'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
+                      }`}
+                    />
+                  )}
+                </div>
+              )}
 
               {/* LIVE VALIDATION PREVIEW */}
               {jsonPreview.status === 'error' && (
