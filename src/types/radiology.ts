@@ -27,11 +27,14 @@ export interface RadiologyQuestion {
   };
   vignette: string;
   image_url: string;
+  image_urls?: string[];
   pertanyaan: string;
   kunci_interpretasi: {
     data_demografi?: string;
     kualitas_foto?: string;
+    syarat_layak_baca?: string;
     interpretasi?: string;
+    sistematika_organ?: string;
     abnormalitas?: string;
     kesimpulan?: string;
   };
@@ -45,7 +48,15 @@ export interface RadiologyPacket {
   admin_id: string; // 1 admin penanggung jawab koreksi
   admin_name: string;
   created_at: string;
+  updated_at?: string;
+  r2_key?: string | null;
+  synced?: boolean;
   questions: RadiologyQuestion[];
+}
+
+export interface RadiologyQuestionChecklist {
+  thorax: Record<string, boolean>;
+  abdomen: Record<string, boolean>;
 }
 
 export interface RadiologySubmission {
@@ -58,6 +69,7 @@ export interface RadiologySubmission {
   checklist: {
     thorax: Record<string, boolean>;
     abdomen: Record<string, boolean>;
+    by_question?: Record<string, RadiologyQuestionChecklist>;
   };
   score: number;
   feedback: string;
@@ -65,6 +77,7 @@ export interface RadiologySubmission {
   graded_by?: string;
   graded_at?: string;
   created_at: string;
+  synced?: boolean;
 }
 
 export const THORAX_CHECKLIST_ITEMS: RadiologyChecklistCategory[] = [

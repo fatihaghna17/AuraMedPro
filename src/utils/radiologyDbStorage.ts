@@ -6,9 +6,8 @@ const STORE_PACKETS = 'radiology_packets';
 const STORE_SUBMISSIONS = 'radiology_submissions';
 
 /**
- * Buka koneksi IndexedDB untuk data CBT Radiologi.
- * IndexedDB memiliki kuota penyimpanan hingga puluhan gigabyte,
- * menyelesaikan masalah QuotaExceededError pada localStorage yang terbatas hanya 5MB.
+ * Buka koneksi IndexedDB untuk cache lokal CBT Radiologi.
+ * Digunakan sebagai cache cepat & penyimpanan cadangan saat offline (cloud D1/R2 adalah sumber utama).
  */
 function openRadiologyDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -38,7 +37,7 @@ function openRadiologyDB(): Promise<IDBDatabase> {
 
 export const radiologyDb = {
   /**
-   * Simpan paket soal ke IndexedDB
+   * Simpan paket soal ke cache IndexedDB
    */
   async savePacket(packet: RadiologyPacket): Promise<void> {
     try {
@@ -151,7 +150,7 @@ export const radiologyDb = {
           db.close();
           let list = (req.result || []) as RadiologySubmission[];
           if (packetId) {
-            list = list.filter(s => s.packet_id === packetId);
+            list = list.filter((s) => s.packet_id === packetId);
           }
           list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           resolve(list);
@@ -165,5 +164,59 @@ export const radiologyDb = {
       console.warn('[Radiology IndexedDB] Gagal membaca submission:', err);
       return [];
     }
-  }
+  },
+
+  /**
+   * Hapus satu submission dari IndexedDB
+   */
+  async deleteSubmission(submissionId: string): Promise<void> {
+    try {
+      const db = await openRadiologyDB();
+      const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
+      tx.objectStore(STORE_SUBMISSIONS).delete(submissionId);
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+      });
+    } catch (err) {
+      console.warn('[Radiology IndexedDB] Gagal menghapus submission:', err);
+    }
+  },
+
+  /**
+   * Hapus seluruh submission milik paket tertentu dari IndexedDB
+   */
+  async deleteSubmissionsByPacket(packetId: string): Promise<void> {
+    try {
+      const db = await openRadiologyDB();
+      const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
+      const store = tx.objectStore(STORE_SUBMISSIONS);
+      const index = store.index('packet_id');
+      const req = index.getAllKeys(packetId);
+      req.onsuccess = () => {
+        const keys = req.result || [];
+        for (const k of keys) {
+          store.delete(k);
+        }
+      };
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+      });
+    } catch (err) {
+      console.warn('[Radiology IndexedDB] Gagal membersihkan submission paket:', err);
+    }
+  },
 };

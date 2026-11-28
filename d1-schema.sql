@@ -229,7 +229,10 @@ CREATE TABLE IF NOT EXISTS radiology_packets (
     admin_id TEXT NOT NULL,
     admin_name TEXT,
     questions_json TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now'))
+    r2_key TEXT,
+    questions_count INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS radiology_submissions (
@@ -249,6 +252,7 @@ CREATE TABLE IF NOT EXISTS radiology_submissions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_radiology_packets_group ON radiology_packets(group_id);
+CREATE INDEX IF NOT EXISTS idx_radiology_submissions_group ON radiology_submissions(group_id);
 CREATE INDEX IF NOT EXISTS idx_radiology_submissions_packet ON radiology_submissions(packet_id);
 CREATE INDEX IF NOT EXISTS idx_radiology_submissions_user ON radiology_submissions(user_id);
 

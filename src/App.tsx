@@ -5057,8 +5057,10 @@ export default function App() {
             {/* 👥 TAB: GRUP BELAJAR */}
             {dashboardTab === 'groups' && (
               <SetupGroupsTab 
-                currentUser={currentUser} 
+                currentUser={currentUser}
+                profileUsername={profileUsername}
                 theme={theme}
+                triggerToast={triggerToast}
                 onJoinGroup={(groupId, groupName) => {
                   setActiveStudyGroupId(groupId);
                   setActiveStudyGroupName(groupName);

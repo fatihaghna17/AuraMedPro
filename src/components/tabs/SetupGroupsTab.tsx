@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Link as LinkIcon, PlusCircle, BookOpen, Stethoscope, Folder } from 'lucide-react';
+import { X, Users, Link as LinkIcon, PlusCircle, Stethoscope, Folder, LogIn } from 'lucide-react';
 import { RadiologyGroupSection } from '../radiology/RadiologyGroupSection';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -16,14 +16,26 @@ interface StudyGroup {
 
 interface SetupGroupsTabProps {
   currentUser: any;
+  profileUsername?: string;
   theme?: 'light' | 'dark';
   onJoinGroup?: (groupId: string, groupName: string) => void;
+  triggerToast?: (msg: string, icon?: string) => void;
 }
 
-export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, theme = 'light', onJoinGroup }) => {
+export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({
+  currentUser,
+  profileUsername,
+  theme = 'light',
+  onJoinGroup,
+  triggerToast,
+}) => {
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [inviteCodeInput, setInviteCodeInput] = useState('');
+  const [joiningGroup, setJoiningGroup] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
@@ -41,9 +53,12 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
   const loadGroups = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/study-groups?user_id=${currentUser.id}`);
-      const json = await res.json();
-      setGroups(json.data || []);
+      const res = await fetch(`${API_BASE}/study-groups?user_id=${encodeURIComponent(currentUser.id)}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      const json = (await res.json()) as any;
+      setGroups(Array.isArray(json?.data) ? json.data : []);
     } catch (e) {
       console.error(e);
     }
@@ -54,8 +69,9 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
     e.preventDefault();
     if (!newGroupName) return;
     try {
-      await fetch(`${API_BASE}/study-groups`, {
+      const res = await fetch(`${API_BASE}/study-groups`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create',
@@ -64,22 +80,65 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
           user_id: currentUser.id
         })
       });
+      const json = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok) {
+        triggerToast?.(json?.error || 'Gagal membuat grup', '❌');
+        return;
+      }
       setShowCreateModal(false);
       setNewGroupName('');
       setNewGroupDesc('');
+      triggerToast?.('Grup belajar berhasil dibuat!', '✅');
       loadGroups();
     } catch (e) {
       console.error(e);
-      alert('Gagal membuat grup');
+      triggerToast?.('Gagal membuat grup', '❌');
+    }
+  };
+
+  const handleJoinByCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = inviteCodeInput.trim().toUpperCase();
+    if (!code || !currentUser?.id) return;
+    setJoiningGroup(true);
+    setJoinError(null);
+    try {
+      const res = await fetch(`${API_BASE}/study-groups`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'join',
+          invite_code: code,
+          user_id: currentUser.id,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok || !json?.success) {
+        setJoinError(json?.error || 'Kode undangan tidak valid');
+        setJoiningGroup(false);
+        return;
+      }
+      setShowJoinModal(false);
+      setInviteCodeInput('');
+      triggerToast?.(`Berhasil bergabung ke grup "${json.name || code}"!`, '🎉');
+      await loadGroups();
+    } catch (err: any) {
+      setJoinError(err?.message || 'Gagal menghubungi server.');
+    } finally {
+      setJoiningGroup(false);
     }
   };
 
   const loadGroupDetails = async (group: StudyGroup) => {
     setSelectedGroup(group);
     try {
-      const res = await fetch(`${API_BASE}/study-groups/${group.id}`);
-      const json = await res.json();
-      setGroupMembers(json.members || []);
+      const res = await fetch(`${API_BASE}/study-groups/${encodeURIComponent(group.id)}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      const json = (await res.json()) as any;
+      setGroupMembers(Array.isArray(json?.members) ? json.members : []);
     } catch (e) {
       console.error(e);
     }
@@ -163,9 +222,11 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
               groupId={selectedGroup.id}
               groupName={selectedGroup.name}
               currentUser={currentUser}
+              profileUsername={profileUsername}
               groupCreatorId={selectedGroup.creator_id}
               groupMembers={groupMembers}
               theme={theme}
+              onToast={triggerToast}
             />
           </div>
         )}
@@ -218,12 +279,24 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
           <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100">Grup Belajar</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Berkumpul, berbagi soal klinis, dan latihan radiologi bersama sejawat.</p>
         </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto justify-center flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition cursor-pointer shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" /> Buat Grup Baru
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setJoinError(null);
+              setShowJoinModal(true);
+            }}
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 liquid-glass-subtle-interactive text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer"
+          >
+            <LogIn className="w-4 h-4" /> Gabung Kode
+          </button>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4" /> Buat Grup Baru
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -325,6 +398,73 @@ export const SetupGroupsTab: React.FC<SetupGroupsTabProps> = ({ currentUser, the
                   className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   Buat Grup
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showJoinModal && (
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in"
+          onClick={() => !joiningGroup && setShowJoinModal(false)}
+        >
+          <div
+            className="w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl liquid-glass-card pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-200/60 dark:border-white/10">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Gabung Grup Belajar</h3>
+              <button
+                type="button"
+                disabled={joiningGroup}
+                onClick={() => setShowJoinModal(false)}
+                className="p-1.5 rounded-lg liquid-glass-subtle-interactive text-slate-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleJoinByCode} className="p-4 sm:p-6">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    Kode Undangan Grup
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold uppercase tracking-widest liquid-glass-input text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                    placeholder="Contoh: AB12CD"
+                    value={inviteCodeInput}
+                    onChange={(e) => {
+                      setJoinError(null);
+                      setInviteCodeInput(e.target.value.toUpperCase());
+                    }}
+                    required
+                    autoFocus
+                  />
+                </div>
+                {joinError && (
+                  <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{joinError}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2.5 mt-6">
+                <button
+                  type="button"
+                  disabled={joiningGroup}
+                  onClick={() => setShowJoinModal(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold liquid-glass-subtle-interactive text-slate-600 dark:text-slate-300 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={!inviteCodeInput.trim() || joiningGroup}
+                  className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                >
+                  {joiningGroup ? 'Bergabung...' : 'Gabung Grup'}
                 </button>
               </div>
             </form>

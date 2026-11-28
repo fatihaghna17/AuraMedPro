@@ -7,12 +7,13 @@ import {
   ChevronRight, Sparkles, ShieldCheck, Flame, Stethoscope, Play
 } from 'lucide-react';
 import { RadiologyPacket, RadiologyQuestion, RadiologySubmission, THORAX_CHECKLIST_ITEMS, ABDOMEN_CHECKLIST_ITEMS } from '../../types/radiology';
-import { radiologyApi } from '../../services/radiologyApi';
+import { getQuestionImages, getUserDisplayName, radiologyApi } from '../../services/radiologyApi';
 
 interface RadiologyExamModalProps {
   packet: RadiologyPacket;
   groupId: string;
   currentUser: any;
+  profileUsername?: string;
   theme?: 'light' | 'dark';
   onClose: () => void;
   onSubmitted?: () => void;
@@ -22,12 +23,14 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   packet,
   groupId,
   currentUser,
+  profileUsername,
   theme = 'dark',
   onClose,
   onSubmitted
 }) => {
   const isDark = theme === 'dark';
   const questions: RadiologyQuestion[] = packet.questions || [];
+  const draftStorageKey = `rad_draft_${groupId}_${packet.id}_${currentUser?.id || 'guest'}`;
   
   // Stages: 'briefing' (gerbang peralihan) -> 'transitioning' (animasi masuk) -> 'exam' (ruang ujian penuh)
   const [stage, setStage] = useState<'briefing' | 'transitioning' | 'exam'>('briefing');
@@ -39,6 +42,8 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   const [submission, setSubmission] = useState<RadiologySubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
@@ -46,23 +51,6 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
   const [invertColors, setInvertColors] = useState(false);
 
   const currentQ = questions[currentIdx] || null;
-
-  // Helper untuk mengekstrak array gambar secara aman (mendukung image_url string maupun image_urls array)
-  const getQuestionImages = (q: RadiologyQuestion | null): string[] => {
-    if (!q) return [];
-    const anyQ = q as any;
-    if (Array.isArray(anyQ.image_urls) && anyQ.image_urls.length > 0) {
-      return anyQ.image_urls.filter((u: any) => typeof u === 'string' && u.trim().length > 0);
-    }
-    if (typeof anyQ.image_url === 'string' && anyQ.image_url.trim().length > 0) {
-      return [anyQ.image_url.trim()];
-    }
-    if (Array.isArray(anyQ.images) && anyQ.images.length > 0) {
-      return anyQ.images.filter((u: any) => typeof u === 'string' && u.trim().length > 0);
-    }
-    return [];
-  };
-
   const activeImages = getQuestionImages(currentQ);
 
   // Lock body scroll, hide main dashboard sidebars, and sync fullscreen status
@@ -120,6 +108,17 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
       if (sub) {
         setSubmission(sub);
         setAnswers(sub.answers || {});
+      } else {
+        // Pulihkan draft jawaban essay lokal jika user sempat menutup modal sebelum submit
+        try {
+          const savedDraft = localStorage.getItem(draftStorageKey);
+          if (savedDraft) {
+            const parsed = JSON.parse(savedDraft);
+            if (parsed && typeof parsed === 'object') {
+              setAnswers(parsed);
+            }
+          }
+        } catch {}
       }
     } catch (e) {
       console.error(e);
@@ -191,9 +190,19 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
     onClose();
   };
 
+  const persistDraft = (next: Record<string, string>) => {
+    try {
+      localStorage.setItem(draftStorageKey, JSON.stringify(next));
+    } catch {}
+  };
+
   const handleAnswerChange = (val: string) => {
-    if (!currentQ || submission?.status === 'graded') return;
-    setAnswers(prev => ({ ...prev, [currentQ.id]: val }));
+    if (!currentQ || isReadOnly) return;
+    setAnswers((prev) => {
+      const next = { ...prev, [currentQ.id]: val };
+      persistDraft(next);
+      return next;
+    });
   };
 
   const handleInsertTemplate = (type: 'thorax' | 'abdomen') => {
@@ -255,29 +264,43 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
 - Kesan Radiologis: 
 - Diagnosis Banding: `;
 
-    setAnswers(prev => ({
-      ...prev,
-      [currentQ.id]: type === 'thorax' ? thoraxTemplate : abdomenTemplate
-    }));
+    setAnswers((prev) => {
+      const next = {
+        ...prev,
+        [currentQ.id]: type === 'thorax' ? thoraxTemplate : abdomenTemplate,
+      };
+      persistDraft(next);
+      return next;
+    });
   };
 
   const handleSubmitExam = async () => {
     if (!currentUser?.id) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
-      const sub = await radiologyApi.submitAnswers(
+      const displayName = getUserDisplayName(currentUser, profileUsername, 'Peserta');
+      const res = await radiologyApi.submitAnswers(
         packet.id,
         groupId,
         currentUser.id,
-        currentUser.username || 'Peserta',
+        displayName,
         answers
       );
-      setSubmission(sub);
+      if (!res.synced) {
+        setSubmitError(res.error || 'Gagal mengirim jawaban ke server cloud. Periksa koneksi internet lalu coba lagi.');
+        setSubmitting(false);
+        return;
+      }
+      try {
+        localStorage.removeItem(draftStorageKey);
+      } catch {}
+      setSubmission(res.submission);
       setShowConfirmFinish(false);
       if (onSubmitted) onSubmitted();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Gagal mengumpulkan jawaban');
+      setSubmitError(e?.message || 'Gagal mengumpulkan jawaban ke server.');
     }
     setSubmitting(false);
   };
@@ -336,7 +359,7 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
             <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between max-lg-liquid-subtle">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Penilaian</span>
               <span className="text-sm font-black text-emerald-300 mt-1">Checklist FK UNS</span>
-              <span className="text-[10px] text-slate-500">52 Rubrik Objektif</span>
+              <span className="text-[10px] text-slate-500">Rubrik Thorax & Abdomen</span>
             </div>
           </div>
 
@@ -379,7 +402,7 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
 
             <button
               onClick={handleStartExam}
-              className="w-full flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-2xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition flex items-center justify-center gap-2 sm:gap-2.5 text-center cursor-pointer"
+              className="w-full flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-2xl font-black text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition flex items-center justify-center gap-2 sm:gap-2.5 text-center cursor-pointer"
             >
               <Maximize2 className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">
@@ -417,7 +440,7 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
           {/* Animated concentric rings */}
           <div className="absolute w-36 h-36 rounded-full border border-indigo-500/20 animate-ping" />
           <div className="absolute w-28 h-28 rounded-full border border-indigo-500/40 animate-pulse" />
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center shadow-2xl shadow-indigo-500/50">
+          <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50">
             <span className="text-3xl font-black text-white">{transitionCountdown}</span>
           </div>
         </div>
@@ -453,8 +476,8 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
         {/* LEFT: EXAM BADGE & QUESTION PILLS */}
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0 flex items-center gap-1">
-              <span>🩺</span>
+            <span className="px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0 flex items-center gap-1.5">
+              <Stethoscope className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">CBT RADIOLOGI</span>
             </span>
           </div>
@@ -651,29 +674,50 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
             {/* CONTAINER GAMBAR */}
             <div className="grid grid-cols-1 gap-3">
               {activeImages.length > 0 ? (
-                activeImages.map((url, i) => (
-                  <div 
-                    key={i} 
-                    className="relative group rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center p-2 min-h-[240px] sm:min-h-[300px] max-h-[460px]"
-                  >
-                    <img
-                      src={url}
-                      alt={`Rontgen Soal ${currentIdx + 1} #${i + 1}`}
-                      style={{
-                        transform: `scale(${imgZoom})`,
-                        filter: invertColors ? 'invert(1) contrast(1.2)' : 'none',
-                        transition: 'transform 0.2s ease-out'
-                      }}
-                      className="max-h-[440px] max-w-full object-contain cursor-zoom-in"
-                      onClick={() => setLightboxImg(url)}
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider pointer-events-none">
-                      <span className="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center gap-1.5 shadow-lg">
-                        <Maximize2 className="w-3.5 h-3.5" /> Klik untuk Perbesar Penuh
-                      </span>
+                activeImages.map((url, i) => {
+                  const imgKey = `${currentQ?.id || currentIdx}-${i}-${url}`;
+                  const hasFailed = Boolean(failedImages[imgKey]);
+                  return (
+                    <div 
+                      key={i} 
+                      className="relative group rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center p-2 min-h-[240px] sm:min-h-[300px] max-h-[460px]"
+                    >
+                      {hasFailed ? (
+                        <div className="p-6 text-center text-slate-400 space-y-2">
+                          <AlertCircle className="w-7 h-7 mx-auto text-amber-500" />
+                          <p className="text-xs font-bold text-slate-300">Citra rontgen gagal dimuat</p>
+                          <button
+                            type="button"
+                            onClick={() => setFailedImages((prev) => ({ ...prev, [imgKey]: false }))}
+                            className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+                          >
+                            Coba Muat Ulang
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <img
+                            src={url}
+                            alt={`Rontgen Soal ${currentIdx + 1} #${i + 1}`}
+                            style={{
+                              transform: `scale(${imgZoom})`,
+                              filter: invertColors ? 'invert(1) contrast(1.2)' : 'none',
+                              transition: 'transform 0.2s ease-out'
+                            }}
+                            className="max-h-[440px] max-w-full object-contain cursor-zoom-in"
+                            onClick={() => setLightboxImg(url)}
+                            onError={() => setFailedImages((prev) => ({ ...prev, [imgKey]: true }))}
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider pointer-events-none">
+                            <span className="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center gap-1.5 shadow-lg">
+                              <Maximize2 className="w-3.5 h-3.5" /> Klik untuk Perbesar Penuh
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="p-8 text-center rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 text-xs max-lg-liquid-subtle">
                   Tidak ada citra foto rontgen pada soal ini.
@@ -813,6 +857,12 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
               </span>
 
               <div className="space-y-3 text-xs text-slate-300 leading-relaxed break-words">
+                {currentQ?.kunci_interpretasi?.data_demografi && (
+                  <div>
+                    <strong className="block text-indigo-400">Data Demografi Pasien:</strong>
+                    <span>{currentQ.kunci_interpretasi.data_demografi}</span>
+                  </div>
+                )}
                 {(currentQ?.kunci_interpretasi?.syarat_layak_baca || currentQ?.kunci_interpretasi?.kualitas_foto) && (
                   <div>
                     <strong className="block text-indigo-400">1. Syarat Layak Baca & Kualitas:</strong>
@@ -883,7 +933,10 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {!isReadOnly ? (
             <button
-              onClick={() => setShowConfirmFinish(true)}
+              onClick={() => {
+                setSubmitError(null);
+                setShowConfirmFinish(true);
+              }}
               className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition text-xs sm:text-sm whitespace-nowrap cursor-pointer"
             >
               <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -907,38 +960,55 @@ export const RadiologyExamModal: React.FC<RadiologyExamModalProps> = ({
       {/* ----------------------------------------------------------------------- */}
       
       {/* CONFIRM FINISH MODAL */}
-      {showConfirmFinish && (
-        <div
-          onClick={() => !submitting && setShowConfirmFinish(false)}
-          className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in zoom-in-95 duration-150"
-        >
+      {showConfirmFinish && (() => {
+        const answeredCount = questions.filter((q) => Boolean((answers[q.id] || '').trim())).length;
+        return (
           <div
-            onClick={e => e.stopPropagation()}
-            className="w-full max-w-md p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 rounded-t-[28px] sm:rounded-3xl bg-slate-900 border-t sm:border border-slate-800 text-slate-100 shadow-2xl max-h-[90dvh] overflow-y-auto max-lg-liquid-card"
+            onClick={() => !submitting && setShowConfirmFinish(false)}
+            className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in zoom-in-95 duration-150"
           >
-            <h3 className="text-lg sm:text-xl font-black mb-2">Kumpulkan Jawaban Essay?</h3>
-            <p className="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed">
-              Setelah dikumpulkan, lembar jawaban akan langsung masuk ke antrean koreksi manual Admin ({packet.admin_name || 'Admin'}). Anda tidak dapat mengubah jawaban sampai selesai dinilai.
-            </p>
-            <div className="flex justify-end gap-2.5 sm:gap-3">
-              <button
-                disabled={submitting}
-                onClick={() => setShowConfirmFinish(false)}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-xl font-bold border border-slate-700 text-slate-300 hover:bg-slate-800 transition text-xs cursor-pointer max-lg-liquid-interactive"
-              >
-                Kembali Periksa
-              </button>
-              <button
-                disabled={submitting}
-                onClick={handleSubmitExam}
-                className="flex-1 sm:flex-none justify-center px-5 sm:px-6 py-2.5 sm:py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer"
-              >
-                {submitting ? 'Mengirim...' : 'Ya, Kumpulkan'}
-              </button>
+            <div
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 rounded-t-[28px] sm:rounded-3xl bg-slate-900 border-t sm:border border-slate-800 text-slate-100 shadow-2xl max-h-[90dvh] overflow-y-auto max-lg-liquid-card"
+            >
+              <h3 className="text-lg sm:text-xl font-black mb-2">Kumpulkan Jawaban Essay?</h3>
+              <p className="text-xs sm:text-sm text-slate-400 mb-3 leading-relaxed">
+                Setelah dikumpulkan, lembar jawaban dikirim ke server cloud dan langsung masuk ke antrean koreksi Admin ({packet.admin_name || 'Admin'}).
+              </p>
+              <div className={`p-3 rounded-xl border text-xs font-bold mb-4 tabular-nums ${
+                answeredCount < questions.length
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              }`}>
+                Terjawab: {answeredCount} dari {questions.length} soal
+                {answeredCount < questions.length && ' — masih ada soal yang belum diisi.'}
+              </div>
+              {submitError && (
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold mb-4 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{submitError}</span>
+                </div>
+              )}
+              <div className="flex justify-end gap-2.5 sm:gap-3">
+                <button
+                  disabled={submitting}
+                  onClick={() => setShowConfirmFinish(false)}
+                  className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-xl font-bold border border-slate-700 text-slate-300 hover:bg-slate-800 transition text-xs cursor-pointer max-lg-liquid-interactive"
+                >
+                  Kembali Periksa
+                </button>
+                <button
+                  disabled={submitting}
+                  onClick={handleSubmitExam}
+                  className="flex-1 sm:flex-none justify-center px-5 sm:px-6 py-2.5 sm:py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer disabled:opacity-50"
+                >
+                  {submitting ? 'Mengirim ke Cloud...' : 'Ya, Kumpulkan'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* CONFIRM EXIT MODAL */}
       {showConfirmExit && (

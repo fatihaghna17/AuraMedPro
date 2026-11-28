@@ -2,18 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Check, Award, MessageSquare, Maximize2, FileText, 
-  CheckCircle2, Clock, Save, User, Sparkles
+  CheckCircle2, Clock, Save, User, Sparkles, ChevronDown, ChevronUp, AlertCircle
 } from 'lucide-react';
 import { 
   RadiologyPacket, RadiologyQuestion, RadiologySubmission, 
   THORAX_CHECKLIST_ITEMS, ABDOMEN_CHECKLIST_ITEMS 
 } from '../../types/radiology';
-import { radiologyApi } from '../../services/radiologyApi';
+import { getQuestionImages, getUserDisplayName, radiologyApi } from '../../services/radiologyApi';
 
 interface RadiologyAdminGradingModalProps {
   packet: RadiologyPacket;
   submission: RadiologySubmission;
   currentUser: any;
+  profileUsername?: string;
   theme?: 'light' | 'dark';
   onClose: () => void;
   onGraded: () => void;
@@ -23,6 +24,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
   packet,
   submission,
   currentUser,
+  profileUsername,
   theme = 'light',
   onClose,
   onGraded
@@ -65,6 +67,8 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
 
   const [feedback, setFeedback] = useState<string>(submission.feedback || '');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [showAnswerKey, setShowAnswerKey] = useState(true);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const currentQ = questions[activeQuestionIdx] || questions[0];
@@ -73,7 +77,7 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
   const thoraxChecklist = currentChecklist.thorax || {};
   const abdomenChecklist = currentChecklist.abdomen || {};
 
-  const adminImage = (currentQ as any)?.image_url || (Array.isArray((currentQ as any)?.image_urls) ? (currentQ as any)?.image_urls[0] : null);
+  const adminImages = getQuestionImages(currentQ);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -196,25 +200,36 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
 
   const handleSubmitGrade = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      await radiologyApi.gradeSubmission(
+      const graderDisplayName = getUserDisplayName(
+        currentUser,
+        profileUsername,
+        packet.admin_name || 'Admin Korektor'
+      );
+      const res = await radiologyApi.gradeSubmission(
         submission.id,
         packet.group_id,
         {
           thorax: questionChecklists[questions[0]?.id]?.thorax || {},
           abdomen: questionChecklists[questions[0]?.id]?.abdomen || {},
           by_question: questionChecklists
-        } as any,
+        },
         calculatedScore,
         feedback,
         currentUser?.id || 'admin',
-        currentUser?.username || packet.admin_name || 'Admin Korektor'
+        graderDisplayName
       );
+      if (!res.success) {
+        setSaveError(res.error || 'Gagal menyimpan hasil penilaian ke server cloud.');
+        setSaving(false);
+        return;
+      }
       onGraded();
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Gagal menyimpan hasil penilaian');
+      setSaveError(e?.message || 'Gagal menyimpan hasil penilaian ke server cloud.');
     }
     setSaving(false);
   };
@@ -325,34 +340,37 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
               </p>
             </div>
 
-            {/* GAMBAR RONTGEN */}
-            {adminImage && (
-              <div className={`p-3 rounded-2xl border max-lg-liquid-subtle ${
+            {/* GAMBAR RONTGEN (MENDUKUNG MULTI-CITRA) */}
+            {adminImages.length > 0 && (
+              <div className={`p-3 rounded-2xl border max-lg-liquid-subtle space-y-2.5 ${
                 isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'
               }`}>
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center">
                   <span className="text-[11px] font-bold opacity-70 uppercase tracking-wider">
-                    Foto Rontgen Kasus
+                    Foto Rontgen Kasus ({adminImages.length} Citra)
                   </span>
                   <button
-                    onClick={() => setLightboxImg(adminImage)}
+                    type="button"
+                    onClick={() => setLightboxImg(adminImages[0])}
                     className="flex items-center gap-1 text-[11px] font-bold text-indigo-500 hover:underline cursor-pointer"
                   >
                     <Maximize2 className="w-3 h-3" /> Zoom Foto
                   </button>
                 </div>
-                <div 
-                  onClick={() => setLightboxImg(adminImage)}
-                  className="rounded-xl overflow-hidden bg-black/90 max-h-[220px] flex items-center justify-center cursor-zoom-in group"
-                >
-                  <img
-                    src={adminImage}
-                    alt="Foto Radiologi"
-                    className="w-full h-auto max-h-[220px] object-contain transition group-hover:scale-105 duration-200"
-                    onError={(e) => {
-                      (e.target as any).src = 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80';
-                    }}
-                  />
+                <div className={`grid gap-2 ${adminImages.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {adminImages.map((imgUrl, imgIdx) => (
+                    <div
+                      key={`${currentQuestionId}-admimg-${imgIdx}`}
+                      onClick={() => setLightboxImg(imgUrl)}
+                      className="rounded-xl overflow-hidden bg-black/90 max-h-[220px] flex items-center justify-center cursor-zoom-in group"
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`Foto Radiologi #${imgIdx + 1}`}
+                        className="w-full h-auto max-h-[220px] object-contain transition group-hover:scale-105 duration-200"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -379,6 +397,66 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
                 )}
               </div>
             </div>
+
+            {/* KUNCI INTERPRETASI RESMI (REFERENSI KOREKTOR) */}
+            {currentQ?.kunci_interpretasi &&
+              Object.values(currentQ.kunci_interpretasi).some((v) => typeof v === 'string' && v.trim()) && (
+              <div className={`p-4 rounded-2xl border max-lg-liquid-subtle ${
+                isDark ? 'bg-indigo-950/30 border-indigo-500/30' : 'bg-indigo-50/70 border-indigo-200'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setShowAnswerKey((prev) => !prev)}
+                  className="w-full flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    Kunci Interpretasi Resmi (Referensi Korektor)
+                  </span>
+                  {showAnswerKey ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
+                </button>
+                {showAnswerKey && (
+                  <div className="mt-3 space-y-2 text-xs leading-relaxed">
+                    {currentQ.kunci_interpretasi.data_demografi && (
+                      <div>
+                        <strong className="text-indigo-600 dark:text-indigo-300 block">Demografi:</strong>
+                        <span className="opacity-90">{currentQ.kunci_interpretasi.data_demografi}</span>
+                      </div>
+                    )}
+                    {(currentQ.kunci_interpretasi.kualitas_foto || currentQ.kunci_interpretasi.syarat_layak_baca) && (
+                      <div>
+                        <strong className="text-indigo-600 dark:text-indigo-300 block">Kualitas Foto:</strong>
+                        <span className="opacity-90">
+                          {currentQ.kunci_interpretasi.kualitas_foto || currentQ.kunci_interpretasi.syarat_layak_baca}
+                        </span>
+                      </div>
+                    )}
+                    {(currentQ.kunci_interpretasi.interpretasi || currentQ.kunci_interpretasi.sistematika_organ) && (
+                      <div>
+                        <strong className="text-indigo-600 dark:text-indigo-300 block">Interpretasi Sistematis:</strong>
+                        <span className="opacity-90">
+                          {currentQ.kunci_interpretasi.interpretasi || currentQ.kunci_interpretasi.sistematika_organ}
+                        </span>
+                      </div>
+                    )}
+                    {currentQ.kunci_interpretasi.abnormalitas && (
+                      <div>
+                        <strong className="text-indigo-600 dark:text-indigo-300 block">Abnormalitas:</strong>
+                        <span className="opacity-90">{currentQ.kunci_interpretasi.abnormalitas}</span>
+                      </div>
+                    )}
+                    {currentQ.kunci_interpretasi.kesimpulan && (
+                      <div className={`p-2.5 rounded-xl border ${
+                        isDark ? 'bg-slate-900/70 border-indigo-500/20' : 'bg-white/80 border-indigo-200/80'
+                      }`}>
+                        <strong className="text-indigo-600 dark:text-indigo-300 block">Kesimpulan:</strong>
+                        <span className="font-semibold">{currentQ.kunci_interpretasi.kesimpulan}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* KOLOM FEEDBACK UNTUK KOREKTOR (DI BAWAH SOAL/JAWABAN) */}
             <div className={`p-4 sm:p-5 rounded-2xl border max-lg-liquid-subtle ${
@@ -543,9 +621,16 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className={`px-3.5 sm:px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t shrink-0 max-lg-liquid-subtle ${
+        <div className={`px-3.5 sm:px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:py-5 flex flex-col gap-3 border-t shrink-0 max-lg-liquid-subtle ${
           isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-slate-50 border-slate-200'
         }`}>
+          {saveError && (
+            <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{saveError}</span>
+            </div>
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <span className="opacity-70">Status Penilaian:</span>
             {submission.status === 'graded' ? (
@@ -573,8 +658,9 @@ export const RadiologyAdminGradingModal: React.FC<RadiologyAdminGradingModalProp
               className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition text-xs sm:text-sm disabled:opacity-50 cursor-pointer"
             >
               <Save className="w-4 h-4 shrink-0" />
-              <span className="truncate">{saving ? 'Menyimpan...' : 'Submit Penilaian & Buka Pembahasan'}</span>
+              <span className="truncate">{saving ? 'Menyimpan ke Cloud...' : 'Submit Penilaian & Buka Pembahasan'}</span>
             </button>
+          </div>
           </div>
         </div>
       </div>
