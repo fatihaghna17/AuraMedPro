@@ -63,10 +63,12 @@ export function useLeaderboard(
       const targetAngkatan = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
       const targetProdi = prodiOverride !== undefined ? prodiOverride : getTargetProdi();
       const cfData = await cloudflareApi.getGlobalLeaderboard(globalTimeFilter, targetAngkatan, targetProdi);
+      const allRows = cfData || [];
+      const totalParticipants = allRows.length;
       const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
       if (isAnyAdmin) {
         // Admin (super admin maupun admin angkatan) melihat seluruh user
-        setGlobalLeaderboard(cfData || []);
+        setGlobalLeaderboard(allRows.map((r: any) => ({ ...r, total_participants: totalParticipants })));
       } else {
         const isUserMatch = (u: any) => {
           if (!u) return false;
@@ -77,13 +79,17 @@ export function useLeaderboard(
           )) return true;
           return false;
         };
-        const userRankIndex = (cfData || []).findIndex(isUserMatch);
-        let top10 = (cfData || []).slice(0, 10);
+        const userRankIndex = allRows.findIndex(isUserMatch);
+        const top10 = allRows.slice(0, 10).map((r: any) => ({
+          ...r,
+          total_participants: totalParticipants,
+        }));
         if (userRankIndex > 9) {
           top10.push({
-            ...cfData[userRankIndex],
+            ...allRows[userRankIndex],
             isCurrentUserOutOfTop10: true,
             actualRank: userRankIndex + 1,
+            total_participants: totalParticipants,
           });
         }
         setGlobalLeaderboard(top10);
@@ -102,10 +108,12 @@ export function useLeaderboard(
       const targetAngkatan = angkatanOverride !== undefined ? angkatanOverride : getTargetAngkatan();
       const targetProdi = prodiOverride !== undefined ? prodiOverride : getTargetProdi();
       const cfData = await cloudflareApi.getFileLeaderboard(fileName, fileTimeFilter, targetAngkatan, targetProdi);
+      const allRows = cfData || [];
+      const totalParticipants = allRows.length;
       const isAnyAdmin = isSuperAdmin || isAdminAngkatan;
       if (isAnyAdmin) {
         // Admin (super admin maupun admin angkatan) melihat seluruh user
-        setFileLeaderboard(cfData || []);
+        setFileLeaderboard(allRows.map((r: any) => ({ ...r, total_participants: totalParticipants })));
       } else {
         const isUserMatch = (u: any) => {
           if (!u) return false;
@@ -116,13 +124,17 @@ export function useLeaderboard(
           )) return true;
           return false;
         };
-        const userRankIndex = (cfData || []).findIndex(isUserMatch);
-        let top10 = (cfData || []).slice(0, 10);
+        const userRankIndex = allRows.findIndex(isUserMatch);
+        const top10 = allRows.slice(0, 10).map((r: any) => ({
+          ...r,
+          total_participants: totalParticipants,
+        }));
         if (userRankIndex > 9) {
           top10.push({
-            ...cfData[userRankIndex],
+            ...allRows[userRankIndex],
             isCurrentUserOutOfTop10: true,
             actualRank: userRankIndex + 1,
+            total_participants: totalParticipants,
           });
         }
         setFileLeaderboard(top10);
